@@ -53,6 +53,13 @@ The reading quiz and the recall quiz are different things with different goals.
 | Form | A conversation that adapts to the user's answers. | Fixed cards. |
 | Result | Understanding, and notes. | A new interval for each card. |
 
+## Storage
+
+- Core writing is Markdown: plain files on disk.
+- The reason: plain files are extremely easy to store, back up and version with Dropbox or git.
+- The files are the truth. Anything else the app keeps (an index, a search database) must be rebuildable from the files.
+- References, AI marks and links must therefore be expressed in the Markdown itself, in a form that still reads well in any other editor.
+
 ## References in writing
 
 Correct references are a key part of the writing section. The tool will be used for university work, where references must be correct.
@@ -118,6 +125,7 @@ Taken from learnharness: the user thinks out loud, by typing or by dictation, an
 - Is the exact location (page number, timestamp) required on every note, or only when the note is cited?
 - Are session records kept as transcripts only, or with the audio?
 - Does each user have a separate graph and separate records?
+- Are cards and their review history also plain files? Review history changes daily, which is noisy in git.
 - Which reference system does the university require?
 - How do references appear in a blog post: links, footnotes, or nothing?
 - How does the tool check that a quote matches the source when it does not have the full text of the book?
