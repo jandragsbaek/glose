@@ -124,6 +124,14 @@ Taken from learnharness: the user thinks out loud, by typing or by dictation, an
 - Kept reasoning is the user's own words, so it can be raw material for notes.
 - Kept records show progress over time.
 
+## Technical direction
+
+- glose is a full Electron desktop app.
+- It uses mostly the same mechanisms as [T3 Code](https://github.com/pingdotgg/t3code) (MIT), in the way the Chalk project already does: shared Effect Schema contracts, an Effect server with typed RPC, and a React client that reads server data through Effect atoms.
+- New compared to Chalk: the Electron shell. T3 Code's `apps/desktop` is the model for it.
+- The app updates itself, so a new version reaches both users without manual installs. T3 Code does this with `electron-builder` and `electron-updater`.
+- The Markdown files stay the truth. A database, if there is one, is only an index that can be rebuilt.
+
 ## Relation to learnharness
 
 - glose copies no code from learnharness. At most it is inspired by its ideas.
@@ -132,6 +140,8 @@ Taken from learnharness: the user thinks out loud, by typing or by dictation, an
 ## Open questions
 
 - Which licence does glose use?
+- Which operating systems must the app support?
+- Is the app code-signed? macOS self-update needs a signed app, which needs a paid Apple Developer account.
 
 - Is a note that the AI arranges from the user's own transcript marked as AI text or as human text?
 
