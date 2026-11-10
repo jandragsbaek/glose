@@ -11,7 +11,7 @@ const require = NodeModule.createRequire(import.meta.url);
 const desktopDir = NodePath.resolve(NodePath.dirname(NodeURL.fileURLToPath(import.meta.url)), "..");
 const electronDir = NodePath.dirname(require.resolve("electron/package.json"));
 
-// Electron 44 has no install script, so the binary is fetched on first launch.
+// Electron has no install script, so the binary is fetched on first launch.
 if (!NodeFS.existsSync(NodePath.join(electronDir, "path.txt"))) {
   NodeChildProcess.execFileSync(process.execPath, [NodePath.join(electronDir, "install.js")], {
     stdio: "inherit",
