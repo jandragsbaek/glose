@@ -124,7 +124,14 @@ Taken from learnharness: the user thinks out loud, by typing or by dictation, an
 - Kept reasoning is the user's own words, so it can be raw material for notes.
 - Kept records show progress over time.
 
+## Relation to learnharness
+
+- glose copies no code from learnharness. At most it is inspired by its ideas.
+- learnharness is AGPL-3.0. Because no code is copied, that licence does not bind glose, and the licence of glose is a free choice.
+
 ## Open questions
+
+- Which licence does glose use?
 
 - Is a note that the AI arranges from the user's own transcript marked as AI text or as human text?
 
