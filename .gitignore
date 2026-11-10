@@ -8,3 +8,8 @@ release/
 !.env.example
 .DS_Store
 .vitest-*
+
+# Impeccable working files: decision sketches, comps and review captures
+**/.impeccable/mocks/
+**/.impeccable/review/
+**/.impeccable/build/

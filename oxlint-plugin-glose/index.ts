@@ -14,6 +14,7 @@ import noTestInLoop from "./rules/no-test-in-loop.ts";
 import noTestTimeoutOrUnreasonedSkip from "./rules/no-test-timeout-or-unreasoned-skip.ts";
 import noUnreasonedStateSync from "./rules/no-unreasoned-state-sync.ts";
 import noUnscopedHas from "./rules/no-unscoped-has.ts";
+import noUntranslatedUiText from "./rules/no-untranslated-ui-text.ts";
 import noWallClockInTests from "./rules/no-wall-clock-in-tests.ts";
 import preferCatchTags from "./rules/prefer-catch-tags.ts";
 import preferEffectFn from "./rules/prefer-effect-fn.ts";
@@ -38,6 +39,7 @@ export default definePlugin({
     "no-test-timeout-or-unreasoned-skip": noTestTimeoutOrUnreasonedSkip,
     "no-unreasoned-state-sync": noUnreasonedStateSync,
     "no-unscoped-has": noUnscopedHas,
+    "no-untranslated-ui-text": noUntranslatedUiText,
     "no-wall-clock-in-tests": noWallClockInTests,
     "prefer-catch-tags": preferCatchTags,
     "prefer-effect-fn": preferEffectFn,

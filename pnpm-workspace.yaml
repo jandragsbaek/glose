@@ -18,6 +18,12 @@ catalog:
   # Vite+ ships its own Vite build; every `vite` dependency resolves to it.
   vite: npm:@voidzero-dev/vite-plus-core@1.5.1
   vite-plus: 1.5.1
+  # Also a root devDependency: it is an optional peer of vite-plus, and one root copy keeps
+  # every package on the same vite-plus peer variant (two variants break @effect/vitest).
+  yaml: ^2.9.1
+
+minimumReleaseAgeExclude:
+  - lucide-react@1.71.0
 
 overrides:
   "@effect/vitest>vitest": "-"

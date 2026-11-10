@@ -141,6 +141,12 @@ export default defineConfig({
         rules: { "glose/no-em-dash-copy": "error" },
       },
       {
+        // Interface text lives in the EN/DA catalogs (apps/web/src/i18n), never inline.
+        files: ["apps/web/src/**"],
+        excludeFiles: ["**/*.{test,spec}.{ts,tsx}"],
+        rules: { "glose/no-untranslated-ui-text": "error" },
+      },
+      {
         // React Compiler owns memoization; upstream rules do not ban redundant useMemo/useCallback.
         files: tsx(REACT_SOURCES),
         rules: {

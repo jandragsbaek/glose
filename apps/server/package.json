@@ -13,7 +13,8 @@
   "dependencies": {
     "@effect/platform-node": "catalog:",
     "@glose/contracts": "workspace:*",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "yaml": "catalog:"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",
