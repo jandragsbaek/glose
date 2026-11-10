@@ -10,33 +10,115 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as GraphRouteImport } from './routes/graph'
+import { Route as RecallRouteImport } from './routes/recall'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as WritingRouteImport } from './routes/writing'
+import { Route as SourcesSourceIdRouteImport } from './routes/sources.$sourceId'
+import { Route as SourcesNewRouteImport } from './routes/sources.new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GraphRoute = GraphRouteImport.update({
+  id: '/graph',
+  path: '/graph',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecallRoute = RecallRouteImport.update({
+  id: '/recall',
+  path: '/recall',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WritingRoute = WritingRouteImport.update({
+  id: '/writing',
+  path: '/writing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SourcesSourceIdRoute = SourcesSourceIdRouteImport.update({
+  id: '/sources/$sourceId',
+  path: '/sources/$sourceId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SourcesNewRoute = SourcesNewRouteImport.update({
+  id: '/sources/new',
+  path: '/sources/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/graph': typeof GraphRoute
+  '/recall': typeof RecallRoute
+  '/settings': typeof SettingsRoute
+  '/writing': typeof WritingRoute
+  '/sources/$sourceId': typeof SourcesSourceIdRoute
+  '/sources/new': typeof SourcesNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/graph': typeof GraphRoute
+  '/recall': typeof RecallRoute
+  '/settings': typeof SettingsRoute
+  '/writing': typeof WritingRoute
+  '/sources/$sourceId': typeof SourcesSourceIdRoute
+  '/sources/new': typeof SourcesNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/graph': typeof GraphRoute
+  '/recall': typeof RecallRoute
+  '/settings': typeof SettingsRoute
+  '/writing': typeof WritingRoute
+  '/sources/$sourceId': typeof SourcesSourceIdRoute
+  '/sources/new': typeof SourcesNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/graph'
+    | '/recall'
+    | '/settings'
+    | '/writing'
+    | '/sources/$sourceId'
+    | '/sources/new'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/graph'
+    | '/recall'
+    | '/settings'
+    | '/writing'
+    | '/sources/$sourceId'
+    | '/sources/new'
+  id:
+    | '__root__'
+    | '/'
+    | '/graph'
+    | '/recall'
+    | '/settings'
+    | '/writing'
+    | '/sources/$sourceId'
+    | '/sources/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  GraphRoute: typeof GraphRoute
+  RecallRoute: typeof RecallRoute
+  SettingsRoute: typeof SettingsRoute
+  WritingRoute: typeof WritingRoute
+  SourcesSourceIdRoute: typeof SourcesSourceIdRoute
+  SourcesNewRoute: typeof SourcesNewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +130,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/graph': {
+      id: '/graph'
+      path: '/graph'
+      fullPath: '/graph'
+      preLoaderRoute: typeof GraphRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recall': {
+      id: '/recall'
+      path: '/recall'
+      fullPath: '/recall'
+      preLoaderRoute: typeof RecallRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/writing': {
+      id: '/writing'
+      path: '/writing'
+      fullPath: '/writing'
+      preLoaderRoute: typeof WritingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sources/$sourceId': {
+      id: '/sources/$sourceId'
+      path: '/sources/$sourceId'
+      fullPath: '/sources/$sourceId'
+      preLoaderRoute: typeof SourcesSourceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sources/new': {
+      id: '/sources/new'
+      path: '/sources/new'
+      fullPath: '/sources/new'
+      preLoaderRoute: typeof SourcesNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  GraphRoute: GraphRoute,
+  RecallRoute: RecallRoute,
+  SettingsRoute: SettingsRoute,
+  WritingRoute: WritingRoute,
+  SourcesSourceIdRoute: SourcesSourceIdRoute,
+  SourcesNewRoute: SourcesNewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,22 +1,178 @@
-import { useAtomValue } from "@effect/atom-react";
-import { createFileRoute } from "@tanstack/react-router";
+import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
+import type { Source } from "@glose/contracts";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
+import { Plus, TriangleAlert } from "lucide-react";
 
-import { serverInfoAtom } from "../state/server.ts";
+import { StepBar } from "../components/StepBar.tsx";
+import {
+  CallNumber,
+  Page,
+  Panel,
+  SkeletonPanel,
+  Spine,
+  StorageProblem,
+} from "../components/ui.tsx";
+import { missingDetails } from "../domain/source.ts";
+import { useT } from "../i18n/I18n.tsx";
+import { sourcesAtom } from "../state/graph.ts";
 
-export const Route = createFileRoute("/")({ component: Index });
+/** The date is read when Today is opened, not on every render. */
+export const Route = createFileRoute("/")({
+  component: Today,
+  loader: () => ({ opened: new Date() }),
+});
 
-/** Placeholder with no styling: it only proves the window reaches the server over RPC. */
-function Index() {
-  const status = AsyncResult.match(useAtomValue(serverInfoAtom), {
-    onInitial: () => "Connecting to the server.",
-    onFailure: () => "The server did not answer.",
-    onSuccess: ({ value }) => `Server version ${value.version}`,
-  });
+function Today() {
+  const t = useT();
+  const { opened } = Route.useLoaderData();
   return (
-    <main>
-      <h1>Glose</h1>
-      <p>{status}</p>
-    </main>
+    <Page
+      title={t.today.title}
+      sub={t.today.date(opened)}
+      actions={
+        <Link to="/sources/new" className="button button--primary">
+          <Plus size={16} aria-hidden="true" />
+          {t.today.addSource}
+        </Link>
+      }
+    >
+      <div className="columns">
+        <div className="stack">
+          <SourcesInProgress />
+          <Panel title={t.today.notesNear} initial="lapis">
+            <div className="panel__body">
+              <p className="empty">{t.today.notesNearEmpty}</p>
+            </div>
+          </Panel>
+        </div>
+        <div className="stack">
+          <Panel title={t.today.recall} initial="rubric">
+            <div className="panel__body">
+              <p className="empty">{t.today.recallEmpty}</p>
+            </div>
+          </Panel>
+          <Panel title={t.today.writingProject} initial="lapis">
+            <div className="panel__body">
+              <p className="empty">{t.today.writingEmpty}</p>
+            </div>
+          </Panel>
+          <Panel title={t.today.aiText} initial="rubric">
+            <div className="panel__body">
+              <p className="empty">{t.today.aiTextEmpty}</p>
+            </div>
+          </Panel>
+        </div>
+      </div>
+    </Page>
+  );
+}
+
+function SourcesInProgress() {
+  const t = useT();
+  const sources = useAtomValue(sourcesAtom);
+  const refresh = useAtomRefresh(sourcesAtom);
+  return AsyncResult.matchWithError(sources, {
+    onInitial: () => <SkeletonPanel />,
+    onError: () => <StorageProblem onRetry={refresh} />,
+    onDefect: () => <StorageProblem onRetry={refresh} />,
+    onSuccess: ({ value }) => {
+      const [current, ...others] = value.filter((source) => source.readingStep !== "done");
+      return (
+        <Panel title={t.today.inProgress} initial="rubric">
+          {current === undefined ? <NoSource /> : <CurrentSource source={current} />}
+          {others.length === 0 ? null : (
+            <div className="panel__body">
+              <h3 className="subhead">{t.today.alsoInProgress}</h3>
+              <ul className="rows">
+                {others.map((source) => (
+                  <li key={source.id}>
+                    <CallNumber source={source} />
+                    <span className="rows__title">{source.title}</span>
+                    <span className="rows__meta">{readingStepName(t, source)}</span>
+                    <Link
+                      to="/sources/$sourceId"
+                      params={{ sourceId: source.id }}
+                      className="button"
+                    >
+                      {t.today.open}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </Panel>
+      );
+    },
+  });
+}
+
+const readingStepName = (t: ReturnType<typeof useT>, source: Source) =>
+  source.readingStep === "done" ? t.today.continue.done : t.steps.names[source.readingStep];
+
+function CurrentSource({ source }: { readonly source: Source }) {
+  const t = useT();
+  const author = [source.givenName, source.familyName].filter(Boolean).join(" ");
+  const missing = missingDetails(source);
+  return (
+    <div className="panel__body">
+      <div className="source">
+        <div className="source__spine">
+          <Spine source={source} />
+        </div>
+        <h3 className="source__title">
+          <Link to="/sources/$sourceId" params={{ sourceId: source.id }}>
+            {source.title}
+          </Link>
+        </h3>
+        <Link
+          to="/sources/$sourceId"
+          params={{ sourceId: source.id }}
+          className="button button--primary source__action"
+        >
+          {t.today.continue[source.readingStep]}
+        </Link>
+        <p className="source__line">
+          {[
+            author,
+            source.publisher,
+            source.firstPublished === null ? null : t.source.firstPublished(source.firstPublished),
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
+        <div className="source__steps">
+          <StepBar source={source} />
+          {missing.length === 0 ? null : (
+            <p className="inline-warning">
+              <TriangleAlert className="notice__icon" aria-hidden="true" />
+              <span>
+                {t.source.missingLine(missing.map((detail) => t.source.missingInline[detail]))}{" "}
+                <Link to="/sources/$sourceId" params={{ sourceId: source.id }}>
+                  {t.source.howToFix}
+                </Link>
+              </span>
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NoSource() {
+  const t = useT();
+  return (
+    <div className="panel__body">
+      <p className="empty empty--lead">{t.today.noSourceTitle}</p>
+      <p className="empty">{t.today.noSourceBody}</p>
+      <p style={{ marginTop: 16 }}>
+        <Link to="/sources/new" className="button button--primary">
+          <Plus size={16} aria-hidden="true" />
+          {t.today.addSource}
+        </Link>
+      </p>
+    </div>
   );
 }

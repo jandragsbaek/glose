@@ -2,6 +2,39 @@
 
 Working notes from early conversations. Nothing here is final.
 
+## Users
+
+- Two users now: Jan (primary language English, Windows) and his girlfriend (primary language
+  Danish, macOS).
+- A public release may come later. The app must be clear to other readers and students too.
+
+## Running locally
+
+- Glose runs locally on the user's own computer. There is no Glose account and no login screen.
+  The app opens straight into the user's work.
+- Connecting a ChatGPT subscription (see "AI provider") is not a login to Glose.
+
+## Interface language
+
+- The interface ships in English and Danish. The user selects the language.
+- Every user-facing string is translated, from the first feature on. No string is hard-coded.
+- Notes, Cards and Writing projects can be in any language, independent of the interface
+  language.
+- The lint rule `glose/no-untranslated-ui-text` rejects JSX text and user-facing attributes
+  (`aria-label`, `title`, `placeholder`, `alt`, `label`) that bypass the catalogs in
+  `apps/web/src/i18n`.
+- Danish interface terms, first version (to be reviewed by a Danish user): Kilde (Source), Note,
+  Graf (Graph), Link, Kort (Card), Genkaldelse (Recall), Skriveprojekt (Writing project), Fri
+  tekst (Free text), Udtræk (Extraction), Sondering (Probe), Læsning (the Reading Stage),
+  AI-tekst (AI text), Kildehenvisning (Citation).
+
+## First start
+
+- A short setup: interface language, Graph folder (suggested: `Glose` in the home folder; created
+  if missing), and a ChatGPT step that says honestly that the connection does not exist yet.
+- App settings (language, Graph folder) live in a `settings.json` in the OS's app data folder,
+  outside the Graph. `GLOSE_DATA_DIR` overrides the folder.
+
 ## Shape
 
 The app has three sections with different rules for the AI.
@@ -63,6 +96,15 @@ The Probe and Review are different things with different goals.
 - The folder structure is mostly flat, as Obsidian practice recommends. Structure comes from links, not from folders.
 - Notes link to each other with wikilinks (`[[note name]]`).
 - The exact layout is not fixed now. It will be worked out along the way.
+- First decision, the Source file: `<Family name> <year> <Title>.md` in the Graph folder,
+  with YAML frontmatter (`glose: source`, `author-family`, `author-given`, `title`,
+  `first-published`, `edition`, `edition-year`, `publisher`, `translator`, `reading-step`) and
+  the user's Free text as the body. Empty fields are left out. Glose reads any Markdown file
+  with `glose: source` as a Source, so a Source can be written or fixed by hand.
+- File names drop characters Windows forbids, and two names that differ only in case count as
+  the same file.
+- A Source's call number (`ARE 1958`) is the first three letters of the family name and the
+  year of first publication. It is shown, not stored.
 
 ## References in writing
 
@@ -133,6 +175,8 @@ Taken from learnharness: the user thinks out loud, by typing or by dictation, an
 - The app updates itself, so a new version reaches both users without manual installs. T3 Code does this with `electron-builder` and `electron-updater`.
 - The Markdown files stay the truth. A database, if there is one, is only an index that can be rebuilt.
 - Release platforms: macOS and Windows. One user is on macOS, and Jan uses glose on Windows.
+- One design language on both platforms. Details that belong to the OS (window controls, menu
+  bar, keyboard shortcuts) follow each OS.
 - Development happens on Linux and macOS nodes, load-balanced through T3. The app must therefore also run on Linux for development, including in a plain browser without Electron on headless nodes.
 - File names must be safe on all three systems: no characters that Windows forbids, and no two notes whose names differ only in upper and lower case.
 - The macOS app is signed and notarized, because self-update on macOS needs it. This needs an Apple Developer account, which Jan plans to get anyway for other macOS apps.

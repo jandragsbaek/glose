@@ -6,8 +6,10 @@ A desktop app for learning from what you read and for writing your own prose: a 
 sourced Markdown notes, spaced-repetition recall, and writing projects where the AI references
 and suggests but never writes. [docs/ideas.md](docs/ideas.md) has the full idea.
 
-Today this is a skeleton: an Electron window that starts a local server and shows a placeholder
-page read from it over RPC. It has no features and no design yet.
+Today Glose has its frame and first working slice, in English and Danish: a first-start setup,
+Today, Add Source, and the Reading Stage up to Free text. Sources are saved as Markdown files in
+the Graph folder. Extraction and the Probe wait for the ChatGPT connection. The visual design is
+recorded in [PRODUCT.md](PRODUCT.md) and [DESIGN.md](DESIGN.md).
 
 Glose uses the architecture and stack of [T3 Code](https://github.com/pingdotgg/t3code), scaled
 down: shared Effect Schema contracts, an Effect server with typed RPC, a React client that reads
@@ -41,6 +43,7 @@ pnpm dist:desktop   # installer for this platform, in apps/desktop/release
 | `GLOSE_WEB_DIST`       | unset       | Built web app to serve; the desktop app sets it     |
 | `GLOSE_VERSION`        | server's    | Version the server reports; the desktop app sets it |
 | `GLOSE_DEV_SERVER_URL` | unset       | Makes the desktop app load this URL (dev)           |
+| `GLOSE_DATA_DIR`       | OS app data | Folder for app settings (`settings.json`)           |
 
 ## How it fits together
 

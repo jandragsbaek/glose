@@ -12,13 +12,18 @@
   },
   "dependencies": {
     "@effect/atom-react": "catalog:",
+    "@fontsource/cinzel-decorative": "^5.3.0",
+    "@fontsource/courier-prime": "^5.3.0",
+    "@fontsource/public-sans": "^5.3.0",
     "@glose/contracts": "workspace:*",
     "@tanstack/react-router": "^1.170.46",
     "effect": "catalog:",
+    "lucide-react": "^1.71.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },
   "devDependencies": {
+    "@effect/vitest": "catalog:",
     "@tanstack/router-plugin": "^1.169.0",
     "@types/node": "catalog:",
     "@types/react": "^19.3.0",

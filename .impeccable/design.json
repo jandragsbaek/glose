@@ -1,0 +1,519 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-10T22:55:18+00:00",
+  "title": "Design System: Glose",
+  "extensions": {
+    "colorMeta": {
+      "lapis": {
+        "role": "primary",
+        "displayName": "Lapis",
+        "canonical": "#1e2f7a",
+        "tonalRamp": [
+          "oklch(15% 0.054 269)",
+          "oklch(26% 0.075 269)",
+          "oklch(38% 0.097 269)",
+          "oklch(49% 0.118 269)",
+          "oklch(61% 0.118 269)",
+          "oklch(72% 0.097 269)",
+          "oklch(84% 0.075 269)",
+          "oklch(95% 0.054 269)"
+        ]
+      },
+      "lapis-raised": {
+        "role": "primary",
+        "displayName": "Raised Lapis",
+        "canonical": "#2b3e92",
+        "tonalRamp": [
+          "oklch(15% 0.059 269)",
+          "oklch(26% 0.082 269)",
+          "oklch(38% 0.105 269)",
+          "oklch(49% 0.128 269)",
+          "oklch(61% 0.128 269)",
+          "oklch(72% 0.105 269)",
+          "oklch(84% 0.082 269)",
+          "oklch(95% 0.059 269)"
+        ]
+      },
+      "lapis-line": {
+        "role": "primary",
+        "displayName": "Lapis Rule",
+        "canonical": "#3a4c9c",
+        "tonalRamp": [
+          "oklch(15% 0.055 271)",
+          "oklch(26% 0.077 271)",
+          "oklch(38% 0.099 271)",
+          "oklch(49% 0.120 271)",
+          "oklch(61% 0.120 271)",
+          "oklch(72% 0.099 271)",
+          "oklch(84% 0.077 271)",
+          "oklch(95% 0.055 271)"
+        ]
+      },
+      "on-lapis": {
+        "role": "primary",
+        "displayName": "On-Lapis White",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "oklch(15% 0.002 90)",
+          "oklch(26% 0.002 90)",
+          "oklch(38% 0.003 90)",
+          "oklch(49% 0.004 90)",
+          "oklch(61% 0.004 90)",
+          "oklch(72% 0.003 90)",
+          "oklch(84% 0.002 90)",
+          "oklch(95% 0.002 90)"
+        ]
+      },
+      "on-lapis-mute": {
+        "role": "primary",
+        "displayName": "Lapis Mist",
+        "canonical": "#c3cbec",
+        "tonalRamp": [
+          "oklch(15% 0.020 275)",
+          "oklch(26% 0.027 275)",
+          "oklch(38% 0.035 275)",
+          "oklch(49% 0.043 275)",
+          "oklch(61% 0.043 275)",
+          "oklch(72% 0.035 275)",
+          "oklch(84% 0.027 275)",
+          "oklch(95% 0.020 275)"
+        ]
+      },
+      "gold": {
+        "role": "secondary",
+        "displayName": "Gilt",
+        "canonical": "#c8a040",
+        "tonalRamp": [
+          "oklch(15% 0.051 86)",
+          "oklch(26% 0.071 86)",
+          "oklch(38% 0.091 86)",
+          "oklch(49% 0.112 86)",
+          "oklch(61% 0.112 86)",
+          "oklch(72% 0.091 86)",
+          "oklch(84% 0.071 86)",
+          "oklch(95% 0.051 86)"
+        ]
+      },
+      "gold-wash": {
+        "role": "secondary",
+        "displayName": "Gilt Wash",
+        "canonical": "#f6efdc",
+        "tonalRamp": [
+          "oklch(15% 0.011 90)",
+          "oklch(26% 0.015 90)",
+          "oklch(38% 0.020 90)",
+          "oklch(49% 0.024 90)",
+          "oklch(61% 0.024 90)",
+          "oklch(72% 0.020 90)",
+          "oklch(84% 0.015 90)",
+          "oklch(95% 0.011 90)"
+        ]
+      },
+      "rubric": {
+        "role": "tertiary",
+        "displayName": "Rubric",
+        "canonical": "#b3261e",
+        "tonalRamp": [
+          "oklch(15% 0.075 29)",
+          "oklch(26% 0.104 29)",
+          "oklch(38% 0.134 29)",
+          "oklch(49% 0.163 29)",
+          "oklch(61% 0.163 29)",
+          "oklch(72% 0.134 29)",
+          "oklch(84% 0.104 29)",
+          "oklch(95% 0.075 29)"
+        ]
+      },
+      "rubric-wash": {
+        "role": "tertiary",
+        "displayName": "Rubric Wash",
+        "canonical": "#fbeceb",
+        "tonalRamp": [
+          "oklch(15% 0.007 22)",
+          "oklch(26% 0.010 22)",
+          "oklch(38% 0.012 22)",
+          "oklch(49% 0.015 22)",
+          "oklch(61% 0.015 22)",
+          "oklch(72% 0.012 22)",
+          "oklch(84% 0.010 22)",
+          "oklch(95% 0.007 22)"
+        ]
+      },
+      "rubric-line": {
+        "role": "tertiary",
+        "displayName": "Rubric Line",
+        "canonical": "#e7c9c6",
+        "tonalRamp": [
+          "oklch(15% 0.007 22)",
+          "oklch(26% 0.010 22)",
+          "oklch(38% 0.012 22)",
+          "oklch(49% 0.015 22)",
+          "oklch(61% 0.015 22)",
+          "oklch(72% 0.012 22)",
+          "oklch(84% 0.010 22)",
+          "oklch(95% 0.007 22)"
+        ]
+      },
+      "verdigris": {
+        "role": "tertiary",
+        "displayName": "Verdigris",
+        "canonical": "#3e7c5a",
+        "tonalRamp": [
+          "oklch(15% 0.035 158)",
+          "oklch(26% 0.049 158)",
+          "oklch(38% 0.063 158)",
+          "oklch(49% 0.077 158)",
+          "oklch(61% 0.077 158)",
+          "oklch(72% 0.063 158)",
+          "oklch(84% 0.049 158)",
+          "oklch(95% 0.035 158)"
+        ]
+      },
+      "ground": {
+        "role": "neutral",
+        "displayName": "Ground",
+        "canonical": "#fbfaf7",
+        "tonalRamp": [
+          "oklch(15% 0.002 91)",
+          "oklch(26% 0.002 91)",
+          "oklch(38% 0.003 91)",
+          "oklch(49% 0.004 91)",
+          "oklch(61% 0.004 91)",
+          "oklch(72% 0.003 91)",
+          "oklch(84% 0.002 91)",
+          "oklch(95% 0.002 91)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "oklch(15% 0.002 90)",
+          "oklch(26% 0.002 90)",
+          "oklch(38% 0.003 90)",
+          "oklch(49% 0.004 90)",
+          "oklch(61% 0.004 90)",
+          "oklch(72% 0.003 90)",
+          "oklch(84% 0.002 90)",
+          "oklch(95% 0.002 90)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#141414",
+        "tonalRamp": [
+          "oklch(15% 0.002 90)",
+          "oklch(26% 0.002 90)",
+          "oklch(38% 0.003 90)",
+          "oklch(49% 0.004 90)",
+          "oklch(61% 0.004 90)",
+          "oklch(72% 0.003 90)",
+          "oklch(84% 0.002 90)",
+          "oklch(95% 0.002 90)"
+        ]
+      },
+      "mute": {
+        "role": "neutral",
+        "displayName": "Mute",
+        "canonical": "#5c5f6a",
+        "tonalRamp": [
+          "oklch(15% 0.008 274)",
+          "oklch(26% 0.010 274)",
+          "oklch(38% 0.013 274)",
+          "oklch(49% 0.016 274)",
+          "oklch(61% 0.016 274)",
+          "oklch(72% 0.013 274)",
+          "oklch(84% 0.010 274)",
+          "oklch(95% 0.008 274)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#dedde3",
+        "tonalRamp": [
+          "oklch(15% 0.003 294)",
+          "oklch(26% 0.005 294)",
+          "oklch(38% 0.006 294)",
+          "oklch(49% 0.007 294)",
+          "oklch(61% 0.007 294)",
+          "oklch(72% 0.006 294)",
+          "oklch(84% 0.005 294)",
+          "oklch(95% 0.003 294)"
+        ]
+      },
+      "line-strong": {
+        "role": "neutral",
+        "displayName": "Strong Hairline",
+        "canonical": "#c9c8d1",
+        "tonalRamp": [
+          "oklch(15% 0.005 291)",
+          "oklch(26% 0.007 291)",
+          "oklch(38% 0.009 291)",
+          "oklch(49% 0.011 291)",
+          "oklch(61% 0.011 291)",
+          "oklch(72% 0.009 291)",
+          "oklch(84% 0.007 291)",
+          "oklch(95% 0.005 291)"
+        ]
+      },
+      "tint": {
+        "role": "neutral",
+        "displayName": "Lapis Tint",
+        "canonical": "#eef0f8",
+        "tonalRamp": [
+          "oklch(15% 0.005 275)",
+          "oklch(26% 0.006 275)",
+          "oklch(38% 0.008 275)",
+          "oklch(49% 0.010 275)",
+          "oklch(61% 0.010 275)",
+          "oklch(72% 0.008 275)",
+          "oklch(84% 0.006 275)",
+          "oklch(95% 0.005 275)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The first-start title only, with a Cinzel initial at 1.35em."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "The page title in the white page header."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "The current Source's title on Today."
+      },
+      "panel-heading": {
+        "displayName": "Panel heading",
+        "purpose": "Every panel's h2, uppercase; its first letter is the Initial. Fieldset legends use the same set in Mute."
+      },
+      "initial": {
+        "displayName": "Initial",
+        "purpose": "The first letter of a panel heading (::first-letter), in rubric or lapis. Never on data, buttons or body."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "All running text; empty states cap at 62ch."
+      },
+      "body-writing": {
+        "displayName": "Body for writing",
+        "purpose": "The Free text area, max 72ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Buttons, field labels, step names, row titles."
+      },
+      "meta": {
+        "displayName": "Meta",
+        "purpose": "Hints, step notes, panel meta, status lines; tabular numerals."
+      },
+      "rail-label": {
+        "displayName": "Rail label",
+        "purpose": "Section names under rail icons; they wrap and hyphenate."
+      },
+      "call": {
+        "displayName": "Call",
+        "purpose": "Call numbers and step numbers only."
+      }
+    },
+    "shadows": [
+      {
+        "name": "lapis-lift",
+        "value": "0 2px 6px rgb(30 47 122 / 22%)",
+        "purpose": "Primary button hover only."
+      },
+      {
+        "name": "focus-halo",
+        "value": "0 0 0 3px rgb(30 47 122 / 18%)",
+        "purpose": "Inputs and the textarea on keyboard focus, with a lapis border."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Every state transition."
+      },
+      {
+        "name": "state-duration",
+        "value": "160ms",
+        "purpose": "Hover and focus transitions on buttons, inputs and rail items."
+      },
+      {
+        "name": "shimmer",
+        "value": "1.4s ease-in-out infinite",
+        "purpose": "Skeleton loading bars; stopped under prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "columns-collapse",
+        "value": "1080px"
+      }
+    ],
+    "layout": {
+      "rail": "96px",
+      "sideColumn": "minmax(300px, 380px)",
+      "narrow": "760px",
+      "pageBodyPadding": "24px 32px 40px"
+    },
+    "focus": {
+      "onPaper": "2px solid lapis, offset 2px",
+      "onLapis": "2px solid gold, offset 2px"
+    },
+    "themes": ["light"]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Lapis button for the next step forward (Add Source, Continue, Start).",
+      "html": "<button class=\"ds-btn ds-btn-primary\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"M12 5v14\"/></svg>Add Source</button>",
+      "css": ".ds-btn { display:inline-flex; align-items:center; gap:8px; min-height:36px; padding:0 16px; border:1px solid var(--ink,#141414); border-radius:4px; background:var(--paper,#fff); color:var(--ink,#141414); font:600 14px/1.2 'Public Sans',system-ui,sans-serif; white-space:nowrap; cursor:pointer; transition:background-color 160ms cubic-bezier(0.22, 1, 0.36, 1),border-color 160ms cubic-bezier(0.22, 1, 0.36, 1),box-shadow 160ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-btn-primary { background:var(--lapis,#1e2f7a); border-color:var(--lapis,#1e2f7a); color:var(--on-lapis,#fff); } .ds-btn-primary:hover { background:var(--lapis-raised,#2b3e92); border-color:var(--lapis-raised,#2b3e92); box-shadow:0 2px 6px rgb(30 47 122 / 22%); } .ds-btn:focus-visible { outline:2px solid var(--lapis,#1e2f7a); outline-offset:2px; } .ds-btn:disabled { opacity:.55; cursor:not-allowed; box-shadow:none; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Ink-outlined paper button for every other action (Open, Cancel, Save, Retry).",
+      "html": "<button class=\"ds-btn2\">Open</button>",
+      "css": ".ds-btn2 { display:inline-flex; align-items:center; gap:8px; min-height:36px; padding:0 16px; border:1px solid var(--ink,#141414); border-radius:4px; background:var(--paper,#fff); color:var(--ink,#141414); font:600 14px/1.2 'Public Sans',system-ui,sans-serif; cursor:pointer; transition:background-color 160ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-btn2:hover { background:var(--tint,#eef0f8); } .ds-btn2:focus-visible { outline:2px solid var(--lapis,#1e2f7a); outline-offset:2px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Labelled field with hint; error shows a rubric icon and words under a rubric border.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-label\" for=\"ds-y\">First published <span class=\"ds-opt\">(optional)</span></label><input id=\"ds-y\" class=\"ds-input\" value=\"19x1\" aria-invalid=\"true\"><span class=\"ds-hint\">The year the work first came out, for example 1958.</span><span class=\"ds-err\"><svg class=\"ds-ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><line x1=\"12\" x2=\"12\" y1=\"8\" y2=\"12\"/><line x1=\"12\" x2=\"12.01\" y1=\"16\" y2=\"16\"/></svg>Write the year as digits, for example 1958.</span></div>",
+      "css": ".ds-field { display:flex; flex-direction:column; gap:6px; max-width:340px; font-family:'Public Sans',system-ui,sans-serif; } .ds-label { font-size:14px; font-weight:600; color:var(--ink,#141414); } .ds-opt { font-weight:400; color:var(--mute,#5c5f6a); } .ds-input { padding:8px 12px; border:1px solid var(--line-strong,#c9c8d1); border-radius:4px; background:var(--paper,#fff); color:var(--ink,#141414); font:400 15px/1.5 'Public Sans',system-ui,sans-serif; transition:border-color 160ms cubic-bezier(0.22, 1, 0.36, 1),box-shadow 160ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-input:hover { border-color:var(--mute,#5c5f6a); } .ds-input:focus-visible { outline:none; border-color:var(--lapis,#1e2f7a); box-shadow:0 0 0 3px rgb(30 47 122 / 18%); } .ds-input[aria-invalid=true] { border-color:var(--rubric,#b3261e); } .ds-hint { font-size:13px; color:var(--mute,#5c5f6a); } .ds-err { display:flex; align-items:center; gap:6px; font-size:13px; color:var(--rubric,#b3261e); } .ds-ico { width:13px; height:13px; flex:none; }"
+    },
+    {
+      "name": "Choice",
+      "kind": "chip",
+      "refersTo": "choice-selected",
+      "description": "Bordered radio row; checked turns lapis border on tint.",
+      "html": "<div class=\"ds-choices\"><label class=\"ds-choice\"><input type=\"radio\" name=\"ds-l\" checked> English</label><label class=\"ds-choice\"><input type=\"radio\" name=\"ds-l\"> Dansk</label></div>",
+      "css": ".ds-choices { display:flex; flex-wrap:wrap; gap:10px; } .ds-choice { display:flex; align-items:center; gap:10px; padding:10px 16px; border:1px solid var(--line-strong,#c9c8d1); border-radius:4px; font:600 15px 'Public Sans',system-ui,sans-serif; color:var(--ink,#141414); cursor:pointer; accent-color:var(--lapis,#1e2f7a); } .ds-choice:has(input:checked) { border-color:var(--lapis,#1e2f7a); background:var(--tint,#eef0f8); } .ds-choice:has(input:focus-visible) { outline:2px solid var(--lapis,#1e2f7a); outline-offset:2px; }"
+    },
+    {
+      "name": "Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "White leaf with a Cinzel initial heading and a hairline rule carrying the rubric pen flourish.",
+      "html": "<section class=\"ds-panel\"><div class=\"ds-panel-head\"><h2 class=\"ds-panel-title\">Recall</h2></div><div class=\"ds-panel-rule\"><svg class=\"ds-flourish\" viewBox=\"0 0 64 10\" aria-hidden=\"true\"><path d=\"M2 6.5c8 0 12-3 20-3 4 0 6 2.2 10 2.2s6-4.2 10-4.2c8 0 12 5 20 5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\"/><circle cx=\"32\" cy=\"5.7\" r=\"1.3\" fill=\"currentColor\"/></svg></div><div class=\"ds-panel-body\"><p class=\"ds-empty\">No Cards yet. Cards are made from Notes, and Recall schedules them for Review.</p></div></section>",
+      "css": ".ds-panel { max-width:380px; background:var(--paper,#fff); border:1px solid var(--line,#dedde3); border-radius:4px; font:400 15px/1.5 'Public Sans',system-ui,sans-serif; color:var(--ink,#141414); } .ds-panel-head { padding:14px 20px 0; } .ds-panel-title { margin:0; font-size:13px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; line-height:1.3; } .ds-panel-title::first-letter { font-family:'Cinzel Decorative','Cinzel',serif; font-weight:700; font-size:2em; letter-spacing:0; line-height:.9; color:var(--rubric,#b3261e); } .ds-panel-rule { display:flex; align-items:center; gap:10px; margin:10px 20px 0; } .ds-panel-rule::before, .ds-panel-rule::after { content:''; flex:1; height:1px; background:var(--line,#dedde3); } .ds-flourish { display:block; flex:none; width:64px; height:10px; color:var(--rubric,#b3261e); } .ds-panel-body { padding:16px 20px 20px; } .ds-empty { margin:0; color:var(--mute,#5c5f6a); max-width:62ch; }"
+    },
+    {
+      "name": "Rail",
+      "kind": "nav",
+      "refersTo": "rail",
+      "description": "Lapis Section rail: 32px icons over labels; current item raised with a gilt icon.",
+      "html": "<nav class=\"ds-rail\" aria-label=\"Sections\"><span class=\"ds-mark\">GLO</span><a class=\"ds-rail-link\" href=\"#\" aria-current=\"page\"><svg class=\"ds-rail-ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M8 2v4\"/><path d=\"M16 2v4\"/><rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\"/><path d=\"M3 10h18\"/><path d=\"M8 14h.01\"/><path d=\"M12 14h.01\"/><path d=\"M16 14h.01\"/><path d=\"M8 18h.01\"/><path d=\"M12 18h.01\"/><path d=\"M16 18h.01\"/></svg>Today</a><span class=\"ds-rail-rule\"></span><a class=\"ds-rail-link\" href=\"#\"><svg class=\"ds-rail-ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z\"/><path d=\"m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65\"/><path d=\"m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65\"/></svg>Recall</a></nav>",
+      "css": ".ds-rail { display:flex; flex-direction:column; gap:4px; width:96px; padding:16px 8px; background:var(--lapis,#1e2f7a); color:var(--on-lapis-mute,#c3cbec); } .ds-mark { align-self:center; margin-bottom:18px; padding:1px 7px; background:var(--paper,#fff); border:1px solid var(--ink,#141414); border-radius:2px; font:700 12px/18px 'Courier Prime',ui-monospace,monospace; color:var(--ink,#141414); } .ds-rail-link { display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 4px 10px; border-radius:4px; color:inherit; font:500 12px/1.25 'Public Sans',system-ui,sans-serif; text-align:center; text-decoration:none; hyphens:auto; overflow-wrap:anywhere; transition:background-color 160ms cubic-bezier(0.22, 1, 0.36, 1),color 160ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-rail-link:hover, .ds-rail-link[aria-current=page] { background:var(--lapis-raised,#2b3e92); color:var(--on-lapis,#fff); } .ds-rail-link[aria-current=page] .ds-rail-ico { color:var(--gold,#c8a040); } .ds-rail-link:focus-visible { outline:2px solid var(--gold,#c8a040); outline-offset:2px; } .ds-rail-ico { width:32px; height:32px; } .ds-rail-rule { height:1px; margin:6px 12px; background:var(--lapis-line,#3a4c9c); }"
+    },
+    {
+      "name": "Call Number",
+      "kind": "custom",
+      "refersTo": "call-number",
+      "description": "Typed white spine label; a missing year turns it rubric with an icon and a question mark.",
+      "html": "<span class=\"ds-call\">ARE 1958 <span class=\"ds-loc\">\u00b7 p. 79</span></span> <span class=\"ds-call ds-call-missing\" aria-label=\"Call number KIE ?, year missing\"><svg class=\"ds-ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3\"/><path d=\"M12 9v4\"/><path d=\"M12 17h.01\"/></svg>KIE ?</span>",
+      "css": ".ds-call { display:inline-flex; align-items:center; gap:6px; padding:1px 7px; background:var(--paper,#fff); border:1px solid var(--ink,#141414); border-radius:2px; font:700 12px/18px 'Courier Prime',ui-monospace,monospace; font-variant-numeric:tabular-nums; color:var(--ink,#141414); white-space:nowrap; } .ds-loc { font-weight:400; color:var(--mute,#5c5f6a); } .ds-call-missing { border-color:var(--rubric,#b3261e); color:var(--rubric,#b3261e); } .ds-call .ds-ico { width:13px; height:13px; }"
+    },
+    {
+      "name": "Spine",
+      "kind": "custom",
+      "refersTo": "spine",
+      "description": "Lapis book spine with gilt bands and the call number set vertically.",
+      "html": "<div class=\"ds-spine\"><span class=\"ds-band\"></span><span class=\"ds-call\">ARE 1958</span></div>",
+      "css": ".ds-spine { display:flex; flex-direction:column; justify-content:space-between; align-items:center; width:56px; min-height:136px; padding:8px 0 10px; border-radius:4px; background:var(--lapis,#1e2f7a); } .ds-band { width:100%; height:3px; border-top:1px solid var(--gold,#c8a040); border-bottom:1px solid var(--gold,#c8a040); } .ds-call { writing-mode:vertical-rl; transform:rotate(180deg); padding:6px 1px; background:var(--paper,#fff); border:1px solid var(--ink,#141414); border-radius:2px; font:700 12px/18px 'Courier Prime',ui-monospace,monospace; color:var(--ink,#141414); }"
+    },
+    {
+      "name": "Step Bar",
+      "kind": "custom",
+      "refersTo": "step-current",
+      "description": "The three Reading steps; current has tint and a gilt underline, done a verdigris underline and check.",
+      "html": "<ol class=\"ds-steps\"><li class=\"ds-step ds-done\"><span class=\"ds-sname\"><svg class=\"ds-check\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M20 6 9 17l-5-5\"/></svg><span class=\"ds-num\">1</span>Free text</span><span class=\"ds-note\">412 words</span></li><li class=\"ds-step\" aria-current=\"step\"><span class=\"ds-sname\"><span class=\"ds-num\">2</span>Extraction</span><span class=\"ds-note\">needs ChatGPT</span></li><li class=\"ds-step\"><span class=\"ds-sname\"><span class=\"ds-num\">3</span>Probe</span><span class=\"ds-note\">needs ChatGPT</span></li></ol>",
+      "css": ".ds-steps { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); margin:0; padding:0; list-style:none; border:1px solid var(--line,#dedde3); border-radius:4px; overflow:hidden; font-family:'Public Sans',system-ui,sans-serif; color:var(--ink,#141414); } .ds-step { padding:10px 14px 9px; border-right:1px solid var(--line,#dedde3); border-bottom:3px solid transparent; } .ds-step:last-child { border-right:0; } .ds-sname { display:flex; align-items:center; gap:6px; font-size:14px; font-weight:600; } .ds-num { font-family:'Courier Prime',ui-monospace,monospace; font-weight:700; } .ds-note { display:block; font-size:13px; color:var(--mute,#5c5f6a); font-variant-numeric:tabular-nums; } .ds-done { border-bottom-color:var(--verdigris,#3e7c5a); } .ds-check { width:15px; height:15px; color:var(--verdigris,#3e7c5a); } .ds-step[aria-current=step] { background:var(--tint,#eef0f8); border-bottom-color:var(--gold,#c8a040); }"
+    },
+    {
+      "name": "Warning Notice",
+      "kind": "custom",
+      "refersTo": "notice-warning",
+      "description": "Red always arrives with an icon and words; stand-alone warnings sit on rubric wash.",
+      "html": "<div class=\"ds-notice\"><svg class=\"ds-ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3\"/><path d=\"M12 9v4\"/><path d=\"M12 17h.01\"/></svg><div><p class=\"ds-ntitle\">Missing for a correct Citation</p><p>The year of first publication and the publisher.</p></div></div>",
+      "css": ".ds-notice { display:flex; gap:10px; padding:12px 14px; border:1px solid var(--rubric-line,#e7c9c6); border-radius:4px; background:var(--rubric-wash,#fbeceb); font:400 14px/1.5 'Public Sans',system-ui,sans-serif; color:var(--ink,#141414); } .ds-notice p { margin:0; } .ds-notice .ds-ico { flex:none; width:18px; height:18px; margin-top:1px; color:var(--rubric,#b3261e); } .ds-ntitle { font-weight:600; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Call Numbers, embellished in Rubric & Lapis",
+    "overview": "**Creative North Star: \"Call Numbers, embellished in Rubric & Lapis\"**\n\nGlose is a library desk, not a file tree. Every Source wears a call number (three letters of the author's family name and the first-publication year, typed on a white label) that leads back to the page. The app is embellished the way old books are: at the edges, never in the text. A lapis rail holds the Sections like a bound spine; panels are white leaves on a near-white ground, each opened by a decorated initial and a small red pen flourish set in a hairline rule.\n\nThe mode is Operate. Density is calm and working: lapis marks the next step, panels that say what to do next when empty, data set plainly in Public Sans with tabular numerals. Ornament (Cinzel initials, the flourish, gilt bands, the gold current marker) lives on headings and chrome. Data, Note text and controls stay plain. The world refuses the category's file-tree-plus-editor arrangement in neutral grey, and it refuses dashboards and gamification.\n\nEvery string comes from the English and Danish catalogs (`i18n/en.ts`, `i18n/da.ts`; the lint rule `glose/no-untranslated-ui-text` enforces this), and every layout takes the longer Danish compounds without clipping.\n\nAI text is to carry rubric marks (a red pilcrow and margin glosses) by direction. No AI text exists in the build yet, so that treatment has no component here; design it with Jan when Notes arrive.",
+    "keyCharacteristics": [
+      "Lapis rail (96px) of large Section icons with labels under them; gold marks the current one.",
+      "White panels with hairline borders; each heading opens with a rubric or lapis Cinzel initial, alternating down a column, above a hairline with a rubric pen flourish in its middle.",
+      "Call numbers as typed white spine labels in Courier Prime with a 1px ink border.",
+      "Flat surfaces; depth comes from hairlines and the ground/paper step, not shadows.",
+      "Red is a signal with fixed jobs, never a decoration of data."
+    ],
+    "rules": [
+      {
+        "name": "The Rubric Rule",
+        "body": "Rubric red marks the decorated initials, the pen flourish and AI text. When red marks an error or missing data, it always comes with a warning icon and words; red alone never carries a meaning.",
+        "section": "colors"
+      },
+      {
+        "name": "The Gilt Marker Rule",
+        "body": "Gold says \"here\": the current Section, the current step, a spine's bands, focus on lapis. It is never used for text on paper or for decoration elsewhere.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Field Rule",
+        "body": "Lapis is the only large color field (rail, spine, the primary button). Panels and the page stay paper and ground.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Initial Rule",
+        "body": "Cinzel Decorative appears only as the first letter of a panel heading or the setup title, through `::first-letter`, so the heading text stays whole for screen readers. Never on data, buttons or body.",
+        "section": "typography"
+      },
+      {
+        "name": "The Typed Label Rule",
+        "body": "Courier Prime is for call numbers and step numbers only.",
+        "section": "typography"
+      },
+      {
+        "name": "The Danish Length Rule",
+        "body": "No layout depends on the length of English text. Heads, rows and button rows wrap; rail labels hyphenate and break anywhere; nothing truncates a label. Check every new screen in Danish.",
+        "section": "layout"
+      },
+      {
+        "name": "The Hairline Rule",
+        "body": "Panels separate by a 1px Hairline and a white leaf on Ground. Don't add resting shadows.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do put ornament (initials, flourish, gilt) on headings and chrome only.",
+      "Do alternate panel initials rubric and lapis down each column.",
+      "Do pair every red error or missing-data signal with a warning icon and words.",
+      "Do use Gilt only to mark the current place (Section, step) and focus on lapis.",
+      "Do give every Source its call number label wherever it is listed.",
+      "Do take every string from the EN/DA catalogs and check the layout in Danish.",
+      "Do keep Lapis buttons for the next step forward (Add Source, Continue, Start); other actions are ink-outlined secondary.",
+      "Do use tabular numerals for counts, years and call numbers."
+    ],
+    "donts": [
+      "Don't decorate data, Note text, inputs or buttons (no initials, flourishes or gilt there).",
+      "Don't use red alone to mean anything; color never carries a message by itself.",
+      "Don't add resting shadows or new fields of color beyond the lapis rail, spine and primary.",
+      "Don't use Cinzel Decorative beyond a single heading initial, or Courier Prime beyond call and step numbers.",
+      "Don't fix widths to English text, truncate labels, or block wrapping.",
+      "Don't build a file-tree-plus-editor arrangement in neutral grey, a busy dashboard, or gamification."
+    ]
+  }
+}
