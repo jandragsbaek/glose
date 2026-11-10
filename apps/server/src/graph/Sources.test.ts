@@ -112,8 +112,19 @@ it.layer(NodeServices.layer)("Sources", (it) => {
   );
 
   it.effect("keeps file names valid on Windows and refuses names that differ only in case", () =>
-    withGraph(({ sources }) =>
+    withGraph(({ folder, sources }) =>
       Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* fs.writeFileString(path.join(folder, "Kierkegaard 1843 Frygt og Bæven.MD"), "");
+        const takenByExtension = yield* sources
+          .create({
+            ...ARENDT,
+            familyName: "Kierkegaard",
+            title: "Frygt og Bæven",
+            firstPublished: 1843,
+          })
+          .pipe(Effect.flip);
         const heidegger = yield* sources.create({
           ...ARENDT,
           familyName: "Heidegger",
@@ -126,6 +137,7 @@ it.layer(NodeServices.layer)("Sources", (it) => {
 
         assert.strictEqual(heidegger.id, "Heidegger 1927 What is Being A B notes");
         assert.strictEqual(taken._tag, "SourceNameTaken");
+        assert.strictEqual(takenByExtension._tag, "SourceNameTaken");
       }),
     ),
   );

@@ -119,8 +119,10 @@ export const make = Effect.gen(function* () {
           .filter((part) => part !== null)
           .join(" "),
       );
-      const existing = yield* markdownNames(folder).pipe(Effect.mapError(storageError));
-      if (id === "" || existing.some((name) => sameFileName(name, id))) {
+      // Every entry counts, whatever its case or extension case: on macOS and Windows
+      // "Name.MD" and "name.md" are the same file.
+      const existing = yield* fs.readDirectory(folder).pipe(Effect.mapError(storageError));
+      if (id === "" || existing.some((entry) => sameFileName(entry, `${id}${MARKDOWN}`))) {
         return yield* new SourceNameTaken({ fileName: `${id}${MARKDOWN}` });
       }
       return yield* writeSource(folder, id, {
