@@ -1,0 +1,35 @@
+packages:
+  - apps/*
+  - oxlint-plugin-glose
+  - packages/*
+
+# Electron 44 has no install script; apps/desktop/scripts/ensure-electron.mjs fetches the binary.
+allowBuilds:
+  electron: false
+  electron-winstaller: false
+
+catalog:
+  "@effect/atom-react": 4.1.0
+  "@effect/platform-node": 4.1.0
+  "@effect/vitest": 4.1.0
+  "@types/node": ^24.0.0
+  effect: 4.1.0
+  typescript: ^6.0.0
+  # Vite+ ships its own Vite build; every `vite` dependency resolves to it.
+  vite: npm:@voidzero-dev/vite-plus-core@1.4.0
+  vite-plus: 1.4.0
+
+overrides:
+  "@effect/vitest>vitest": "-"
+  vite: "catalog:"
+  vite-plus: "catalog:"
+
+packageExtensions:
+  # Our patch makes @effect/vitest import vite-plus/test. A catalog: spec here
+  # resolves through the vite-plus override above.
+  "@effect/vitest@*":
+    dependencies:
+      vite-plus: "catalog:"
+
+patchedDependencies:
+  "@effect/vitest@4.1.0": patches/@effect__vitest@4.1.0.patch

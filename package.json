@@ -1,0 +1,28 @@
+{
+  "name": "glose",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare": "vp config --no-agent",
+    "dev": "vp run --parallel --filter @glose/server --filter @glose/web dev",
+    "dev:desktop": "vp run --parallel --filter @glose/server --filter @glose/web --filter @glose/desktop dev",
+    "build": "vp run --filter @glose/web build",
+    "build:desktop": "vp run --filter @glose/web --filter @glose/server --filter @glose/desktop build",
+    "start": "vp run --filter @glose/server start",
+    "dist:desktop": "pnpm build:desktop && pnpm --filter @glose/desktop dist",
+    "typecheck": "vp run -r --cache typecheck",
+    "test": "vp run -r test",
+    "lint": "vp lint --report-unused-disable-directives",
+    "fmt": "vp fmt",
+    "fmt:check": "vp fmt --check",
+    "check": "vp fmt --check && vp lint --report-unused-disable-directives && vp run -r --cache typecheck && vp run -r test"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "packageManager": "pnpm@12.16.1"
+}

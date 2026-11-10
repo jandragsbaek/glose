@@ -1,0 +1,32 @@
+{
+  "name": "@glose/desktop",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Glose desktop app",
+  "homepage": "https://github.com/jandragsbaek/glose",
+  "author": "Jan Dragsbaek <jan@dragsbaek.tech>",
+  "type": "module",
+  "main": "dist-electron/main.cjs",
+  "scripts": {
+    "dev": "vp pack && node scripts/launch-electron.mjs --dev",
+    "build": "vp pack",
+    "start": "node scripts/launch-electron.mjs",
+    "dist": "electron-builder --config electron-builder.yml",
+    "typecheck": "tsc --noEmit",
+    "test": "vp test run --config ../../vite.config.ts --dir ."
+  },
+  "devDependencies": {
+    "@effect/platform-node": "catalog:",
+    "@effect/vitest": "catalog:",
+    "@glose/contracts": "workspace:*",
+    "@glose/server": "workspace:*",
+    "@types/node": "catalog:",
+    "effect": "catalog:",
+    "electron": "44.10.1",
+    "electron-builder": "26.16.1",
+    "electron-updater": "^6.8.9",
+    "typescript": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "productName": "Glose"
+}

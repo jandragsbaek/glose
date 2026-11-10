@@ -6,11 +6,11 @@ Working notes from early conversations. Nothing here is final.
 
 The app has three sections with different rules for the AI.
 
-| Section | What it holds | May the AI write text? |
-|---|---|---|
-| **Graph** | Notes and rich notes (authors and so on), all interlinked. | Yes. AI text is marked so the human rewrites it later. |
+| Section              | What it holds                                                       | May the AI write text?                                              |
+| -------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| **Graph**            | Notes and rich notes (authors and so on), all interlinked.          | Yes. AI text is marked so the human rewrites it later.              |
 | **Writing projects** | Prose texts. Each project is isolated and is not part of the graph. | No. The AI only references and suggests. It never writes the prose. |
-| **Recall** | Quiz cards made from notes, scheduled by spaced repetition. | Yes. AI-written cards are marked, the same as notes. |
+| **Recall**           | Quiz cards made from notes, scheduled by spaced repetition.         | Yes. AI-written cards are marked, the same as notes.                |
 
 The core loop depends on the stage the user is in. Stages known so far:
 
@@ -46,12 +46,12 @@ The core loop depends on the stage the user is in. Stages known so far:
 
 The reading quiz and the recall quiz are different things with different goals.
 
-| | Reading quiz | Recall quiz |
-|---|---|---|
-| Goal | Gauge comprehension. Clarify and learn concepts. | Practise active recall. Keep retention high. |
-| When | While adding a source, once. | Repeatedly, on a schedule. |
-| Form | A conversation that adapts to the user's answers. | Fixed cards. |
-| Result | Understanding, and notes. | A new interval for each card. |
+|        | Reading quiz                                      | Recall quiz                                  |
+| ------ | ------------------------------------------------- | -------------------------------------------- |
+| Goal   | Gauge comprehension. Clarify and learn concepts.  | Practise active recall. Keep retention high. |
+| When   | While adding a source, once.                      | Repeatedly, on a schedule.                   |
+| Form   | A conversation that adapts to the user's answers. | Fixed cards.                                 |
+| Result | Understanding, and notes.                         | A new interval for each card.                |
 
 ## Storage
 
