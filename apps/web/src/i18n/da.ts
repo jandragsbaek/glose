@@ -58,7 +58,15 @@ export const da: Messages = {
       "Sproget i programmet. Noter og skriveprojekter kan være på alle sprog. Du kan ændre det senere under Indstillinger.",
     folderStep: "Graf-mappe",
     folderHint:
-      "Glose gemmer hver kilde og note som en Markdown-fil i denne mappe. Læg den i Dropbox eller et git-repository for at have en sikkerhedskopi.",
+      "Glose gemmer hver kilde og note som en Markdown-fil i denne mappe, og sine egne indstillinger i en skjult .glose-mappe i den. Flyt mappen, eller del den gennem Dropbox eller git, så følger grafen med.",
+    folderActions: {
+      create: "Start en ny graf",
+      open: "Åbn en eksisterende mappe",
+    },
+    folderActionHints: {
+      create: "Glose opretter en tom mappe på denne sti.",
+      open: "En graf, som du har flyttet, eller som nogen deler med dig, eller en mappe med Markdown-filer.",
+    },
     folderLabel: "Mappens sti",
     chatgptStep: "ChatGPT",
     chatgptHint:
@@ -67,7 +75,10 @@ export const da: Messages = {
     folderErrors: {
       "not-absolute": "Skriv mappens fulde sti, helt fra toppen af disken.",
       "not-a-folder": "Denne sti er en fil, ikke en mappe. Vælg en mappe.",
-      "cannot-create": "Glose kunne ikke oprette mappen. Vælg en mappe, som du må skrive i.",
+      "not-found": "Der er ingen mappe på denne sti. Vælg Start en ny graf for at oprette den.",
+      "not-empty":
+        "Mappen indeholder allerede filer. Vælg Åbn en eksisterende mappe for at bruge dem i Glose.",
+      "not-writable": "Glose kan ikke skrive i mappen. Vælg en mappe, som du må skrive i.",
     },
   },
   today: {

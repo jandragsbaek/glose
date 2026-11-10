@@ -32,7 +32,11 @@ const withGraph = <A, E>(
     const path = yield* Path.Path;
     const folder = path.join(dirs.homeDir, "Glose");
     return yield* Effect.gen(function* () {
-      yield* (yield* Settings.Settings).completeSetup({ language: "en", graphFolder: folder });
+      yield* (yield* Settings.Settings).completeSetup({
+        language: "en",
+        graphFolder: folder,
+        action: "create",
+      });
       return yield* test({ folder, sources: yield* Sources.Sources });
     }).pipe(Effect.provide(layerServices(dirs)));
   }).pipe(Effect.scoped);

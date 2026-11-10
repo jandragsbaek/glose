@@ -1,4 +1,4 @@
-import type { ReadingStep } from "@glose/contracts";
+import type { GraphFolderAction, GraphFolderUnavailable, ReadingStep } from "@glose/contracts";
 
 const numbers = new Intl.NumberFormat("en");
 const plurals = new Intl.PluralRules("en");
@@ -59,7 +59,15 @@ export const en = {
       "The language of the interface. Notes and Writing projects can be in any language. You can change this later in Settings.",
     folderStep: "Graph folder",
     folderHint:
-      "Glose keeps every Source and Note as a Markdown file in this folder. Put it in Dropbox or a git repository to back it up.",
+      "Glose keeps every Source and Note as a Markdown file in this folder, and its own settings in a hidden .glose folder inside it. Move the folder, or share it through Dropbox or git, and the Graph goes with it.",
+    folderActions: {
+      create: "Start a new Graph",
+      open: "Open an existing folder",
+    } satisfies Record<GraphFolderAction, string>,
+    folderActionHints: {
+      create: "Glose creates an empty folder at this path.",
+      open: "A Graph that you moved or that someone shares with you, or a folder of Markdown files.",
+    } satisfies Record<GraphFolderAction, string>,
     folderLabel: "Folder path",
     chatgptStep: "ChatGPT",
     chatgptHint:
@@ -68,8 +76,11 @@ export const en = {
     folderErrors: {
       "not-absolute": "Write the full path of the folder, starting from the top of the disk.",
       "not-a-folder": "This path is a file, not a folder. Choose a folder.",
-      "cannot-create": "Glose could not create this folder. Choose a folder that you may write to.",
-    },
+      "not-found": "There is no folder at this path. To make one, choose Start a new Graph.",
+      "not-empty":
+        "This folder already holds files. To use them in Glose, choose Open an existing folder.",
+      "not-writable": "Glose cannot write to this folder. Choose a folder that you may write to.",
+    } satisfies Record<GraphFolderUnavailable["reason"], string>,
   },
   today: {
     title: "Today",

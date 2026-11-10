@@ -4,7 +4,10 @@ import * as Schema from "effect/Schema";
 export const Language = Schema.Literals(["en", "da"]);
 export type Language = typeof Language.Type;
 
-/** App settings kept outside the Graph folder; null fields are not chosen yet. */
+/**
+ * Settings of this computer, kept outside the Graph folder; null fields are not chosen yet. The
+ * interface language is here so that two people who share one Graph can each read their own.
+ */
 export const Settings = Schema.Struct({
   language: Schema.NullOr(Language),
   /** Absolute path of the folder that holds the Graph's Markdown files. */
@@ -19,16 +22,34 @@ export const SettingsView = Schema.Struct({
 });
 export type SettingsView = typeof SettingsView.Type;
 
+/**
+ * Settings that travel with the Graph folder, in its hidden `.glose/settings.json`. None exist
+ * yet; the file marks the folder as a Graph. Unknown fields from a newer Glose are ignored.
+ */
+export const GraphSettings = Schema.Struct({});
+export type GraphSettings = typeof GraphSettings.Type;
+
+/** `create` starts an empty Graph; `open` uses a folder that exists, such as a moved Graph. */
+export const GraphFolderAction = Schema.Literals(["create", "open"]);
+export type GraphFolderAction = typeof GraphFolderAction.Type;
+
 export const CompleteSetup = Schema.Struct({
   language: Language,
   graphFolder: Schema.String,
+  action: GraphFolderAction,
 });
 
 export class GraphFolderUnavailable extends Schema.TaggedError<GraphFolderUnavailable>()(
   "GraphFolderUnavailable",
   {
     path: Schema.String,
-    reason: Schema.Literals(["not-absolute", "not-a-folder", "cannot-create"]),
+    reason: Schema.Literals([
+      "not-absolute",
+      "not-a-folder",
+      "not-found",
+      "not-empty",
+      "not-writable",
+    ]),
   },
 ) {}
 
