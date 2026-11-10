@@ -1,0 +1,130 @@
+# Ideas
+
+Working notes from early conversations. Nothing here is final.
+
+## Shape
+
+The app has three sections with different rules for the AI.
+
+| Section | What it holds | May the AI write text? |
+|---|---|---|
+| **Graph** | Notes and rich notes (authors and so on), all interlinked. | Yes. AI text is marked so the human rewrites it later. |
+| **Writing projects** | Prose texts. Each project is isolated and is not part of the graph. | No. The AI only references and suggests. It never writes the prose. |
+| **Recall** | Quiz cards made from notes, scheduled by spaced repetition. | Yes. AI-written cards are marked, the same as notes. |
+
+The core loop depends on the stage the user is in. Stages known so far:
+
+1. **Reading** (graph) — add a book (a core reference) and turn it into notes.
+2. **Writing** (writing projects) — to be described.
+3. More stages to come (recall).
+
+## Sources
+
+- Every note in the graph must have a source.
+- Most sources are books. YouTube videos and other kinds of sources also count.
+- A writing project can read from the graph and use notes as references. The link is one-way: the graph does not contain the project.
+- Because every note has a source, a reference from a writing project can be followed back to the original source.
+
+## Writing projects
+
+- There is one type of project. Practice writing and university assignments use the same thing.
+- A project holds one or more files. Files can be re-ordered and joined together.
+- A project ends in an output: a PDF, or a post published to a blog or website.
+- Jan's use: practise writing and publish to his own website/blog.
+- Girlfriend's use: university assignments, most likely as PDF.
+- Writing practice has no curriculum and no set exercises. Jan writes about whatever inspires him that day. The practice is the writing itself, with the AI suggesting and referencing.
+
+## Recall
+
+- A separate section that quizzes the user on cards.
+- Scheduling follows the modern Anki approach (FSRS): the user's answers decide how long until a card comes back.
+- Cards can be extracted from notes.
+- Cards are editable.
+- A card shows whether it is AI-written or human-written, the same as notes.
+
+## Two kinds of quiz
+
+The reading quiz and the recall quiz are different things with different goals.
+
+| | Reading quiz | Recall quiz |
+|---|---|---|
+| Goal | Gauge comprehension. Clarify and learn concepts. | Practise active recall. Keep retention high. |
+| When | While adding a source, once. | Repeatedly, on a schedule. |
+| Form | A conversation that adapts to the user's answers. | Fixed cards. |
+| Result | Understanding, and notes. | A new interval for each card. |
+
+## References in writing
+
+Correct references are a key part of the writing section. The tool will be used for university work, where references must be correct.
+
+- The reference system is not known yet, so the tool must not be built around one style. The style is a setting of the project and can change without rewriting the text.
+- A reference in the prose points to a note or a source, not to typed-out citation text. The tool builds the citation, footnote and bibliography from the source data.
+- This puts a demand on sources: each one needs complete data (author, title, year, edition, publisher, translator and so on), and a reference needs an exact location such as a page number.
+- The tool should warn when a reference cannot be made correct, for example when a source lacks a year or a quote lacks a page number.
+- Quotes must match the source word for word.
+- Helping with references is inside the AI's permitted role in writing: it references, it does not write the prose.
+
+## AI-written text in the graph
+
+- The AI may write notes and drafts of rich notes such as author notes.
+- Every piece of AI-written text is clearly marked in the Markdown itself.
+- The goal is that the human eventually rewrites all of it. The marks make the remaining work visible.
+
+## Stage 1: Reading
+
+Trigger: the user is reading, or has finished, a book and adds it as a core reference.
+
+### Steps
+
+1. **Free text.** The user writes freely about the book. This step is optional; the user says when they are done or skips it.
+2. **Assisted extraction.** The AI helps the user pull out the core beliefs and points of the book.
+3. **Measure.** Like learnharness, the AI quizzes the user to find what they already know, what they do not know, and what still must be learned.
+
+### Result
+
+A set of notes. Each note should be traceable to the user's free text or to the book itself.
+
+### Notes
+
+- Format: Markdown files, Obsidian-like.
+- Default size: Zettelkasten. Small, one idea each, heavily interlinked.
+- Richer notes are allowed where the subject needs it. An author note, for example, can be long and hold images.
+
+### AI provider
+
+ChatGPT first. Both users already have access to it.
+
+## Reasoning as part of the answer
+
+Taken from learnharness: the user thinks out loud, by typing or by dictation, and the reasoning is recorded and transcribed.
+
+- The reasoning is part of the answer. The AI judges both the reasoning and the end result.
+- Sometimes the reasoning is right and the end result is wrong, or the other way round. A right/wrong mark alone hides this.
+- The reasoning shows where the misunderstanding is, so the AI can address that exact point.
+- It belongs to the reading quiz. Recall stays quick questions and does not require it.
+
+## Everything is kept
+
+- All sessions are recorded and kept: quiz conversations, transcribed reasoning, and answers.
+- Kept reasoning is the user's own words, so it can be raw material for notes.
+- Kept records show progress over time.
+
+## Open questions
+
+- Is a note that the AI arranges from the user's own transcript marked as AI text or as human text?
+
+- How is AI text marked: per note, per block, or inline?
+- What is the source of a note that holds the user's own idea, or that combines several notes?
+- Is the exact location (page number, timestamp) required on every note, or only when the note is cited?
+- Are session records kept as transcripts only, or with the audio?
+- Does each user have a separate graph and separate records?
+- Which reference system does the university require?
+- How do references appear in a blog post: links, footnotes, or nothing?
+- How does the tool check that a quote matches the source when it does not have the full text of the book?
+- Which suggestions may the AI make in a writing project: other words, weak sentences, questions, a review at the end?
+- When a note changes, what happens to the cards made from it?
+- Does the reading quiz hand anything to recall (for example, suggested cards), or are cards only made from notes?
+- How does publishing to a blog work: export a file, or push directly to the site?
+- Does the AI see the book text, or only the user's free text plus what the model already knows?
+- What happens to the "unknown" items found by the quiz? Do they become drill cards?
+- What exactly are the richer note types (author, work, period, concept)?
