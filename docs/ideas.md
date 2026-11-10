@@ -6,15 +6,15 @@ Working notes from early conversations. Nothing here is final.
 
 The app has three sections with different rules for the AI.
 
-| Section              | What it holds                                                       | May the AI write text?                                              |
-| -------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| **Graph**            | Notes and rich notes (authors and so on), all interlinked.          | Yes. AI text is marked so the human rewrites it later.              |
-| **Writing projects** | Prose texts. Each project is isolated and is not part of the graph. | No. The AI only references and suggests. It never writes the prose. |
-| **Recall**           | Quiz cards made from notes, scheduled by spaced repetition.         | Yes. AI-written cards are marked, the same as notes.                |
+| Section              | What it holds                                                               | May the AI write text?                                              |
+| -------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| **Graph**            | Notes and rich notes (authors and so on), all interlinked.                  | Yes. AI text is marked so the human rewrites it later.              |
+| **Writing projects** | Prose texts. Each writing project is isolated and is not part of the graph. | No. The AI only references and suggests. It never writes the prose. |
+| **Recall**           | Quiz cards made from notes, scheduled by spaced repetition.                 | Yes. AI-written cards are marked, the same as notes.                |
 
 The core loop depends on the stage the user is in. Stages known so far:
 
-1. **Reading** (graph) — add a book (a core reference) and turn it into notes.
+1. **Reading** (graph) — add a book (a source) and turn it into notes.
 2. **Writing** (writing projects) — to be described.
 3. More stages to come (recall).
 
@@ -22,14 +22,14 @@ The core loop depends on the stage the user is in. Stages known so far:
 
 - Every note in the graph must have a source.
 - Most sources are books. YouTube videos and other kinds of sources also count.
-- A writing project can read from the graph and use notes as references. The link is one-way: the graph does not contain the project.
+- A writing project can read from the graph and use notes as references. The link is one-way: the graph does not contain the writing project.
 - Because every note has a source, a reference from a writing project can be followed back to the original source.
 
 ## Writing projects
 
-- There is one type of project. Practice writing and university assignments use the same thing.
-- A project holds one or more files. Files can be re-ordered and joined together.
-- A project ends in a Publication: a PDF, or a post published to a blog or website.
+- There is one type of writing project. Practice writing and university assignments use the same thing.
+- A writing project holds one or more files. Files can be re-ordered and joined together.
+- A writing project ends in a Publication: a PDF, or a post published to a blog or website.
 - Jan's use: practise writing and publish to his own website/blog.
 - Girlfriend's use: university assignments, most likely as PDF.
 - Writing practice has no curriculum and no set exercises. Jan writes about whatever inspires him that day. The practice is the writing itself, with the AI suggesting and referencing.
@@ -68,7 +68,7 @@ The Probe and Review are different things with different goals.
 
 Correct references are a key part of the writing section. The tool will be used for university work, where references must be correct.
 
-- The reference system is not known yet, so the tool must not be built around one style. The style is a setting of the project and can change without rewriting the text.
+- The reference system is not known yet, so the tool must not be built around one style. The style is a setting of the writing project and can change without rewriting the text.
 - A reference in the prose points to a note or a source, not to typed-out citation text. The tool builds the citation, footnote and bibliography from the source data.
 - This puts a demand on sources: each one needs complete data (author, title, year, edition, publisher, translator and so on), and a reference needs an exact location such as a page number.
 - The tool should warn when a reference cannot be made correct, for example when a source lacks a year or a quote lacks a page number.
@@ -83,7 +83,7 @@ Correct references are a key part of the writing section. The tool will be used 
 
 ## Stage 1: Reading
 
-Trigger: the user is reading, or has finished, a book and adds it as a core reference.
+Trigger: the user is reading, or has finished, a book and adds it as a source.
 
 ### Steps
 
