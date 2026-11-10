@@ -59,6 +59,9 @@ The reading quiz and the recall quiz are different things with different goals.
 - The reason: plain files are extremely easy to store, back up and version with Dropbox or git.
 - The files are the truth. Anything else the app keeps (an index, a search database) must be rebuildable from the files.
 - References, AI marks and links must therefore be expressed in the Markdown itself, in a form that still reads well in any other editor.
+- The folder structure is mostly flat, as Obsidian practice recommends. Structure comes from links, not from folders.
+- Notes link to each other with wikilinks (`[[note name]]`).
+- The exact layout is not fixed now. It will be worked out along the way.
 
 ## References in writing
 
@@ -100,6 +103,11 @@ A set of notes. Each note should be traceable to the user's free text or to the 
 ### AI provider
 
 ChatGPT first. Both users already have access to it.
+
+- Each user signs in with their own ChatGPT subscription. No API key.
+- learnharness already does this ("Sign in with ChatGPT", an OAuth sign-in whose callback is on the user's own machine), so there is a working example to study.
+- The experience is agentic, like learnharness: the AI runs a session, asks questions, reads the graph and acts through tools, instead of answering one prompt at a time.
+- The AI rules of each section can be enforced by the tools the agent gets there. In a writing project the agent has no tool that writes prose.
 
 ## Reasoning as part of the answer
 
