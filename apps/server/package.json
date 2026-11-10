@@ -1,0 +1,24 @@
+{
+  "name": "@glose/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/bin.ts",
+    "build": "vp pack",
+    "start": "NODE_ENV=production GLOSE_WEB_DIST=../web/dist node src/bin.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vp test run --config ../../vite.config.ts --dir ."
+  },
+  "dependencies": {
+    "@effect/platform-node": "catalog:",
+    "@glose/contracts": "workspace:*",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@effect/vitest": "catalog:",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}

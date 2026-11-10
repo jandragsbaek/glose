@@ -1,0 +1,36 @@
+appId: tech.dragsbaek.glose
+productName: Glose
+# The workspace name (@glose/desktop) would become the executable and cache folder name.
+extraMetadata:
+  name: glose
+directories:
+  output: release
+# main.cjs is self-contained; nothing is read from node_modules at runtime.
+files:
+  - dist-electron/**/*
+  - package.json
+npmRebuild: false
+# The server runs as its own process, so it and the built web app sit outside app.asar.
+extraResources:
+  - from: ../server/dist
+    to: server/dist
+    filter:
+      - bin.mjs
+  - from: ../web/dist
+    to: web/dist
+mac:
+  # The zip is what the updater downloads; the dmg is the first install.
+  target:
+    - dmg
+    - zip
+win:
+  target:
+    - nsis
+linux:
+  target:
+    - AppImage
+# The app reads its updates from the releases of this repository.
+publish:
+  - provider: github
+    owner: jandragsbaek
+    repo: glose
