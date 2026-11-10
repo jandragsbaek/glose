@@ -1,5 +1,6 @@
 import {
-  GraphFolderUnavailable,
+  type GraphFolderAction,
+  type GraphFolderUnavailable,
   type Language,
   Settings as SettingsData,
   type SettingsView,
@@ -13,6 +14,7 @@ import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 
 import * as ServerConfig from "../config.ts";
+import * as GraphFolder from "../graph/GraphFolder.ts";
 import { writeFileAtomic } from "../storage.ts";
 
 export class Settings extends Context.Service<
@@ -20,10 +22,11 @@ export class Settings extends Context.Service<
   {
     readonly get: Effect.Effect<SettingsView, StorageError>;
     readonly setLanguage: (language: Language) => Effect.Effect<SettingsView, StorageError>;
-    /** Creates the Graph folder when it does not exist yet. */
+    /** Creates a new Graph folder or opens an existing one, then remembers it on this computer. */
     readonly completeSetup: (input: {
       readonly language: Language;
       readonly graphFolder: string;
+      readonly action: GraphFolderAction;
     }) => Effect.Effect<SettingsView, GraphFolderUnavailable | StorageError>;
   }
 >()("glose/Settings") {}
@@ -55,20 +58,7 @@ export const make = Effect.gen(function* () {
 
   const view = (settings: SettingsData): SettingsView => ({ settings, suggestedGraphFolder });
 
-  const ensureFolder = Effect.fn("Settings.ensureFolder")(function* (graphFolder: string) {
-    const unavailable = (reason: GraphFolderUnavailable["reason"]) =>
-      new GraphFolderUnavailable({ path: graphFolder, reason });
-    if (!path.isAbsolute(graphFolder)) return yield* unavailable("not-absolute");
-    const exists = yield* fs.exists(graphFolder).pipe(Effect.orElseSucceed(() => false));
-    if (exists) {
-      const info = yield* fs.stat(graphFolder).pipe(Effect.mapError(storageError));
-      if (info.type !== "Directory") return yield* unavailable("not-a-folder");
-      return;
-    }
-    yield* fs
-      .makeDirectory(graphFolder, { recursive: true })
-      .pipe(Effect.mapError(() => unavailable("cannot-create")));
-  });
+  const graphFolders = GraphFolder.make(fs, path);
 
   return Settings.of({
     get: read.pipe(Effect.map(view)),
@@ -77,9 +67,13 @@ export const make = Effect.gen(function* () {
       yield* write(next);
       return view(next);
     }),
-    completeSetup: Effect.fn("Settings.completeSetup")(function* ({ language, graphFolder }) {
+    completeSetup: Effect.fn("Settings.completeSetup")(function* ({
+      language,
+      graphFolder,
+      action,
+    }) {
       const folder = graphFolder.trim();
-      yield* ensureFolder(folder);
+      yield* graphFolders[action](folder);
       const next = { language, graphFolder: path.resolve(folder) };
       yield* write(next);
       return view(next);

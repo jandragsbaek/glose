@@ -43,7 +43,7 @@ pnpm dist:desktop   # installer for this platform, in apps/desktop/release
 | `GLOSE_WEB_DIST`       | unset       | Built web app to serve; the desktop app sets it     |
 | `GLOSE_VERSION`        | server's    | Version the server reports; the desktop app sets it |
 | `GLOSE_DEV_SERVER_URL` | unset       | Makes the desktop app load this URL (dev)           |
-| `GLOSE_DATA_DIR`       | OS app data | Folder for app settings (`settings.json`)           |
+| `GLOSE_DATA_DIR`       | OS app data | Folder for computer settings (`settings.json`)      |
 
 ## How it fits together
 

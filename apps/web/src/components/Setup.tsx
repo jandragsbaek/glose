@@ -1,5 +1,5 @@
 import { useAtomSet } from "@effect/atom-react";
-import type { Language, SettingsView } from "@glose/contracts";
+import type { GraphFolderAction, Language, SettingsView } from "@glose/contracts";
 import * as Cause from "effect/Cause";
 import * as Exit from "effect/Exit";
 import * as Option from "effect/Option";
@@ -12,6 +12,8 @@ import { completeSetupAtom, KEYS } from "../state/graph.ts";
 import { Notice, Panel } from "./ui.tsx";
 
 type FolderError = keyof Messages["setup"]["folderErrors"] | "storage";
+
+const FOLDER_ACTIONS: ReadonlyArray<GraphFolderAction> = ["create", "open"];
 
 /** The first start: language, Graph folder, and the ChatGPT step that cannot run yet. */
 export function Setup({
@@ -41,6 +43,7 @@ function SetupForm({
   const t = useT();
   const folderId = useId();
   const errorId = useId();
+  const [action, setAction] = useState<GraphFolderAction>("create");
   const [folder, setFolder] = useState(view.suggestedGraphFolder);
   const [error, setError] = useState<FolderError | null>(null);
   const [busy, setBusy] = useState(false);
@@ -50,7 +53,7 @@ function SetupForm({
     event.preventDefault();
     setBusy(true);
     const exit = await completeSetup({
-      payload: { language, graphFolder: folder },
+      payload: { language, graphFolder: folder, action },
       reactivityKeys: KEYS.settings,
     });
     setBusy(false);
@@ -99,10 +102,31 @@ function SetupForm({
 
           <Panel title={t.setup.folderStep} initial="lapis">
             <div className="panel__body field">
+              <p className="field__hint">{t.setup.folderHint}</p>
+              <fieldset className="fieldset" style={{ display: "block" }}>
+                <legend className="sr-only">{t.setup.folderStep}</legend>
+                <div className="choice-list">
+                  {FOLDER_ACTIONS.map((option) => (
+                    <label key={option} className="choice">
+                      <input
+                        type="radio"
+                        name="setup-folder-action"
+                        value={option}
+                        checked={action === option}
+                        onChange={() => {
+                          setAction(option);
+                          setError(null);
+                        }}
+                      />
+                      <span>{t.setup.folderActions[option]}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
               <label className="field__label" htmlFor={folderId}>
                 {t.setup.folderLabel}
               </label>
-              <p className="field__hint">{t.setup.folderHint}</p>
+              <p className="field__hint">{t.setup.folderActionHints[action]}</p>
               <input
                 id={folderId}
                 className="input"

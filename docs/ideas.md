@@ -30,10 +30,21 @@ Working notes from early conversations. Nothing here is final.
 
 ## First start
 
-- A short setup: interface language, Graph folder (suggested: `Glose` in the home folder; created
-  if missing), and a ChatGPT step that says honestly that the connection does not exist yet.
-- App settings (language, Graph folder) live in a `settings.json` in the OS's app data folder,
-  outside the Graph. `GLOSE_DATA_DIR` overrides the folder.
+- A short setup: interface language, Graph folder, and a ChatGPT step that says honestly that the
+  connection does not exist yet.
+- The Graph folder works like an Obsidian vault. The setup either starts a new Graph (suggested:
+  `Glose` in the home folder; the folder must be missing or empty) or opens a folder that exists.
+  An existing Graph opens with its own settings; any other folder (Markdown from another editor,
+  say) becomes a Graph as it is.
+- Graph settings travel with the folder, in a hidden `.glose/settings.json`. Moving the folder or
+  sharing it through Dropbox or git takes the settings along. No Graph settings exist yet; the file
+  marks the folder as a Graph.
+- Computer settings stay outside the Graph, in a `settings.json` in the OS's app data folder: the
+  path of the open Graph folder and the interface language. The language is per computer so that
+  two people who share one Graph each read the interface in their own language.
+  `GLOSE_DATA_DIR` overrides the folder.
+- Not built yet: noticing a Graph folder that moved or went missing, a native folder picker, and
+  switching between Graphs.
 
 ## Shape
 
