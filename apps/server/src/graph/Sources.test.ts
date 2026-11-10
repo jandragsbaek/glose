@@ -82,6 +82,10 @@ it.layer(NodeServices.layer)("Sources", (it) => {
           "# The leap of faith\n",
         );
         yield* fs.writeFileString(path.join(folder, "Broken.md"), "---\nglose: [source\n---\n");
+        yield* fs.writeFileString(
+          path.join(folder, "No author.md"),
+          '---\nglose: source\nauthor-family: ""\ntitle: Anonymous\n---\n',
+        );
 
         const listed = yield* sources.list;
 

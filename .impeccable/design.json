@@ -139,6 +139,21 @@
           "oklch(95% 0.007 22)"
         ]
       },
+      "rubric-line": {
+        "role": "tertiary",
+        "displayName": "Rubric Line",
+        "canonical": "#e7c9c6",
+        "tonalRamp": [
+          "oklch(15% 0.007 22)",
+          "oklch(26% 0.010 22)",
+          "oklch(38% 0.012 22)",
+          "oklch(49% 0.015 22)",
+          "oklch(61% 0.015 22)",
+          "oklch(72% 0.012 22)",
+          "oklch(84% 0.010 22)",
+          "oklch(95% 0.007 22)"
+        ]
+      },
       "verdigris": {
         "role": "tertiary",
         "displayName": "Verdigris",
@@ -407,7 +422,7 @@
       "kind": "custom",
       "refersTo": "call-number",
       "description": "Typed white spine label; a missing year turns it rubric with an icon and a question mark.",
-      "html": "<span class=\"ds-call\">ARE 1958 <span class=\"ds-loc\">· p. 79</span></span> <span class=\"ds-call ds-call-missing\" aria-label=\"Call number KIE ?, year missing\"><svg class=\"ds-ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3\"/><path d=\"M12 9v4\"/><path d=\"M12 17h.01\"/></svg>KIE ?</span>",
+      "html": "<span class=\"ds-call\">ARE 1958 <span class=\"ds-loc\">\u00b7 p. 79</span></span> <span class=\"ds-call ds-call-missing\" aria-label=\"Call number KIE ?, year missing\"><svg class=\"ds-ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3\"/><path d=\"M12 9v4\"/><path d=\"M12 17h.01\"/></svg>KIE ?</span>",
       "css": ".ds-call { display:inline-flex; align-items:center; gap:6px; padding:1px 7px; background:var(--paper,#fff); border:1px solid var(--ink,#141414); border-radius:2px; font:700 12px/18px 'Courier Prime',ui-monospace,monospace; font-variant-numeric:tabular-nums; color:var(--ink,#141414); white-space:nowrap; } .ds-loc { font-weight:400; color:var(--mute,#5c5f6a); } .ds-call-missing { border-color:var(--rubric,#b3261e); color:var(--rubric,#b3261e); } .ds-call .ds-ico { width:13px; height:13px; }"
     },
     {

@@ -1,4 +1,4 @@
-import { ReadingStep, type Source, type SourceDetails } from "@glose/contracts";
+import { ReadingStep, type Source, SourceDetails } from "@glose/contracts";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as Yaml from "yaml";
@@ -25,6 +25,7 @@ const SourceFrontmatter = Schema.Struct({
   "reading-step": Schema.optionalKey(ReadingStep),
 });
 const decodeFrontmatter = Schema.decodeUnknownOption(SourceFrontmatter);
+const decodeDetails = Schema.decodeUnknownOption(SourceDetails);
 
 const text = (value: string | number | null | undefined) =>
   value === null || value === undefined || String(value).trim() === ""
@@ -47,18 +48,25 @@ export const parseSourceFile = (markdown: string): Option.Option<SourceFileConte
   const match = FRONTMATTER.exec(markdown);
   if (!match) return Option.none();
   return decodeFrontmatter(parseYaml(match[1] ?? "")).pipe(
-    Option.map((data) => ({
-      familyName: String(data["author-family"]).trim(),
-      givenName: text(data["author-given"]),
-      title: String(data.title).trim(),
-      firstPublished: data["first-published"] ?? null,
-      edition: text(data.edition),
-      editionYear: data["edition-year"] ?? null,
-      publisher: text(data.publisher),
-      translator: text(data.translator),
-      readingStep: data["reading-step"] ?? "free-text",
-      freeText: (match[2] ?? "").replace(/^\r?\n/, "").trimEnd(),
-    })),
+    Option.flatMap((data) =>
+      // The same rules as the RPC: a file that breaks them (an empty author, say) is skipped.
+      decodeDetails({
+        familyName: String(data["author-family"]),
+        givenName: text(data["author-given"]),
+        title: String(data.title),
+        firstPublished: data["first-published"] ?? null,
+        edition: text(data.edition),
+        editionYear: data["edition-year"] ?? null,
+        publisher: text(data.publisher),
+        translator: text(data.translator),
+      }).pipe(
+        Option.map((details) => ({
+          ...details,
+          readingStep: data["reading-step"] ?? "free-text",
+          freeText: (match[2] ?? "").replace(/^\r?\n/, "").trimEnd(),
+        })),
+      ),
+    ),
   );
 };
 

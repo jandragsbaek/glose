@@ -69,7 +69,7 @@ export const make = Effect.gen(function* () {
   const markdownNames = Effect.fn("Sources.markdownNames")(function* (folder: string) {
     const entries = yield* fs.readDirectory(folder);
     return entries
-      .filter((entry) => entry.toLowerCase().endsWith(MARKDOWN))
+      .filter((entry) => entry.endsWith(MARKDOWN))
       .map((entry) => entry.slice(0, -MARKDOWN.length));
   });
 
