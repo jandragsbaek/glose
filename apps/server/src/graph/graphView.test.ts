@@ -34,6 +34,7 @@ describe("buildGraphView", () => {
         title: "The Human Condition",
         sourceId: null,
         body: "Start at [[Natality]].",
+        aiText: false,
       },
       {
         id: "Inbox",
@@ -41,6 +42,7 @@ describe("buildGraphView", () => {
         title: "Inbox",
         sourceId: null,
         body: "Written in another editor.",
+        aiText: false,
       },
       {
         id: "Natality",
@@ -48,6 +50,7 @@ describe("buildGraphView", () => {
         title: "Natality",
         sourceId: "Arendt 1958 The Human Condition",
         body: "Beginnings.",
+        aiText: false,
       },
       {
         id: "Plurality",
@@ -55,6 +58,7 @@ describe("buildGraphView", () => {
         title: "Plurality",
         sourceId: "Arendt 1958 The Human Condition",
         body: "Many.",
+        aiText: false,
       },
     ]);
   });
@@ -98,6 +102,16 @@ describe("buildGraphView", () => {
     ]);
 
     assert.deepStrictEqual(view.links, []);
+  });
+
+  it("finds AI text by either AI mark, but not a callout inside code", () => {
+    const aiText = (markdown: string) => buildGraphView([{ name: "N", markdown }]).nodes[0]?.aiText;
+
+    assert.isTrue(aiText(["---", "glose: note", "ai: true", "---", "", "All of it."].join("\n")));
+    assert.isTrue(aiText(["Mine.", "", "> [!AI]- Folded", "> The AI's."].join("\n")));
+    assert.isTrue(aiText(["## Early life", "> [!ai-part]", "> The AI's."].join("\n")));
+    assert.isFalse(aiText(["---", "ai: false", "---", "", "> [!note]", "> Mine."].join("\n")));
+    assert.isFalse(aiText(["```", "> [!ai]", "```", "Write `> [!ai]` to mark it."].join("\n")));
   });
 
   it("finds a file for every wikilink in the demo Graph", () => {

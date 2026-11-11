@@ -15,7 +15,7 @@ import {
 } from "../components/ui.tsx";
 import { missingDetails } from "../domain/source.ts";
 import { useT } from "../i18n/I18n.tsx";
-import { sourcesAtom } from "../state/graph.ts";
+import { graphAtom, sourcesAtom } from "../state/graph.ts";
 
 /** The date is read when Today is opened, not on every render. */
 export const Route = createFileRoute("/")({
@@ -57,11 +57,7 @@ function Today() {
               <p className="empty">{t.today.writingEmpty}</p>
             </div>
           </Panel>
-          <Panel title={t.today.aiText} initial="rubric">
-            <div className="panel__body">
-              <p className="empty">{t.today.aiTextEmpty}</p>
-            </div>
-          </Panel>
+          <NotesWithAiText />
         </div>
       </div>
     </Page>
@@ -102,6 +98,54 @@ function SourcesInProgress() {
               </ul>
             </div>
           )}
+        </Panel>
+      );
+    },
+  });
+}
+
+/** Few enough to take in at a glance; the rest wait in the Graph. */
+const AI_TEXT_SHOWN = 8;
+
+/** Every Note that holds AI text, until the user rewrites it in their own words. */
+function NotesWithAiText() {
+  const t = useT();
+  const graph = useAtomValue(graphAtom);
+  const refresh = useAtomRefresh(graphAtom);
+  return AsyncResult.matchWithError(graph, {
+    onInitial: () => <SkeletonPanel />,
+    onError: () => <StorageProblem onRetry={refresh} />,
+    onDefect: () => <StorageProblem onRetry={refresh} />,
+    onSuccess: ({ value }) => {
+      const notes = value.nodes
+        .filter((node) => node.kind === "note" && node.aiText)
+        .sort((a, b) => a.title.localeCompare(b.title));
+      return (
+        <Panel
+          title={t.today.aiText}
+          initial="rubric"
+          meta={notes.length === 0 ? undefined : t.today.aiTextCount(notes.length)}
+        >
+          <div className="panel__body">
+            {notes.length === 0 ? (
+              <p className="empty">{t.today.aiTextEmpty}</p>
+            ) : (
+              <>
+                <ul className="rows">
+                  {notes.slice(0, AI_TEXT_SHOWN).map((note) => (
+                    <li key={note.id}>
+                      <Link to="/graph" search={{ node: note.id }} className="rows__title">
+                        {note.title}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+                {notes.length > AI_TEXT_SHOWN ? (
+                  <p className="empty">{t.today.aiTextMore(notes.length - AI_TEXT_SHOWN)}</p>
+                ) : null}
+              </>
+            )}
+          </div>
         </Panel>
       );
     },

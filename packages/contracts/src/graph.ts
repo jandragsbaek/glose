@@ -17,6 +17,8 @@ export const GraphNode = Schema.Struct({
   sourceId: Schema.NullOr(Schema.String),
   /** The Markdown after the frontmatter: a Note's text, or a Source's Free text. */
   body: Schema.String,
+  /** The file holds AI text: an AI mark in its frontmatter (`ai: true`) or in its text. */
+  aiText: Schema.Boolean,
 });
 export type GraphNode = typeof GraphNode.Type;
 
@@ -52,3 +54,17 @@ export const parseWikilink = (
 
 /** Two names that differ only in case name the same file on macOS and Windows. */
 export const linkKey = (name: string): string => name.normalize("NFC").toLocaleLowerCase("und");
+
+/**
+ * The AI mark on AI text, an Obsidian callout: `> [!ai]` on paragraphs, `> [!ai-part]` on all
+ * the text of a Part, under its heading. Group 1 is the kind; group 2 a title, which is AI text.
+ * The heading stays outside the callout, since Obsidian cannot link to a heading inside one.
+ */
+export const AI_CALLOUT = /^[ \t]*>[ \t]*\[!ai(-part)?\][-+]?(?:[ \t]+(.*?))?[ \t]*$/i;
+
+/** Whether Markdown holds an AI mark outside code, where a callout is shown as written. */
+export const hasAiCallout = (markdown: string): boolean =>
+  markdown
+    .replace(MARKDOWN_CODE, "")
+    .split(/\r?\n/)
+    .some((line) => AI_CALLOUT.test(line));

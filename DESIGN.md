@@ -203,9 +203,8 @@ Every string comes from the English and Danish catalogs (`i18n/en.ts`, `i18n/da.
 rule `glose/no-untranslated-ui-text` enforces this), and every layout takes the longer Danish
 compounds without clipping.
 
-AI text is to carry rubric marks (a red pilcrow and margin glosses) by direction. No AI text
-exists in the build yet, so that treatment has no component here; design it with Jan when
-Notes arrive.
+AI text carries rubric marks at its edge (a red pilcrow, a gloss and a rule) while the text
+itself stays ink; see the AI Text component.
 
 **Key Characteristics:**
 
@@ -239,7 +238,7 @@ three small pigments (gold, rubric red, verdigris) each with one job.
 
 ### Tertiary
 
-- **Rubric** (rubric): decorated initials, the pen flourish, AI text (by direction), and
+- **Rubric** (rubric): decorated initials, the pen flourish, AI text (the AI Text component), and
   signals of missing data or error, always paired with an icon and words.
 - **Rubric Wash** (rubric-wash): the background of a stand-alone warning notice.
 - **Rubric Line** (rubric-line): the border of a stand-alone warning notice.
@@ -416,6 +415,21 @@ at the foot. It stands beside the current Source and its bibliographic data.
 The three Reading steps in one bordered strip, divided by Hairlines. Each step: a Courier step
 number, a Label name, a Meta note. Current: Lapis Tint with a 3px Gilt underline and
 `aria-current`. Done: a 3px Verdigris underline and a Verdigris check.
+
+### AI Text (signature)
+
+AI text in a Note. The text stays Ink and Body type; the mark sits at the edge, and it says how
+much the AI wrote.
+
+- **Paragraphs:** a 2px Rubric rule on the left with 12px padding, and above the text a Rubric
+  gloss (12px, 600, 0.06em tracking, uppercase) opened by a ¶ pilcrow: "AI paragraph" ("AI-afsnit").
+- **A whole Part or Note:** a 3px Rubric rule, and a gloss opened by a § section sign: "AI-written
+  Part" or "AI-written Note" ("AI-skrevet del", "AI-skrevet note"). For a Part, the rule and the
+  gloss cover its heading too.
+- The block is a group named by its gloss, so a screen reader hears the words, not only the
+  colour.
+
+Note headings in the side panel: 700 15px, 18px above when they follow other text.
 
 ### Loading
 

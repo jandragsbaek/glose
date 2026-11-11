@@ -1079,10 +1079,62 @@ a:hover {
   margin-bottom: 4px;
 }
 
-.graph__text p + p,
-.graph__text p + ul,
-.graph__text ul + p {
+.graph__text > * + *,
+.ai-text > * + * {
   margin-top: 10px;
+}
+
+/*
+ * AI text keeps ink, with its mark at the edge: a rubric rule beside it and a rubric gloss
+ * that says how much the AI wrote. A whole Part or Note has a heavier rule and a §; paragraphs
+ * have a ¶. The gloss gives the words that red alone may not carry.
+ */
+.ai-text {
+  padding-left: 12px;
+  border-left: 2px solid var(--rubric);
+}
+
+.ai-text:not([data-scope="paragraphs"]) {
+  padding-left: 11px;
+  border-left-width: 3px;
+}
+
+.ai-text > .ai-text__gloss + * {
+  margin-top: 2px;
+}
+
+.ai-text__gloss {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--rubric);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ai-text__gloss::before {
+  content: "§";
+  font-size: 15px;
+  letter-spacing: 0;
+}
+
+.ai-text[data-scope="paragraphs"] > .ai-text__gloss::before {
+  content: "¶";
+}
+
+.graph__heading {
+  margin-bottom: 0;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.graph__text > .graph__heading:not(:first-child),
+.graph__text > .ai-text[data-scope="part"]:not(:first-child) {
+  margin-top: 18px;
 }
 
 .graph__text ul {

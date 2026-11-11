@@ -128,9 +128,10 @@ The Probe and Review are different things with different goals.
 - A Source's call number (`ARE 1958`) is the first three letters of the family name and the
   year of first publication. It is shown, not stored.
 - First form of a Note file, used by the demo Graph and read by the Graph view (nothing writes
-  Notes yet, and the AI mark is still open): `<Note title>.md` in the Graph folder, with
-  frontmatter `glose: note` and `source: "[[<Source file name>]]"`, then the Note text with
-  wikilinks. The `source` field is itself a wikilink, so Obsidian links a Note to its Source too.
+  Notes yet): `<Note title>.md` in the Graph folder, with frontmatter `glose: note` and
+  `source: "[[<Source file name>]]"`, then the Note text with wikilinks. The `source` field is
+  itself a wikilink, so Obsidian links a Note to its Source too. AI text in it carries the AI mark
+  (see "AI-written text in the graph").
 - Any other Markdown file in the Graph folder is a Note without a Source. Links follow Obsidian:
   `[[name]]`, `[[name|shown words]]`, `[[name#heading]]` and embeds count, names match without
   regard to case, a wikilink inside code is not a Link, and a wikilink to a missing file draws no
@@ -168,6 +169,53 @@ Correct references are a key part of the writing section. The tool will be used 
 - The AI may write notes and drafts of rich notes such as author notes.
 - Every piece of AI-written text is clearly marked in the Markdown itself.
 - The goal is that the human eventually rewrites all of it. The marks make the remaining work visible.
+
+Decided, the AI mark (November 2026): the AI may write a few paragraphs, a whole Part (a
+heading and its text, up to the next heading) or a whole Note, and the mark says which.
+
+- AI paragraphs are an Obsidian callout of type `ai`. Obsidian shows it as a marked box; any
+  other editor shows a quote. The callout runs to the next blank line; paragraphs inside it are
+  separated by `>` lines. A callout title, if any, is AI text too.
+- A whole AI-written Part keeps its heading as a real heading, and directly under it one callout
+  of type `ai-part` holds all of the Part's text. The heading stays outside the callout because
+  Obsidian cannot link to a heading inside one (`[[Note#Heading]]`) or show it in the Outline.
+  The heading counts as AI text.
+- A whole AI-written Note has `ai: true` and no callout. This also covers a file marked by hand.
+- Any file with AI text has `ai: true` in its frontmatter, so Obsidian search, Dataview and other
+  tools find it without reading callouts.
+
+  ```md
+  ---
+  glose: note
+  source: "[[Newport 2016 Deep Work]]"
+  ai: true
+  ---
+
+  ## The finding
+
+  > [!ai-part]
+  > Newport draws on research by Sophie Leroy: ...
+  >
+  > This is why multitasking feels productive but is not. ...
+
+  ## How it connects
+
+  My own paragraph.
+
+  > [!ai]
+  > One paragraph the AI wrote.
+  ```
+
+- Either mark counts. If the two drift apart after a hand edit, the file still shows as holding
+  AI text: Glose never hides AI text because one mark is missing.
+- To rewrite AI text, the user replaces the callout with their own words. When no callout is
+  left, the user removes `ai: true` (Glose does not edit Notes yet).
+- In the app, AI text keeps ink colour. A rubric rule is beside it and a rubric gloss above it
+  says how much the AI wrote: "¶ AI paragraph(s)", "§ AI-written Part" or "§ AI-written Note"
+  (Danish "AI-afsnit", "AI-skrevet del", "AI-skrevet note"). A Part or a Note has a heavier rule
+  that covers the heading too. See DESIGN.md. Today lists every Note with AI text and opens it in
+  the Graph.
+- Cards use the same marks when Cards exist.
 
 ## Stage 1: Reading
 
@@ -266,7 +314,6 @@ Taken from learnharness: the user thinks out loud, by typing or by dictation, an
 
 - Is a note that the AI arranges from the user's own transcript marked as AI text or as human text?
 
-- How is AI text marked: per note, per block, or inline?
 - What is the source of a note that holds the user's own idea, or that combines several notes?
 - Is the exact location (page number, timestamp) required on every note, or only when the note is cited?
 - Are session records kept as transcripts only, or with the audio?
