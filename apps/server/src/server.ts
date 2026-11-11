@@ -79,9 +79,13 @@ export const layerServices = layerApp.pipe(
 /** Every route, still waiting for an HTTP server; the test serves these on a random port. */
 export const layerRoutes = Layer.mergeAll(layerRpcRoute, layerHealthRoute, layerSpaRoute);
 
+/**
+ * The services are built before the port opens. A request that reached the port first would
+ * find no handler yet and hang, and the desktop app's first health check could be that request.
+ */
 export const layer = HttpRouter.serve(layerRoutes).pipe(
   Layer.provide(ServerInfo.layer),
-  Layer.provide(layerServices),
   Layer.provide(layerHttpServer),
+  Layer.provide(layerServices),
   Layer.provide(ServerConfig.layer),
 );
