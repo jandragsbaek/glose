@@ -4,6 +4,7 @@ import * as Schema from "effect/Schema";
 
 import { CatalogRecord, CatalogSearch, CatalogUnavailable } from "./catalog.ts";
 import { ChatGptStatus, ConnectChatGpt, DisconnectResult } from "./chatgpt.ts";
+import { GraphView } from "./graph.ts";
 import { ServerInfo } from "./server.ts";
 import {
   FindSession,
@@ -39,6 +40,7 @@ export const RPC_METHODS = {
   sourcesGet: "sources.get",
   sourcesCreate: "sources.create",
   sourcesSaveFreeText: "sources.saveFreeText",
+  graphRead: "graph.read",
   catalogSearch: "catalog.search",
   chatgptWatch: "chatgpt.watch",
   chatgptConnect: "chatgpt.connect",
@@ -89,6 +91,7 @@ export const GloseRpcGroup = RpcGroup.make(
     success: Source,
     error: Schema.Union([SourceNotFound, GraphFolderNotSet, StorageError]),
   }),
+  Rpc.make(RPC_METHODS.graphRead, { success: GraphView, error: GraphErrors }),
   /** Works in the Catalog that match the search, best match first. */
   Rpc.make(RPC_METHODS.catalogSearch, {
     payload: CatalogSearch,

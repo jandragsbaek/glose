@@ -17,6 +17,7 @@ import * as ChatGpt from "./chatgpt/ChatGpt.ts";
 import * as Credentials from "./chatgpt/Credentials.ts";
 import * as Responses from "./chatgpt/Responses.ts";
 import * as ServerConfig from "./config.ts";
+import * as Graph from "./graph/Graph.ts";
 import * as Sources from "./graph/Sources.ts";
 import * as ServerInfo from "./info/ServerInfo.ts";
 import * as Rpc from "./rpc.ts";
@@ -59,7 +60,7 @@ const layerChatGpt = ChatGpt.layer.pipe(Layer.provide([ChatGpt.layerCrypto, Cred
  */
 export const layerApp = Sessions.layer.pipe(
   Layer.provideMerge(Layer.mergeAll(layerChatGpt, Responses.layer, Catalog.layer)),
-  Layer.provideMerge(Sources.layer),
+  Layer.provideMerge(Layer.mergeAll(Sources.layer, Graph.layer)),
   Layer.provideMerge(Settings.layer),
 );
 

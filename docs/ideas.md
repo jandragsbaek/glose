@@ -127,6 +127,30 @@ The Probe and Review are different things with different goals.
   Glose and a contact address in its `User-Agent`, as Open Library asks.
 - A Source's call number (`ARE 1958`) is the first three letters of the family name and the
   year of first publication. It is shown, not stored.
+- First form of a Note file, used by the demo Graph and read by the Graph view (nothing writes
+  Notes yet, and the AI mark is still open): `<Note title>.md` in the Graph folder, with
+  frontmatter `glose: note` and `source: "[[<Source file name>]]"`, then the Note text with
+  wikilinks. The `source` field is itself a wikilink, so Obsidian links a Note to its Source too.
+- Any other Markdown file in the Graph folder is a Note without a Source. Links follow Obsidian:
+  `[[name]]`, `[[name|shown words]]`, `[[name#heading]]` and embeds count, names match without
+  regard to case, a wikilink inside code is not a Link, and a wikilink to a missing file draws no
+  Link.
+
+## Graph view
+
+- The Graph Section draws every file as a node and every Link as a line, like Obsidian's graph
+  view and learnharness's knowledge graph: a force layout on one canvas, zoom to the pointer by
+  wheel or pinch, pan by dragging the background, and drag a node to pull on its Links.
+- A Source is a larger lapis node that wears its call number; Notes are smaller. A node grows
+  with its number of Links. Note names fade in as the user zooms in.
+- Hover or select a node and its neighbourhood stays bright while the rest fades. The selected
+  node is in the address (`/graph?node=…`), so Back returns to the Note read before.
+- A side panel reads the selected node: its text with working wikilinks, its Source, and its
+  Links. Without a selection it lists the Sources. Search fades everything except matching names.
+- Double-clicking a Source opens its Reading Stage. A Note has no page of its own yet.
+- `pnpm dev:demo` opens Glose on the demo Graph (`demo/Graph`): ten Sources, two of them Danish,
+  with 104 linked Notes of clearly sample content. It runs on a copy in the temp folder with its
+  own computer settings, so the user's Graph and settings stay untouched.
 
 ## References in writing
 

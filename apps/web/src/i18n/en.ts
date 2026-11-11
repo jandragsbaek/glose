@@ -298,6 +298,31 @@ export const en = {
     title: "Graph",
     empty:
       "The Graph holds your Notes and the Links between them. It stays empty until Extraction makes the first Notes from a Source.",
+    counts: (notes: number, sources: number, links: number) =>
+      [
+        count(notes, "Note", "Notes"),
+        count(sources, "Source", "Sources"),
+        count(links, "Link", "Links"),
+      ].join(" · "),
+    canvasLabel: (notes: number, links: number) =>
+      `The Graph: ${count(notes, "node", "nodes")} joined by ${count(links, "Link", "Links")}. The panel beside it lists the same Sources and Notes.`,
+    findLabel: "Find in the Graph",
+    findPlaceholder: "Find a Note or Source",
+    found: (n: number) => (n === 0 ? "Nothing found" : `${numbers.format(n)} found`),
+    zoomIn: "Zoom in",
+    zoomOut: "Zoom out",
+    fit: "Show the whole Graph",
+    help: "Scroll or pinch to zoom, and drag the background to move. Drag a node to pull on its Links. Click a node to read it here; double-click a Source to open it.",
+    sources: "Sources",
+    note: "Note",
+    source: "Source",
+    close: "Close",
+    noSource: "This Note names no Source yet.",
+    linkCount: (n: number) => count(n, "Link", "Links"),
+    noLinks: "No Links yet.",
+    notesFromSource: "Notes from this Source",
+    openSource: "Open the Source",
+    missingLink: (name: string) => `No file is named ${name} yet.`,
   },
   writing: {
     title: "Writing projects",

@@ -292,6 +292,31 @@ export const da: Messages = {
     title: "Graf",
     empty:
       "Grafen rummer dine noter og links mellem dem. Den er tom, indtil udtræk laver de første noter fra en kilde.",
+    counts: (notes: number, sources: number, links: number) =>
+      [
+        count(notes, "note", "noter"),
+        count(sources, "kilde", "kilder"),
+        count(links, "link", "links"),
+      ].join(" · "),
+    canvasLabel: (notes: number, links: number) =>
+      `Grafen: ${count(notes, "punkt", "punkter")} forbundet af ${count(links, "link", "links")}. Panelet ved siden af viser de samme kilder og noter.`,
+    findLabel: "Søg i grafen",
+    findPlaceholder: "Find en note eller kilde",
+    found: (n: number) => (n === 0 ? "Intet fundet" : `${numbers.format(n)} fundet`),
+    zoomIn: "Zoom ind",
+    zoomOut: "Zoom ud",
+    fit: "Vis hele grafen",
+    help: "Rul eller knib for at zoome, og træk i baggrunden for at flytte rundt. Træk i et punkt for at trække i dets links. Klik på et punkt for at læse det her; dobbeltklik på en kilde for at åbne den.",
+    sources: "Kilder",
+    note: "Note",
+    source: "Kilde",
+    close: "Luk",
+    noSource: "Noten nævner ingen kilde endnu.",
+    linkCount: (n: number) => count(n, "link", "links"),
+    noLinks: "Ingen links endnu.",
+    notesFromSource: "Noter fra denne kilde",
+    openSource: "Åbn kilden",
+    missingLink: (name: string) => `Ingen fil hedder ${name} endnu.`,
   },
   writing: {
     title: "Skriveprojekter",

@@ -17,6 +17,11 @@ export const sourcesAtom = GloseClient.query(RPC_METHODS.sourcesList, undefined,
   reactivityKeys: KEYS.sources,
 });
 
+/** Every file in the Graph folder and its Links; it reads afresh when Sources change. */
+export const graphAtom = GloseClient.query(RPC_METHODS.graphRead, undefined, {
+  reactivityKeys: KEYS.sources,
+});
+
 export const sourceAtom = Atom.family((id: string) =>
   GloseClient.query(RPC_METHODS.sourcesGet, { id }, { reactivityKeys: KEYS.sources }),
 );

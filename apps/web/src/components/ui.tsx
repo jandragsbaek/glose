@@ -9,11 +9,14 @@ export function Page({
   title,
   sub,
   actions,
+  fill = false,
   children,
 }: {
   readonly title: string;
   readonly sub?: ReactNode;
   readonly actions?: ReactNode;
+  /** The body takes the rest of the window's height instead of scrolling (the Graph). */
+  readonly fill?: boolean;
   readonly children: ReactNode;
 }) {
   return (
@@ -23,7 +26,7 @@ export function Page({
         {sub === undefined ? null : <span className="page-head__sub">{sub}</span>}
         {actions === undefined ? null : <div className="page-head__actions">{actions}</div>}
       </header>
-      <div className="page-body">{children}</div>
+      <div className={fill ? "page-body page-body--fill" : "page-body"}>{children}</div>
     </>
   );
 }

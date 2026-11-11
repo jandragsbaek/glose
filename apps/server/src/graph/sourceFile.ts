@@ -7,7 +7,7 @@ import * as Yaml from "yaml";
  * A Source file is plain Markdown that any editor can read: YAML frontmatter with the
  * bibliographic data and the Reading Stage step, then the user's Free text as the body.
  */
-const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)([\s\S]*)$/;
+export const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)([\s\S]*)$/;
 
 const MaybeText = Schema.optionalKey(Schema.NullOr(Schema.Union([Schema.String, Schema.Number])));
 const MaybeYear = Schema.optionalKey(Schema.NullOr(Schema.Int));
@@ -35,7 +35,7 @@ const text = (value: string | number | null | undefined) =>
 export type SourceFileContent = Omit<Source, "id" | "modified">;
 
 /** A user may break the YAML in another editor; that file then reads as not a Source. */
-const parseYaml = (yaml: string): unknown => {
+export const parseYaml = (yaml: string): unknown => {
   try {
     return Yaml.parse(yaml);
   } catch {
