@@ -43,6 +43,15 @@ export const make = (fs: FileSystem.FileSystem, path: Path.Path) => {
   );
 
   return {
+    /** The Graph's settings now; a Graph without the file has every default. */
+    settings: Effect.fn("GraphFolder.settings")(function* (folder: string) {
+      const file = settingsFile(folder);
+      if (!(yield* fs.exists(file).pipe(Effect.mapError(storageError)))) return EMPTY;
+      return yield* fs
+        .readFileString(file)
+        .pipe(Effect.flatMap(decodeGraphSettings), Effect.mapError(storageError));
+    }),
+
     /** Makes a new Graph in a folder that is missing or empty, so no existing files get mixed in. */
     create: Effect.fn("GraphFolder.create")(function* (folder: string) {
       if ((yield* inspect(folder)) === "folder") {

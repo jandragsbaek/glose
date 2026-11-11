@@ -22,6 +22,7 @@ import * as ServerConfig from "./config.ts";
 import * as Graph from "./graph/Graph.ts";
 import * as Sources from "./graph/Sources.ts";
 import * as ServerInfo from "./info/ServerInfo.ts";
+import * as Recall from "./recall/Recall.ts";
 import * as Rpc from "./rpc.ts";
 import * as Sessions from "./sessions/Sessions.ts";
 import * as Settings from "./settings/Settings.ts";
@@ -62,7 +63,7 @@ const layerChatGpt = ChatGpt.layer.pipe(Layer.provide([ChatGpt.layerCrypto, Cred
  */
 export const layerApp = Sessions.layer.pipe(
   Layer.provideMerge(CardChecks.layer),
-  Layer.provideMerge(Layer.mergeAll(layerChatGpt, Responses.layer, Catalog.layer)),
+  Layer.provideMerge(Layer.mergeAll(layerChatGpt, Responses.layer, Catalog.layer, Recall.layer)),
   Layer.provideMerge(Layer.mergeAll(Sources.layer, Graph.layer, Cards.layer)),
   Layer.provideMerge(Settings.layer),
 );

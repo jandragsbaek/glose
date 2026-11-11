@@ -13,11 +13,14 @@ import type {
 } from "@glose/contracts";
 import { ANSWER_WORDS, QUESTION_WORDS } from "@glose/contracts";
 
+import { formatInterval } from "../domain/interval.ts";
+
 const numbers = new Intl.NumberFormat("en");
 const plurals = new Intl.PluralRules("en");
 const count = (n: number, one: string, other: string) =>
   `${numbers.format(n)} ${plurals.select(n) === "one" ? one : other}`;
 const list = new Intl.ListFormat("en", { type: "conjunction" });
+const clockTime = new Intl.DateTimeFormat("en-GB", { timeStyle: "short" });
 const longDate = new Intl.DateTimeFormat("en-GB", {
   weekday: "long",
   day: "numeric",
@@ -358,8 +361,6 @@ export const en = {
     title: "Recall",
     empty:
       "Recall asks you about Cards made from your Notes and schedules each one with FSRS. To make Cards, open a Note in the Graph and choose Make Cards.",
-    reviewLater:
-      "Review comes in the next version. Until then, you can read, edit and rewrite your Cards here.",
     counts: (cards: number, ai: number) =>
       ai === 0
         ? count(cards, "Card", "Cards")
@@ -373,6 +374,36 @@ export const en = {
     nothingFound: "No Card matches.",
     gradeLabel: "Grade",
     allGrades: "All grades",
+  },
+  review: {
+    title: "Review",
+    counts: (counts: {
+      readonly new: number;
+      readonly learning: number;
+      readonly review: number;
+    }) =>
+      `${numbers.format(counts.new)} new · ${numbers.format(counts.learning)} learning · ${numbers.format(counts.review)} due`,
+    states: { new: "New Card", learning: "Learning", review: "Due" },
+    showAnswer: "Show answer",
+    // Two steps, because people press Hard when they forgot, and FSRS reads Hard as a pass.
+    didRecall: "Did you recall it?",
+    forgot: "Forgot",
+    recalled: "Recalled",
+    howWasIt: "How did it go?",
+    efforts: { hard: "With effort", good: "Normal", easy: "At once" },
+    back: "Back",
+    interval: (ms: number) => formatInterval("en", ms),
+    start: "Start Review",
+    dueToday: (n: number) => `${count(n, "Card", "Cards")} to review today.`,
+    left: (n: number) => `${numbers.format(n)} left`,
+    stop: "Stop",
+    keys: { space: "Space", escape: "Esc", backspace: "Backspace" },
+    waitTitle: "Nothing to review right now",
+    nextAt: (at: number) => `A Card in learning comes back at ${clockTime.format(at)}.`,
+    doneTitle: "Done for today",
+    doneToday: "You reviewed every Card due today. More come back tomorrow.",
+    backToRecall: "Back to Recall",
+    failed: "Glose could not keep this Review. Try again.",
   },
   cards: {
     extraction: "Card Extraction",

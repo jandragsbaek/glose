@@ -1,5 +1,6 @@
 import { ANSWER_WORDS, QUESTION_WORDS } from "@glose/contracts";
 
+import { formatInterval } from "../domain/interval.ts";
 import type { Messages } from "./en.ts";
 
 const numbers = new Intl.NumberFormat("da");
@@ -7,6 +8,7 @@ const plurals = new Intl.PluralRules("da");
 const count = (n: number, one: string, other: string) =>
   `${numbers.format(n)} ${plurals.select(n) === "one" ? one : other}`;
 const list = new Intl.ListFormat("da", { type: "conjunction" });
+const clockTime = new Intl.DateTimeFormat("da-DK", { timeStyle: "short" });
 const longDate = new Intl.DateTimeFormat("da-DK", {
   weekday: "long",
   day: "numeric",
@@ -347,8 +349,6 @@ export const da: Messages = {
     title: "Genkaldelse",
     empty:
       "Genkaldelse spørger dig om kort lavet af dine noter og planlægger hvert kort med FSRS. Åbn en note i grafen, og vælg Lav kort for at lave kort.",
-    reviewLater:
-      "Gennemgang kommer i næste version. Indtil da kan du læse, rette og omskrive dine kort her.",
     counts: (cards: number, ai: number) =>
       ai === 0
         ? count(cards, "kort", "kort")
@@ -362,6 +362,31 @@ export const da: Messages = {
     nothingFound: "Intet kort passer.",
     gradeLabel: "Vurdering",
     allGrades: "Alle vurderinger",
+  },
+  review: {
+    title: "Gennemgang",
+    counts: (counts) =>
+      `${count(counts.new, "ny", "nye")} · ${numbers.format(counts.learning)} under indlæring · ${count(counts.review, "forfalden", "forfaldne")}`,
+    states: { new: "Nyt kort", learning: "Under indlæring", review: "Forfalden" },
+    showAnswer: "Vis svar",
+    didRecall: "Huskede du det?",
+    forgot: "Glemt",
+    recalled: "Husket",
+    howWasIt: "Hvordan gik det?",
+    efforts: { hard: "Med besvær", good: "Normalt", easy: "Med det samme" },
+    back: "Tilbage",
+    interval: (ms) => formatInterval("da", ms),
+    start: "Start gennemgang",
+    dueToday: (n) => `${count(n, "kort", "kort")} at gennemgå i dag.`,
+    left: (n) => `${numbers.format(n)} tilbage`,
+    stop: "Stop",
+    keys: { space: "Mellemrum", escape: "Esc", backspace: "Backspace" },
+    waitTitle: "Intet at gennemgå lige nu",
+    nextAt: (at) => `Et kort under indlæring kommer igen kl. ${clockTime.format(at)}.`,
+    doneTitle: "Færdig for i dag",
+    doneToday: "Du har gennemgået alle kort for i dag. Flere kommer igen i morgen.",
+    backToRecall: "Tilbage til Genkaldelse",
+    failed: "Glose kunne ikke gemme gennemgangen. Prøv igen.",
   },
   cards: {
     extraction: "Kortudtræk",

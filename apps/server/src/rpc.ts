@@ -8,6 +8,7 @@ import * as ChatGpt from "./chatgpt/ChatGpt.ts";
 import * as Graph from "./graph/Graph.ts";
 import * as Sources from "./graph/Sources.ts";
 import * as ServerInfo from "./info/ServerInfo.ts";
+import * as Recall from "./recall/Recall.ts";
 import * as Sessions from "./sessions/Sessions.ts";
 import * as Settings from "./settings/Settings.ts";
 
@@ -23,6 +24,7 @@ export const layer = GloseRpcGroup.toLayer(
     const sessions = yield* Sessions.Sessions;
     const cards = yield* Cards.Cards;
     const checks = yield* CardChecks.CardChecks;
+    const recall = yield* Recall.Recall;
     return GloseRpcGroup.of({
       [RPC_METHODS.serverInfo]: () => info.get,
       [RPC_METHODS.settingsGet]: () => settings.get,
@@ -54,6 +56,8 @@ export const layer = GloseRpcGroup.toLayer(
       [RPC_METHODS.cardsUpdate]: (input) => cards.update(input),
       [RPC_METHODS.cardsClearAiMark]: ({ file }) => cards.clearAiMark(file),
       [RPC_METHODS.cardsDelete]: ({ file }) => cards.remove(file),
+      [RPC_METHODS.recallQueue]: () => recall.queue,
+      [RPC_METHODS.recallReview]: (input) => recall.review(input),
     });
   }),
 );

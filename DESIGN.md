@@ -81,6 +81,17 @@ typography:
     fontWeight: 700
     lineHeight: "18px"
     fontFeature: '"tnum"'
+  review-question:
+    fontFamily: "Public Sans, system-ui, sans-serif"
+    fontSize: "28px"
+    fontWeight: 700
+    lineHeight: 1.3
+    letterSpacing: "-0.01em"
+  review-answer:
+    fontFamily: "Public Sans, system-ui, sans-serif"
+    fontSize: "21px"
+    fontWeight: 400
+    lineHeight: 1.5
 rounded:
   label: "2px"
   base: "4px"
@@ -173,6 +184,29 @@ components:
     textColor: "{colors.ink}"
     rounded: "{rounded.base}"
     padding: "12px 14px"
+  button-quiet:
+    textColor: "{colors.mute}"
+    rounded: "{rounded.base}"
+    padding: "0 12px"
+    height: "36px"
+  button-quiet-hover:
+    textColor: "{colors.ink}"
+  key-cap:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.mute}"
+    rounded: "{rounded.base}"
+    padding: "0 6px"
+    height: "22px"
+  key-cap-on-primary:
+    backgroundColor: "{colors.lapis}"
+    textColor: "{colors.on-lapis}"
+  review-leaf:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
+    typography: "{typography.review-question}"
+    rounded: "{rounded.base}"
+    padding: "40px 48px 36px"
+    width: "720px"
 ---
 
 # Design System: Glose
@@ -214,6 +248,7 @@ itself stays ink; see the AI Text component.
 - Call numbers as typed white spine labels in Courier Prime with a 1px ink border.
 - Flat surfaces; depth comes from hairlines and the ground/paper step, not shadows.
 - Red is a signal with fixed jobs, never a decoration of data.
+- A focus screen (Review) drops the rail and the page header: one Paper leaf on Ground.
 
 ## Colors
 
@@ -249,9 +284,10 @@ three small pigments (gold, rubric red, verdigris) each with one job.
 - **Ground** (ground): the page behind panels and the setup body.
 - **Paper** (paper): panels, the page header, inputs, buttons, call-number labels.
 - **Ink** (ink): text, secondary button border, call-number border.
-- **Mute** (mute): secondary text, hints, meta, empty-state copy, field legends.
+- **Mute** (mute): secondary text, hints, meta, empty-state copy, field legends, the Review
+  progress line, rating intervals and key-cap letters.
 - **Hairline** (line): panel borders, header rule, row and step dividers, the flourish rule.
-- **Strong Hairline** (line-strong): input and choice borders, scrollbar thumb.
+- **Strong Hairline** (line-strong): input and choice borders, key-cap borders, scrollbar thumb.
 - **Lapis Tint** (tint): secondary button hover, the current step, a selected choice.
 
 ### Named Rules
@@ -283,11 +319,15 @@ heading like an illuminated initial.
 - **Headline** (700, 22px, -0.01em): the page title in the white header.
 - **Title** (700, 21px, 1.25): the current Source's title on Today.
 - **Panel heading** (600, 13px, 1.3, 0.06em tracking, uppercase): every panel's `h2`; its first
-  letter is the Initial. Fieldset legends use the same set in Mute.
+  letter is the Initial. Fieldset legends use the same set in Mute. The Review bar title uses
+  the same set, with a lapis Initial.
 - **Initial** (Cinzel Decorative 700, 2em of the heading, 0.9 line height): the panel heading's
   first letter, in rubric or lapis.
 - **Body** (400, 15px, 1.5): all running text; empty states cap at 62ch.
 - **Body for writing** (400, 16px, 1.65, max 72ch): the Free text area.
+- **Review question** (700, 28px, 1.3, -0.01em, max 30ch, balanced wrap; 24px on phones): the
+  question on the Review leaf.
+- **Review answer** (400, 21px, 1.5, max 40ch; 18px on phones): the answer on the Review leaf.
 - **Label** (600, 14px): buttons, field labels, step names, row titles.
 - **Meta** (400, 13px, tabular numerals): hints, step notes, panel meta, status lines.
 - **Rail label** (500, 12px, 1.25): Section names under rail icons; they wrap and hyphenate.
@@ -296,9 +336,9 @@ heading like an illuminated initial.
 
 ### Named Rules
 
-**The One Initial Rule.** Cinzel Decorative appears only as the first letter of a panel heading
-or the setup title, through `::first-letter`, so the heading text stays whole for screen
-readers. Never on data, buttons or body.
+**The One Initial Rule.** Cinzel Decorative appears only as the first letter of a panel heading,
+the setup title or the Review bar title, through `::first-letter`, so the heading text stays
+whole for screen readers. Never on data, buttons or body.
 
 **The Typed Label Rule.** Courier Prime is for call numbers and step numbers only.
 
@@ -317,6 +357,12 @@ Spacing steps through 4, 6, 8, 12, 16, 20, 24 and 32px; panel bodies pad 16px 20
 heads pad 14px 20px. Forms use a two-column field grid (16px row, 20px column gaps) with wide
 fields spanning both.
 
+A focus screen (today only Review, at `/review`) fills the window without the rail and the page
+header. A 64px bar (12px 32px padding) holds the title left, a centred progress line and the way
+out right; the desk below centres one 720px column (68px top, 32px sides, 48px bottom). Below
+720px the bar pads 16px, the progress line drops under the title, the desk pads 24px 16px 32px
+and button rows stack full width.
+
 **The Danish Length Rule.** No layout depends on the length of English text. Heads, rows and
 button rows wrap; rail labels hyphenate and break anywhere; nothing truncates a label.
 Check every new screen in Danish.
@@ -334,6 +380,9 @@ There are two shadows, both responses to state.
 
 Elsewhere, focus is a 2px lapis outline at 2px offset (gold on the rail).
 
+The Review stack shows depth the same way: the Cards still to come are paper edges under the
+leaf, each narrower, with hairline borders and no shadow.
+
 ### Named Rules
 
 **The Hairline Rule.** Panels separate by a 1px Hairline and a white leaf on Ground. Don't add
@@ -342,7 +391,8 @@ resting shadows.
 ## Shapes
 
 Quiet, nearly square corners: 4px on panels, buttons, inputs, choices, notices, the step bar and
-rail items; 2px on call-number labels and skeleton bars; 3px on the spine. The one curve is the
+rail items, key caps and the Review leaf; 2px on call-number labels and skeleton bars; 3px on the
+spine. Review leaf edges round only their two lower corners (4px). The one curve is the
 pen flourish (a 64 by 10px stroked SVG with a center dot) set between two hairlines.
 
 ## Components
@@ -352,11 +402,14 @@ pen flourish (a 64 by 10px stroked SVG with a center dot) set between two hairli
 Firm and plain, ink-outlined.
 
 - **Shape:** gently squared (4px), 36px minimum height, 16px side padding, 8px gap to an icon.
-- **Primary:** Lapis fill and border, white label, for the next step forward (Add Source, Continue, Start, Skip).
+- **Primary:** Lapis fill and border, white label, for the next step forward (Add Source, Continue, Start, Skip, Start Review, Show answer, Recalled, Back to Recall).
 - **Hover / Focus:** primary moves to Raised Lapis with the lapis lift; secondary fills with
   Lapis Tint. 160ms on the shared ease-out. Focus is the 2px lapis outline.
 - **Secondary:** Paper with a 1px Ink border and Ink label (Open, Cancel, Save, Retry).
 - **Disabled:** 55% opacity, no shadow, not-allowed cursor.
+- **Quiet:** no border or fill, Mute 600 13px, 36px minimum height, 12px side padding; hover turns
+  it Ink and underlines it (3px offset). For a way out of a slip, set apart from the choices
+  (Review's Back).
 
 ### Choices
 
@@ -431,6 +484,49 @@ much the AI wrote.
 
 Note headings in the side panel: 700 15px, 18px above when they follow other text.
 
+### Key Cap
+
+A small hairline box that names the key doing the same as the button it sits in: Paper, 1px
+Strong Hairline with a 2px bottom border, 4px corners, 22px tall (22px minimum width, 6px side
+padding), Mute 600 12px. On a primary button it turns transparent with a 45% white border and
+white text. It is hidden from screen readers; the button carries `aria-keyshortcuts`. Every button
+on the Review screen that a key presses has one (Stop, Show answer, each rating, Back).
+
+### Review Leaf (signature)
+
+One Card on the desk: a Paper leaf, max 720px, 1px Hairline border, 4px corners, no shadow,
+40px 48px 36px padding (28px 24px on phones).
+
+- **Content:** the Review question; after Show answer, the rubric pen flourish between two
+  hairlines (32px above, 28px below), then the Review answer. A Mute Meta foot line 28px below
+  says the state and the Note: "New Card · From <Note>". An AI-written Card carries the AI Text mark.
+- **Leaf edges:** under the leaf, one paper strip for each Card still to come, up to five. Each is
+  8px tall, 16px narrower than the one above, centred, with a Hairline border and no top border.
+  The edges say "many" or "few"; the bar gives the number.
+- **Motion:** a rating lifts the leaf 14px and fades it out in 200ms; the next leaf rises 10px
+  from 0.6 opacity in 280ms, both on the shared ease-out. Reduced motion stops both.
+
+### Review Bar
+
+The focus screen's bar: the title in the panel-heading set with a lapis Initial; a centred Mute
+Meta progress line with tabular numerals and the count left in Ink 600 ("12 left · 3 new · 1
+learning · 8 due"); and a secondary Stop button with an Esc key cap. When nothing is due, the
+progress line is empty and Stop goes; Esc still leaves.
+
+### Rating
+
+The rating comes in two steps under the leaf, centred, each a 600 prompt over a row of buttons
+(12px gaps). Step one: Show answer, the one primary button. Step two: Forgot (secondary) and
+Recalled (primary). Step three: the three efforts as secondary buttons, then Back as a quiet
+button on its own line below. Secondary rating buttons end with their interval in Mute 400,
+tabular. On phones the buttons stack full width.
+
+### Done Desk
+
+When nothing is due, the desk shows the closing pen flourish between two short hairlines (240px
+across), the empty-state lead line and its Mute body, and a primary Back to Recall, centred
+with 20px gaps and 72px from the bar.
+
 ### Loading
 
 Skeleton bars (14px, 2px corners) shimmer Tint to Ground over 1.4s inside a panel, with a hidden
@@ -440,13 +536,16 @@ Skeleton bars (14px, 2px corners) shimmer Tint to Ground over 1.4s inside a pane
 
 ### Do:
 
-- **Do** put ornament (initials, flourish, gilt) on headings and chrome only.
+- **Do** put ornament (initials, flourish, gilt) on headings and chrome only, and the flourish in
+  the hairline rule between a Review question and its answer.
 - **Do** alternate panel initials rubric and lapis down each column.
 - **Do** pair every red error or missing-data signal with a warning icon and words.
 - **Do** use Gilt only to mark the current place (Section, step) and focus on lapis.
 - **Do** give every Source its call number label wherever it is listed.
 - **Do** take every string from the EN/DA catalogs and check the layout in Danish.
 - **Do** keep Lapis buttons for the next step forward (Add Source, Continue, Start); other actions are ink-outlined secondary.
+- **Do** give every button on a focus screen that a key presses a key cap, and name the key in
+  `aria-keyshortcuts`.
 - **Do** use tabular numerals for counts, years and call numbers.
 
 ### Don't:

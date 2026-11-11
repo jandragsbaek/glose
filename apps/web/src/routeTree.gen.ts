@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GraphRouteImport } from './routes/graph'
 import { Route as RecallRouteImport } from './routes/recall'
+import { Route as ReviewRouteImport } from './routes/review'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as WritingRouteImport } from './routes/writing'
 import { Route as SourcesSourceIdRouteImport } from './routes/sources.$sourceId'
@@ -31,6 +32,11 @@ const GraphRoute = GraphRouteImport.update({
 const RecallRoute = RecallRouteImport.update({
   id: '/recall',
   path: '/recall',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReviewRoute = ReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/graph': typeof GraphRoute
   '/recall': typeof RecallRoute
+  '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
   '/writing': typeof WritingRoute
   '/sources/$sourceId': typeof SourcesSourceIdRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/graph': typeof GraphRoute
   '/recall': typeof RecallRoute
+  '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
   '/writing': typeof WritingRoute
   '/sources/$sourceId': typeof SourcesSourceIdRoute
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/graph': typeof GraphRoute
   '/recall': typeof RecallRoute
+  '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
   '/writing': typeof WritingRoute
   '/sources/$sourceId': typeof SourcesSourceIdRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/graph'
     | '/recall'
+    | '/review'
     | '/settings'
     | '/writing'
     | '/sources/$sourceId'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/graph'
     | '/recall'
+    | '/review'
     | '/settings'
     | '/writing'
     | '/sources/$sourceId'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/'
     | '/graph'
     | '/recall'
+    | '/review'
     | '/settings'
     | '/writing'
     | '/sources/$sourceId'
@@ -127,6 +139,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   GraphRoute: typeof GraphRoute
   RecallRoute: typeof RecallRoute
+  ReviewRoute: typeof ReviewRoute
   SettingsRoute: typeof SettingsRoute
   WritingRoute: typeof WritingRoute
   SourcesSourceIdRoute: typeof SourcesSourceIdRoute
@@ -155,6 +168,13 @@ declare module '@tanstack/react-router' {
       path: '/recall'
       fullPath: '/recall'
       preLoaderRoute: typeof RecallRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/review': {
+      id: '/review'
+      path: '/review'
+      fullPath: '/review'
+      preLoaderRoute: typeof ReviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -199,6 +219,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   GraphRoute: GraphRoute,
   RecallRoute: RecallRoute,
+  ReviewRoute: ReviewRoute,
   SettingsRoute: SettingsRoute,
   WritingRoute: WritingRoute,
   SourcesSourceIdRoute: SourcesSourceIdRoute,

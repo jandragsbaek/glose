@@ -1,5 +1,5 @@
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
-import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
+import { createRootRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 
 import { PlanNotice } from "../components/PlanNotice.tsx";
@@ -20,9 +20,13 @@ import "../styles/app.css";
 
 export const Route = createRootRoute({ component: Root, notFoundComponent: NotFound });
 
+/** Screens that fill the window without the rail, so nothing else asks for attention. */
+const FOCUS_SCREENS: ReadonlySet<string> = new Set(["/review"]);
+
 /** Glose opens straight into the user's work; a first start shows the setup instead. */
 function Root() {
   const settings = useAtomValue(settingsAtom);
+  const focus = useRouterState({ select: (state) => FOCUS_SCREENS.has(state.location.pathname) });
   return AsyncResult.matchWithError(settings, {
     onInitial: () => null,
     onError: () => (
@@ -39,6 +43,13 @@ function Root() {
       const language = value.settings.language ?? systemLanguage();
       if (value.settings.graphFolder === null) {
         return <Setup view={value} initialLanguage={language} />;
+      }
+      if (focus) {
+        return (
+          <I18nProvider language={language}>
+            <Outlet />
+          </I18nProvider>
+        );
       }
       return (
         <I18nProvider language={language}>

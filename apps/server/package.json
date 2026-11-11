@@ -14,6 +14,7 @@
     "@effect/platform-node": "catalog:",
     "@glose/contracts": "workspace:*",
     "effect": "catalog:",
+    "ts-fsrs": "6.0.0",
     "yaml": "catalog:"
   },
   "devDependencies": {
