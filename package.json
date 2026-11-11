@@ -6,6 +6,8 @@
     "prepare": "vp config --no-agent",
     "dev": "vp run --parallel --filter @glose/server --filter @glose/web dev",
     "dev:desktop": "vp run --parallel --filter @glose/server --filter @glose/web --filter @glose/desktop dev",
+    "dev:demo": "node scripts/demo.mjs",
+    "dev:demo:desktop": "node scripts/demo.mjs --desktop",
     "build": "vp run --filter @glose/web build",
     "build:desktop": "vp run --filter @glose/web --filter @glose/server --filter @glose/desktop build",
     "start": "vp run --filter @glose/server start",
