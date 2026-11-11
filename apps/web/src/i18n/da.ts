@@ -108,6 +108,8 @@ export const da: Messages = {
     aiText: "Noter med AI-tekst",
     aiTextEmpty:
       "Ingen AI-tekst. Når AI'en skriver en note, vises noten her, indtil du har omskrevet den med dine egne ord.",
+    aiTextCount: (n: number) => count(n, "note", "noter"),
+    aiTextMore: (n: number) => `${count(n, "note mere", "noter mere")} i grafen.`,
   },
   steps: {
     label: "Læsning",
@@ -287,6 +289,11 @@ export const da: Messages = {
       unavailable: "ChatGPT kunne ikke nås. Prøv igen om lidt.",
       failed: "AI'en stoppede med en fejl. Prøv igen.",
     },
+  },
+  aiText: {
+    paragraphs: () => "AI-afsnit",
+    part: "AI-skrevet del",
+    note: "AI-skrevet note",
   },
   graph: {
     title: "Graf",

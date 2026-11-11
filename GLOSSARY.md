@@ -26,6 +26,10 @@ _Avoid_: chat, conversation, thread, run
 A Markdown file in the **Graph** that has a **Source**. By default it holds one idea.
 _Avoid_: zettel, page, document, entry
 
+**Part**:
+A heading in a **Note** and its text, up to the next heading.
+_Avoid_: section (that is a **Section** of the app), chapter, block
+
 **Rich note**:
 A **Note** about one subject, such as an author or a work, that may be long and hold images.
 
@@ -84,7 +88,8 @@ Text in a **Note** or a **Card** that the AI wrote and the user has not yet rewr
 _Avoid_: generated text, draft, suggestion, AI content
 
 **AI mark**:
-The marker in the Markdown that flags **AI text**.
+The marker in the Markdown that flags **AI text**: on a paragraph, on a whole **Part**, or on the
+whole file.
 
 **Publication**:
 The finished form of a **Writing project**, such as a PDF or a blog post.
@@ -113,10 +118,14 @@ The text the tool builds from a **Reference** in the style the **Writing project
   **Citation** from it
 - A **Card** is usually made from a **Note** by **Extraction**; each **Review** sets when it comes
   back
-- An **AI mark** flags **AI text** in a **Note** or a **Card**
+- An **AI mark** flags **AI text** in a **Note** or a **Card**; a whole **Part** and a paragraph wear
+  different marks
 
 ## Flagged ambiguities
 
+- "section" meant both a top part of the app and a heading with its text in a **Note**. Resolved:
+  the app has **Sections**; a **Note** has **Parts**. (Danish "afsnit" means both paragraph and
+  section, so the Danish term is "del".)
 - "reference" meant both the book a user reads ("core reference") and the pointer in prose.
   Resolved: the book is a **Source**; "reference" is kept for the pointer in prose.
 - "reading quiz" and "recall quiz" shared a word though they have different goals. Resolved: the

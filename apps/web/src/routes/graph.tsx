@@ -8,7 +8,7 @@ import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { CallNumber, Page, Panel, SkeletonPanel, StorageProblem } from "../components/ui.tsx";
 import { callNumber } from "../domain/source.ts";
 import { GraphCanvas, type GraphCanvasEvents, type NodeLabel } from "../graph/GraphCanvas.ts";
-import { type Inline, parseNoteText } from "../graph/noteText.ts";
+import { type AiScope, type Block, type Inline, parseNoteText } from "../graph/noteText.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { graphAtom, sourcesAtom } from "../state/graph.ts";
 
@@ -396,7 +396,7 @@ function NodePanel({
             </NodeLink>
           </p>
         )}
-        <NoteText markdown={node.body} index={index} onShow={onShow} />
+        <NoteText markdown={node.body} aiText={node.aiText} index={index} onShow={onShow} />
         {isSource ? (
           <p>
             <Link to="/sources/$sourceId" params={{ sourceId: node.id }} className="button">
@@ -445,10 +445,12 @@ function NodeList({
 
 function NoteText({
   markdown,
+  aiText,
   index,
   onShow,
 }: {
   readonly markdown: string;
+  readonly aiText: boolean;
   readonly index: GraphIndex;
   readonly onShow: (id: string) => void;
 }) {
@@ -464,19 +466,61 @@ function NoteText({
         </NodeLink>
       );
     });
-  return (
-    <div className="graph__text">
-      {parseNoteText(markdown).map((block) =>
-        block.kind === "paragraph" ? (
-          <p key={block.at}>{inline(block.inlines)}</p>
-        ) : (
+  const render = (block: Block): ReactNode => {
+    switch (block.kind) {
+      case "paragraph":
+        return <p key={block.at}>{inline(block.inlines)}</p>;
+      case "list":
+        return (
           <ul key={block.at}>
             {block.items.map((item) => (
               <li key={item.at}>{inline(item.inlines)}</li>
             ))}
           </ul>
-        ),
-      )}
+        );
+      case "heading": {
+        // The Note's title is the panel's h3, so its own headings sit below it.
+        const Tag = block.level === 1 ? "h4" : block.level === 2 ? "h5" : "h6";
+        return (
+          <Tag key={block.at} className="graph__heading">
+            {inline(block.inlines)}
+          </Tag>
+        );
+      }
+      case "ai":
+        return (
+          <AiText key={block.at} scope={block.scope} count={block.blocks.length}>
+            {block.heading === null ? null : render(block.heading)}
+            {block.blocks.map(render)}
+          </AiText>
+        );
+    }
+  };
+  return <div className="graph__text">{parseNoteText(markdown, aiText).map(render)}</div>;
+}
+
+/**
+ * AI text wears its mark in the app too, at the edge: a rubric rule beside it and a gloss that
+ * says how much the AI wrote. A ¶ opens the gloss on paragraphs, a § on a whole Part or Note.
+ */
+function AiText({
+  scope,
+  count,
+  children,
+}: {
+  readonly scope: AiScope;
+  /** How many paragraphs and lists the AI wrote. */
+  readonly count: number;
+  readonly children: ReactNode;
+}) {
+  const t = useT();
+  const glossId = useId();
+  return (
+    <div className="ai-text" data-scope={scope} role="group" aria-labelledby={glossId}>
+      <p className="ai-text__gloss" id={glossId}>
+        {scope === "paragraphs" ? t.aiText.paragraphs(count) : t.aiText[scope]}
+      </p>
+      {children}
     </div>
   );
 }

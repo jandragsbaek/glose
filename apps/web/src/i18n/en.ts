@@ -115,6 +115,8 @@ export const en = {
     aiText: "Notes with AI text",
     aiTextEmpty:
       "No AI text. When the AI writes a Note, the Note shows here until you rewrite it in your own words.",
+    aiTextCount: (n: number) => count(n, "Note", "Notes"),
+    aiTextMore: (n: number) => `${count(n, "more Note", "more Notes")} in the Graph.`,
   },
   steps: {
     label: "Reading Stage",
@@ -293,6 +295,11 @@ export const en = {
       unavailable: "ChatGPT could not be reached. Try again in a moment.",
       failed: "The AI stopped with an error. Try again.",
     } satisfies Record<SessionProblem, string>,
+  },
+  aiText: {
+    paragraphs: (n: number): string => (n === 1 ? "AI paragraph" : "AI paragraphs"),
+    part: "AI-written Part",
+    note: "AI-written Note",
   },
   graph: {
     title: "Graph",

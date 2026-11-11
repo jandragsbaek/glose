@@ -2,6 +2,7 @@ import {
   type GraphLink,
   type GraphNode,
   type GraphView,
+  hasAiCallout,
   linkKey,
   MARKDOWN_CODE,
   parseWikilink,
@@ -35,6 +36,18 @@ const sourceName = (frontmatter: unknown): string | null => {
   return name === "" ? null : name;
 };
 
+/**
+ * AI text carries an AI mark: the file as a whole (`ai: true`, so Obsidian search and other
+ * tools find it), and its paragraphs or Parts (`[!ai]`, `[!ai-part]`). Either mark counts, so
+ * a file whose two marks drift apart after a hand edit is never shown as free of AI text.
+ */
+const hasAiText = (frontmatter: unknown, body: string): boolean =>
+  (typeof frontmatter === "object" &&
+    frontmatter !== null &&
+    "ai" in frontmatter &&
+    frontmatter.ai === true) ||
+  hasAiCallout(body);
+
 interface ParsedFile {
   readonly node: Omit<GraphNode, "sourceId">;
   readonly sourceName: string | null;
@@ -48,12 +61,18 @@ const parseFile = ({ name, markdown }: GraphFile): ParsedFile => {
   const targets = linkTargets(markdown);
   return Option.match(parseSourceFile(markdown), {
     onSome: (source) => ({
-      node: { id: name, kind: "source", title: source.title, body: source.freeText },
+      node: {
+        id: name,
+        kind: "source",
+        title: source.title,
+        body: source.freeText,
+        aiText: hasAiText(frontmatter, source.freeText),
+      },
       sourceName: null,
       targets,
     }),
     onNone: () => ({
-      node: { id: name, kind: "note", title: name, body },
+      node: { id: name, kind: "note", title: name, body, aiText: hasAiText(frontmatter, body) },
       sourceName: sourceName(frontmatter),
       targets,
     }),

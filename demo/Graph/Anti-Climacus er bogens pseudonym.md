@@ -1,6 +1,7 @@
 ---
 glose: note
 source: "[[Kierkegaard 1849 Sygdommen til Døden]]"
+ai: true
 ---
 
 Bogen udkom i 1849 under pseudonymet Anti-Climacus, med Kierkegaard selv angivet som udgiver. Tidligere havde han skrevet som Johannes Climacus, der ikke påstår at være kristen. Anti-Climacus er hans modstykke: en, der taler ud fra et meget højt kristent ideal. Kierkegaard skrev, at han selv stod et sted imellem de to, og derfor ville han ikke sætte sit eget navn som forfatter.
