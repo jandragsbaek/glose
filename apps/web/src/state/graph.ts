@@ -25,3 +25,6 @@ export const setLanguageAtom = GloseClient.mutation(RPC_METHODS.settingsSetLangu
 export const completeSetupAtom = GloseClient.mutation(RPC_METHODS.setupComplete);
 export const createSourceAtom = GloseClient.mutation(RPC_METHODS.sourcesCreate);
 export const saveFreeTextAtom = GloseClient.mutation(RPC_METHODS.sourcesSaveFreeText);
+
+/** Searches the Catalog on demand; nothing is cached, since each search is typed afresh. */
+export const searchCatalogAtom = GloseClient.mutation(RPC_METHODS.catalogSearch);

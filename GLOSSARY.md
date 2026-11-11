@@ -38,6 +38,11 @@ _Avoid_: edge, connection, relation, backlink
 The book, video or other work that a **Note** comes from, with its bibliographic data.
 _Avoid_: core reference, reference, book (as the general term), material
 
+**Catalog**:
+An outside book database that Glose searches to fill in the bibliographic data of a new
+**Source**. The user checks what it gives against their own copy.
+_Avoid_: book database, registry, library
+
 **Free text**:
 What the user writes freely, in their own words, about a **Source** at the start of the Reading
 **Stage**.
@@ -100,6 +105,8 @@ The text the tool builds from a **Reference** in the style the **Writing project
 ## Relationships
 
 - Every **Note** has a **Source**; **Links** join **Notes** into the **Graph**
+- A new **Source** can be filled in from a **Catalog**; the **Source** file, not the **Catalog**,
+  is the truth
 - A **Probe** is a **Session**; the user's **Reasoning** in it is kept
 - A **Writing project** reads from the **Graph** but is not part of it
 - A **Reference** points to a **Note** or a **Source** at a **Location**; the tool builds a

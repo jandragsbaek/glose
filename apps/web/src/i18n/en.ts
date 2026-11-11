@@ -162,6 +162,30 @@ export const en = {
   },
   addSource: {
     title: "Add Source",
+    find: "Find the book",
+    findHint:
+      "Search Open Library, an open book catalog. Choosing a book fills in the form below. An ISBN finds your exact edition.",
+    searchLabel: "Title, author or ISBN",
+    search: "Search",
+    searching: "Searching Open Library",
+    results: "Books in Open Library",
+    noResults:
+      "Open Library has no book that matches. Try other words, or fill in the form yourself.",
+    unavailable:
+      "Open Library did not answer. Check the internet connection, or fill in the form yourself.",
+    resultEdition: (publisher: string | null, year: number | null) => {
+      const parts = [publisher, year].filter((part) => part !== null);
+      return parts.length === 0 ? "" : `Edition: ${parts.join(", ")}`;
+    },
+    partBreak: ". ",
+    notYourCopy:
+      "Not your copy? Search by the ISBN printed in your book to get that exact edition.",
+    filledTitle: (title: string) => `Filled in from Open Library: ${title}`,
+    filled:
+      "Check the fields marked From Open Library against your copy. The title, publisher and edition year must be those of the book you read.",
+    keptTyped: "Fields you typed yourself are kept.",
+    undoFill: "Undo",
+    fromCatalog: "From Open Library",
     intro:
       "A book you are reading or have read. A Citation needs complete data, so fill in what you have. Glose shows what is missing.",
     author: "Author",
