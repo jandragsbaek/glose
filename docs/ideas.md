@@ -30,8 +30,8 @@ Working notes from early conversations. Nothing here is final.
 
 ## First start
 
-- A short setup: interface language, Graph folder, and a ChatGPT step that says honestly that the
-  connection does not exist yet.
+- A short setup: interface language, Graph folder, and an optional ChatGPT connection (it can
+  also be made later in Settings).
 - The Graph folder works like an Obsidian vault. The setup either starts a new Graph (suggested:
   `Glose` in the home folder; the folder must be missing or empty) or opens a folder that exists.
   An existing Graph opens with its own settings; any other folder (Markdown from another editor,
@@ -163,6 +163,32 @@ ChatGPT first. Both users already have access to it.
 - The experience is agentic, like learnharness: the AI runs a session, asks questions, reads the graph and acts through tools, instead of answering one prompt at a time.
 - The AI rules of each section can be enforced by the tools the agent gets there. In a writing project the agent has no tool that writes prose.
 
+Decided, first version (November 2026):
+
+- Glose uses OpenAI's documented "Sign in with ChatGPT" for open-source and locally hosted apps
+  (https://developers.openai.com/siwc/token-sharing-open-source), not the Codex CLI's client ID.
+  The first sign-in registers Glose as the user's own client (`dynamic_agent_client`, name hint
+  "Glose"); later sign-ins reuse the issued client ID. Each computer has its own opaque host ID.
+- The browser returns to a loopback callback on `127.0.0.1:1455` for the first sign-in, and any
+  free port after that. The server opens the system browser itself; the app also shows the link.
+- Inference goes to the public Responses API (`api.openai.com/v1/responses`) with `store: false`
+  and `stream: true`. The full model input is sent each time, so nothing is kept at OpenAI.
+  Glose's tools reach the model in one namespace, `glose`, as this route requires.
+- The model is the first one OpenAI lists for the account. A model picker can come later.
+- The ChatGPT credentials are per computer, in `chatgpt.json` beside the computer settings, readable
+  by the owner only. They never go into the Graph folder, which may be shared.
+- Following OpenAI's guidelines: the button reads "Continue with ChatGPT", a one-time notice says
+  "You're using your ChatGPT plan", and "Using ChatGPT plan" with a "Manage usage" link to
+  ChatGPT's usage page sits next to the Session's message box. The ChatGPT logo is not used yet.
+- First Session kind: Extraction. The agent has two read-only tools, `read_source` (bibliographic
+  data and Free text) and `list_sources`. It cannot write Notes, because the Note format and the
+  AI mark are not decided. One Extraction Session per Source; reopening the Source continues it.
+- A Session is kept in the Graph folder as `.glose/sessions/<id>.json`: what the user saw, and the
+  exact model input that the next turn continues from.
+- Developing on a headless node: the callback reaches the computer that runs the browser, so
+  forward the port first (`ssh -L 1455:127.0.0.1:1455 <node>`), or sign in on a computer with a
+  browser.
+
 ## Reasoning as part of the answer
 
 Taken from learnharness: the user thinks out loud, by typing or by dictation, and the reasoning is recorded and transcribed.
@@ -199,7 +225,8 @@ Taken from learnharness: the user thinks out loud, by typing or by dictation, an
 
 ## Open questions
 
-- Which licence does glose use?
+- Which licence does glose use? OpenAI documents "Sign in with ChatGPT" plan usage for open-source
+  and locally hosted apps; Glose is locally hosted, and a public release may need it open source.
 - Is the Windows build signed, or is the one-time SmartScreen warning acceptable?
 
 - Is a note that the AI arranges from the user's own transcript marked as AI text or as human text?

@@ -2,6 +2,7 @@ import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { createFileRoute } from "@tanstack/react-router";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 
+import { ChatGptConnection } from "../components/ChatGptConnection.tsx";
 import { Page, Panel } from "../components/ui.tsx";
 import { LANGUAGES, useT } from "../i18n/I18n.tsx";
 import { KEYS, setLanguageAtom, settingsAtom } from "../state/graph.ts";
@@ -48,6 +49,12 @@ function Settings() {
               {current?.graphFolder}
             </code>
             <p className="field__hint">{t.settings.graphFolderHint}</p>
+          </div>
+        </Panel>
+        <Panel title={t.chatgpt.title} initial="rubric">
+          <div className="panel__body stack">
+            <p className="field__hint">{t.chatgpt.intro}</p>
+            <ChatGptConnection />
           </div>
         </Panel>
       </div>

@@ -2,7 +2,16 @@ import * as Rpc from "effect/rpc/Rpc";
 import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as Schema from "effect/Schema";
 
+import { ChatGptStatus, ConnectChatGpt, DisconnectResult } from "./chatgpt.ts";
 import { ServerInfo } from "./server.ts";
+import {
+  FindSession,
+  SendMessage,
+  Session,
+  SessionBusy,
+  SessionNotFound,
+  SessionRef,
+} from "./session.ts";
 import {
   CompleteSetup,
   GraphFolderNotSet,
@@ -29,6 +38,17 @@ export const RPC_METHODS = {
   sourcesGet: "sources.get",
   sourcesCreate: "sources.create",
   sourcesSaveFreeText: "sources.saveFreeText",
+  chatgptWatch: "chatgpt.watch",
+  chatgptConnect: "chatgpt.connect",
+  chatgptCancel: "chatgpt.cancel",
+  chatgptDisconnect: "chatgpt.disconnect",
+  chatgptDismissPlanNotice: "chatgpt.dismissPlanNotice",
+  sessionsFind: "sessions.find",
+  sessionsStart: "sessions.start",
+  sessionsWatch: "sessions.watch",
+  sessionsSend: "sessions.send",
+  sessionsRetry: "sessions.retry",
+  sessionsStop: "sessions.stop",
 } as const;
 
 export const RPC_PATH = "/rpc";
@@ -67,4 +87,41 @@ export const GloseRpcGroup = RpcGroup.make(
     success: Source,
     error: Schema.Union([SourceNotFound, GraphFolderNotSet, StorageError]),
   }),
+  /** The current status, then every change to it. */
+  Rpc.make(RPC_METHODS.chatgptWatch, { success: ChatGptStatus, stream: true }),
+  /** Starts a sign-in in the browser; the status follows it. */
+  Rpc.make(RPC_METHODS.chatgptConnect, { payload: ConnectChatGpt, error: StorageError }),
+  Rpc.make(RPC_METHODS.chatgptCancel),
+  Rpc.make(RPC_METHODS.chatgptDisconnect, { success: DisconnectResult, error: StorageError }),
+  Rpc.make(RPC_METHODS.chatgptDismissPlanNotice, { error: StorageError }),
+  /** The latest Session of a kind for a Source, or null when there is none. */
+  Rpc.make(RPC_METHODS.sessionsFind, {
+    payload: FindSession,
+    success: Schema.NullOr(Session),
+    error: GraphErrors,
+  }),
+  /** Starts a Session; the AI takes the first turn at once. */
+  Rpc.make(RPC_METHODS.sessionsStart, {
+    payload: FindSession,
+    success: Session,
+    error: Schema.Union([SourceNotFound, GraphFolderNotSet, StorageError]),
+  }),
+  /** The Session now, then every change to it, including the AI's answer as it arrives. */
+  Rpc.make(RPC_METHODS.sessionsWatch, {
+    payload: SessionRef,
+    success: Session,
+    error: Schema.Union([SessionNotFound, GraphFolderNotSet, StorageError]),
+    stream: true,
+  }),
+  Rpc.make(RPC_METHODS.sessionsSend, {
+    payload: SendMessage,
+    error: Schema.Union([SessionNotFound, SessionBusy, GraphFolderNotSet, StorageError]),
+  }),
+  /** Runs the last turn again after a problem. */
+  Rpc.make(RPC_METHODS.sessionsRetry, {
+    payload: SessionRef,
+    error: Schema.Union([SessionNotFound, SessionBusy, GraphFolderNotSet, StorageError]),
+  }),
+  /** Stops the AI's current turn; what it already said stays. */
+  Rpc.make(RPC_METHODS.sessionsStop, { payload: SessionRef }),
 );

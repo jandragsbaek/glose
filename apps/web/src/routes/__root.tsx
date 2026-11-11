@@ -2,6 +2,7 @@ import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
 import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 
+import { PlanNotice } from "../components/PlanNotice.tsx";
 import { Rail } from "../components/Rail.tsx";
 import { Setup } from "../components/Setup.tsx";
 import { Notice, Page } from "../components/ui.tsx";
@@ -47,6 +48,7 @@ function Root() {
               <Outlet />
             </main>
           </div>
+          <PlanNotice />
         </I18nProvider>
       );
     },

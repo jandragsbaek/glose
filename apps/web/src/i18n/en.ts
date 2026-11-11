@@ -1,4 +1,11 @@
-import type { GraphFolderAction, GraphFolderUnavailable, ReadingStep } from "@glose/contracts";
+import type {
+  ChatGptProblem,
+  GraphFolderAction,
+  GraphFolderUnavailable,
+  ReadingStep,
+  SessionProblem,
+  SessionTool,
+} from "@glose/contracts";
 
 const numbers = new Intl.NumberFormat("en");
 const plurals = new Intl.PluralRules("en");
@@ -71,7 +78,7 @@ export const en = {
     folderLabel: "Folder path",
     chatgptStep: "ChatGPT",
     chatgptHint:
-      "Extraction and the Probe use your own ChatGPT subscription. Glose cannot connect to ChatGPT yet, so this step is skipped for now. You can already add Sources and write Free text.",
+      "Optional. You can also connect later in Settings. Without ChatGPT you can still add Sources and write Free text.",
     submit: "Start using Glose",
     folderErrors: {
       "not-absolute": "Write the full path of the folder, starting from the top of the disk.",
@@ -120,7 +127,8 @@ export const en = {
     current: "current step",
     words: (n: number) => count(n, "word", "words"),
     noFreeText: "skipped",
-    waitsForChatGpt: "needs ChatGPT",
+    withChatGpt: "with ChatGPT",
+    later: "comes later",
   },
   source: {
     firstPublished: (year: number) => `first published ${year}`,
@@ -187,9 +195,80 @@ export const en = {
     skip: "Skip Free text",
     finished: "Free text is finished. You can still change it.",
     nextStep: "Next step",
-    aiUnavailableTitle: "Extraction waits for ChatGPT",
-    aiUnavailable:
-      "Extraction and the Probe need a ChatGPT connection. Glose cannot connect to ChatGPT yet. Your Free text is saved in the Source file, ready for when it can.",
+  },
+  chatgpt: {
+    title: "ChatGPT",
+    intro:
+      "Extraction and the Probe use your own ChatGPT plan. Glose has no account of its own: ChatGPT asks you to allow Glose to use your plan, and counts the usage there.",
+    continue: "Continue with ChatGPT",
+    lastAccount: (email: string) => `Last used with ${email}.`,
+    otherAccount: "Use another ChatGPT account",
+    connecting: "Waiting for ChatGPT",
+    connectingHint:
+      "Glose opened ChatGPT in your browser. Sign in there and allow Glose to use your plan, then come back here.",
+    openAgain: "Open the ChatGPT page again",
+    cancel: "Cancel",
+    connected: (email: string) => `Connected as ${email}.`,
+    usingPlan: "Using ChatGPT plan",
+    manageUsage: "Manage usage",
+    disconnect: "Disconnect",
+    disconnectUnconfirmed:
+      "Glose forgot the sign-in, but ChatGPT did not confirm that it ended it. To be sure, disconnect Glose in ChatGPT's settings.",
+    planNotAllowedTitle: "Glose may not use your ChatGPT plan",
+    planNotAllowed:
+      "You signed in, but did not allow Glose to use your ChatGPT plan. The AI cannot work without it.",
+    allowPlan: "Allow plan use",
+    unknown: "Glose cannot see the ChatGPT connection right now.",
+    problems: {
+      declined: "You declined in ChatGPT, so Glose is not connected.",
+      "port-busy":
+        "Another program is signing in to ChatGPT at the same time, perhaps Codex. Finish or close that sign-in, then try again.",
+      "timed-out": "The sign-in took too long. Try again.",
+      "other-account":
+        "The browser signed in to another ChatGPT account. Try again with the same account, or choose Use another ChatGPT account.",
+      expired:
+        "The ChatGPT sign-in no longer works. It may have expired, or Glose was disconnected in ChatGPT. Sign in again.",
+      failed: "The sign-in did not work. Try again.",
+    } satisfies Record<ChatGptProblem, string>,
+    noticeTitle: "You're using your ChatGPT plan",
+    noticeBody:
+      "The AI in Glose now uses your ChatGPT plan. You can see and limit its usage in ChatGPT's settings.",
+    gotIt: "Got it",
+  },
+  session: {
+    title: "Extraction",
+    start: "Start Extraction",
+    startHint:
+      "The AI reads your Free text and the Source's data, suggests the core points, and asks you about them. Glose does not save Notes yet.",
+    needsChatGpt: "Extraction needs ChatGPT",
+    needsChatGptBody: "Connect your ChatGPT plan in Settings, then come back to this Source.",
+    openSettings: "Open Settings",
+    transcript: "Session",
+    you: "You",
+    ai: "AI",
+    tools: {
+      "read-source": "The AI read this Source and your Free text.",
+      "list-sources": "The AI looked at the list of your Sources.",
+    } satisfies Record<SessionTool, string>,
+    working: "The AI is working",
+    messageLabel: "Your answer",
+    messageHint: "Press Ctrl+Enter or Cmd+Enter to send.",
+    send: "Send",
+    stop: "Stop",
+    retry: "Try again",
+    model: (model: string) => `Model ${model}`,
+    sendFailed: "Glose could not send your message. Try again.",
+    problems: {
+      "not-connected": "The ChatGPT connection does not work. Sign in again in Settings.",
+      "plan-not-allowed":
+        "Glose may not use your ChatGPT plan. Allow it in Settings, then try again.",
+      "usage-limit":
+        "Usage limit reached. Your ChatGPT plan, or the share you gave Glose, is used up for now. See the limits in ChatGPT's settings.",
+      "not-eligible":
+        "This ChatGPT account cannot use its plan in other apps. ChatGPT Plus and Pro can.",
+      unavailable: "ChatGPT could not be reached. Try again in a moment.",
+      failed: "The AI stopped with an error. Try again.",
+    } satisfies Record<SessionProblem, string>,
   },
   graph: {
     title: "Graph",

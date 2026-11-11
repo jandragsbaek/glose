@@ -5,6 +5,7 @@ import * as Exit from "effect/Exit";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useId, useState } from "react";
 
+import { ExtractionPanel } from "../components/ExtractionPanel.tsx";
 import { StepBar } from "../components/StepBar.tsx";
 import {
   CallNumber,
@@ -57,7 +58,6 @@ function ReadingStage() {
 }
 
 function SourceView({ source }: { readonly source: Source }) {
-  const t = useT();
   const author = [source.givenName, source.familyName].filter(Boolean).join(" ");
   return (
     <Page
@@ -73,15 +73,7 @@ function SourceView({ source }: { readonly source: Source }) {
         <div className="stack">
           <StepBar source={source} />
           <FreeText source={source} />
-          {source.readingStep === "free-text" ? null : (
-            <Panel title={t.steps.names.extraction} initial="lapis">
-              <div className="panel__body">
-                <Notice tone="info" title={t.reading.aiUnavailableTitle}>
-                  <p>{t.reading.aiUnavailable}</p>
-                </Notice>
-              </div>
-            </Panel>
-          )}
+          {source.readingStep === "free-text" ? null : <ExtractionPanel source={source} />}
         </div>
         <div className="stack">
           <Details source={source} />

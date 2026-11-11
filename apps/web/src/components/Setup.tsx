@@ -9,13 +9,14 @@ import { type FormEvent, useId, useState } from "react";
 import { I18nProvider, LANGUAGES, useT } from "../i18n/I18n.tsx";
 import type { Messages } from "../i18n/en.ts";
 import { completeSetupAtom, KEYS } from "../state/graph.ts";
+import { ChatGptConnection } from "./ChatGptConnection.tsx";
 import { Notice, Panel } from "./ui.tsx";
 
 type FolderError = keyof Messages["setup"]["folderErrors"] | "storage";
 
 const FOLDER_ACTIONS: ReadonlyArray<GraphFolderAction> = ["create", "open"];
 
-/** The first start: language, Graph folder, and the ChatGPT step that cannot run yet. */
+/** The first start: language, Graph folder, and an optional ChatGPT connection. */
 export function Setup({
   view,
   initialLanguage,
@@ -151,10 +152,10 @@ function SetupForm({
           </Panel>
 
           <Panel title={t.setup.chatgptStep} initial="rubric">
-            <div className="panel__body">
-              <Notice tone="info">
-                <p>{t.setup.chatgptHint}</p>
-              </Notice>
+            <div className="panel__body stack">
+              <p className="field__hint">{t.chatgpt.intro}</p>
+              <p className="field__hint">{t.setup.chatgptHint}</p>
+              <ChatGptConnection />
             </div>
           </Panel>
 
