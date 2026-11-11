@@ -30,7 +30,15 @@ export interface Answer {
   /** JSON body, or SSE events for a streamed response. */
   readonly body: unknown;
   readonly sse?: boolean;
+  /** Keep the stream open after the events, as a long answer still on its way. */
+  readonly open?: boolean;
 }
+
+/** An SSE body that sends `text`, then stays open until the reader cancels it. */
+const openStream = (text: string) =>
+  new ReadableStream<Uint8Array>({
+    start: (controller) => controller.enqueue(new TextEncoder().encode(text)),
+  });
 
 export interface RecordedRequest {
   readonly url: string;
@@ -74,10 +82,15 @@ export const makeFakeOpenAi = Effect.gen(function* () {
       requests.push({ url: target, headers: request.headers, body: bodyText(request) });
       const answer = queues.get(target)?.shift() ?? { status: 404, body: { detail: "no answer" } };
       const response = answer.sse
-        ? new Response(sse(answer.body as ReadonlyArray<unknown>), {
-            status: answer.status,
-            headers: { "content-type": "text/event-stream" },
-          })
+        ? new Response(
+            answer.open
+              ? openStream(sse(answer.body as ReadonlyArray<unknown>))
+              : sse(answer.body as ReadonlyArray<unknown>),
+            {
+              status: answer.status,
+              headers: { "content-type": "text/event-stream" },
+            },
+          )
         : new Response(JSON.stringify(answer.body), {
             status: answer.status,
             headers: { "content-type": "application/json" },

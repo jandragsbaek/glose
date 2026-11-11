@@ -128,6 +128,8 @@ export const make = Effect.gen(function* () {
   const live = new Map<string, Live>();
   const loading = yield* Semaphore.make(1);
   const turns = yield* FiberMap.make<string>();
+  // Signing out stops every request on the user's plan, before the sign-in ends.
+  yield* chatGpt.beforeSignOut(FiberMap.clear(turns));
 
   const sessionsFolder = settings.get.pipe(
     Effect.flatMap(({ settings: { graphFolder } }) =>
@@ -249,11 +251,30 @@ export const make = Effect.gen(function* () {
             Effect.andThen(patch(session, (view) => ({ ...view, problem }))),
           );
         }),
+        // A turn that ends early (stopped, or failed mid-answer) keeps what the AI already
+        // said, in the transcript and in the model input the next turn continues from.
         Effect.ensuring(
-          patch(session, (view) => ({ ...view, working: false, draft: "" })).pipe(
-            Effect.andThen(save(session)),
-            Effect.ignore,
-          ),
+          Effect.gen(function* () {
+            const { draft } = yield* SubscriptionRef.get(session.view);
+            if (draft !== "") {
+              session.items = [
+                ...session.items,
+                {
+                  type: "message",
+                  role: "assistant",
+                  content: [{ type: "output_text", text: draft }],
+                },
+              ];
+            }
+            yield* patch(session, (view) => ({
+              ...view,
+              entries:
+                draft === "" ? view.entries : [...view.entries, { _tag: "AiMessage", text: draft }],
+              working: false,
+              draft: "",
+            }));
+            yield* save(session);
+          }).pipe(Effect.ignore),
         ),
       ),
   );

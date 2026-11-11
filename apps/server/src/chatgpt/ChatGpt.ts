@@ -72,7 +72,10 @@ export class ChatGpt extends Context.Service<
       readonly consent: boolean;
     }) => Effect.Effect<void, StorageError>;
     readonly cancel: Effect.Effect<void>;
+    /** Stops what runs on the user's plan, then revokes and forgets the sign-in. */
     readonly disconnect: Effect.Effect<{ readonly revoked: boolean }, StorageError>;
+    /** Runs `stop` at each sign-out, before the tokens are revoked and forgotten. */
+    readonly beforeSignOut: (stop: Effect.Effect<void>) => Effect.Effect<void>;
     readonly dismissPlanNotice: Effect.Effect<void, StorageError>;
     /** An access token for the Responses API, refreshed when it is about to expire. */
     readonly accessToken: Effect.Effect<Redacted.Redacted<string>, ChatGptUnavailable>;
@@ -138,6 +141,7 @@ export const make = Effect.gen(function* () {
   const status = yield* SubscriptionRef.make<ChatGptStatus>(initial);
   const attempt = yield* FiberHandle.make<void, never>();
   const refreshLock = yield* Semaphore.make(1);
+  const signOutSteps: Array<Effect.Effect<void>> = [];
 
   const publish = (problem: ChatGptProblem | null) =>
     credentials.get.pipe(
@@ -353,6 +357,7 @@ export const make = Effect.gen(function* () {
 
     disconnect: Effect.gen(function* () {
       yield* FiberHandle.clear(attempt);
+      yield* Effect.all(signOutSteps, { discard: true });
       const account = activeAccount(yield* credentials.get);
       const revoked =
         account?.tokens === undefined || account.tokens === null
@@ -362,6 +367,8 @@ export const make = Effect.gen(function* () {
       yield* publish(null);
       return { revoked };
     }),
+
+    beforeSignOut: (stop) => Effect.sync(() => void signOutSteps.push(stop)),
 
     dismissPlanNotice: Effect.gen(function* () {
       yield* credentials.update((data) => {
