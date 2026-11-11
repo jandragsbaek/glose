@@ -70,7 +70,7 @@ export const da: Messages = {
     folderLabel: "Mappens sti",
     chatgptStep: "ChatGPT",
     chatgptHint:
-      "Udtræk og sondering bruger dit eget ChatGPT-abonnement. Glose kan ikke forbinde til ChatGPT endnu, så dette trin springes over indtil videre. Du kan allerede tilføje kilder og skrive fri tekst.",
+      "Valgfrit. Du kan også forbinde senere under Indstillinger. Uden ChatGPT kan du stadig tilføje kilder og skrive fri tekst.",
     submit: "Begynd at bruge Glose",
     folderErrors: {
       "not-absolute": "Skriv mappens fulde sti, helt fra toppen af disken.",
@@ -120,7 +120,8 @@ export const da: Messages = {
     current: "nuværende trin",
     words: (n: number) => count(n, "ord", "ord"),
     noFreeText: "sprunget over",
-    waitsForChatGpt: "kræver ChatGPT",
+    withChatGpt: "med ChatGPT",
+    later: "kommer senere",
   },
   source: {
     firstPublished: (year: number) => `først udgivet ${year}`,
@@ -187,9 +188,81 @@ export const da: Messages = {
     skip: "Spring fri tekst over",
     finished: "Fri tekst er afsluttet. Du kan stadig ændre den.",
     nextStep: "Næste trin",
-    aiUnavailableTitle: "Udtræk venter på ChatGPT",
-    aiUnavailable:
-      "Udtræk og sondering kræver en forbindelse til ChatGPT. Glose kan ikke forbinde til ChatGPT endnu. Din frie tekst er gemt i kildens fil, klar til når det kan.",
+  },
+  chatgpt: {
+    title: "ChatGPT",
+    intro:
+      "Udtræk og sondering bruger dit eget ChatGPT-abonnement. Glose har ingen konto selv: ChatGPT beder dig give Glose lov til at bruge dit abonnement og tæller forbruget dér.",
+    continue: "Fortsæt med ChatGPT",
+    lastAccount: (email: string) => `Sidst brugt med ${email}.`,
+    otherAccount: "Brug en anden ChatGPT-konto",
+    connecting: "Venter på ChatGPT",
+    connectingHint:
+      "Glose har åbnet ChatGPT i din browser. Log ind dér, og giv Glose lov til at bruge dit abonnement. Kom så tilbage hertil.",
+    openAgain: "Åbn ChatGPT-siden igen",
+    cancel: "Annullér",
+    connected: (email: string) => `Forbundet som ${email}.`,
+    usingPlan: "Bruger ChatGPT-abonnement",
+    manageUsage: "Administrér forbrug",
+    disconnect: "Afbryd forbindelsen",
+    disconnectUnconfirmed:
+      "Glose har glemt log-ind'et, men ChatGPT bekræftede ikke, at det er afsluttet. Afbryd Glose i ChatGPT's indstillinger for at være sikker.",
+    planNotAllowedTitle: "Glose må ikke bruge dit ChatGPT-abonnement",
+    planNotAllowed:
+      "Du loggede ind, men gav ikke Glose lov til at bruge dit ChatGPT-abonnement. AI'en kan ikke arbejde uden.",
+    allowPlan: "Giv lov til at bruge abonnementet",
+    unknown: "Glose kan ikke se forbindelsen til ChatGPT lige nu.",
+    problems: {
+      declined: "Du sagde nej i ChatGPT, så Glose er ikke forbundet.",
+      "port-busy":
+        "Et andet program logger ind på ChatGPT samtidig, måske Codex. Gør det log-ind færdigt eller luk det, og prøv så igen.",
+      "timed-out": "Log-ind'et tog for lang tid. Prøv igen.",
+      "other-account":
+        "Browseren loggede ind på en anden ChatGPT-konto. Prøv igen med samme konto, eller vælg Brug en anden ChatGPT-konto.",
+      expired:
+        "Log-ind'et på ChatGPT virker ikke længere. Det kan være udløbet, eller Glose er afbrudt i ChatGPT. Log ind igen.",
+      failed: "Log-ind'et virkede ikke. Prøv igen.",
+    },
+    noticeTitle: "Du bruger dit ChatGPT-abonnement",
+    noticeBody:
+      "AI'en i Glose bruger nu dit ChatGPT-abonnement. Du kan se og begrænse forbruget i ChatGPT's indstillinger.",
+    gotIt: "Forstået",
+  },
+  session: {
+    title: "Udtræk",
+    start: "Start udtræk",
+    startHint:
+      "AI'en læser din frie tekst og kildens data, foreslår hovedpointerne og spørger dig om dem. Glose gemmer ikke noter endnu.",
+    needsChatGpt: "Udtræk kræver ChatGPT",
+    needsChatGptBody:
+      "Forbind dit ChatGPT-abonnement under Indstillinger, og kom så tilbage til denne kilde.",
+    openSettings: "Åbn Indstillinger",
+    transcript: "Session",
+    you: "Dig",
+    ai: "AI",
+    tools: {
+      "read-source": "AI'en læste denne kilde og din frie tekst.",
+      "list-sources": "AI'en så på listen over dine kilder.",
+    },
+    working: "AI'en arbejder",
+    messageLabel: "Dit svar",
+    messageHint: "Tryk Ctrl+Enter eller Cmd+Enter for at sende.",
+    send: "Send",
+    stop: "Stop",
+    retry: "Prøv igen",
+    model: (model: string) => `Model ${model}`,
+    sendFailed: "Glose kunne ikke sende din besked. Prøv igen.",
+    problems: {
+      "not-connected": "Forbindelsen til ChatGPT virker ikke. Log ind igen under Indstillinger.",
+      "plan-not-allowed":
+        "Glose må ikke bruge dit ChatGPT-abonnement. Giv lov under Indstillinger, og prøv så igen.",
+      "usage-limit":
+        "Forbrugsgrænsen er nået. Dit ChatGPT-abonnement, eller den andel du har givet Glose, er brugt op for nu. Se grænserne i ChatGPT's indstillinger.",
+      "not-eligible":
+        "Denne ChatGPT-konto kan ikke bruge sit abonnement i andre programmer. ChatGPT Plus og Pro kan.",
+      unavailable: "ChatGPT kunne ikke nås. Prøv igen om lidt.",
+      failed: "AI'en stoppede med en fejl. Prøv igen.",
+    },
   },
   graph: {
     title: "Graf",

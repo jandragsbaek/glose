@@ -2,6 +2,7 @@ import { GloseRpcGroup, HEALTH_PATH, RPC_PATH } from "@glose/contracts";
 import * as NodeHttpServer from "@effect/platform-node/NodeHttpServer";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as Effect from "effect/Effect";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as HttpRouter from "effect/http/HttpRouter";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as HttpStaticServer from "effect/http/HttpStaticServer";
@@ -11,10 +12,14 @@ import * as RpcSerialization from "effect/rpc/RpcSerialization";
 import * as RpcServer from "effect/rpc/RpcServer";
 import * as NodeHttp from "node:http";
 
+import * as ChatGpt from "./chatgpt/ChatGpt.ts";
+import * as Credentials from "./chatgpt/Credentials.ts";
+import * as Responses from "./chatgpt/Responses.ts";
 import * as ServerConfig from "./config.ts";
 import * as Sources from "./graph/Sources.ts";
 import * as ServerInfo from "./info/ServerInfo.ts";
 import * as Rpc from "./rpc.ts";
+import * as Sessions from "./sessions/Sessions.ts";
 import * as Settings from "./settings/Settings.ts";
 
 /** Newline-delimited JSON, so a streamed reply reaches the client as it happens. */
@@ -45,18 +50,42 @@ const layerHttpServer = Layer.unwrap(
   }),
 );
 
-/** The app's services over the files on disk; they need ServerConfig. */
-export const layerServices = Sources.layer.pipe(
+const layerChatGpt = ChatGpt.layer.pipe(Layer.provide([ChatGpt.layerCrypto, Credentials.layer]));
+
+/**
+ * The app's services over the files on disk and ChatGPT. They still need ServerConfig, an
+ * HttpClient, OpenAI's signing keys and the platform; a test supplies fakes for OpenAI.
+ */
+export const layerApp = Sessions.layer.pipe(
+  Layer.provideMerge(Layer.mergeAll(layerChatGpt, Responses.layer)),
+  Layer.provideMerge(Sources.layer),
   Layer.provideMerge(Settings.layer),
-  Layer.provide(NodeServices.layer),
+);
+
+/** OpenAI's signing keys come only from the configured URL, never from a redirect. */
+const layerFetchNoRedirects = FetchHttpClient.layer.pipe(
+  Layer.provide(Layer.succeed(FetchHttpClient.RequestInit, { redirect: "manual" })),
+);
+
+/** The app's services against the real OpenAI; they need ServerConfig. */
+export const layerServices = layerApp.pipe(
+  Layer.provide([
+    ChatGpt.layerJwks.pipe(Layer.provide(layerFetchNoRedirects)),
+    FetchHttpClient.layer,
+    NodeServices.layer,
+  ]),
 );
 
 /** Every route, still waiting for an HTTP server; the test serves these on a random port. */
 export const layerRoutes = Layer.mergeAll(layerRpcRoute, layerHealthRoute, layerSpaRoute);
 
+/**
+ * The services are built before the port opens. A request that reached the port first would
+ * find no handler yet and hang, and the desktop app's first health check could be that request.
+ */
 export const layer = HttpRouter.serve(layerRoutes).pipe(
   Layer.provide(ServerInfo.layer),
-  Layer.provide(layerServices),
   Layer.provide(layerHttpServer),
+  Layer.provide(layerServices),
   Layer.provide(ServerConfig.layer),
 );

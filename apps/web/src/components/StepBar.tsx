@@ -18,7 +18,7 @@ export function StepBar({ source }: { readonly source: Source }) {
       return words === 0 ? t.steps.noFreeText : t.steps.words(words);
     }
     if (step === "free-text") return t.steps.words(words);
-    return t.steps.waitsForChatGpt;
+    return step === "extraction" ? t.steps.withChatGpt : t.steps.later;
   };
 
   return (

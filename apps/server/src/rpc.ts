@@ -1,8 +1,10 @@
 import { GloseRpcGroup, RPC_METHODS } from "@glose/contracts";
 import * as Effect from "effect/Effect";
 
+import * as ChatGpt from "./chatgpt/ChatGpt.ts";
 import * as Sources from "./graph/Sources.ts";
 import * as ServerInfo from "./info/ServerInfo.ts";
+import * as Sessions from "./sessions/Sessions.ts";
 import * as Settings from "./settings/Settings.ts";
 
 /** Thin transport: RpcServer decodes the payload, the handler calls one service method. */
@@ -11,6 +13,8 @@ export const layer = GloseRpcGroup.toLayer(
     const info = yield* ServerInfo.ServerInfo;
     const settings = yield* Settings.Settings;
     const sources = yield* Sources.Sources;
+    const chatGpt = yield* ChatGpt.ChatGpt;
+    const sessions = yield* Sessions.Sessions;
     return GloseRpcGroup.of({
       [RPC_METHODS.serverInfo]: () => info.get,
       [RPC_METHODS.settingsGet]: () => settings.get,
@@ -20,6 +24,17 @@ export const layer = GloseRpcGroup.toLayer(
       [RPC_METHODS.sourcesGet]: ({ id }) => sources.get(id),
       [RPC_METHODS.sourcesCreate]: (details) => sources.create(details),
       [RPC_METHODS.sourcesSaveFreeText]: (input) => sources.saveFreeText(input),
+      [RPC_METHODS.chatgptWatch]: () => chatGpt.status,
+      [RPC_METHODS.chatgptConnect]: (input) => chatGpt.connect(input),
+      [RPC_METHODS.chatgptCancel]: () => chatGpt.cancel,
+      [RPC_METHODS.chatgptDisconnect]: () => chatGpt.disconnect,
+      [RPC_METHODS.chatgptDismissPlanNotice]: () => chatGpt.dismissPlanNotice,
+      [RPC_METHODS.sessionsFind]: (input) => sessions.find(input),
+      [RPC_METHODS.sessionsStart]: (input) => sessions.start(input),
+      [RPC_METHODS.sessionsWatch]: ({ id }) => sessions.watch(id),
+      [RPC_METHODS.sessionsSend]: (input) => sessions.send(input),
+      [RPC_METHODS.sessionsRetry]: ({ id }) => sessions.retry(id),
+      [RPC_METHODS.sessionsStop]: ({ id }) => sessions.stop(id),
     });
   }),
 );
