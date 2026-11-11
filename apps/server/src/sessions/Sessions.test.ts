@@ -371,7 +371,7 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
       const noteRead = afterRead!.input.find((item) => item.type === "function_call_output");
       assert.include(String(noteRead?.["output"]), "Leroy found that attention lingers.");
 
-      const after = yield* Effect.gen(function* () {
+      const kept = yield* Effect.gen(function* () {
         const sessions = yield* Sessions;
         const card = yield* sessions.keepProposal({
           id: session.id,
@@ -384,9 +384,15 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
           sessions.keepProposal({ id: session.id, proposal: "p2", question: "Q?", answer: "" }),
         );
         assert.isTrue(again._tag === "Failure");
+        return card;
+      }).pipe(Effect.provide(layer));
+
+      // After a restart, the next turn still learns what the user decided.
+      const after = yield* Effect.gen(function* () {
+        const sessions = yield* Sessions;
         yield* sessions.send({ id: session.id, text: "Harder, please." });
         const done = yield* afterTurn(session.id);
-        return { card, done, cards: yield* (yield* Cards.Cards).list };
+        return { card: kept, done, cards: yield* (yield* Cards.Cards).list };
       }).pipe(Effect.provide(layer));
 
       // A kept Card is AI text, even after the user changed it.

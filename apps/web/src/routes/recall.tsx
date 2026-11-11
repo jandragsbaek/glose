@@ -86,7 +86,7 @@ function CardList({ cards }: { readonly cards: ReadonlyArray<Card> }) {
               }}
             />
           </div>
-          {ai === 0 ? null : (
+          {ai === 0 && !onlyAi ? null : (
             <label>
               <input
                 type="checkbox"

@@ -97,6 +97,8 @@ const SessionRecord = Schema.Struct({
   created: Schema.Number,
   entries: Schema.Array(SessionEntry),
   items: Schema.Array(Schema.Record(Schema.String, Schema.Unknown)),
+  /** Decisions on proposed Cards that the next turn has yet to tell the AI. */
+  decisions: Schema.optionalKey(Schema.Array(Schema.String)),
 });
 type SessionRecord = typeof SessionRecord.Type;
 
@@ -218,6 +220,7 @@ export const make = Effect.gen(function* () {
       created: view.created,
       entries: view.entries,
       items: session.items,
+      decisions: session.decisions,
     };
     yield* fs.makeDirectory(folder, { recursive: true }).pipe(Effect.mapError(storageError));
     yield* encodeRecord(record).pipe(
@@ -250,7 +253,7 @@ export const make = Effect.gen(function* () {
     const session: Live = {
       view: yield* SubscriptionRef.make(viewOf(record)),
       items: record.items,
-      decisions: [],
+      decisions: [...(record.decisions ?? [])],
     };
     live.set(record.id, session);
     return session;
