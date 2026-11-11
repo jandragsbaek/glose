@@ -14,6 +14,7 @@ import {
 import { CatalogRecord, CatalogSearch, CatalogUnavailable } from "./catalog.ts";
 import { ChatGptStatus, ConnectChatGpt, DisconnectResult } from "./chatgpt.ts";
 import { GraphView, NoteNotFound } from "./graph.ts";
+import { RecordReview, ReviewQueue } from "./recall.ts";
 import { ServerInfo } from "./server.ts";
 import {
   DropProposal,
@@ -76,6 +77,8 @@ export const RPC_METHODS = {
   cardsUpdate: "cards.update",
   cardsClearAiMark: "cards.clearAiMark",
   cardsDelete: "cards.delete",
+  recallQueue: "recall.queue",
+  recallReview: "recall.review",
 } as const;
 
 export const RPC_PATH = "/rpc";
@@ -193,6 +196,13 @@ export const GloseRpcGroup = RpcGroup.make(
   }),
   Rpc.make(RPC_METHODS.cardsDelete, {
     payload: CardRef,
+    error: Schema.Union([CardNotFound, GraphFolderNotSet, StorageError]),
+  }),
+  /** What is due today, scheduled by FSRS from every computer's Reviews. */
+  Rpc.make(RPC_METHODS.recallQueue, { success: ReviewQueue, error: GraphErrors }),
+  /** Keeps one Review in this computer's log; the next queue shows its effect. */
+  Rpc.make(RPC_METHODS.recallReview, {
+    payload: RecordReview,
     error: Schema.Union([CardNotFound, GraphFolderNotSet, StorageError]),
   }),
 );

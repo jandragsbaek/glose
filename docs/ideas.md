@@ -27,7 +27,8 @@ Working notes from early conversations. Nothing here is final.
   Graf (Graph), Link, Kort (Card), Genkaldelse (Recall), Skriveprojekt (Writing project), Fri
   tekst (Free text), Udtræk (Extraction), Sondering (Probe), Læsning (the Reading Stage),
   AI-tekst (AI text), Kildehenvisning (Citation), Kortudtræk (Card Extraction), Foreslået kort
-  (Proposed Card), Tjek (Check), Vurdering (Grade).
+  (Proposed Card), Tjek (Check), Vurdering (Grade), Gennemgang (Review), Glemt / Husket
+  (Forgot / Recalled), and Med besvær, Normalt, Med det samme (With effort, Normal, At once).
 
 ## First start
 
@@ -177,17 +178,65 @@ Decided, Card Checks (November 2026):
 - Not yet: Checks across the set of a Note's Cards (does it cover the Note's main point, is
   there enough "why" and "how"), and lapses from Reviews as evidence of a weak Card.
 
-Decided, Reviews (next version, November 2026):
+Decided, Reviews (November 2026):
 
-- FSRS, through the TypeScript FSRS library of the open-spaced-repetition project (health check
-  before it is added).
-- Every Review is appended as one JSON line to `.glose/recall/reviews/<computer id>/<yyyy-mm>.jsonl`:
-  Card id, time, rating (Again, Hard, Good, Easy) and time to answer. Each computer writes only
-  its own folder, so a Graph shared through Dropbox or git has no conflicts, and git sees only
-  added lines.
-- The log is the record. Each Card's FSRS state (stability, difficulty, due date) is a cache in
-  `.glose/recall/`, rebuilt by replaying the log. Retention numbers and, later, FSRS parameters
-  fitted to the user come from the log.
+- FSRS through ts-fsrs 6 (open-spaced-repetition, MIT; healthy: 400k weekly downloads, active
+  in November 2026). Glose pins the FSRS-6 model, which Anki 26.09 uses. ts-fsrs 6 defaults to
+  FSRS-7, which reached fsrs-rs on 10 November 2026 and is not in Anki yet. The scheduling runs
+  on the server only.
+- Every Review is appended as one JSON line to `.glose/recall/reviews/<computer id>/<yyyy-mm>.jsonl`
+  (month in UTC): `{"card":"c-…","at":"<ISO time>","rating":"good","answerMs":3100}`. The rating
+  is `again`, `hard`, `good` or `easy`. Each computer writes only its own folder, so a Graph shared
+  through Dropbox or git has no conflicts, and git sees only added lines. A line Glose cannot read
+  is skipped, so one cut-off line does not lose the record.
+- The computer id is a random id in `computer.json` in the app data folder, made on first use.
+- The log is the record. Each Card's FSRS state is replayed from the logs of every computer, in
+  time order. Changed: the replayed state is cached in memory only, not in `.glose/recall/`,
+  because a cache file in a shared Graph folder would conflict between computers. A new Review
+  is applied to the cache at once; a changed log file (a sync) or changed settings replays the
+  whole log (50,000 Reviews take about 0.6 s).
+- Because the state is replayed, a changed setting applies to past Reviews too, like Anki's
+  "Reschedule cards on change".
+- Fuzz is on, as in Anki. ts-fsrs seeds it with the Card id and its number of Reviews, so a
+  replay gives the same dates.
+- A Card written by hand without an `id` gets one before its first Review is kept.
+
+Decided, Recall settings (November 2026):
+
+- They travel with the Graph, in `.glose/settings.json` under `recall`, because the Reviews they
+  schedule travel with it too. The file holds only what the user changed; a missing field takes
+  its default, so a later Glose can improve a default the user never set. Until the Settings
+  panel edits them, they can be changed by hand in that file.
+- Defaults are Anki's for a new deck with FSRS on: `desiredRetention` 0.9 (0.7 to 0.99),
+  `learningSteps` `["1m", "10m"]`, `relearningSteps` `["10m"]`, `maximumInterval` 36500 days,
+  `newCardsPerDay` 20, `maximumReviewsPerDay` 200, `nextDayStartsAt` 4 (local hour), `weights`
+  null (FSRS-6's defaults; later, parameters fitted to the user's log). A step is a number and
+  `m`, `h` or `d`.
+- Fixed for now, as Anki has them: fuzz on, and a learn ahead limit of 20 minutes.
+
+Decided, the Review queue (November 2026):
+
+- Anki's order: due learning steps first, then due Cards past learning (oldest due first, up to
+  the daily limit), then new Cards (up to the daily limit). With nothing else due, a learning step
+  due within 20 minutes comes early. The daily limits count Reviews since the day started at
+  `nextDayStartsAt`, on every computer.
+- New Cards start in file name order, since a Card does not record when it was made.
+- Recall shows what is due today and a "Start Review" button. A Review has its own screen at
+  `/review`, without the rail: one Card (a white leaf) on the desk, with the Cards still to come
+  as paper edges under it, a quiet count, and Stop (Esc). The leaf shows the question, then
+  "Show answer" opens the answer below the pen flourish. The keyboard drives it, and each button
+  shows its key: Space shows the answer; 1 Forgot, 2 Recalled; then 1, 2, 3 for how it went,
+  Backspace for Back. The time to answer counts from showing the question to choosing the
+  rating. With nothing due, the desk says when a learning step comes back, and asks again then,
+  or that the day is done.
+- The rating comes in two steps, not Anki's four buttons. People press Hard when they forgot, but
+  FSRS reads Hard as a pass ("recalled, with effort"); only Again is a fail, and FSRS cannot
+  adapt to that habit. So Recall first asks "Did you recall it?" with Forgot (Again) and Recalled.
+  After Recalled it asks "How did it go?" with With effort (Hard), Normal (Good) and At once
+  (Easy), and Back. Each button that rates shows when the Card would come back. The log and FSRS
+  keep Anki's names: `again`, `hard`, `good`, `easy`. The price is one more click per Review.
+- Not yet: undo of the last Review, leeches (Cards forgotten often), fitting
+  FSRS parameters to the log, retention numbers, and the order new Cards start in.
 
 ## Probe and Review
 

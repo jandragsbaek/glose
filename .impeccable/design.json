@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-10T22:55:18+00:00",
+  "generatedAt": "2026-11-11T13:07:47+00:00",
   "title": "Design System: Glose",
   "extensions": {
     "colorMeta": {
@@ -319,6 +319,14 @@
       "call": {
         "displayName": "Call",
         "purpose": "Call numbers and step numbers only."
+      },
+      "review-question": {
+        "displayName": "Review question",
+        "purpose": "The question on the Review leaf; max 30ch, balanced wrap; 24px on phones."
+      },
+      "review-answer": {
+        "displayName": "Review answer",
+        "purpose": "The answer on the Review leaf; max 40ch; 18px on phones."
       }
     },
     "shadows": [
@@ -348,19 +356,36 @@
         "name": "shimmer",
         "value": "1.4s ease-in-out infinite",
         "purpose": "Skeleton loading bars; stopped under prefers-reduced-motion."
+      },
+      {
+        "name": "leaf-leave",
+        "value": "200ms ease-out, translateY(-14px), opacity 0",
+        "purpose": "A rating lifts the Review leaf away; stopped under prefers-reduced-motion."
+      },
+      {
+        "name": "leaf-rise",
+        "value": "280ms ease-out, from translateY(10px) and opacity 0.6",
+        "purpose": "The next Review leaf rises from the stack; stopped under prefers-reduced-motion."
       }
     ],
     "breakpoints": [
       {
         "name": "columns-collapse",
         "value": "1080px"
+      },
+      {
+        "name": "focus-stack",
+        "value": "720px"
       }
     ],
     "layout": {
       "rail": "96px",
       "sideColumn": "minmax(300px, 380px)",
       "narrow": "760px",
-      "pageBodyPadding": "24px 32px 40px"
+      "pageBodyPadding": "24px 32px 40px",
+      "focusBar": "64px, padding 12px 32px (12px 16px at 720px)",
+      "reviewLeaf": "720px",
+      "reviewDeskPadding": "68px 32px 48px (24px 16px 32px at 720px)"
     },
     "focus": {
       "onPaper": "2px solid lapis, offset 2px",
@@ -422,7 +447,7 @@
       "kind": "custom",
       "refersTo": "call-number",
       "description": "Typed white spine label; a missing year turns it rubric with an icon and a question mark.",
-      "html": "<span class=\"ds-call\">ARE 1958 <span class=\"ds-loc\">\u00b7 p. 79</span></span> <span class=\"ds-call ds-call-missing\" aria-label=\"Call number KIE ?, year missing\"><svg class=\"ds-ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3\"/><path d=\"M12 9v4\"/><path d=\"M12 17h.01\"/></svg>KIE ?</span>",
+      "html": "<span class=\"ds-call\">ARE 1958 <span class=\"ds-loc\">· p. 79</span></span> <span class=\"ds-call ds-call-missing\" aria-label=\"Call number KIE ?, year missing\"><svg class=\"ds-ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3\"/><path d=\"M12 9v4\"/><path d=\"M12 17h.01\"/></svg>KIE ?</span>",
       "css": ".ds-call { display:inline-flex; align-items:center; gap:6px; padding:1px 7px; background:var(--paper,#fff); border:1px solid var(--ink,#141414); border-radius:2px; font:700 12px/18px 'Courier Prime',ui-monospace,monospace; font-variant-numeric:tabular-nums; color:var(--ink,#141414); white-space:nowrap; } .ds-loc { font-weight:400; color:var(--mute,#5c5f6a); } .ds-call-missing { border-color:var(--rubric,#b3261e); color:var(--rubric,#b3261e); } .ds-call .ds-ico { width:13px; height:13px; }"
     },
     {
@@ -448,17 +473,50 @@
       "description": "Red always arrives with an icon and words; stand-alone warnings sit on rubric wash.",
       "html": "<div class=\"ds-notice\"><svg class=\"ds-ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3\"/><path d=\"M12 9v4\"/><path d=\"M12 17h.01\"/></svg><div><p class=\"ds-ntitle\">Missing for a correct Citation</p><p>The year of first publication and the publisher.</p></div></div>",
       "css": ".ds-notice { display:flex; gap:10px; padding:12px 14px; border:1px solid var(--rubric-line,#e7c9c6); border-radius:4px; background:var(--rubric-wash,#fbeceb); font:400 14px/1.5 'Public Sans',system-ui,sans-serif; color:var(--ink,#141414); } .ds-notice p { margin:0; } .ds-notice .ds-ico { flex:none; width:18px; height:18px; margin-top:1px; color:var(--rubric,#b3261e); } .ds-ntitle { font-weight:600; }"
+    },
+    {
+      "name": "Key Cap",
+      "kind": "custom",
+      "refersTo": "key-cap",
+      "description": "A small hairline box naming the key that does the same as its button; inverted on the primary button.",
+      "html": "<button class=\"ds-kbtn\"><kbd class=\"ds-key\">1</kbd>Forgot <span class=\"ds-when\">1 min</span></button> <button class=\"ds-kbtn ds-kbtn-primary\"><kbd class=\"ds-key\">2</kbd>Recalled</button>",
+      "css": ".ds-kbtn { display:inline-flex; align-items:center; gap:8px; min-height:36px; padding:0 16px; border:1px solid var(--ink,#141414); border-radius:4px; background:var(--paper,#fff); color:var(--ink,#141414); font:600 14px/1.2 'Public Sans',system-ui,sans-serif; cursor:pointer; transition:background-color 160ms cubic-bezier(0.22,1,0.36,1); } .ds-kbtn:hover { background:var(--tint,#eef0f8); } .ds-kbtn:focus-visible { outline:2px solid var(--lapis,#1e2f7a); outline-offset:2px; } .ds-kbtn-primary { background:var(--lapis,#1e2f7a); border-color:var(--lapis,#1e2f7a); color:var(--on-lapis,#fff); } .ds-kbtn-primary:hover { background:var(--lapis-raised,#2b3e92); box-shadow:0 2px 6px rgb(30 47 122 / 22%); } .ds-key { display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px; padding:0 6px; border:1px solid var(--line-strong,#c9c8d1); border-bottom-width:2px; border-radius:4px; background:var(--paper,#fff); color:var(--mute,#5c5f6a); font:600 12px/1 'Public Sans',system-ui,sans-serif; } .ds-kbtn-primary .ds-key { border-color:rgb(255 255 255 / 45%); background:transparent; color:var(--on-lapis,#fff); } .ds-when { color:var(--mute,#5c5f6a); font-weight:400; font-variant-numeric:tabular-nums; }"
+    },
+    {
+      "name": "Quiet Button",
+      "kind": "button",
+      "refersTo": "button-quiet",
+      "description": "A borderless Mute text button for a way out of a slip (Review's Back), on its own line under the choices.",
+      "html": "<button class=\"ds-quiet\"><kbd class=\"ds-quiet-key\">Backspace</kbd>Back</button>",
+      "css": ".ds-quiet { display:inline-flex; align-items:center; gap:8px; min-height:36px; padding:0 12px; border:0; border-radius:4px; background:none; color:var(--mute,#5c5f6a); font:600 13px/1.2 'Public Sans',system-ui,sans-serif; cursor:pointer; } .ds-quiet:hover { color:var(--ink,#141414); text-decoration:underline; text-underline-offset:3px; } .ds-quiet:focus-visible { outline:2px solid var(--lapis,#1e2f7a); outline-offset:2px; } .ds-quiet-key { display:inline-flex; align-items:center; height:22px; padding:0 6px; border:1px solid var(--line-strong,#c9c8d1); border-bottom-width:2px; border-radius:4px; background:var(--paper,#fff); color:var(--mute,#5c5f6a); font:600 12px/1 'Public Sans',system-ui,sans-serif; }"
+    },
+    {
+      "name": "Review Leaf",
+      "kind": "card",
+      "refersTo": "review-leaf",
+      "description": "One Card on the desk: question, the flourish between hairlines, answer, a Mute foot line; leaf edges below for the Cards still to come.",
+      "html": "<div class=\"ds-stage\"><article class=\"ds-leaf\"><h2 class=\"ds-q\">Why does Kierkegaard let Anti-Climacus write the book?</h2><div class=\"ds-rule\"><svg class=\"ds-flourish\" viewBox=\"0 0 64 10\" aria-hidden=\"true\"><path d=\"M2 6.5c8 0 12-3 20-3 4 0 6 2.2 10 2.2s6-4.2 10-4.2c8 0 12 5 20 5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\"/><circle cx=\"32\" cy=\"5.7\" r=\"1.3\" fill=\"currentColor\"/></svg></div><p class=\"ds-a\">Anti-Climacus stands for an ideal Kierkegaard did not live up to.</p><p class=\"ds-from\">New Card · From Anti-Climacus is the book's pseudonym</p></article><span class=\"ds-edge\" style=\"--depth:1\"></span><span class=\"ds-edge\" style=\"--depth:2\"></span></div>",
+      "css": ".ds-stage { width:min(720px,100%); } .ds-leaf { display:flex; flex-direction:column; padding:40px 48px 36px; background:var(--paper,#fff); border:1px solid var(--line,#dedde3); border-radius:4px; color:var(--ink,#141414); font-family:'Public Sans',system-ui,sans-serif; } .ds-q { margin:0; max-width:30ch; font-size:28px; font-weight:700; line-height:1.3; letter-spacing:-0.01em; text-wrap:balance; } .ds-rule { display:flex; align-items:center; gap:12px; margin:32px 0 28px; } .ds-rule::before, .ds-rule::after { content:''; flex:1; height:1px; background:var(--line,#dedde3); } .ds-flourish { display:block; flex:none; width:64px; height:10px; color:var(--rubric,#b3261e); } .ds-a { margin:0; max-width:40ch; font-size:21px; line-height:1.5; } .ds-from { margin:0; padding-top:28px; color:var(--mute,#5c5f6a); font-size:13px; } .ds-edge { display:block; width:calc(100% - var(--depth) * 16px); height:8px; margin:0 auto; background:var(--paper,#fff); border:1px solid var(--line,#dedde3); border-top:0; border-radius:0 0 4px 4px; }"
+    },
+    {
+      "name": "AI Text",
+      "kind": "annotation",
+      "refersTo": "ai-text",
+      "description": "AI text in a Note or Card keeps ink and body type; its mark sits at the edge: a rubric rule and a rubric gloss above it that says how much the AI wrote. Paragraphs: 2px rule and a ¶ gloss. A whole Part, Note or Card: 3px rule and a § gloss. The block is a group named by its gloss.",
+      "html": "<div class=\"ds-ai\" role=\"group\" aria-labelledby=\"ds-ai-gloss\"><p class=\"ds-ai-gloss\" id=\"ds-ai-gloss\">AI-written Note</p><p>Newport draws on research by Sophie Leroy: after a switch, part of the attention stays with the last task.</p></div><div class=\"ds-ai ds-ai--paragraphs\" role=\"group\" aria-labelledby=\"ds-ai-gloss-2\"><p class=\"ds-ai-gloss\" id=\"ds-ai-gloss-2\">AI paragraph</p><p>One paragraph the AI wrote.</p></div>",
+      "css": ".ds-ai { margin:0 0 16px; padding-left:11px; border-left:3px solid var(--rubric,#b3261e); color:var(--ink,#141414); font:400 15px/1.5 'Public Sans',system-ui,sans-serif; } .ds-ai--paragraphs { padding-left:12px; border-left-width:2px; } .ds-ai p { margin:0; } .ds-ai > * + * { margin-top:2px; } .ds-ai-gloss { display:flex; align-items:baseline; gap:6px; color:var(--rubric,#b3261e); font-size:12px; font-weight:600; line-height:1.3; letter-spacing:0.06em; text-transform:uppercase; } .ds-ai-gloss::before { content:'\\00A7'; font-size:15px; letter-spacing:0; } .ds-ai--paragraphs .ds-ai-gloss::before { content:'\\00B6'; }"
     }
   ],
   "narrative": {
     "northStar": "Call Numbers, embellished in Rubric & Lapis",
-    "overview": "**Creative North Star: \"Call Numbers, embellished in Rubric & Lapis\"**\n\nGlose is a library desk, not a file tree. Every Source wears a call number (three letters of the author's family name and the first-publication year, typed on a white label) that leads back to the page. The app is embellished the way old books are: at the edges, never in the text. A lapis rail holds the Sections like a bound spine; panels are white leaves on a near-white ground, each opened by a decorated initial and a small red pen flourish set in a hairline rule.\n\nThe mode is Operate. Density is calm and working: lapis marks the next step, panels that say what to do next when empty, data set plainly in Public Sans with tabular numerals. Ornament (Cinzel initials, the flourish, gilt bands, the gold current marker) lives on headings and chrome. Data, Note text and controls stay plain. The world refuses the category's file-tree-plus-editor arrangement in neutral grey, and it refuses dashboards and gamification.\n\nEvery string comes from the English and Danish catalogs (`i18n/en.ts`, `i18n/da.ts`; the lint rule `glose/no-untranslated-ui-text` enforces this), and every layout takes the longer Danish compounds without clipping.\n\nAI text is to carry rubric marks (a red pilcrow and margin glosses) by direction. No AI text exists in the build yet, so that treatment has no component here; design it with Jan when Notes arrive.",
+    "overview": "**Creative North Star: \"Call Numbers, embellished in Rubric & Lapis\"**\n\nGlose is a library desk, not a file tree. Every Source wears a call number (three letters of the author's family name and the first-publication year, typed on a white label) that leads back to the page. The app is embellished the way old books are: at the edges, never in the text. A lapis rail holds the Sections like a bound spine; panels are white leaves on a near-white ground, each opened by a decorated initial and a small red pen flourish set in a hairline rule.\n\nThe mode is Operate. Density is calm and working: lapis marks the next step, panels that say what to do next when empty, data set plainly in Public Sans with tabular numerals. Ornament (Cinzel initials, the flourish, gilt bands, the gold current marker) lives on headings and chrome. Data, Note text and controls stay plain. The world refuses the category's file-tree-plus-editor arrangement in neutral grey, and it refuses dashboards and gamification.\n\nEvery string comes from the English and Danish catalogs (`i18n/en.ts`, `i18n/da.ts`; the lint rule `glose/no-untranslated-ui-text` enforces this), and every layout takes the longer Danish compounds without clipping.\n\nAI text carries rubric marks at its edge (a red pilcrow, a gloss and a rule) while the text itself stays ink; see the AI Text component in DESIGN.md.",
     "keyCharacteristics": [
       "Lapis rail (96px) of large Section icons with labels under them; gold marks the current one.",
       "White panels with hairline borders; each heading opens with a rubric or lapis Cinzel initial, alternating down a column, above a hairline with a rubric pen flourish in its middle.",
       "Call numbers as typed white spine labels in Courier Prime with a 1px ink border.",
       "Flat surfaces; depth comes from hairlines and the ground/paper step, not shadows.",
-      "Red is a signal with fixed jobs, never a decoration of data."
+      "Red is a signal with fixed jobs, never a decoration of data.",
+      "A focus screen (Review) drops the rail and the page header: one Paper leaf on Ground."
     ],
     "rules": [
       {
@@ -478,7 +536,7 @@
       },
       {
         "name": "The One Initial Rule",
-        "body": "Cinzel Decorative appears only as the first letter of a panel heading or the setup title, through `::first-letter`, so the heading text stays whole for screen readers. Never on data, buttons or body.",
+        "body": "Cinzel Decorative appears only as the first letter of a panel heading, the setup title or the Review bar title, through `::first-letter`, so the heading text stays whole for screen readers. Never on data, buttons or body.",
         "section": "typography"
       },
       {
@@ -498,13 +556,14 @@
       }
     ],
     "dos": [
-      "Do put ornament (initials, flourish, gilt) on headings and chrome only.",
+      "Do put ornament (initials, flourish, gilt) on headings and chrome only, and the flourish in the hairline rule between a Review question and its answer.",
       "Do alternate panel initials rubric and lapis down each column.",
       "Do pair every red error or missing-data signal with a warning icon and words.",
       "Do use Gilt only to mark the current place (Section, step) and focus on lapis.",
       "Do give every Source its call number label wherever it is listed.",
       "Do take every string from the EN/DA catalogs and check the layout in Danish.",
       "Do keep Lapis buttons for the next step forward (Add Source, Continue, Start); other actions are ink-outlined secondary.",
+      "Do give every button on a focus screen that a key presses a key cap, and name the key in `aria-keyshortcuts`.",
       "Do use tabular numerals for counts, years and call numbers."
     ],
     "donts": [

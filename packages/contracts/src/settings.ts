@@ -1,5 +1,7 @@
 import * as Schema from "effect/Schema";
 
+import { RecallSettingsFile } from "./recall.ts";
+
 /** Interface languages. Notes and Writing projects may be in any language. */
 export const Language = Schema.Literals(["en", "da"]);
 export type Language = typeof Language.Type;
@@ -23,10 +25,14 @@ export const SettingsView = Schema.Struct({
 export type SettingsView = typeof SettingsView.Type;
 
 /**
- * Settings that travel with the Graph folder, in its hidden `.glose/settings.json`. None exist
- * yet; the file marks the folder as a Graph. Unknown fields from a newer Glose are ignored.
+ * Settings that travel with the Graph folder, in its hidden `.glose/settings.json`; the file also
+ * marks the folder as a Graph. A missing field takes its default, and unknown fields from a newer
+ * Glose are ignored.
  */
-export const GraphSettings = Schema.Struct({});
+export const GraphSettings = Schema.Struct({
+  /** How Recall schedules Reviews. */
+  recall: Schema.optionalKey(RecallSettingsFile),
+});
 export type GraphSettings = typeof GraphSettings.Type;
 
 /** `create` starts an empty Graph; `open` uses a folder that exists, such as a moved Graph. */

@@ -35,6 +35,8 @@ export class Cards extends Context.Service<
       input: CardText & { readonly file: string },
     ) => Effect.Effect<Card, CardNotFound | GraphError>;
     readonly clearAiMark: (file: string) => Effect.Effect<Card, CardNotFound | GraphError>;
+    /** The Card with an id: one written by hand without one gets it now, before a Review. */
+    readonly ensureId: (file: string) => Effect.Effect<Card, CardNotFound | GraphError>;
     readonly remove: (file: string) => Effect.Effect<void, CardNotFound | GraphError>;
   }
 >()("glose/cards/Cards") {}
@@ -186,6 +188,12 @@ export const make = Effect.gen(function* () {
     update: ({ file, question, answer }) => edit(file, { text: { question, answer } }),
 
     clearAiMark: (file) => edit(file, { clearAiMark: true }),
+
+    ensureId: Effect.fn("Cards.ensureId")(function* (file: string) {
+      const card = (yield* list).find((other) => other.file === file);
+      if (card === undefined) return yield* new CardNotFound({ file });
+      return card.id === null ? yield* edit(file, {}) : card;
+    }),
 
     remove: Effect.fn("Cards.remove")(
       function* (file: string) {

@@ -6,6 +6,7 @@ import { useId, useState } from "react";
 
 import { AiChecksOff, useJudgeShown } from "../components/CardChecks.tsx";
 import { CardItem } from "../components/CardItem.tsx";
+import { ReviewStart } from "../components/Review.tsx";
 import { Page, Panel, SkeletonPanel, StorageProblem } from "../components/ui.tsx";
 import { useT } from "../i18n/I18n.tsx";
 import { cardsAtom } from "../state/cards.ts";
@@ -16,7 +17,7 @@ function Section() {
   const t = useT();
   return (
     <Page title={t.recall.title}>
-      <div className="narrow">
+      <div className="narrow stack">
         <AllCards />
       </div>
     </Page>
@@ -39,7 +40,10 @@ function AllCards() {
           </div>
         </Panel>
       ) : (
-        <CardList cards={value} />
+        <>
+          <ReviewStart />
+          <CardList cards={value} />
+        </>
       ),
   });
 }
@@ -75,7 +79,6 @@ function CardList({ cards }: { readonly cards: ReadonlyArray<ScoredCard> }) {
   return (
     <Panel title={t.recall.title} initial="rubric" meta={t.recall.counts(cards.length, ai)}>
       <div className="panel__body stack">
-        <p className="field__hint">{t.recall.reviewLater}</p>
         <form role="search" className="stack" onSubmit={(event) => event.preventDefault()}>
           <div className="field">
             <label className="field__label" htmlFor={findId}>
