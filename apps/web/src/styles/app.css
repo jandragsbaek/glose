@@ -763,6 +763,11 @@ a:hover {
 
 /* Catalog records on Add Source: one button per book, title first, the rest muted. */
 
+/* The live region is always there so a fill is announced; it takes space only when it speaks. */
+.fill-status:not(:empty) {
+  margin-top: 24px;
+}
+
 .catalog-results {
   display: flex;
   flex-direction: column;

@@ -140,23 +140,21 @@ function AddSource() {
         <p className="empty" style={{ marginBottom: 20 }}>
           {t.addSource.intro}
         </p>
-        <div className="form">
-          <FindBook chosen={fill?.record.id ?? null} onChoose={choose} />
-          <div role="status">
-            {fill === null ? null : (
-              <Notice tone="info" title={t.addSource.filledTitle(fill.record.details.title)}>
-                <p>
-                  {t.addSource.filled}
-                  {fill.kept.length === 0 ? null : ` ${t.addSource.keptTyped}`}
-                </p>
-                <div className="button-row" style={{ marginTop: 8 }}>
-                  <button type="button" className="button" onClick={undoFill}>
-                    {t.addSource.undoFill}
-                  </button>
-                </div>
-              </Notice>
-            )}
-          </div>
+        <FindBook chosen={fill?.record.id ?? null} onChoose={choose} />
+        <div role="status" className="fill-status">
+          {fill === null ? null : (
+            <Notice tone="info" title={t.addSource.filledTitle(fill.record.details.title)}>
+              <p>
+                {t.addSource.filled}
+                {fill.kept.length === 0 ? null : ` ${t.addSource.keptTyped}`}
+              </p>
+              <div className="button-row" style={{ marginTop: 8 }}>
+                <button type="button" className="button" onClick={undoFill}>
+                  {t.addSource.undoFill}
+                </button>
+              </div>
+            </Notice>
+          )}
         </div>
         <form className="form" onSubmit={submit} style={{ marginTop: 24 }}>
           <Panel title={t.addSource.author} initial="lapis">
