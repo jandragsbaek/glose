@@ -26,7 +26,8 @@ Working notes from early conversations. Nothing here is final.
 - Danish interface terms, first version (to be reviewed by a Danish user): Kilde (Source), Note,
   Graf (Graph), Link, Kort (Card), Genkaldelse (Recall), Skriveprojekt (Writing project), Fri
   tekst (Free text), Udtræk (Extraction), Sondering (Probe), Læsning (the Reading Stage),
-  AI-tekst (AI text), Kildehenvisning (Citation).
+  AI-tekst (AI text), Kildehenvisning (Citation), Kortudtræk (Card Extraction), Foreslået kort
+  (Proposed Card).
 
 ## First start
 
@@ -86,6 +87,70 @@ The core loop depends on the stage the user is in. Stages known so far:
 - Cards can be extracted from notes.
 - Cards are editable.
 - A card shows whether it is AI-written or human-written, the same as notes.
+
+Decided, the Card file (November 2026):
+
+- One file per Card, `Cards/<question>.md` in a `Cards` folder of the Graph folder. The file
+  name is the question, made file-safe; a name that is taken (in any case) gets ` 2`, ` 3`. A
+  question with nothing a file name may hold is named by its id. Editing the question does not
+  rename the file.
+- Frontmatter `glose: card`, `id`, `from` and, while it is AI text, `ai: true`. Then the
+  question, a `---` line, and the answer:
+
+  ```md
+  ---
+  glose: card
+  id: c-3f9a2c1d
+  from: "[[Attention residue lowers performance after switching]]"
+  ai: true
+  ---
+
+  What does attention residue do?
+
+  ---
+
+  It lowers performance on the next task after a switch.
+  ```
+
+- `from` is a wikilink to the file the Card is made from (a Note, a Rich note, or a Source), so
+  Obsidian links the Card to it. The Graph view does not show Cards: Glose reads only the top of
+  the Graph folder as the Graph.
+- `id` stays for the life of the Card, so Reviews keep pointing at it when the file is renamed.
+  A Card written by hand without an `id` gets one when Glose next writes it.
+- Glose keeps every other frontmatter field (tags, comments) when it edits a Card.
+- The AI mark on a Card is `ai: true`. Keeping a proposed Card, edited or not, saves it with the
+  mark. The user clears it with "I rewrote it" when the Card is in their own words.
+- Glose reads the `Cards` folder once and then only the files whose modification time or size
+  changed, so thousands of Cards stay quick. The index lives in memory and is rebuilt from the
+  files.
+
+Decided, Card Extraction (November 2026):
+
+- An agentic Session of kind `card-extraction` on one Note (the Session's `subject`; Session
+  files from before keep working: `sourceId` reads as `subject`). One Session per Note;
+  reopening the Note continues it.
+- The user starts it from the whole Note or from a passage they select in it, and can send more
+  passages later. The page is `/notes/<Note>/cards`; the Graph's Note panel links to it.
+- The agent has `read_note` (any Note by name: text, Source, Links), `list_cards` (the Cards
+  already made from this Note) and `propose_cards`. Proposed Cards appear in the Session; the
+  user keeps, edits or drops each one. Only kept Cards become files. The next turn tells the AI
+  what was kept, changed and dropped.
+- The AI must make every Card answerable from the Note or the passage, and may not add facts.
+- The user can also write a Card in their own words on the same page; it has no AI mark.
+- Recall lists every Card (50 at a time, with search and an AI-text filter) to read, edit, clear
+  the AI mark, or delete.
+
+Decided, Reviews (next version, November 2026):
+
+- FSRS, through the TypeScript FSRS library of the open-spaced-repetition project (health check
+  before it is added).
+- Every Review is appended as one JSON line to `.glose/recall/reviews/<computer id>/<yyyy-mm>.jsonl`:
+  Card id, time, rating (Again, Hard, Good, Easy) and time to answer. Each computer writes only
+  its own folder, so a Graph shared through Dropbox or git has no conflicts, and git sees only
+  added lines.
+- The log is the record. Each Card's FSRS state (stability, difficulty, due date) is a cache in
+  `.glose/recall/`, rebuilt by replaying the log. Retention numbers and, later, FSRS parameters
+  fitted to the user come from the log.
 
 ## Probe and Review
 
@@ -215,7 +280,7 @@ heading and its text, up to the next heading) or a whole Note, and the mark says
   (Danish "AI-afsnit", "AI-skrevet del", "AI-skrevet note"). A Part or a Note has a heavier rule
   that covers the heading too. See DESIGN.md. Today lists every Note with AI text and opens it in
   the Graph.
-- Cards use the same marks when Cards exist.
+- Cards use `ai: true` as their mark (see "Recall").
 
 ## Stage 1: Reading
 
@@ -318,7 +383,6 @@ Taken from learnharness: the user thinks out loud, by typing or by dictation, an
 - Is the exact location (page number, timestamp) required on every note, or only when the note is cited?
 - Are session records kept as transcripts only, or with the audio?
 - Does each user have a separate graph and separate records?
-- Are cards and their review history also plain files? Review history changes daily, which is noisy in git.
 - Which reference system does the university require?
 - How do references appear in a blog post: links, footnotes, or nothing?
 - How does the tool check that a quote matches the source when it does not have the full text of the book?

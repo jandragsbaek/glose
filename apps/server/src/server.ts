@@ -12,6 +12,7 @@ import * as RpcSerialization from "effect/rpc/RpcSerialization";
 import * as RpcServer from "effect/rpc/RpcServer";
 import * as NodeHttp from "node:http";
 
+import * as Cards from "./cards/Cards.ts";
 import * as Catalog from "./catalog/Catalog.ts";
 import * as ChatGpt from "./chatgpt/ChatGpt.ts";
 import * as Credentials from "./chatgpt/Credentials.ts";
@@ -60,7 +61,7 @@ const layerChatGpt = ChatGpt.layer.pipe(Layer.provide([ChatGpt.layerCrypto, Cred
  */
 export const layerApp = Sessions.layer.pipe(
   Layer.provideMerge(Layer.mergeAll(layerChatGpt, Responses.layer, Catalog.layer)),
-  Layer.provideMerge(Layer.mergeAll(Sources.layer, Graph.layer)),
+  Layer.provideMerge(Layer.mergeAll(Sources.layer, Graph.layer, Cards.layer)),
   Layer.provideMerge(Settings.layer),
 );
 

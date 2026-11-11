@@ -15,6 +15,7 @@ import {
 } from "../components/ui.tsx";
 import { missingDetails } from "../domain/source.ts";
 import { useT } from "../i18n/I18n.tsx";
+import { cardsAtom } from "../state/cards.ts";
 import { graphAtom, sourcesAtom } from "../state/graph.ts";
 
 /** The date is read when Today is opened, not on every render. */
@@ -47,11 +48,7 @@ function Today() {
           </Panel>
         </div>
         <div className="stack">
-          <Panel title={t.today.recall} initial="rubric">
-            <div className="panel__body">
-              <p className="empty">{t.today.recallEmpty}</p>
-            </div>
-          </Panel>
+          <RecallToday />
           <Panel title={t.today.writingProject} initial="lapis">
             <div className="panel__body">
               <p className="empty">{t.today.writingEmpty}</p>
@@ -101,6 +98,36 @@ function SourcesInProgress() {
         </Panel>
       );
     },
+  });
+}
+
+/** The Cards there are; Review, and so the Cards due today, comes in a later version. */
+function RecallToday() {
+  const t = useT();
+  const cards = useAtomValue(cardsAtom);
+  const refresh = useAtomRefresh(cardsAtom);
+  return AsyncResult.matchWithError(cards, {
+    onInitial: () => <SkeletonPanel />,
+    onError: () => <StorageProblem onRetry={refresh} />,
+    onDefect: () => <StorageProblem onRetry={refresh} />,
+    onSuccess: ({ value }) => (
+      <Panel title={t.today.recall} initial="rubric">
+        <div className="panel__body">
+          {value.length === 0 ? (
+            <p className="empty">{t.today.recallEmpty}</p>
+          ) : (
+            <p className="button-row">
+              <span>
+                {t.today.recallCounts(value.length, value.filter((card) => card.ai).length)}
+              </span>
+              <Link to="/recall" className="button">
+                {t.today.openRecall}
+              </Link>
+            </p>
+          )}
+        </div>
+      </Panel>
+    ),
   });
 }
 

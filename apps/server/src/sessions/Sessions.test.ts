@@ -14,11 +14,14 @@ import * as Settings from "../settings/Settings.ts";
 import { writeCredentials } from "../testkit/credentials.ts";
 import { makeDirs } from "../testkit/graph.ts";
 import { FAKE_OPENAI, makeFakeOpenAi } from "../testkit/openai.ts";
+import * as Cards from "../cards/Cards.ts";
 import { ChatGpt } from "../chatgpt/ChatGpt.ts";
 import { Sessions } from "./Sessions.ts";
 
 const RESPONSES = `${FAKE_OPENAI.apiUrl}/responses`;
 const MODELS = `${FAKE_OPENAI.apiUrl}/models`;
+
+const NOTE = "Attention residue lowers performance";
 
 const SOURCE = {
   familyName: "Arendt",
@@ -32,7 +35,7 @@ const SOURCE = {
 };
 
 /** Streamed answers as OpenAI sends them. */
-const toolCall = (name: string) => ({
+const toolCall = (name: string, args: unknown = {}) => ({
   status: 200,
   sse: true,
   body: [
@@ -44,7 +47,7 @@ const toolCall = (name: string) => ({
         call_id: "call_1",
         namespace: "glose",
         name,
-        arguments: "{}",
+        arguments: JSON.stringify(args),
       },
     },
     { type: "response.completed", response: {} },
@@ -145,6 +148,10 @@ const setUp = Effect.gen(function* () {
     });
     return source.id;
   }).pipe(Effect.provide(layer));
+  yield* (yield* FileSystem.FileSystem).writeFileString(
+    path.join(graphFolder, `${NOTE}.md`),
+    `---\nglose: note\nsource: "[[${sourceId}]]"\n---\n\nLeroy found that attention lingers.\n`,
+  );
   const bodies = () =>
     fake.requests
       .filter((request) => request.url === RESPONSES)
@@ -173,7 +180,7 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
 
         const first = yield* Effect.gen(function* () {
           const sessions = yield* Sessions;
-          const { id } = yield* sessions.start({ kind: "extraction", sourceId });
+          const { id } = yield* sessions.start({ kind: "extraction", subject: sourceId });
           return yield* afterTurn(id);
         }).pipe(Effect.provide(layer));
 
@@ -203,7 +210,7 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
         fake.answer(RESPONSES, answer("Say it without 'durable'."));
         const second = yield* Effect.gen(function* () {
           const sessions = yield* Sessions;
-          const found = yield* sessions.find({ kind: "extraction", sourceId });
+          const found = yield* sessions.find({ kind: "extraction", subject: sourceId });
           assert.deepStrictEqual(found?.entries, first.entries);
           yield* sessions.send({ id: first.id, text: "Is it about durability?" });
           return yield* afterTurn(first.id);
@@ -238,7 +245,7 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
       fake.answer(RESPONSES, halfAnswer);
       const id = yield* Effect.gen(function* () {
         const sessions = yield* Sessions;
-        const { id } = yield* sessions.start({ kind: "extraction", sourceId });
+        const { id } = yield* sessions.start({ kind: "extraction", subject: sourceId });
         yield* answering(id);
         yield* sessions.stop(id);
         return id;
@@ -246,7 +253,7 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
 
       // After a restart, the Session still shows the partial answer, and the model will see it.
       const found = yield* Sessions.use((sessions) =>
-        sessions.find({ kind: "extraction", sourceId }),
+        sessions.find({ kind: "extraction", subject: sourceId }),
       ).pipe(Effect.provide(layer));
       assert.deepStrictEqual(found?.entries, [{ _tag: "AiMessage", text: "Half an ans" }]);
       assert.isFalse(found?.working);
@@ -271,7 +278,7 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
       fake.answer(FAKE_OPENAI.revokeUrl, { status: 200, body: {} });
       const session = yield* Effect.gen(function* () {
         const sessions = yield* Sessions;
-        const { id } = yield* sessions.start({ kind: "extraction", sourceId });
+        const { id } = yield* sessions.start({ kind: "extraction", subject: sourceId });
         yield* answering(id);
         yield* (yield* ChatGpt).disconnect;
         return yield* sessions.watch(id).pipe(Stream.runHead, Effect.map(Option.getOrThrow));
@@ -294,11 +301,149 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
         body: { error: { code: "subscription_sharing_usage_limit_exceeded", message: "limit" } },
       });
       const session = yield* Effect.gen(function* () {
-        const { id } = yield* (yield* Sessions).start({ kind: "extraction", sourceId });
+        const { id } = yield* (yield* Sessions).start({ kind: "extraction", subject: sourceId });
         return yield* afterTurn(id);
       }).pipe(Effect.provide(layer));
       assert.strictEqual(session.problem, "usage-limit");
       assert.deepStrictEqual(session.entries, []);
+    }).pipe(Effect.scoped),
+  );
+
+  it.effect("proposes Cards from a passage of a Note, and saves the ones the user keeps", () =>
+    Effect.gen(function* () {
+      const { fake, layer, graphFolder, bodies } = yield* setUp;
+      fake.answer(MODELS, MODEL_LIST, MODEL_LIST);
+      fake.answer(
+        RESPONSES,
+        toolCall("read_note", { name: NOTE }),
+        toolCall("propose_cards", {
+          cards: [
+            { question: "Who found attention residue?", answer: "Leroy." },
+            { question: "  ", answer: "A Card without a question is not shown." },
+            { question: "What lingers after a switch?", answer: "Attention." },
+          ],
+        }),
+        answer("Two Cards on the finding."),
+        answer("Harder ones."),
+      );
+
+      const session = yield* Effect.gen(function* () {
+        const sessions = yield* Sessions;
+        // The Note is found without regard to case, as a wikilink finds it.
+        const { id } = yield* sessions.start({
+          kind: "card-extraction",
+          subject: NOTE.toLowerCase(),
+          passage: "Leroy found that attention lingers.",
+        });
+        return yield* afterTurn(id);
+      }).pipe(Effect.provide(layer));
+
+      assert.strictEqual(session.subject, NOTE);
+      assert.deepStrictEqual(session.entries, [
+        { _tag: "Passage", text: "Leroy found that attention lingers." },
+        { _tag: "ToolUse", tool: "read-note" },
+        {
+          _tag: "CardProposals",
+          proposals: [
+            {
+              id: "p1",
+              question: "Who found attention residue?",
+              answer: "Leroy.",
+              state: "open",
+              card: null,
+            },
+            {
+              id: "p2",
+              question: "What lingers after a switch?",
+              answer: "Attention.",
+              state: "open",
+              card: null,
+            },
+          ],
+        },
+        { _tag: "AiMessage", text: "Two Cards on the finding." },
+      ]);
+      const [first, afterRead] = bodies();
+      assert.include(
+        String(first!.input.at(-1)?.["content"]),
+        "Leroy found that attention lingers.",
+      );
+      const noteRead = afterRead!.input.find((item) => item.type === "function_call_output");
+      assert.include(String(noteRead?.["output"]), "Leroy found that attention lingers.");
+
+      const after = yield* Effect.gen(function* () {
+        const sessions = yield* Sessions;
+        const card = yield* sessions.keepProposal({
+          id: session.id,
+          proposal: "p1",
+          question: "Who found attention residue?",
+          answer: "Sophie Leroy, in 2009.",
+        });
+        yield* sessions.dropProposal({ id: session.id, proposal: "p2" });
+        const again = yield* Effect.exit(
+          sessions.keepProposal({ id: session.id, proposal: "p2", question: "Q?", answer: "" }),
+        );
+        assert.isTrue(again._tag === "Failure");
+        yield* sessions.send({ id: session.id, text: "Harder, please." });
+        const done = yield* afterTurn(session.id);
+        return { card, done, cards: yield* (yield* Cards.Cards).list };
+      }).pipe(Effect.provide(layer));
+
+      // A kept Card is AI text, even after the user changed it.
+      assert.deepInclude(after.card, { from: NOTE, ai: true, answer: "Sophie Leroy, in 2009." });
+      assert.deepStrictEqual(after.cards, [after.card]);
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      assert.isTrue(yield* fs.exists(path.join(graphFolder, "Cards", `${after.card.file}.md`)));
+      const proposals = after.done.entries.flatMap((entry) =>
+        entry._tag === "CardProposals" ? entry.proposals : [],
+      );
+      assert.deepStrictEqual(
+        proposals.map(({ state, card }) => [state, card]),
+        [
+          ["kept", after.card.file],
+          ["dropped", null],
+        ],
+      );
+
+      // The next turn tells the AI what the user kept and dropped, before their message.
+      const [decisions, message] = bodies().at(-1)!.input.slice(-2);
+      assert.strictEqual(decisions?.["role"], "developer");
+      assert.include(String(decisions?.["content"]), "Sophie Leroy, in 2009.");
+      assert.include(String(decisions?.["content"]), 'Dropped "What lingers after a switch?"');
+      assert.deepStrictEqual(message, {
+        type: "message",
+        role: "user",
+        content: "Harder, please.",
+      });
+    }).pipe(Effect.scoped),
+  );
+
+  it.effect("reads a Session that an earlier Glose kept for a Source", () =>
+    Effect.gen(function* () {
+      const { layer, graphFolder, sourceId } = yield* setUp;
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const folder = path.join(graphFolder, ".glose", "sessions");
+      yield* fs.makeDirectory(folder, { recursive: true });
+      yield* fs.writeFileString(
+        path.join(folder, "old.json"),
+        JSON.stringify({
+          version: 1,
+          id: "old",
+          kind: "extraction",
+          sourceId,
+          model: "gpt-test",
+          created: 1,
+          entries: [{ _tag: "AiMessage", text: "Kept from before." }],
+          items: [],
+        }),
+      );
+      const found = yield* Sessions.use((sessions) =>
+        sessions.find({ kind: "extraction", subject: sourceId }),
+      ).pipe(Effect.provide(layer));
+      assert.strictEqual(found?.subject, sourceId);
+      assert.deepStrictEqual(found?.entries, [{ _tag: "AiMessage", text: "Kept from before." }]);
     }).pipe(Effect.scoped),
   );
 });

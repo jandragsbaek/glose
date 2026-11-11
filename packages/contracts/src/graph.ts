@@ -68,3 +68,8 @@ export const hasAiCallout = (markdown: string): boolean =>
     .replace(MARKDOWN_CODE, "")
     .split(/\r?\n/)
     .some((line) => AI_CALLOUT.test(line));
+
+/** No Markdown file in the Graph folder has this name. */
+export class NoteNotFound extends Schema.TaggedError<NoteNotFound>()("NoteNotFound", {
+  id: Schema.String,
+}) {}

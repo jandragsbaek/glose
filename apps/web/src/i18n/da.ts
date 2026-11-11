@@ -102,7 +102,12 @@ export const da: Messages = {
       "Noter fra kilden, du er i gang med, og de noter de linker til, vises her. Noter kommer fra udtræk.",
     recall: "Genkaldelse",
     recallEmpty:
-      "Ingen kort endnu. Kort laves af noter, og Genkaldelse planlægger, hvornår du skal gennemgå dem.",
+      "Ingen kort endnu. Åbn en note i grafen, og vælg Lav kort. Genkaldelse planlægger, hvornår du skal gennemgå dem.",
+    recallCounts: (cards: number, ai: number) =>
+      ai === 0
+        ? count(cards, "kort", "kort")
+        : `${count(cards, "kort", "kort")}, ${numbers.format(ai)} med AI-tekst`,
+    openRecall: "Åbn Genkaldelse",
     writingProject: "Skriveprojekt",
     writingEmpty: "Ingen skriveprojekter endnu. De kommer i en senere version af Glose.",
     aiText: "Noter med AI-tekst",
@@ -269,7 +274,10 @@ export const da: Messages = {
     tools: {
       "read-source": "AI'en læste denne kilde og din frie tekst.",
       "list-sources": "AI'en så på listen over dine kilder.",
+      "read-note": "AI'en læste en note.",
+      "list-cards": "AI'en så på de kort, noten allerede har.",
     },
+    passage: "Passage",
     working: "AI'en arbejder",
     messageLabel: "Dit svar",
     messageHint: "Tryk Ctrl+Enter eller Cmd+Enter for at sende.",
@@ -294,6 +302,7 @@ export const da: Messages = {
     paragraphs: () => "AI-afsnit",
     part: "AI-skrevet del",
     note: "AI-skrevet note",
+    card: "AI-skrevet kort",
   },
   graph: {
     title: "Graf",
@@ -324,6 +333,8 @@ export const da: Messages = {
     notesFromSource: "Noter fra denne kilde",
     openSource: "Åbn kilden",
     missingLink: (name: string) => `Ingen fil hedder ${name} endnu.`,
+    makeCards: "Lav kort",
+    cardCount: (n: number) => (n === 0 ? "Ingen kort endnu" : count(n, "kort", "kort")),
   },
   writing: {
     title: "Skriveprojekter",
@@ -333,7 +344,68 @@ export const da: Messages = {
   recall: {
     title: "Genkaldelse",
     empty:
-      "Genkaldelse spørger dig om kort lavet af dine noter og planlægger hvert kort med FSRS. Den er tom, indtil du har noter.",
+      "Genkaldelse spørger dig om kort lavet af dine noter og planlægger hvert kort med FSRS. Åbn en note i grafen, og vælg Lav kort for at lave kort.",
+    reviewLater:
+      "Gennemgang kommer i næste version. Indtil da kan du læse, rette og omskrive dine kort her.",
+    counts: (cards: number, ai: number) =>
+      ai === 0
+        ? count(cards, "kort", "kort")
+        : `${count(cards, "kort", "kort")} · ${numbers.format(ai)} med AI-tekst`,
+    findLabel: "Find kort",
+    findPlaceholder: "Find et spørgsmål, svar eller en note",
+    onlyAi: "Kun kort med AI-tekst",
+    shown: (shown: number, total: number) =>
+      `Viser ${numbers.format(shown)} af ${count(total, "kort", "kort")}.`,
+    showMore: "Vis flere",
+    nothingFound: "Intet kort passer.",
+  },
+  cards: {
+    extraction: "Kortudtræk",
+    title: "Kort",
+    start: "Lav kort af hele noten",
+    startPassage: "Lav kort af passagen",
+    startHint:
+      "AI'en læser noten og foreslår kort. Du beholder, retter eller dropper hvert kort. Et kort, du beholder, er mærket som AI-tekst, indtil du har omskrevet det med dine egne ord.",
+    needsChatGpt: "Kortudtræk kræver ChatGPT",
+    needsChatGptBody:
+      "Forbind dit ChatGPT-abonnement under Indstillinger, og kom så tilbage til denne note. Du kan stadig skrive dine egne kort.",
+    noteNotFound: "Noten findes ikke. Dens Markdown-fil kan være omdøbt eller slettet.",
+    backToGraph: "Tilbage til grafen",
+    openInGraph: "Åbn i grafen",
+    passage: "Passage",
+    passageHint:
+      "Vil du lave kort af en del af noten, så markér teksten ovenfor, og vælg Brug den markerede tekst.",
+    useSelection: "Brug den markerede tekst",
+    noSelection: "Markér først tekst i noten.",
+    clearPassage: "Fjern passagen",
+    sendPassage: "Lav kort af passagen",
+    proposals: "Foreslåede kort",
+    question: "Spørgsmål",
+    answer: "Svar",
+    keep: "Behold",
+    edit: "Ret",
+    drop: "Drop",
+    save: "Gem",
+    cancel: "Annullér",
+    states: {
+      open: "Foreslået",
+      kept: "Beholdt",
+      dropped: "Droppet",
+    },
+    keepFailed: "Glose kunne ikke gemme kortet. Prøv igen.",
+    fromNote: (n: number) =>
+      n === 0 ? "Ingen kort fra denne note endnu." : count(n, "kort", "kort"),
+    write: "Skriv dit eget kort",
+    writeHint: "Et kort med dine egne ord har intet AI-mærke.",
+    add: "Tilføj kort",
+    saveFailed: "Glose kunne ikke gemme kortet. Prøv igen.",
+    from: "Fra",
+    fromNone: "Fra ingen note",
+    rewrote: "Jeg har omskrevet det",
+    rewroteHint: "Fjerner AI-mærket. Vælg det, når spørgsmål og svar er med dine egne ord.",
+    delete: "Slet",
+    deleteConfirm: "Slet dette kort? Glose fjerner filen fra mappen Cards.",
+    file: (file: string) => `Cards/${file}.md`,
   },
   settings: {
     title: "Indstillinger",
