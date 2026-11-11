@@ -1,6 +1,7 @@
 import { type FormEvent, useId, useState } from "react";
 
 import { useT } from "../i18n/I18n.tsx";
+import { TypingChecks } from "./CardChecks.tsx";
 
 interface CardWords {
   readonly question: string;
@@ -65,6 +66,7 @@ export function CardFields({
           spellCheck
         />
       </div>
+      <TypingChecks question={question} answer={answer} />
       <div className="button-row">
         <button type="submit" className="button button--primary" disabled={!canSubmit}>
           {submitLabel}

@@ -1,3 +1,5 @@
+import { ANSWER_WORDS, QUESTION_WORDS } from "@glose/contracts";
+
 import type { Messages } from "./en.ts";
 
 const numbers = new Intl.NumberFormat("da");
@@ -358,6 +360,8 @@ export const da: Messages = {
       `Viser ${numbers.format(shown)} af ${count(total, "kort", "kort")}.`,
     showMore: "Vis flere",
     nothingFound: "Intet kort passer.",
+    gradeLabel: "Vurdering",
+    allGrades: "Alle vurderinger",
   },
   cards: {
     extraction: "Kortudtræk",
@@ -406,6 +410,79 @@ export const da: Messages = {
     delete: "Slet",
     deleteConfirm: "Slet dette kort? Glose fjerner filen fra mappen Cards.",
     file: (file: string) => `Cards/${file}.md`,
+  },
+  score: {
+    label: "Tjek",
+    grades: {
+      good: "Godt kort",
+      fix: "Kan blive bedre",
+      poor: "Skal rettes",
+    },
+    judge: {
+      done: "",
+      pending: "AI'en tjekker kortet.",
+      off: "Forbind ChatGPT i Indstillinger for også at få AI-tjek.",
+      failed: "AI'en kunne ikke tjekke kortet. Glose prøver igen senere.",
+    },
+    verdicts: {
+      pass: "Bestået",
+      warn: "Advarsel",
+      fail: "Ikke bestået",
+    },
+    passed: (n: number) => `${count(n, "tjek", "tjek")} bestået`,
+    ai: "AI-tjek",
+    aiHint: "AI-tjek er råd. I forsøg er AI-dommere enige med mennesker om cirka to af tre kort.",
+    rulesWhileTyping: "Tjek, mens du skriver",
+    checks: {
+      "has-answer": {
+        name: "Har et svar",
+        tip: "Skriv svaret, så en gennemgang kan tjekke, hvad du husker.",
+      },
+      recall: {
+        name: "Beder dig huske, ikke vælge",
+        tip: "Et ja, et nej eller et valg kan gættes. Spørg hvad, hvorfor eller hvordan.",
+      },
+      "not-broad": {
+        name: "Beder om ét svar, ikke en stil",
+        tip: "Forklar eller Beskriv beder om en stil. Spørg efter én ting, du kan huske.",
+      },
+      concise: {
+        name: "Kort",
+        tip: `Hold spørgsmålet under ${QUESTION_WORDS} ord og svaret under ${ANSWER_WORDS}. Del et længere kort.`,
+      },
+      "no-list": {
+        name: "Ingen liste at remse op",
+        tip: "En liste er svær at huske som ét kort. Lav et kort for hvert punkt, eller et kort om idéen, der samler dem.",
+      },
+      "no-giveaway": {
+        name: "Røber ikke svaret",
+        tip: "De fleste ord i svaret står i spørgsmålet. Spørg, så du skal huske dem.",
+      },
+      distinct: {
+        name: "Kan ikke forveksles med et andet kort",
+        tip: "Et andet kort fra denne note spørger næsten om det samme. Gør spørgsmålene forskellige, eller slå kortene sammen.",
+      },
+      "one-answer": {
+        name: "Ét præcist svar",
+        tip: "Spørgsmålet skal have ét rigtigt svar: svaret på dette kort.",
+      },
+      specific: {
+        name: "Præcist, ikke bredt eller vagt",
+        tip: "Sig præcist, hvad der skal huskes.",
+      },
+      "self-contained": {
+        name: "Klart uden noten",
+        tip: "Nævn emnet, så kortet er klart om flere måneder.",
+      },
+      "one-idea": {
+        name: "Én idé",
+        tip: "Spørg efter én kendsgerning eller én idé. Del kortet.",
+      },
+      "true-to-note": {
+        name: "Tro mod sin note",
+        tip: "Svaret skal stå i noten, uden tilføjede fakta.",
+      },
+    },
   },
   settings: {
     title: "Indstillinger",

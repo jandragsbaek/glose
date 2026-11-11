@@ -1,5 +1,7 @@
 import * as Schema from "effect/Schema";
 
+import { CardScore } from "./cardScore.ts";
+
 /**
  * What a Session is for. Each kind has its own AI rules and tools. `extraction` turns a Source
  * into Notes; `card-extraction` turns a Note into Cards.
@@ -29,6 +31,8 @@ export const CardProposal = Schema.Struct({
   state: ProposalState,
   /** The Card file a kept proposal became. */
   card: Schema.NullOr(Schema.String),
+  /** The proposed words against the Checks; Sessions from before Checks have none. */
+  score: Schema.optionalKey(CardScore),
 });
 export type CardProposal = typeof CardProposal.Type;
 

@@ -2,7 +2,15 @@ import * as Rpc from "effect/rpc/Rpc";
 import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as Schema from "effect/Schema";
 
-import { Card, CardNotFound, CardRef, CreateCard, UpdateCard } from "./card.ts";
+import {
+  Card,
+  CardNotFound,
+  CardRef,
+  CreateCard,
+  JudgeCards,
+  ScoredCard,
+  UpdateCard,
+} from "./card.ts";
 import { CatalogRecord, CatalogSearch, CatalogUnavailable } from "./catalog.ts";
 import { ChatGptStatus, ConnectChatGpt, DisconnectResult } from "./chatgpt.ts";
 import { GraphView, NoteNotFound } from "./graph.ts";
@@ -63,6 +71,7 @@ export const RPC_METHODS = {
   sessionsKeepProposal: "sessions.keepProposal",
   sessionsDropProposal: "sessions.dropProposal",
   cardsList: "cards.list",
+  cardsJudge: "cards.judge",
   cardsCreate: "cards.create",
   cardsUpdate: "cards.update",
   cardsClearAiMark: "cards.clearAiMark",
@@ -164,8 +173,10 @@ export const GloseRpcGroup = RpcGroup.make(
     payload: DropProposal,
     error: Schema.Union([SessionNotFound, ProposalNotOpen, GraphFolderNotSet, StorageError]),
   }),
-  /** Every Card in the Graph folder, in file name order. */
-  Rpc.make(RPC_METHODS.cardsList, { success: Schema.Array(Card), error: GraphErrors }),
+  /** Every Card in the Graph folder, in file name order, with its Checks. */
+  Rpc.make(RPC_METHODS.cardsList, { success: Schema.Array(ScoredCard), error: GraphErrors }),
+  /** Runs the AI Checks of these Cards; the next list shows them. */
+  Rpc.make(RPC_METHODS.cardsJudge, { payload: JudgeCards, error: GraphErrors }),
   /** A Card the user writes: their own words, without an AI mark. */
   Rpc.make(RPC_METHODS.cardsCreate, { payload: CreateCard, success: Card, error: GraphErrors }),
   /** New words for a Card. An AI mark stays until the user clears it. */

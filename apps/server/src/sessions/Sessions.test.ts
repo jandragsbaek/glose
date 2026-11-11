@@ -23,6 +23,9 @@ const MODELS = `${FAKE_OPENAI.apiUrl}/models`;
 
 const NOTE = "Attention residue lowers performance";
 
+/** The Card Checks ask for a structured answer; a Session's turn never does. */
+const isChecks = (body: string) => body.includes('"json_schema"');
+
 const SOURCE = {
   familyName: "Arendt",
   givenName: "Hannah",
@@ -152,9 +155,11 @@ const setUp = Effect.gen(function* () {
     path.join(graphFolder, `${NOTE}.md`),
     `---\nglose: note\nsource: "[[${sourceId}]]"\n---\n\nLeroy found that attention lingers.\n`,
   );
+  // The Card Checks of proposed Cards run beside the turn, on answers of their own.
+  fake.answerMatching(RESPONSES, isChecks);
   const bodies = () =>
     fake.requests
-      .filter((request) => request.url === RESPONSES)
+      .filter((request) => request.url === RESPONSES && !isChecks(request.body))
       .map((request) => JSON.parse(request.body) as Body);
   return { fake, layer, graphFolder, sourceId, bodies };
 });
@@ -312,7 +317,9 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
   it.effect("proposes Cards from a passage of a Note, and saves the ones the user keeps", () =>
     Effect.gen(function* () {
       const { fake, layer, graphFolder, bodies } = yield* setUp;
-      fake.answer(MODELS, MODEL_LIST, MODEL_LIST);
+      // More for the Card Checks: they run beside the turn, and fail here (no answers queued),
+      // so the restart below tries them again.
+      fake.answer(MODELS, MODEL_LIST, MODEL_LIST, MODEL_LIST, MODEL_LIST);
       fake.answer(
         RESPONSES,
         toolCall("read_note", { name: NOTE }),
@@ -339,7 +346,13 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
       }).pipe(Effect.provide(layer));
 
       assert.strictEqual(session.subject, NOTE);
-      assert.deepStrictEqual(session.entries, [
+      // The Card Checks have a test of their own.
+      const withoutScores = session.entries.map((entry) =>
+        entry._tag === "CardProposals"
+          ? { ...entry, proposals: entry.proposals.map(({ score: _score, ...rest }) => rest) }
+          : entry,
+      );
+      assert.deepStrictEqual(withoutScores, [
         { _tag: "Passage", text: "Leroy found that attention lingers." },
         { _tag: "ToolUse", tool: "read-note" },
         {
@@ -422,6 +435,174 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
         role: "user",
         content: "Harder, please.",
       });
+    }).pipe(Effect.scoped),
+  );
+
+  it.effect(
+    "checks proposed Cards: rules at once, then the AI answers each question blind and judges",
+    () =>
+      Effect.gen(function* () {
+        const { fake, layer } = yield* setUp;
+        fake.answer(MODELS, MODEL_LIST, MODEL_LIST);
+        fake.answer(
+          RESPONSES,
+          toolCall("propose_cards", {
+            cards: [
+              { question: "Does attention linger after a switch?", answer: "Yes." },
+              {
+                question: "What did Leroy find about switching tasks?",
+                answer: "Attention lingers.",
+              },
+            ],
+          }),
+          answer("Two Cards."),
+        );
+        const verdict = (verdictOf: "pass" | "warn" | "fail", note = "") => ({
+          verdict: verdictOf,
+          note,
+        });
+        const passing = {
+          "one-answer": verdict("pass"),
+          specific: verdict("pass"),
+          "self-contained": verdict("pass"),
+          "one-idea": verdict("pass"),
+          "true-to-note": verdict("pass"),
+        };
+        fake.answerMatching(
+          RESPONSES,
+          isChecks,
+          answer(
+            JSON.stringify({
+              cards: [
+                { id: "1", answers: ["Yes."] },
+                { id: "2", answers: ["Attention lingers.", "Performance drops."] },
+              ],
+            }),
+          ),
+          answer(
+            JSON.stringify({
+              cards: [
+                { id: "1", checks: passing },
+                {
+                  id: "2",
+                  checks: {
+                    ...passing,
+                    "one-answer": verdict("fail", "Ask what lingers, not what Leroy found."),
+                  },
+                },
+              ],
+            }),
+          ),
+        );
+
+        const session = yield* Effect.gen(function* () {
+          const sessions = yield* Sessions;
+          const { id } = yield* sessions.start({ kind: "card-extraction", subject: NOTE });
+          return yield* sessions.watch(id).pipe(
+            Stream.filter(
+              (now) =>
+                !now.working &&
+                now.entries.some(
+                  (entry) =>
+                    entry._tag === "CardProposals" &&
+                    entry.proposals.every((proposal) => proposal.score?.judge === "done"),
+                ),
+            ),
+            Stream.runHead,
+            Effect.map(Option.getOrThrow),
+          );
+        }).pipe(Effect.provide(layer));
+
+        const [yesNo, broad] = session.entries.flatMap((entry) =>
+          entry._tag === "CardProposals" ? entry.proposals : [],
+        );
+        const failed = (proposal: typeof yesNo) =>
+          proposal?.score?.checks.filter((check) => check.verdict !== "pass");
+        // A yes/no question fails a rule; the AI found two answers to the other one.
+        assert.strictEqual(yesNo?.score?.grade, "poor");
+        assert.deepStrictEqual(failed(yesNo), [{ id: "recall", verdict: "fail", note: null }]);
+        assert.strictEqual(broad?.score?.grade, "poor");
+        assert.deepStrictEqual(failed(broad), [
+          {
+            id: "one-answer",
+            verdict: "fail",
+            note: "Ask what lingers, not what Leroy found.",
+          },
+        ]);
+
+        // The first call never sees the expected answers; the judge sees them and the blind ones.
+        const [blind, judge] = fake.requests.filter(
+          (request) => request.url === RESPONSES && isChecks(request.body),
+        );
+        const blindInput = JSON.stringify((JSON.parse(blind!.body) as Body).input);
+        assert.include(blindInput, "What did Leroy find about switching tasks?");
+        assert.include(blindInput, "Leroy found that attention lingers.");
+        assert.notInclude(blindInput, "expectedAnswer");
+        const judgeInput = JSON.stringify((JSON.parse(judge!.body) as Body).input);
+        assert.include(judgeInput, "expectedAnswer");
+        assert.include(judgeInput, "Performance drops.");
+      }).pipe(Effect.scoped),
+  );
+
+  it.effect("tries failed Card Checks again when the user opens the Session again", () =>
+    Effect.gen(function* () {
+      const { fake, layer } = yield* setUp;
+      fake.answer(MODELS, MODEL_LIST, MODEL_LIST);
+      fake.answer(
+        RESPONSES,
+        toolCall("propose_cards", {
+          cards: [{ question: "What did Leroy find about switching?", answer: "It lingers." }],
+        }),
+        answer("One Card."),
+      );
+      const judgeOf = (session: { readonly entries: ReadonlyArray<unknown> }) =>
+        (
+          session.entries as Array<{
+            _tag: string;
+            proposals?: Array<{ score?: { judge: string } }>;
+          }>
+        ).flatMap((entry) => entry.proposals ?? [])[0]?.score?.judge;
+
+      const final = yield* Effect.gen(function* () {
+        const sessions = yield* Sessions;
+        const { id } = yield* sessions.start({ kind: "card-extraction", subject: NOTE });
+        // No answers for the Checks yet: they fail.
+        yield* sessions.watch(id).pipe(
+          Stream.filter((now) => judgeOf(now) === "failed"),
+          Stream.runHead,
+        );
+        const passing = { verdict: "pass", note: "" };
+        fake.answer(MODELS, MODEL_LIST);
+        fake.answerMatching(
+          RESPONSES,
+          isChecks,
+          answer(JSON.stringify({ cards: [{ id: "1", answers: ["It lingers."] }] })),
+          answer(
+            JSON.stringify({
+              cards: [
+                {
+                  id: "1",
+                  checks: {
+                    "one-answer": passing,
+                    specific: passing,
+                    "self-contained": passing,
+                    "one-idea": passing,
+                    "true-to-note": passing,
+                  },
+                },
+              ],
+            }),
+          ),
+        );
+        // The page opens the Session again; Glose is still running.
+        yield* sessions.find({ kind: "card-extraction", subject: NOTE });
+        return yield* sessions.watch(id).pipe(
+          Stream.filter((now) => judgeOf(now) === "done"),
+          Stream.runHead,
+          Effect.map(Option.getOrThrow),
+        );
+      }).pipe(Effect.provide(layer));
+      assert.strictEqual(judgeOf(final), "done");
     }).pipe(Effect.scoped),
   );
 

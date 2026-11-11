@@ -84,6 +84,17 @@ A **Card** the AI suggests during **Extraction** from a **Note**. It becomes a *
 the user keeps it, edited or not.
 _Avoid_: draft, suggestion, candidate
 
+**Check**:
+One test of a **Card** or **Proposed Card** against what research says a good Card is, such as
+"one exact answer". Code runs the rule Checks at once; the AI runs the AI Checks, which are advice.
+Each passes, warns or fails.
+_Avoid_: rating, lint, validation, quality check
+
+**Grade**:
+One word for all the **Checks** of a **Card**: good, fix (a **Check** warns) or poor (a **Check**
+fails).
+_Avoid_: rating, mark (that is the **AI mark**), quality
+
 **Review**:
 One answer to one due **Card**. It sets when the **Card** comes back.
 _Avoid_: recall quiz, drill
@@ -125,6 +136,8 @@ The text the tool builds from a **Reference** in the style the **Writing project
   back
 - In **Extraction** from a **Note**, the AI makes **Proposed Cards**; a kept one is a **Card** with
   an **AI mark**
+- Every **Card** and open **Proposed Card** has **Checks** and a **Grade**; they inform the user and
+  never change or block the **Card**
 - An **AI mark** flags **AI text** in a **Note** or a **Card**; a whole **Part** and a paragraph wear
   different marks
 

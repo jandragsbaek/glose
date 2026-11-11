@@ -2,10 +2,15 @@ import {
   type Card,
   type CardProposal,
   type CardText,
+  type Check,
   GraphFolderNotSet,
+  type JudgeState,
   linkKey,
   NoteNotFound,
   ProposalNotOpen,
+  RULE_CHECKS,
+  ruleChecks,
+  scoreOf,
   type Session,
   SessionBusy,
   SessionEntry,
@@ -30,6 +35,7 @@ import * as Stream from "effect/Stream";
 import * as SubscriptionRef from "effect/SubscriptionRef";
 import * as NodeCrypto from "node:crypto";
 
+import * as CardChecks from "../cards/CardChecks.ts";
 import * as Cards from "../cards/Cards.ts";
 import * as ChatGpt from "../chatgpt/ChatGpt.ts";
 import { Responses, type ResponsesError } from "../chatgpt/Responses.ts";
@@ -167,6 +173,35 @@ const setProposal = (
       : entry,
   );
 
+/** Changes one proposal in the Session's entries from what it is now. */
+const mapProposal = (
+  entries: ReadonlyArray<SessionEntry>,
+  id: string,
+  change: (proposal: CardProposal) => CardProposal,
+): ReadonlyArray<SessionEntry> =>
+  entries.map((entry) =>
+    entry._tag === "CardProposals" && entry.proposals.some((proposal) => proposal.id === id)
+      ? {
+          ...entry,
+          proposals: entry.proposals.map((proposal) =>
+            proposal.id === id ? change(proposal) : proposal,
+          ),
+        }
+      : entry,
+  );
+
+const isRuleCheck = (check: Check) => (RULE_CHECKS as ReadonlyArray<string>).includes(check.id);
+
+/** The proposal's rule Checks with the AI's answer added, or with why it has none. */
+const withJudged = (proposal: CardProposal, judged: CardChecks.Judged): CardProposal => {
+  const rules = (proposal.score?.checks ?? []).filter(isRuleCheck);
+  return {
+    ...proposal,
+    score:
+      typeof judged === "string" ? scoreOf(rules, judged) : scoreOf([...rules, ...judged], "done"),
+  };
+};
+
 const quoted = (card: CardText) => `"${card.question}" / "${card.answer}"`;
 
 const viewOf = (record: SessionRecord): Session => ({
@@ -188,13 +223,18 @@ export const make = Effect.gen(function* () {
   const sources = yield* Sources.Sources;
   const graph = yield* Graph.Graph;
   const cards = yield* Cards.Cards;
+  const checks = yield* CardChecks.CardChecks;
   const chatGpt = yield* ChatGpt.ChatGpt;
   const responses = yield* Responses;
 
   const live = new Map<string, Live>();
   const loading = yield* Semaphore.make(1);
   const deciding = yield* Semaphore.make(1);
+  // The Card Checks save beside a turn; two writes of one file must not share its temp file.
+  const saving = yield* Semaphore.make(1);
   const turns = yield* FiberMap.make<string>();
+  /** Runs of the AI Checks of proposals so far; each runs under its own key in `turns`. */
+  let judgeRuns = 0;
   // Signing out stops every request on the user's plan, before the sign-in ends.
   yield* chatGpt.beforeSignOut(FiberMap.clear(turns));
 
@@ -208,26 +248,29 @@ export const make = Effect.gen(function* () {
 
   const fileOf = (folder: string, id: string) => path.join(folder, `${id}.json`);
 
-  const save = Effect.fn("Sessions.save")(function* (session: Live) {
-    const view = yield* SubscriptionRef.get(session.view);
-    const folder = yield* sessionsFolder;
-    const record: SessionRecord = {
-      version: 2,
-      id: view.id,
-      kind: view.kind,
-      subject: view.subject,
-      model: view.model,
-      created: view.created,
-      entries: view.entries,
-      items: session.items,
-      decisions: session.decisions,
-    };
-    yield* fs.makeDirectory(folder, { recursive: true }).pipe(Effect.mapError(storageError));
-    yield* encodeRecord(record).pipe(
-      Effect.flatMap((json) => writeFileAtomic(fs, fileOf(folder, view.id), json)),
-      Effect.mapError(storageError),
-    );
-  });
+  const save = Effect.fn("Sessions.save")(
+    function* (session: Live) {
+      const view = yield* SubscriptionRef.get(session.view);
+      const folder = yield* sessionsFolder;
+      const record: SessionRecord = {
+        version: 2,
+        id: view.id,
+        kind: view.kind,
+        subject: view.subject,
+        model: view.model,
+        created: view.created,
+        entries: view.entries,
+        items: session.items,
+        decisions: session.decisions,
+      };
+      yield* fs.makeDirectory(folder, { recursive: true }).pipe(Effect.mapError(storageError));
+      yield* encodeRecord(record).pipe(
+        Effect.flatMap((json) => writeFileAtomic(fs, fileOf(folder, view.id), json)),
+        Effect.mapError(storageError),
+      );
+    },
+    (effect) => saving.withPermit(effect),
+  );
 
   const readRecords = Effect.gen(function* () {
     const folder = yield* sessionsFolder;
@@ -246,16 +289,24 @@ export const make = Effect.gen(function* () {
     return records.flatMap((record) => Option.toArray(record));
   });
 
-  /** The one live copy of a Session, so every watcher sees the same turn. */
+  /**
+   * The one live copy of a Session, so every watcher sees the same turn. Opening it tries
+   * again the AI Checks of open proposals that have none.
+   */
   const adopt = Effect.fn("Sessions.adopt")(function* (record: SessionRecord) {
     const existing = live.get(record.id);
-    if (existing) return existing;
+    if (existing) {
+      // In a live Session, pending Checks are still running; only these wait for a retry.
+      yield* pendingProposals(existing, ["off", "failed"]);
+      return existing;
+    }
     const session: Live = {
       view: yield* SubscriptionRef.make(viewOf(record)),
       items: record.items,
       decisions: [...(record.decisions ?? [])],
     };
     live.set(record.id, session);
+    yield* pendingProposals(session, ["pending", "off", "failed"]);
     return session;
   });
 
@@ -278,18 +329,112 @@ export const make = Effect.gen(function* () {
   const patch = (session: Live, change: (view: Session) => Session) =>
     SubscriptionRef.update(session.view, change);
 
-  /** Proposed Cards join the Session as one entry, each with an id unique in it. */
-  const propose = (session: Live) => (proposed: ReadonlyArray<CardText>) =>
-    patch(session, (view) => {
-      const before = proposalsOf(view.entries).length;
-      const proposals = proposed.map((card, index): CardProposal => ({
-        id: `p${before + index + 1}`,
-        ...card,
-        state: "open",
-        card: null,
+  /**
+   * Runs the AI Checks of open proposals in the background; signing out stops them with the
+   * turns. A proposal the user changed meanwhile keeps the answer for the words it was kept as.
+   */
+  const judgeProposals = Effect.fn("Sessions.judgeProposals")(function* (
+    session: Live,
+    ids: ReadonlyArray<string>,
+  ) {
+    const view = yield* SubscriptionRef.get(session.view);
+    const targets = proposalsOf(view.entries).filter((proposal) => ids.includes(proposal.id));
+    if (targets.length === 0) return;
+    const mark = (judgedOf: (proposal: CardProposal, index: number) => CardChecks.Judged) =>
+      patch(session, (now) => ({
+        ...now,
+        entries: targets.reduce(
+          (entries, target, index) =>
+            mapProposal(entries, target.id, (proposal) =>
+              proposal.question === target.question && proposal.answer === target.answer
+                ? withJudged(proposal, judgedOf(proposal, index))
+                : proposal,
+            ),
+          now.entries,
+        ),
       }));
-      return { ...view, entries: [...view.entries, { _tag: "CardProposals", proposals }] };
+    const judged = yield* checks
+      .judge(targets.map(({ question, answer }) => ({ question, answer, from: view.subject })))
+      .pipe(
+        Effect.onInterrupt(() =>
+          mark(() => "off").pipe(Effect.andThen(save(session)), Effect.ignore),
+        ),
+      );
+    yield* mark((_, index) => judged[index] ?? "failed");
+    yield* save(session).pipe(Effect.ignore);
+  });
+
+  const startJudging = Effect.fn("Sessions.startJudging")(function* (
+    session: Live,
+    ids: ReadonlyArray<string>,
+  ) {
+    const { id } = yield* SubscriptionRef.get(session.view);
+    // A key per run: a new run never stops an older one that is still saving its answer.
+    judgeRuns += 1;
+    yield* FiberMap.run(turns, `${id}:checks:${judgeRuns}`, judgeProposals(session, ids));
+  });
+
+  /**
+   * Proposed Cards join the Session as one entry, each with an id unique in it and its rule
+   * Checks against the Note's Cards and each other. The AI Checks follow.
+   */
+  const propose = (session: Live) => (proposed: ReadonlyArray<CardText>) =>
+    Effect.gen(function* () {
+      const { subject } = yield* SubscriptionRef.get(session.view);
+      const fromNote = (yield* cards.list.pipe(Effect.orElseSucceed(() => []))).filter(
+        (card) => card.from !== null && linkKey(card.from) === linkKey(subject),
+      );
+      const ids = yield* SubscriptionRef.modify(session.view, (view) => {
+        const before = proposalsOf(view.entries).length;
+        const proposals = proposed.map((card, index): CardProposal => ({
+          id: `p${before + index + 1}`,
+          ...card,
+          state: "open",
+          card: null,
+          score: scoreOf(
+            ruleChecks(card, [...fromNote, ...proposed.filter((other) => other !== card)]),
+            "pending",
+          ),
+        }));
+        return [
+          proposals.map((proposal) => proposal.id),
+          { ...view, entries: [...view.entries, { _tag: "CardProposals" as const, proposals }] },
+        ];
+      });
+      yield* startJudging(session, ids);
     });
+
+  /**
+   * Starts the AI Checks of open proposals in these states again: pending (left by a closed
+   * Glose), off (stopped by a sign-out, or no ChatGPT) or failed.
+   */
+  const pendingProposals = Effect.fn("Sessions.pendingProposals")(function* (
+    session: Live,
+    retry: ReadonlyArray<JudgeState>,
+  ) {
+    // Marked pending in the same step, so opening the Session twice checks them once.
+    const ids = yield* SubscriptionRef.modify(session.view, (view) => {
+      const chosen = proposalsOf(view.entries)
+        .filter(
+          (proposal) =>
+            proposal.state === "open" &&
+            proposal.score !== undefined &&
+            retry.includes(proposal.score.judge),
+        )
+        .map((proposal) => proposal.id);
+      const entries = chosen.reduce(
+        (all, chosenId) =>
+          mapProposal(all, chosenId, (proposal) =>
+            proposal.score === undefined
+              ? proposal
+              : { ...proposal, score: { ...proposal.score, judge: "pending" } },
+          ),
+        view.entries,
+      );
+      return [chosen, { ...view, entries }];
+    });
+    if (ids.length > 0) yield* startJudging(session, ids);
+  });
 
   /** What the AI of each kind of Session is told, and may do. */
   const rulesOf = (session: Live, { kind, subject }: Session) => {

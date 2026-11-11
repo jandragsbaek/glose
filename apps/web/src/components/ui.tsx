@@ -117,15 +117,24 @@ const NOTICE_ICONS = { warning: TriangleAlert, error: CircleAlert, info: Info } 
 export function Notice({
   tone,
   title,
+  callout = false,
   children,
 }: {
   readonly tone: keyof typeof NOTICE_ICONS;
-  readonly title?: string | undefined;
+  readonly title?: ReactNode;
+  /**
+   * A callout about one thing on the page, such as a Card's Check: it keeps its box inside a
+   * panel, and an error in it is not announced at once, since a list may hold many.
+   */
+  readonly callout?: boolean;
   readonly children?: ReactNode;
 }) {
   const Icon = NOTICE_ICONS[tone];
   return (
-    <div className={`notice notice--${tone}`} role={tone === "error" ? "alert" : undefined}>
+    <div
+      className={`notice notice--${tone}${callout ? " notice--callout" : ""}`}
+      role={tone === "error" && !callout ? "alert" : undefined}
+    >
       <Icon className="notice__icon" aria-hidden="true" />
       <div>
         {title === undefined ? null : <p className="notice__title">{title}</p>}

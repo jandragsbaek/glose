@@ -74,13 +74,22 @@ export const makeFakeOpenAi = Effect.gen(function* () {
   const signingKey = yield* Jwk.importPrivate(privateKey, "RS256");
   const signature = yield* Signature.Signature;
   const queues = new Map<string, Array<Answer>>();
+  /** Requests whose body matches take answers from their own queue, never the URL's. */
+  const lanes: Array<{
+    readonly url: string;
+    readonly match: (body: string) => boolean;
+    readonly answers: Array<Answer>;
+  }> = [];
   const requests: Array<RecordedRequest> = [];
 
   const client = HttpClient.make((request, url) =>
     Effect.sync(() => {
       const target = `${url.origin}${url.pathname}`;
-      requests.push({ url: target, headers: request.headers, body: bodyText(request) });
-      const answer = queues.get(target)?.shift() ?? { status: 404, body: { detail: "no answer" } };
+      const body = bodyText(request);
+      requests.push({ url: target, headers: request.headers, body });
+      const lane = lanes.find((other) => other.url === target && other.match(body));
+      const queue = lane === undefined ? queues.get(target) : lane.answers;
+      const answer = queue?.shift() ?? { status: 404, body: { detail: "no answer" } };
       const response = answer.sse
         ? new Response(
             answer.open
@@ -109,6 +118,19 @@ export const makeFakeOpenAi = Effect.gen(function* () {
     /** Queues answers for a URL; each request takes the next one. */
     answer: (url: string, ...answers: ReadonlyArray<Answer>) => {
       queues.set(url, [...(queues.get(url) ?? []), ...answers]);
+    },
+    /**
+     * Answers for the requests to a URL whose body matches, such as the Card Checks beside a
+     * Session's turn; with no answers queued, such requests get a 404.
+     */
+    answerMatching: (
+      url: string,
+      match: (body: string) => boolean,
+      ...answers: ReadonlyArray<Answer>
+    ) => {
+      const lane = lanes.find((other) => other.url === url && other.match === match);
+      if (lane === undefined) lanes.push({ url, match, answers: [...answers] });
+      else lane.answers.push(...answers);
     },
     /** An ID token as OpenAI would sign it for this client. */
     idToken: (claims: {

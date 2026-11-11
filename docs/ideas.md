@@ -27,7 +27,7 @@ Working notes from early conversations. Nothing here is final.
   Graf (Graph), Link, Kort (Card), Genkaldelse (Recall), Skriveprojekt (Writing project), Fri
   tekst (Free text), Udtræk (Extraction), Sondering (Probe), Læsning (the Reading Stage),
   AI-tekst (AI text), Kildehenvisning (Citation), Kortudtræk (Card Extraction), Foreslået kort
-  (Proposed Card).
+  (Proposed Card), Tjek (Check), Vurdering (Grade).
 
 ## First start
 
@@ -139,6 +139,43 @@ Decided, Card Extraction (November 2026):
 - The user can also write a Card in their own words on the same page; it has no AI mark.
 - Recall lists every Card (50 at a time, with search and an AI-text filter) to read, edit, clear
   the AI mark, or delete.
+
+Decided, Card Checks (November 2026):
+
+- Every Card and every open Proposed Card is checked automatically against what research says a
+  good Card is. Each Check passes, warns or fails; the Grade is poor with a failed Check, fix
+  with a warning, else good. Glose only shows them: the user fixes the Card, and the AI never
+  changes it on its own. Recall filters by Grade.
+- Rule Checks run in code, at once and offline, also while the user writes a Card:
+  - `has-answer`: the Card has an answer.
+  - `recall`: no yes/no, true/false or either/or question, and no yes/no answer. Recall beats
+    recognition (the testing effect: Roediger & Karpicke 2006), and a yes or a no can be guessed.
+  - `not-broad`: no essay prompt ("Explain…", "Describe…", "Forklar…").
+  - `concise`: question and answer each at most 30 words (warn), 60 (fail). Wozniak's minimum
+    information principle.
+  - `no-list`: no list to recite (Wozniak: avoid sets and enumerations).
+  - `no-giveaway`: the question does not hold most of the answer's words (Matuschak: effortful).
+  - `distinct`: no near-identical question among the Cards from the same Note (Wozniak: combat
+    interference).
+    English and Danish words are known; Cards in other languages get the language-free rules.
+- AI Checks need the meaning of the words: `one-answer` (one exact answer, the one on the Card),
+  `specific` (precise, not broad or vague), `self-contained` (clear without the Note),
+  `one-idea` (one fact or idea), `true-to-note` (no wrong or added facts; Cards without a Note
+  skip it). After Matuschak's focused, precise and consistent prompts.
+- An AI judge that sees the expected answer is poor at "many correct answers possible"
+  (Memory Machines' 2025 study of 1,500 rated cards: F1 0.32–0.50 for that fault, while
+  "lacks context" reached 0.85). So `one-answer` works blind: a first call sees only the
+  questions and the Note and writes every answer a fair grader would accept; the judge then
+  compares those with the Card's answer. Ten Cards per pair of calls.
+- AI Checks are advice. The same study found AI judges agree with people on about two Cards in
+  three; the interface says so.
+- AI Checks run on Proposed Cards as soon as the AI proposes them, and on saved Cards when
+  Recall or the Note's Card page shows them (the shown page, not all Cards at once). They are
+  kept per computer in the app data folder, by a hash of the question, answer, Note text and
+  interface language; changed words or a changed Note are checked again. A failed AI Check
+  waits ten minutes before it is tried again.
+- Not yet: Checks across the set of a Note's Cards (does it cover the Note's main point, is
+  there enough "why" and "how"), and lapses from Reviews as evidence of a weak Card.
 
 Decided, Reviews (next version, November 2026):
 

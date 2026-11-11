@@ -9,6 +9,8 @@ export const cardsAtom = GloseClient.query(RPC_METHODS.cardsList, undefined, {
   reactivityKeys: CARD_KEYS.cards,
 });
 
+/** Runs the AI Checks of Cards whose Checks are pending. */
+export const judgeCardsAtom = GloseClient.mutation(RPC_METHODS.cardsJudge);
 export const createCardAtom = GloseClient.mutation(RPC_METHODS.cardsCreate);
 export const updateCardAtom = GloseClient.mutation(RPC_METHODS.cardsUpdate);
 export const clearAiMarkAtom = GloseClient.mutation(RPC_METHODS.cardsClearAiMark);
