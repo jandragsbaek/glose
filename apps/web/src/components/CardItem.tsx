@@ -1,11 +1,12 @@
 import { useAtomSet } from "@effect/atom-react";
-import type { Card } from "@glose/contracts";
+import type { ScoredCard } from "@glose/contracts";
 import { Link } from "@tanstack/react-router";
 import * as Exit from "effect/Exit";
 import { type ReactNode, useState } from "react";
 
 import { useT } from "../i18n/I18n.tsx";
 import { CARD_KEYS, clearAiMarkAtom, deleteCardAtom, updateCardAtom } from "../state/cards.ts";
+import { CardChecks } from "./CardChecks.tsx";
 import { CardFields } from "./CardFields.tsx";
 import { AiText } from "./NoteText.tsx";
 import { Notice } from "./ui.tsx";
@@ -17,7 +18,7 @@ export function CardItem({
   card,
   showFrom = true,
 }: {
-  readonly card: Card;
+  readonly card: ScoredCard;
   /** The Note it comes from; a page about that Note leaves it out. */
   readonly showFrom?: boolean;
 }) {
@@ -65,6 +66,7 @@ export function CardItem({
       ) : (
         words
       )}
+      {mode === "edit" ? null : <CardChecks score={card.score} />}
       {showFrom ? (
         <p className="field__hint">
           {card.from === null ? (

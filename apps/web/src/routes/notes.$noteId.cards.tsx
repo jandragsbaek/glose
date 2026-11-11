@@ -5,6 +5,7 @@ import * as Exit from "effect/Exit";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useRef, useState } from "react";
 
+import { AiChecksOff, useJudgeShown } from "../components/CardChecks.tsx";
 import { CardFields } from "../components/CardFields.tsx";
 import { CardItem } from "../components/CardItem.tsx";
 import { MissingLink, NoteText } from "../components/NoteText.tsx";
@@ -177,6 +178,7 @@ function NoteCards({ note }: { readonly note: GraphNode }) {
     ),
     () => [],
   );
+  useJudgeShown(fromNote);
 
   const write = async (text: { readonly question: string; readonly answer: string }) => {
     setBusy(true);
@@ -196,7 +198,8 @@ function NoteCards({ note }: { readonly note: GraphNode }) {
           <StorageProblem onRetry={refresh} />
         </div>
       ) : fromNote.length === 0 ? null : (
-        <div className="panel__body">
+        <div className="panel__body stack">
+          <AiChecksOff scores={fromNote.map((card) => card.score)} />
           <ul className="stack">
             {fromNote.map((card) => (
               <li key={card.file}>

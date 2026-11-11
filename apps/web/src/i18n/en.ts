@@ -2,11 +2,16 @@ import type {
   ChatGptProblem,
   GraphFolderAction,
   GraphFolderUnavailable,
+  CheckId,
+  Grade,
+  JudgeState,
   ProposalState,
   ReadingStep,
   SessionProblem,
   SessionTool,
+  Verdict,
 } from "@glose/contracts";
+import { ANSWER_WORDS, QUESTION_WORDS } from "@glose/contracts";
 
 const numbers = new Intl.NumberFormat("en");
 const plurals = new Intl.PluralRules("en");
@@ -366,6 +371,8 @@ export const en = {
       `Showing ${numbers.format(shown)} of ${count(total, "Card", "Cards")}.`,
     showMore: "Show more",
     nothingFound: "No Card matches.",
+    gradeLabel: "Grade",
+    allGrades: "All grades",
   },
   cards: {
     extraction: "Card Extraction",
@@ -414,6 +421,80 @@ export const en = {
     delete: "Delete",
     deleteConfirm: "Delete this Card? Glose removes its file from the Cards folder.",
     file: (file: string) => `Cards/${file}.md`,
+  },
+  score: {
+    label: "Checks",
+    grades: {
+      good: "Good Card",
+      fix: "Could be better",
+      poor: "Needs work",
+    } satisfies Record<Grade, string>,
+    judge: {
+      done: "",
+      pending: "The AI is checking this Card.",
+      off: "Connect ChatGPT in Settings to get the AI Checks too.",
+      failed: "The AI could not check this Card. Glose tries again later.",
+    } satisfies Record<JudgeState, string>,
+    verdicts: {
+      pass: "Passes",
+      warn: "Warning",
+      fail: "Fails",
+    } satisfies Record<Verdict, string>,
+    passed: (n: number) => `${count(n, "Check", "Checks")} passed`,
+    ai: "AI Check",
+    aiHint:
+      "The AI Checks are advice. In tests, AI judges agree with people on about two Cards in three.",
+    rulesWhileTyping: "Checks while you write",
+    checks: {
+      "has-answer": {
+        name: "Has an answer",
+        tip: "Write the answer, so that a Review can check what you recall.",
+      },
+      recall: {
+        name: "Asks you to recall, not to choose",
+        tip: "You can guess a yes, a no or a choice. Ask what, why or how.",
+      },
+      "not-broad": {
+        name: "Asks for one answer, not an essay",
+        tip: "Explain or Describe asks for an essay. Ask for one thing that you can recall.",
+      },
+      concise: {
+        name: "Short",
+        tip: `Keep the question under ${QUESTION_WORDS} words and the answer under ${ANSWER_WORDS}. Split a longer Card.`,
+      },
+      "no-list": {
+        name: "No list to recite",
+        tip: "A list is hard to recall as one Card. Make one Card for each item, or one for the idea that joins them.",
+      },
+      "no-giveaway": {
+        name: "Does not give the answer away",
+        tip: "Most words of the answer are in the question. Ask so that you must recall them.",
+      },
+      distinct: {
+        name: "Cannot be confused with another Card",
+        tip: "Another Card from this Note asks almost the same. Make the questions different, or join the Cards.",
+      },
+      "one-answer": {
+        name: "One exact answer",
+        tip: "The question must have one correct answer: the answer on this Card.",
+      },
+      specific: {
+        name: "Precise, not broad or vague",
+        tip: "Say exactly what to recall.",
+      },
+      "self-contained": {
+        name: "Clear without the Note",
+        tip: "Name the subject, so that the Card is clear months from now.",
+      },
+      "one-idea": {
+        name: "One idea",
+        tip: "Ask for one fact or one idea. Split the Card.",
+      },
+      "true-to-note": {
+        name: "True to its Note",
+        tip: "The answer must be in the Note, with no added facts.",
+      },
+    } satisfies Record<CheckId, { readonly name: string; readonly tip: string }>,
   },
   settings: {
     title: "Settings",

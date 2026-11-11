@@ -1,9 +1,10 @@
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
-import type { Card } from "@glose/contracts";
+import { Grade, type ScoredCard } from "@glose/contracts";
 import { createFileRoute } from "@tanstack/react-router";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useId, useState } from "react";
 
+import { AiChecksOff, useJudgeShown } from "../components/CardChecks.tsx";
 import { CardItem } from "../components/CardItem.tsx";
 import { Page, Panel, SkeletonPanel, StorageProblem } from "../components/ui.tsx";
 import { useT } from "../i18n/I18n.tsx";
@@ -46,23 +47,29 @@ function AllCards() {
 /** A page of Cards at a time: there may be thousands. */
 const PAGE = 50;
 
-function CardList({ cards }: { readonly cards: ReadonlyArray<Card> }) {
+const GRADES = Grade.literals;
+
+function CardList({ cards }: { readonly cards: ReadonlyArray<ScoredCard> }) {
   const t = useT();
   const findId = useId();
+  const gradeId = useId();
   const [query, setQuery] = useState("");
   const [onlyAi, setOnlyAi] = useState(false);
+  const [grade, setGrade] = useState<Grade | "all">("all");
   const [limit, setLimit] = useState(PAGE);
 
   const needle = query.trim().toLocaleLowerCase();
   const matching = cards.filter(
     (card) =>
       (!onlyAi || card.ai) &&
+      (grade === "all" || card.score.grade === grade) &&
       (needle === "" ||
         [card.question, card.answer, card.from ?? ""].some((text) =>
           text.toLocaleLowerCase().includes(needle),
         )),
   );
   const shown = matching.slice(0, limit);
+  useJudgeShown(shown);
   const ai = cards.filter((card) => card.ai).length;
 
   return (
@@ -86,6 +93,28 @@ function CardList({ cards }: { readonly cards: ReadonlyArray<Card> }) {
               }}
             />
           </div>
+          <div className="field">
+            <label className="field__label" htmlFor={gradeId}>
+              {t.recall.gradeLabel}
+            </label>
+            <select
+              id={gradeId}
+              className="input"
+              value={grade}
+              onChange={(event) => {
+                const value = event.target.value;
+                setGrade(GRADES.find((other) => other === value) ?? "all");
+                setLimit(PAGE);
+              }}
+            >
+              <option value="all">{t.recall.allGrades}</option>
+              {GRADES.map((other) => (
+                <option key={other} value={other}>
+                  {t.score.grades[other]}
+                </option>
+              ))}
+            </select>
+          </div>
           {ai === 0 && !onlyAi ? null : (
             <label>
               <input
@@ -106,6 +135,7 @@ function CardList({ cards }: { readonly cards: ReadonlyArray<Card> }) {
           <p className="empty">{t.recall.nothingFound}</p>
         ) : (
           <>
+            <AiChecksOff scores={shown.map((card) => card.score)} />
             <ul className="stack">
               {shown.map((card) => (
                 <li key={card.file}>

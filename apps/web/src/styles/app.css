@@ -848,8 +848,9 @@ a:hover {
   color: var(--lapis);
 }
 
-/* Inside a panel the panel is the box; the notice keeps only its icon and words. */
-.panel .notice {
+/* Inside a panel the panel is the box; the notice keeps only its icon and words. A callout
+   about one thing in the panel keeps its box, so it stands out from what it is about. */
+.panel .notice:not(.notice--callout) {
   padding: 0;
   border: 0;
   background: none;
@@ -873,6 +874,41 @@ a:hover {
 
 .inline-warning .notice__icon {
   color: var(--rubric);
+}
+
+.notice-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* A Card's Checks: apart from the Card's words, a failure stronger than a warning. Red fails,
+   gold warns; each callout also says it in words, never by color alone. */
+.card-checks {
+  margin-top: 12px;
+}
+
+.notice--callout.notice--error {
+  border-color: var(--rubric);
+  border-left-width: 4px;
+  background: var(--rubric-wash);
+}
+
+.notice--callout.notice--error .notice__title {
+  color: var(--rubric);
+}
+
+.notice--callout.notice--warning {
+  border-color: var(--gold);
+  background: var(--gold-wash);
+}
+
+.notice--callout.notice--warning .notice__icon {
+  color: var(--gold);
+}
+
+.panel .notice--callout.notice--warning .notice__title {
+  color: var(--ink);
 }
 
 .notice ul {

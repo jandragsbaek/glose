@@ -12,6 +12,7 @@ import * as RpcSerialization from "effect/rpc/RpcSerialization";
 import * as RpcServer from "effect/rpc/RpcServer";
 import * as NodeHttp from "node:http";
 
+import * as CardChecks from "./cards/CardChecks.ts";
 import * as Cards from "./cards/Cards.ts";
 import * as Catalog from "./catalog/Catalog.ts";
 import * as ChatGpt from "./chatgpt/ChatGpt.ts";
@@ -60,6 +61,7 @@ const layerChatGpt = ChatGpt.layer.pipe(Layer.provide([ChatGpt.layerCrypto, Cred
  * HttpClient, OpenAI's signing keys and the platform; a test supplies fakes for OpenAI.
  */
 export const layerApp = Sessions.layer.pipe(
+  Layer.provideMerge(CardChecks.layer),
   Layer.provideMerge(Layer.mergeAll(layerChatGpt, Responses.layer, Catalog.layer)),
   Layer.provideMerge(Layer.mergeAll(Sources.layer, Graph.layer, Cards.layer)),
   Layer.provideMerge(Settings.layer),

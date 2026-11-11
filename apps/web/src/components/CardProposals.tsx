@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useT } from "../i18n/I18n.tsx";
 import { CARD_KEYS } from "../state/cards.ts";
 import { dropProposalAtom, keepProposalAtom } from "../state/sessions.ts";
+import { AiChecksOff, CardChecks } from "./CardChecks.tsx";
 import { CardFields } from "./CardFields.tsx";
 import { AiText } from "./NoteText.tsx";
 import { Notice } from "./ui.tsx";
@@ -20,13 +21,18 @@ export function CardProposals({
 }) {
   const t = useT();
   return (
-    <ol className="stack" aria-label={t.cards.proposals}>
-      {proposals.map((proposal) => (
-        <li key={proposal.id}>
-          <Proposal sessionId={sessionId} proposal={proposal} />
-        </li>
-      ))}
-    </ol>
+    <div className="stack">
+      <AiChecksOff
+        scores={proposals.filter(({ state }) => state === "open").map(({ score }) => score)}
+      />
+      <ol className="stack" aria-label={t.cards.proposals}>
+        {proposals.map((proposal) => (
+          <li key={proposal.id}>
+            <Proposal sessionId={sessionId} proposal={proposal} />
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 }
 
@@ -83,6 +89,9 @@ function Proposal({
             </p>
             {proposal.answer === "" ? null : <p>{proposal.answer}</p>}
           </AiText>
+          {proposal.state === "open" && proposal.score !== undefined ? (
+            <CardChecks score={proposal.score} />
+          ) : null}
           {proposal.state === "open" ? (
             <div className="button-row" style={{ marginTop: 8 }}>
               <button

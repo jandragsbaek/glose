@@ -1,5 +1,7 @@
 import * as Schema from "effect/Schema";
 
+import { CardScore } from "./cardScore.ts";
+
 /** Folder in the Graph folder that holds one Markdown file per Card. */
 export const CARDS_FOLDER = "Cards";
 
@@ -33,7 +35,16 @@ export const Card = Schema.Struct({
 });
 export type Card = typeof Card.Type;
 
+/** A Card with its Checks against the research on good Cards, as Recall lists it. */
+export const ScoredCard = Schema.Struct({ ...Card.fields, score: CardScore });
+export type ScoredCard = typeof ScoredCard.Type;
+
 export const CardRef = Schema.Struct({ file: Schema.String });
+
+/** Cards whose AI Checks are `pending`; at most a page of Recall at a time. */
+export const JudgeCards = Schema.Struct({
+  files: Schema.Array(Schema.String).pipe(Schema.check(Schema.isMaxLength(50))),
+});
 
 /** A Card the user writes in Glose. */
 export const CreateCard = Schema.Struct({
