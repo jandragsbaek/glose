@@ -114,6 +114,17 @@ The Probe and Review are different things with different goals.
   with `glose: source` as a Source, so a Source can be written or fixed by hand.
 - File names drop characters Windows forbids, and two names that differ only in case count as
   the same file.
+- Add Source can search a Catalog, an outside book database, and fill the form from a chosen
+  book. The first Catalog is Open Library (open data, no key; Google Books refuses calls without
+  one). One result per work, with the edition Open Library matches best; editions in the interface
+  language come first, and an ISBN finds the exact edition. The work gives the year of first
+  publication; the edition gives the title as printed, the publisher and the edition year. Edition
+  and translator stay for the user. Each result leads with the call number it would get and names
+  its edition; an ISBN search is the way to the user's exact copy. Choosing a result fills only
+  empty fields and fields an earlier choice filled, never what the user typed, and can be undone.
+  Filled fields are marked until the user edits them, and the user is told to check them against
+  their copy: Open Library's data has errors. The search runs on the server, which names
+  Glose and a contact address in its `User-Agent`, as Open Library asks.
 - A Source's call number (`ARE 1958`) is the first three letters of the family name and the
   year of first publication. It is shown, not stored.
 

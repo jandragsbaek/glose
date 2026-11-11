@@ -155,6 +155,30 @@ export const da: Messages = {
   },
   addSource: {
     title: "Tilføj kilde",
+    find: "Find bogen",
+    findHint:
+      "Søg i Open Library, et åbent bogkatalog. Når du vælger en bog, udfyldes formularen nedenfor. Et ISBN finder netop din udgave.",
+    searchLabel: "Titel, forfatter eller ISBN",
+    search: "Søg",
+    searching: "Søger i Open Library",
+    results: "Bøger i Open Library",
+    noResults:
+      "Open Library har ingen bog, der passer. Prøv andre ord, eller udfyld formularen selv.",
+    unavailable:
+      "Open Library svarede ikke. Tjek internetforbindelsen, eller udfyld formularen selv.",
+    resultEdition: (publisher: string | null, year: number | null) => {
+      const parts = [publisher, year].filter((part) => part !== null);
+      return parts.length === 0 ? "" : `Udgave: ${parts.join(", ")}`;
+    },
+    partBreak: ". ",
+    notYourCopy:
+      "Ikke dit eksemplar? Søg på det ISBN, der står i din bog, for at få netop den udgave.",
+    filledTitle: (title: string) => `Udfyldt fra Open Library: ${title}`,
+    filled:
+      "Tjek felterne mærket Fra Open Library mod dit eksemplar. Titel, forlag og udgaveår skal være dem fra den bog, du har læst.",
+    keptTyped: "Felter, du selv har skrevet i, er beholdt.",
+    undoFill: "Fortryd",
+    fromCatalog: "Fra Open Library",
     intro:
       "En bog du læser eller har læst. En kildehenvisning kræver fuldstændige data, så udfyld det du har. Glose viser, hvad der mangler.",
     author: "Forfatter",

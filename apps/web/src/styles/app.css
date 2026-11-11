@@ -688,6 +688,10 @@ a:hover {
   color: var(--mute);
 }
 
+.field__hint--catalog {
+  color: var(--lapis);
+}
+
 .field__error {
   display: flex;
   align-items: center;
@@ -755,6 +759,47 @@ a:hover {
 .choice:has(input:checked) {
   border-color: var(--lapis);
   background: var(--tint);
+}
+
+/* Catalog records on Add Source: one button per book, title first, the rest muted. */
+
+.catalog-results {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.catalog-results .choice {
+  flex-wrap: wrap;
+  column-gap: 12px;
+  row-gap: 2px;
+  width: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+}
+
+.catalog-results .choice:hover {
+  border-color: var(--mute);
+}
+
+.catalog-results .choice[aria-pressed="true"] {
+  border-color: var(--lapis);
+  background: var(--tint);
+}
+
+.catalog-results cite {
+  font-style: normal;
+  font-weight: 600;
+}
+
+.catalog-results .choice span {
+  font-weight: 400;
+  color: var(--mute);
 }
 
 /* Notices: a red message always carries an icon and words, never color alone. */

@@ -12,6 +12,7 @@ import * as RpcSerialization from "effect/rpc/RpcSerialization";
 import * as RpcServer from "effect/rpc/RpcServer";
 import * as NodeHttp from "node:http";
 
+import * as Catalog from "./catalog/Catalog.ts";
 import * as ChatGpt from "./chatgpt/ChatGpt.ts";
 import * as Credentials from "./chatgpt/Credentials.ts";
 import * as Responses from "./chatgpt/Responses.ts";
@@ -53,11 +54,11 @@ const layerHttpServer = Layer.unwrap(
 const layerChatGpt = ChatGpt.layer.pipe(Layer.provide([ChatGpt.layerCrypto, Credentials.layer]));
 
 /**
- * The app's services over the files on disk and ChatGPT. They still need ServerConfig, an
+ * The app's services over the files on disk, ChatGPT and the Catalog. They still need ServerConfig, an
  * HttpClient, OpenAI's signing keys and the platform; a test supplies fakes for OpenAI.
  */
 export const layerApp = Sessions.layer.pipe(
-  Layer.provideMerge(Layer.mergeAll(layerChatGpt, Responses.layer)),
+  Layer.provideMerge(Layer.mergeAll(layerChatGpt, Responses.layer, Catalog.layer)),
   Layer.provideMerge(Sources.layer),
   Layer.provideMerge(Settings.layer),
 );

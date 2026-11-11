@@ -1,40 +1,52 @@
 import { useAtomSet } from "@effect/atom-react";
-import type { SourceDetails } from "@glose/contracts";
+import type { CatalogRecord, SourceDetails } from "@glose/contracts";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import * as Cause from "effect/Cause";
 import * as Exit from "effect/Exit";
 import * as Option from "effect/Option";
 import { CircleAlert } from "lucide-react";
-import { type FormEvent, useId, useState } from "react";
+import { type FormEvent, type RefObject, useId, useRef, useState } from "react";
 
-import { Notice, Page, Panel } from "../components/ui.tsx";
+import { CallNumber, Notice, Page, Panel } from "../components/ui.tsx";
+import {
+  EMPTY_FORM,
+  type FieldName,
+  fillFromCatalog,
+  type FormValues,
+  formValuesOf,
+  isFromCatalog,
+} from "../domain/sourceForm.ts";
 import { useT } from "../i18n/I18n.tsx";
-import { createSourceAtom, KEYS } from "../state/graph.ts";
+import { createSourceAtom, KEYS, searchCatalogAtom } from "../state/graph.ts";
 
 export const Route = createFileRoute("/sources/new")({ component: AddSource });
-
-type FieldName =
-  | "familyName"
-  | "givenName"
-  | "title"
-  | "firstPublished"
-  | "edition"
-  | "editionYear"
-  | "publisher"
-  | "translator";
 
 const YEAR = /^-?\d{1,4}$/;
 const YEAR_FIELDS = ["firstPublished", "editionYear"] as const;
 
-const text = (form: FormData, name: FieldName) => {
-  const value = String(form.get(name) ?? "").trim();
+const text = (values: FormValues, name: FieldName) => {
+  const value = values[name].trim();
   return value === "" ? null : value;
 };
 
-const year = (form: FormData, name: FieldName) => {
-  const value = text(form, name);
+const year = (values: FormValues, name: FieldName) => {
+  const value = text(values, name);
   return value === null ? null : Number(value);
 };
+
+/** The last Catalog fill: which record, what it wrote, and the form before it, for Undo. */
+interface Fill {
+  readonly record: CatalogRecord;
+  readonly values: FormValues;
+  readonly kept: ReadonlyArray<FieldName>;
+  readonly before: { readonly values: FormValues; readonly fill: Fill | null };
+}
+
+type Search =
+  | { readonly _tag: "Idle" }
+  | { readonly _tag: "Searching" }
+  | { readonly _tag: "Found"; readonly records: ReadonlyArray<CatalogRecord> }
+  | { readonly _tag: "Unavailable" };
 
 function AddSource() {
   const t = useT();
@@ -43,26 +55,53 @@ function AddSource() {
   const [invalidYears, setInvalidYears] = useState<ReadonlyArray<FieldName>>([]);
   const [failure, setFailure] = useState<{ readonly nameTaken: string } | "storage" | null>(null);
   const [busy, setBusy] = useState(false);
+  const [values, setValues] = useState<FormValues>(EMPTY_FORM);
+  const [fill, setFill] = useState<Fill | null>(null);
+  const firstFieldRef = useRef<HTMLInputElement>(null);
+
+  const focusFirstField = () => {
+    const input = firstFieldRef.current;
+    input?.scrollIntoView({ block: "center" });
+    input?.focus({ preventScroll: true });
+  };
+
+  const choose = (record: CatalogRecord) => {
+    const filled = fillFromCatalog(values, fill?.values ?? null, formValuesOf(record.details));
+    setFill({
+      record,
+      values: formValuesOf(record.details),
+      kept: filled.kept,
+      before: { values, fill },
+    });
+    setValues(filled.values);
+    setInvalidYears([]);
+    focusFirstField();
+  };
+
+  const undoFill = () => {
+    if (fill === null) return;
+    setValues(fill.before.values);
+    setFill(fill.before.fill);
+  };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
     const invalid = YEAR_FIELDS.filter((name) => {
-      const value = text(form, name);
+      const value = text(values, name);
       return value !== null && !YEAR.test(value);
     });
     setInvalidYears(invalid);
     if (invalid.length > 0) return;
 
     const details: SourceDetails = {
-      familyName: text(form, "familyName") ?? "",
-      givenName: text(form, "givenName"),
-      title: text(form, "title") ?? "",
-      firstPublished: year(form, "firstPublished"),
-      edition: text(form, "edition"),
-      editionYear: year(form, "editionYear"),
-      publisher: text(form, "publisher"),
-      translator: text(form, "translator"),
+      familyName: text(values, "familyName") ?? "",
+      givenName: text(values, "givenName"),
+      title: text(values, "title") ?? "",
+      firstPublished: year(values, "firstPublished"),
+      edition: text(values, "edition"),
+      editionYear: year(values, "editionYear"),
+      publisher: text(values, "publisher"),
+      translator: text(values, "translator"),
     };
     setBusy(true);
     const exit = await createSource({ payload: details, reactivityKeys: KEYS.sources });
@@ -88,6 +127,10 @@ function AddSource() {
       wide={options.wide}
       year={options.year}
       error={invalidYears.includes(name) ? t.addSource.yearInvalid : undefined}
+      value={values[name]}
+      fromCatalog={isFromCatalog(values, fill?.values ?? null, name)}
+      onChange={(value) => setValues((current) => ({ ...current, [name]: value }))}
+      inputRef={name === "familyName" ? firstFieldRef : undefined}
     />
   );
 
@@ -97,8 +140,26 @@ function AddSource() {
         <p className="empty" style={{ marginBottom: 20 }}>
           {t.addSource.intro}
         </p>
-        <form className="form" onSubmit={submit}>
-          <Panel title={t.addSource.author} initial="rubric">
+        <div className="form">
+          <FindBook chosen={fill?.record.id ?? null} onChoose={choose} />
+          <div role="status">
+            {fill === null ? null : (
+              <Notice tone="info" title={t.addSource.filledTitle(fill.record.details.title)}>
+                <p>
+                  {t.addSource.filled}
+                  {fill.kept.length === 0 ? null : ` ${t.addSource.keptTyped}`}
+                </p>
+                <div className="button-row" style={{ marginTop: 8 }}>
+                  <button type="button" className="button" onClick={undoFill}>
+                    {t.addSource.undoFill}
+                  </button>
+                </div>
+              </Notice>
+            )}
+          </div>
+        </div>
+        <form className="form" onSubmit={submit} style={{ marginTop: 24 }}>
+          <Panel title={t.addSource.author} initial="lapis">
             <div className="panel__body">
               <fieldset className="fieldset">
                 <legend className="sr-only">{t.addSource.author}</legend>
@@ -107,7 +168,7 @@ function AddSource() {
               </fieldset>
             </div>
           </Panel>
-          <Panel title={t.addSource.work} initial="lapis">
+          <Panel title={t.addSource.work} initial="rubric">
             <div className="panel__body">
               <fieldset className="fieldset">
                 <legend className="sr-only">{t.addSource.work}</legend>
@@ -146,6 +207,130 @@ function AddSource() {
   );
 }
 
+/** Searches the Catalog; choosing a record fills the form, which stays editable. */
+function FindBook({
+  chosen,
+  onChoose,
+}: {
+  readonly chosen: string | null;
+  readonly onChoose: (record: CatalogRecord) => void;
+}) {
+  const t = useT();
+  const searchCatalog = useAtomSet(searchCatalogAtom, { mode: "promiseExit" });
+  const [search, setSearch] = useState<Search>({ _tag: "Idle" });
+  const latest = useRef(0);
+  const inputId = useId();
+  const hintId = `${inputId}-hint`;
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const query = String(new FormData(event.currentTarget).get("query") ?? "").trim();
+    if (query === "") return;
+    const request = ++latest.current;
+    setSearch({ _tag: "Searching" });
+    const exit = await searchCatalog({ payload: { query } });
+    // An answer to an older search must not replace the newer one.
+    if (request !== latest.current) return;
+    setSearch(
+      Exit.isSuccess(exit) ? { _tag: "Found", records: exit.value } : { _tag: "Unavailable" },
+    );
+  };
+
+  return (
+    <Panel title={t.addSource.find} initial="rubric">
+      <div className="panel__body">
+        <form role="search" onSubmit={submit} aria-describedby={hintId}>
+          <div className="field">
+            <label className="field__label" htmlFor={inputId}>
+              {t.addSource.searchLabel}
+            </label>
+            <div className="button-row">
+              <input
+                id={inputId}
+                name="query"
+                type="search"
+                className="input"
+                autoComplete="off"
+                style={{ flex: 1 }}
+              />
+              <button type="submit" className="button" disabled={search._tag === "Searching"}>
+                {t.addSource.search}
+              </button>
+            </div>
+            <p className="field__hint" id={hintId}>
+              {t.addSource.findHint}
+            </p>
+          </div>
+        </form>
+        <div aria-live="polite" style={{ marginTop: 12 }}>
+          {search._tag === "Searching" ? <p className="status">{t.addSource.searching}</p> : null}
+          {search._tag === "Unavailable" ? (
+            <Notice tone="warning">
+              <p>{t.addSource.unavailable}</p>
+            </Notice>
+          ) : null}
+          {search._tag === "Found" && search.records.length === 0 ? (
+            <p className="status">{t.addSource.noResults}</p>
+          ) : null}
+          {search._tag === "Found" && search.records.length > 0 ? (
+            <ul className="catalog-results" aria-label={t.addSource.results}>
+              {search.records.map((record) => (
+                <li key={record.id}>
+                  <CatalogChoice
+                    record={record}
+                    chosen={record.id === chosen}
+                    onChoose={() => onChoose(record)}
+                  />
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {search._tag === "Found" && search.records.length > 0 ? (
+            <p className="field__hint" style={{ marginTop: 8 }}>
+              {t.addSource.notYourCopy}
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
+function CatalogChoice({
+  record: { details },
+  chosen,
+  onChoose,
+}: {
+  readonly record: CatalogRecord;
+  readonly chosen: boolean;
+  readonly onChoose: () => void;
+}) {
+  const t = useT();
+  const author = [details.givenName, details.familyName].filter(Boolean).join(" ");
+  const edition = t.addSource.resultEdition(details.publisher, details.editionYear);
+  // Each part ends a phrase for screen readers, which otherwise read the row as one run-on name.
+  const parts = [
+    author,
+    details.firstPublished === null ? null : t.source.firstPublished(details.firstPublished),
+    edition,
+  ].filter((part): part is string => part !== null && part !== "");
+  return (
+    <button type="button" className="choice" aria-pressed={chosen} onClick={onChoose}>
+      <CallNumber source={details} />
+      <cite>
+        {details.title}
+        <span className="sr-only">{t.addSource.partBreak}</span>
+      </cite>
+      {parts.map((part) => (
+        <span key={part}>
+          {part}
+          <span className="sr-only">{t.addSource.partBreak}</span>
+        </span>
+      ))}
+    </button>
+  );
+}
+
 interface FieldOptions {
   readonly required?: boolean;
   readonly hint?: string;
@@ -161,6 +346,10 @@ function Field({
   wide,
   year: isYear,
   error,
+  value,
+  fromCatalog,
+  onChange,
+  inputRef,
 }: {
   readonly name: FieldName;
   readonly label: string;
@@ -169,11 +358,21 @@ function Field({
   readonly wide: boolean | undefined;
   readonly year: boolean | undefined;
   readonly error: string | undefined;
+  readonly value: string;
+  readonly fromCatalog: boolean;
+  readonly onChange: (value: string) => void;
+  readonly inputRef: RefObject<HTMLInputElement | null> | undefined;
 }) {
+  const t = useT();
   const id = useId();
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
-  const describedBy = [hint === undefined ? null : hintId, error === undefined ? null : errorId]
+  const catalogId = `${id}-catalog`;
+  const describedBy = [
+    hint === undefined ? null : hintId,
+    fromCatalog ? catalogId : null,
+    error === undefined ? null : errorId,
+  ]
     .filter(Boolean)
     .join(" ");
   return (
@@ -186,7 +385,10 @@ function Field({
       </label>
       <input
         id={id}
+        ref={inputRef}
         name={name}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
         className="input"
         required={optionalLabel === undefined}
         inputMode={isYear ? "numeric" : undefined}
@@ -199,6 +401,11 @@ function Field({
           {hint}
         </p>
       )}
+      {fromCatalog ? (
+        <p className="field__hint field__hint--catalog" id={catalogId}>
+          {t.addSource.fromCatalog}
+        </p>
+      ) : null}
       {error === undefined ? null : (
         <p className="field__error" id={errorId}>
           <CircleAlert className="call__icon" aria-hidden="true" />

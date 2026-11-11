@@ -1,6 +1,7 @@
 import { GloseRpcGroup, RPC_METHODS } from "@glose/contracts";
 import * as Effect from "effect/Effect";
 
+import * as Catalog from "./catalog/Catalog.ts";
 import * as ChatGpt from "./chatgpt/ChatGpt.ts";
 import * as Sources from "./graph/Sources.ts";
 import * as ServerInfo from "./info/ServerInfo.ts";
@@ -13,6 +14,7 @@ export const layer = GloseRpcGroup.toLayer(
     const info = yield* ServerInfo.ServerInfo;
     const settings = yield* Settings.Settings;
     const sources = yield* Sources.Sources;
+    const catalog = yield* Catalog.Catalog;
     const chatGpt = yield* ChatGpt.ChatGpt;
     const sessions = yield* Sessions.Sessions;
     return GloseRpcGroup.of({
@@ -24,6 +26,7 @@ export const layer = GloseRpcGroup.toLayer(
       [RPC_METHODS.sourcesGet]: ({ id }) => sources.get(id),
       [RPC_METHODS.sourcesCreate]: (details) => sources.create(details),
       [RPC_METHODS.sourcesSaveFreeText]: (input) => sources.saveFreeText(input),
+      [RPC_METHODS.catalogSearch]: ({ query }) => catalog.search(query),
       [RPC_METHODS.chatgptWatch]: () => chatGpt.status,
       [RPC_METHODS.chatgptConnect]: (input) => chatGpt.connect(input),
       [RPC_METHODS.chatgptCancel]: () => chatGpt.cancel,

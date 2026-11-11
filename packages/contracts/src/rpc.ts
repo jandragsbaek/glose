@@ -2,6 +2,7 @@ import * as Rpc from "effect/rpc/Rpc";
 import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as Schema from "effect/Schema";
 
+import { CatalogRecord, CatalogSearch, CatalogUnavailable } from "./catalog.ts";
 import { ChatGptStatus, ConnectChatGpt, DisconnectResult } from "./chatgpt.ts";
 import { ServerInfo } from "./server.ts";
 import {
@@ -38,6 +39,7 @@ export const RPC_METHODS = {
   sourcesGet: "sources.get",
   sourcesCreate: "sources.create",
   sourcesSaveFreeText: "sources.saveFreeText",
+  catalogSearch: "catalog.search",
   chatgptWatch: "chatgpt.watch",
   chatgptConnect: "chatgpt.connect",
   chatgptCancel: "chatgpt.cancel",
@@ -86,6 +88,12 @@ export const GloseRpcGroup = RpcGroup.make(
     payload: SaveFreeText,
     success: Source,
     error: Schema.Union([SourceNotFound, GraphFolderNotSet, StorageError]),
+  }),
+  /** Works in the Catalog that match the search, best match first. */
+  Rpc.make(RPC_METHODS.catalogSearch, {
+    payload: CatalogSearch,
+    success: Schema.Array(CatalogRecord),
+    error: CatalogUnavailable,
   }),
   /** The current status, then every change to it. */
   Rpc.make(RPC_METHODS.chatgptWatch, { success: ChatGptStatus, stream: true }),
