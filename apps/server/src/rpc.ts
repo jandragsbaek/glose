@@ -1,6 +1,7 @@
 import { GloseRpcGroup, RPC_METHODS } from "@glose/contracts";
 import * as Effect from "effect/Effect";
 
+import * as Cards from "./cards/Cards.ts";
 import * as Catalog from "./catalog/Catalog.ts";
 import * as ChatGpt from "./chatgpt/ChatGpt.ts";
 import * as Graph from "./graph/Graph.ts";
@@ -19,6 +20,7 @@ export const layer = GloseRpcGroup.toLayer(
     const catalog = yield* Catalog.Catalog;
     const chatGpt = yield* ChatGpt.ChatGpt;
     const sessions = yield* Sessions.Sessions;
+    const cards = yield* Cards.Cards;
     return GloseRpcGroup.of({
       [RPC_METHODS.serverInfo]: () => info.get,
       [RPC_METHODS.settingsGet]: () => settings.get,
@@ -41,6 +43,14 @@ export const layer = GloseRpcGroup.toLayer(
       [RPC_METHODS.sessionsSend]: (input) => sessions.send(input),
       [RPC_METHODS.sessionsRetry]: ({ id }) => sessions.retry(id),
       [RPC_METHODS.sessionsStop]: ({ id }) => sessions.stop(id),
+      [RPC_METHODS.sessionsSendPassage]: (input) => sessions.sendPassage(input),
+      [RPC_METHODS.sessionsKeepProposal]: (input) => sessions.keepProposal(input),
+      [RPC_METHODS.sessionsDropProposal]: (input) => sessions.dropProposal(input),
+      [RPC_METHODS.cardsList]: () => cards.list,
+      [RPC_METHODS.cardsCreate]: (input) => cards.create({ ...input, ai: false }),
+      [RPC_METHODS.cardsUpdate]: (input) => cards.update(input),
+      [RPC_METHODS.cardsClearAiMark]: ({ file }) => cards.clearAiMark(file),
+      [RPC_METHODS.cardsDelete]: ({ file }) => cards.remove(file),
     });
   }),
 );

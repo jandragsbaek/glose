@@ -14,8 +14,8 @@ export type InputItem = Readonly<Record<string, unknown>>;
 export interface AgentTool {
   /** The name the model sees, such as `read_source`. */
   readonly name: string;
-  /** The name the user sees in the Session. */
-  readonly entry: SessionTool;
+  /** The name the user sees in the Session; null for a tool whose result shows by itself. */
+  readonly entry: SessionTool | null;
   readonly description: string;
   /** JSON Schema of the arguments, strict: every property required, nothing extra. */
   readonly parameters: Readonly<Record<string, unknown>>;
@@ -87,7 +87,7 @@ export const runTurn = Effect.fn("agent.runTurn")(function* (turn: Turn) {
   const toolSpec = {
     type: "namespace",
     name: NAMESPACE,
-    description: "Glose: the user's Sources and Notes.",
+    description: "Glose: the user's Sources, Notes and Cards.",
     tools: turn.tools.map((tool) => ({
       type: "function",
       name: tool.name,
@@ -139,7 +139,9 @@ export const runTurn = Effect.fn("agent.runTurn")(function* (turn: Turn) {
       const call = decodeFunctionCall(item);
       if (Option.isNone(call)) continue;
       const tool = tools.get(call.value.name);
-      if (tool) yield* turn.onEntry({ _tag: "ToolUse", tool: tool.entry });
+      if (tool !== undefined && tool.entry !== null) {
+        yield* turn.onEntry({ _tag: "ToolUse", tool: tool.entry });
+      }
       const result = tool
         ? yield* Option.match(decodeArguments(call.value.arguments), {
             onNone: () => Effect.succeed({ error: "The arguments are not valid JSON." }),

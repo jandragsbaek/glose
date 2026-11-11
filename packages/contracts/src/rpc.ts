@@ -2,17 +2,23 @@ import * as Rpc from "effect/rpc/Rpc";
 import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as Schema from "effect/Schema";
 
+import { Card, CardNotFound, CardRef, CreateCard, UpdateCard } from "./card.ts";
 import { CatalogRecord, CatalogSearch, CatalogUnavailable } from "./catalog.ts";
 import { ChatGptStatus, ConnectChatGpt, DisconnectResult } from "./chatgpt.ts";
-import { GraphView } from "./graph.ts";
+import { GraphView, NoteNotFound } from "./graph.ts";
 import { ServerInfo } from "./server.ts";
 import {
+  DropProposal,
   FindSession,
+  KeepProposal,
+  ProposalNotOpen,
   SendMessage,
+  SendPassage,
   Session,
   SessionBusy,
   SessionNotFound,
   SessionRef,
+  StartSession,
 } from "./session.ts";
 import {
   CompleteSetup,
@@ -53,6 +59,14 @@ export const RPC_METHODS = {
   sessionsSend: "sessions.send",
   sessionsRetry: "sessions.retry",
   sessionsStop: "sessions.stop",
+  sessionsSendPassage: "sessions.sendPassage",
+  sessionsKeepProposal: "sessions.keepProposal",
+  sessionsDropProposal: "sessions.dropProposal",
+  cardsList: "cards.list",
+  cardsCreate: "cards.create",
+  cardsUpdate: "cards.update",
+  cardsClearAiMark: "cards.clearAiMark",
+  cardsDelete: "cards.delete",
 } as const;
 
 export const RPC_PATH = "/rpc";
@@ -105,7 +119,7 @@ export const GloseRpcGroup = RpcGroup.make(
   Rpc.make(RPC_METHODS.chatgptCancel),
   Rpc.make(RPC_METHODS.chatgptDisconnect, { success: DisconnectResult, error: StorageError }),
   Rpc.make(RPC_METHODS.chatgptDismissPlanNotice, { error: StorageError }),
-  /** The latest Session of a kind for a Source, or null when there is none. */
+  /** The latest Session of a kind for a Graph file, or null when there is none. */
   Rpc.make(RPC_METHODS.sessionsFind, {
     payload: FindSession,
     success: Schema.NullOr(Session),
@@ -113,9 +127,9 @@ export const GloseRpcGroup = RpcGroup.make(
   }),
   /** Starts a Session; the AI takes the first turn at once. */
   Rpc.make(RPC_METHODS.sessionsStart, {
-    payload: FindSession,
+    payload: StartSession,
     success: Session,
-    error: Schema.Union([SourceNotFound, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SourceNotFound, NoteNotFound, GraphFolderNotSet, StorageError]),
   }),
   /** The Session now, then every change to it, including the AI's answer as it arrives. */
   Rpc.make(RPC_METHODS.sessionsWatch, {
@@ -135,4 +149,39 @@ export const GloseRpcGroup = RpcGroup.make(
   }),
   /** Stops the AI's current turn; what it already said stays. */
   Rpc.make(RPC_METHODS.sessionsStop, { payload: SessionRef }),
+  /** Card Extraction from another passage of the Note; the AI takes a turn. */
+  Rpc.make(RPC_METHODS.sessionsSendPassage, {
+    payload: SendPassage,
+    error: Schema.Union([SessionNotFound, SessionBusy, GraphFolderNotSet, StorageError]),
+  }),
+  /** Saves a proposed Card, as the user changed it, as an AI-written Card. */
+  Rpc.make(RPC_METHODS.sessionsKeepProposal, {
+    payload: KeepProposal,
+    success: Card,
+    error: Schema.Union([SessionNotFound, ProposalNotOpen, GraphFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.sessionsDropProposal, {
+    payload: DropProposal,
+    error: Schema.Union([SessionNotFound, ProposalNotOpen, GraphFolderNotSet, StorageError]),
+  }),
+  /** Every Card in the Graph folder, in file name order. */
+  Rpc.make(RPC_METHODS.cardsList, { success: Schema.Array(Card), error: GraphErrors }),
+  /** A Card the user writes: their own words, without an AI mark. */
+  Rpc.make(RPC_METHODS.cardsCreate, { payload: CreateCard, success: Card, error: GraphErrors }),
+  /** New words for a Card. An AI mark stays until the user clears it. */
+  Rpc.make(RPC_METHODS.cardsUpdate, {
+    payload: UpdateCard,
+    success: Card,
+    error: Schema.Union([CardNotFound, GraphFolderNotSet, StorageError]),
+  }),
+  /** The user rewrote an AI-written Card in their own words. */
+  Rpc.make(RPC_METHODS.cardsClearAiMark, {
+    payload: CardRef,
+    success: Card,
+    error: Schema.Union([CardNotFound, GraphFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.cardsDelete, {
+    payload: CardRef,
+    error: Schema.Union([CardNotFound, GraphFolderNotSet, StorageError]),
+  }),
 );

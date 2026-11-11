@@ -1,5 +1,11 @@
 import {
+  type Card,
+  type CardProposal,
+  type CardText,
   GraphFolderNotSet,
+  linkKey,
+  NoteNotFound,
+  ProposalNotOpen,
   type Session,
   SessionBusy,
   SessionEntry,
@@ -24,14 +30,17 @@ import * as Stream from "effect/Stream";
 import * as SubscriptionRef from "effect/SubscriptionRef";
 import * as NodeCrypto from "node:crypto";
 
+import * as Cards from "../cards/Cards.ts";
 import * as ChatGpt from "../chatgpt/ChatGpt.ts";
 import { Responses, type ResponsesError } from "../chatgpt/Responses.ts";
 import { isFileName } from "../graph/fileName.ts";
+import * as Graph from "../graph/Graph.ts";
 import { GLOSE_DIR } from "../graph/GraphFolder.ts";
 import * as Sources from "../graph/Sources.ts";
 import * as Settings from "../settings/Settings.ts";
 import { writeFileAtomic } from "../storage.ts";
 import { type InputItem, runTurn } from "./agent.ts";
+import * as CardExtraction from "./cardExtraction.ts";
 import * as Extraction from "./extraction.ts";
 
 type GraphError = GraphFolderNotSet | StorageError;
@@ -41,13 +50,14 @@ export class Sessions extends Context.Service<
   {
     readonly find: (input: {
       readonly kind: SessionKind;
-      readonly sourceId: string;
+      readonly subject: string;
     }) => Effect.Effect<Session | null, GraphError>;
     /** Makes a Session and starts the AI's first turn in the background. */
     readonly start: (input: {
       readonly kind: SessionKind;
-      readonly sourceId: string;
-    }) => Effect.Effect<Session, SourceNotFound | GraphError>;
+      readonly subject: string;
+      readonly passage?: string;
+    }) => Effect.Effect<Session, SourceNotFound | NoteNotFound | GraphError>;
     readonly watch: (id: string) => Stream.Stream<Session, SessionNotFound | GraphError>;
     readonly send: (input: {
       readonly id: string;
@@ -55,6 +65,22 @@ export class Sessions extends Context.Service<
     }) => Effect.Effect<void, SessionNotFound | SessionBusy | GraphError>;
     readonly retry: (id: string) => Effect.Effect<void, SessionNotFound | SessionBusy | GraphError>;
     readonly stop: (id: string) => Effect.Effect<void>;
+    /** Card Extraction from another passage of the Note. */
+    readonly sendPassage: (input: {
+      readonly id: string;
+      readonly passage: string;
+    }) => Effect.Effect<void, SessionNotFound | SessionBusy | GraphError>;
+    /** Saves a proposed Card, as the user changed it, as an AI-written Card. */
+    readonly keepProposal: (input: {
+      readonly id: string;
+      readonly proposal: string;
+      readonly question: string;
+      readonly answer: string;
+    }) => Effect.Effect<Card, SessionNotFound | ProposalNotOpen | GraphError>;
+    readonly dropProposal: (input: {
+      readonly id: string;
+      readonly proposal: string;
+    }) => Effect.Effect<void, SessionNotFound | ProposalNotOpen | GraphError>;
   }
 >()("glose/sessions/Sessions") {}
 
@@ -63,20 +89,34 @@ export class Sessions extends Context.Service<
  * (`entries`) and the exact model input (`items`) that the next turn continues from.
  */
 const SessionRecord = Schema.Struct({
-  version: Schema.Literal(1),
+  version: Schema.Literal(2),
   id: Schema.String,
   kind: SessionKindSchema,
-  sourceId: Schema.String,
+  subject: Schema.String,
   model: Schema.NullOr(Schema.String),
   created: Schema.Number,
   entries: Schema.Array(SessionEntry),
   items: Schema.Array(Schema.Record(Schema.String, Schema.Unknown)),
+  /** Decisions on proposed Cards that the next turn has yet to tell the AI. */
+  decisions: Schema.optionalKey(Schema.Array(Schema.String)),
 });
 type SessionRecord = typeof SessionRecord.Type;
 
 const RecordJson = Schema.fromJsonString(SessionRecord);
-const decodeRecord = Schema.decodeUnknownEffect(RecordJson);
+const decodeJson = Schema.decodeUnknownEffect(Schema.fromJsonString(Schema.Unknown));
+const decodeRecordFields = Schema.decodeUnknownEffect(SessionRecord);
 const encodeRecord = Schema.encodeEffect(RecordJson);
+
+/** Version 1 named the Session's file `sourceId`, when only Sources had Sessions. */
+const upgrade = (json: unknown): unknown => {
+  if (typeof json !== "object" || json === null || !("version" in json)) return json;
+  if (json.version !== 1 || !("sourceId" in json)) return json;
+  const { sourceId, ...rest } = json;
+  return { ...rest, version: 2, subject: sourceId };
+};
+
+const decodeRecord = (text: string) =>
+  decodeJson(text).pipe(Effect.map(upgrade), Effect.flatMap(decodeRecordFields));
 
 const storageError = (cause: unknown) => new StorageError({ detail: String(cause) });
 
@@ -103,12 +143,36 @@ interface Live {
   readonly view: SubscriptionRef.SubscriptionRef<Session>;
   /** The model input so far; it grows with each completed model call. */
   items: ReadonlyArray<InputItem>;
+  /** What the user did with proposed Cards since the last turn; the next turn tells the AI. */
+  decisions: Array<string>;
 }
+
+const proposalsOf = (entries: ReadonlyArray<SessionEntry>) =>
+  entries.flatMap((entry) => (entry._tag === "CardProposals" ? entry.proposals : []));
+
+/** Changes one proposal in the Session's entries, wherever it is. */
+const setProposal = (
+  entries: ReadonlyArray<SessionEntry>,
+  id: string,
+  change: Partial<CardProposal>,
+): ReadonlyArray<SessionEntry> =>
+  entries.map((entry) =>
+    entry._tag === "CardProposals" && entry.proposals.some((proposal) => proposal.id === id)
+      ? {
+          ...entry,
+          proposals: entry.proposals.map((proposal) =>
+            proposal.id === id ? { ...proposal, ...change } : proposal,
+          ),
+        }
+      : entry,
+  );
+
+const quoted = (card: CardText) => `"${card.question}" / "${card.answer}"`;
 
 const viewOf = (record: SessionRecord): Session => ({
   id: record.id,
   kind: record.kind,
-  sourceId: record.sourceId,
+  subject: record.subject,
   model: record.model,
   created: record.created,
   entries: record.entries,
@@ -122,11 +186,14 @@ export const make = Effect.gen(function* () {
   const path = yield* Path.Path;
   const settings = yield* Settings.Settings;
   const sources = yield* Sources.Sources;
+  const graph = yield* Graph.Graph;
+  const cards = yield* Cards.Cards;
   const chatGpt = yield* ChatGpt.ChatGpt;
   const responses = yield* Responses;
 
   const live = new Map<string, Live>();
   const loading = yield* Semaphore.make(1);
+  const deciding = yield* Semaphore.make(1);
   const turns = yield* FiberMap.make<string>();
   // Signing out stops every request on the user's plan, before the sign-in ends.
   yield* chatGpt.beforeSignOut(FiberMap.clear(turns));
@@ -145,14 +212,15 @@ export const make = Effect.gen(function* () {
     const view = yield* SubscriptionRef.get(session.view);
     const folder = yield* sessionsFolder;
     const record: SessionRecord = {
-      version: 1,
+      version: 2,
       id: view.id,
       kind: view.kind,
-      sourceId: view.sourceId,
+      subject: view.subject,
       model: view.model,
       created: view.created,
       entries: view.entries,
       items: session.items,
+      decisions: session.decisions,
     };
     yield* fs.makeDirectory(folder, { recursive: true }).pipe(Effect.mapError(storageError));
     yield* encodeRecord(record).pipe(
@@ -185,6 +253,7 @@ export const make = Effect.gen(function* () {
     const session: Live = {
       view: yield* SubscriptionRef.make(viewOf(record)),
       items: record.items,
+      decisions: [...(record.decisions ?? [])],
     };
     live.set(record.id, session);
     return session;
@@ -209,9 +278,35 @@ export const make = Effect.gen(function* () {
   const patch = (session: Live, change: (view: Session) => Session) =>
     SubscriptionRef.update(session.view, change);
 
+  /** Proposed Cards join the Session as one entry, each with an id unique in it. */
+  const propose = (session: Live) => (proposed: ReadonlyArray<CardText>) =>
+    patch(session, (view) => {
+      const before = proposalsOf(view.entries).length;
+      const proposals = proposed.map((card, index): CardProposal => ({
+        id: `p${before + index + 1}`,
+        ...card,
+        state: "open",
+        card: null,
+      }));
+      return { ...view, entries: [...view.entries, { _tag: "CardProposals", proposals }] };
+    });
+
+  /** What the AI of each kind of Session is told, and may do. */
+  const rulesOf = (session: Live, { kind, subject }: Session) => {
+    switch (kind) {
+      case "extraction":
+        return { instructions: Extraction.INSTRUCTIONS, tools: Extraction.tools(sources, subject) };
+      case "card-extraction":
+        return {
+          instructions: CardExtraction.INSTRUCTIONS,
+          tools: CardExtraction.tools({ graph, cards, note: subject, propose: propose(session) }),
+        };
+    }
+  };
+
   const runSessionTurn = Effect.fn("Sessions.runTurn")(
     function* (session: Live) {
-      const { sourceId } = yield* SubscriptionRef.get(session.view);
+      const rules = rulesOf(session, yield* SubscriptionRef.get(session.view));
       const token = yield* chatGpt.accessToken;
       const [model] = yield* responses.models(token);
       if (model === undefined) return yield* Effect.fail("no-model" as const);
@@ -219,8 +314,7 @@ export const make = Effect.gen(function* () {
       yield* runTurn({
         token,
         model: model.slug,
-        instructions: Extraction.INSTRUCTIONS,
-        tools: Extraction.tools(sources, sourceId),
+        ...rules,
         items: session.items,
         onDelta: (delta) => patch(session, (view) => ({ ...view, draft: view.draft + delta })),
         onEntry: (entry) =>
@@ -282,8 +376,8 @@ export const make = Effect.gen(function* () {
   /** Marks the Session busy and runs a turn in the background; refuses while one runs. */
   const beginTurn = Effect.fn("Sessions.beginTurn")(function* (
     session: Live,
-    entry: SessionEntry | null,
-    item: InputItem | null,
+    entries: ReadonlyArray<SessionEntry>,
+    items: ReadonlyArray<InputItem>,
   ) {
     const started = yield* SubscriptionRef.modify(session.view, (view) =>
       view.working
@@ -295,43 +389,85 @@ export const make = Effect.gen(function* () {
               working: true,
               problem: null,
               draft: "",
-              entries: entry ? [...view.entries, entry] : view.entries,
+              entries: [...view.entries, ...entries],
             },
           ],
     );
     const { id } = yield* SubscriptionRef.get(session.view);
     if (!started) return yield* new SessionBusy({ id });
-    if (item) session.items = [...session.items, item];
+    const decisions =
+      session.decisions.length === 0 ? [] : [CardExtraction.decisionsMessage(session.decisions)];
+    session.decisions = [];
+    session.items = [...session.items, ...decisions, ...items];
     yield* save(session);
     yield* FiberMap.run(turns, id, runSessionTurn(session));
   });
 
+  /**
+   * The file a new Session works on, as the Graph folder names it. Extraction needs a Source;
+   * Card Extraction any file in the Graph.
+   */
+  const subjectOf = Effect.fn("Sessions.subjectOf")(function* (kind: SessionKind, name: string) {
+    switch (kind) {
+      case "extraction":
+        return (yield* sources.get(name)).id;
+      case "card-extraction": {
+        const view = yield* graph.read;
+        const node = view.nodes.find((other) => linkKey(other.id) === linkKey(name));
+        if (node === undefined) return yield* new NoteNotFound({ id: name });
+        return node.id;
+      }
+    }
+  });
+
+  const openProposal = Effect.fn("Sessions.openProposal")(function* (
+    session: Live,
+    proposalId: string,
+  ) {
+    const view = yield* SubscriptionRef.get(session.view);
+    const proposal = proposalsOf(view.entries).find((other) => other.id === proposalId);
+    if (proposal === undefined || proposal.state !== "open") {
+      return yield* new ProposalNotOpen({ id: view.id, proposal: proposalId });
+    }
+    return { proposal, subject: view.subject };
+  });
+
   return Sessions.of({
-    find: Effect.fn("Sessions.find")(function* ({ kind, sourceId }) {
+    find: Effect.fn("Sessions.find")(function* ({ kind, subject }) {
       const [latest] = (yield* readRecords)
-        .filter((record) => record.kind === kind && record.sourceId === sourceId)
+        .filter((record) => record.kind === kind && linkKey(record.subject) === linkKey(subject))
         .sort((a, b) => b.created - a.created);
       if (latest === undefined) return null;
       return yield* SubscriptionRef.get((yield* adopt(latest)).view);
     }),
 
-    start: Effect.fn("Sessions.start")(function* ({ kind, sourceId }) {
-      yield* sources.get(sourceId);
+    start: Effect.fn("Sessions.start")(function* ({ kind, subject: asked, passage }) {
+      const subject = yield* subjectOf(kind, asked);
       const { language } = (yield* settings.get).settings;
       const created = yield* Clock.currentTimeMillis;
       const stamp = new Date(created).toISOString().replace(/[:.]/g, "-");
       const record: SessionRecord = {
-        version: 1,
+        version: 2,
         id: `${stamp}-${NodeCrypto.randomBytes(3).toString("hex")}`,
         kind,
-        sourceId,
+        subject,
         model: null,
         created,
         entries: [],
         items: [],
       };
       const session = yield* adopt(record);
-      yield* beginTurn(session, null, Extraction.kickoff(language ?? "en")).pipe(
+      const opening =
+        kind === "extraction"
+          ? { entries: [], items: [Extraction.kickoff(language ?? "en")] }
+          : {
+              entries: passage === undefined ? [] : [{ _tag: "Passage" as const, text: passage }],
+              items: [
+                CardExtraction.kickoff(subject, language ?? "en"),
+                ...(passage === undefined ? [] : [CardExtraction.passageMessage(passage)]),
+              ],
+            };
+      yield* beginTurn(session, opening.entries, opening.items).pipe(
         Effect.catchTags({ SessionBusy: () => Effect.void }),
       );
       return yield* SubscriptionRef.get(session.view);
@@ -344,16 +480,64 @@ export const make = Effect.gen(function* () {
       const session = yield* load(id);
       yield* beginTurn(
         session,
-        { _tag: "UserMessage", text },
-        { type: "message", role: "user", content: text },
+        [{ _tag: "UserMessage", text }],
+        [{ type: "message", role: "user", content: text }],
       );
     }),
 
     retry: Effect.fn("Sessions.retry")(function* (id) {
-      yield* beginTurn(yield* load(id), null, null);
+      yield* beginTurn(yield* load(id), [], []);
     }),
 
     stop: (id) => FiberMap.remove(turns, id),
+
+    sendPassage: Effect.fn("Sessions.sendPassage")(function* ({ id, passage }) {
+      yield* beginTurn(
+        yield* load(id),
+        [{ _tag: "Passage", text: passage }],
+        [CardExtraction.passageMessage(passage)],
+      );
+    }),
+
+    keepProposal: Effect.fn("Sessions.keepProposal")(
+      function* ({ id, proposal: proposalId, question, answer }) {
+        const session = yield* load(id);
+        const { proposal, subject } = yield* openProposal(session, proposalId);
+        // The AI wrote it, so it is AI text, edited or not, until the user rewrites it.
+        const card = yield* cards.create({ from: subject, question, answer, ai: true });
+        const kept = { question, answer };
+        session.decisions.push(
+          question === proposal.question && answer === proposal.answer
+            ? `Kept ${quoted(proposal)}.`
+            : `Kept ${quoted(proposal)}, changed by the user to ${quoted(kept)}.`,
+        );
+        yield* patch(session, (view) => ({
+          ...view,
+          entries: setProposal(view.entries, proposalId, {
+            ...kept,
+            state: "kept",
+            card: card.file,
+          }),
+        }));
+        yield* save(session);
+        return card;
+      },
+      (effect) => deciding.withPermit(effect),
+    ),
+
+    dropProposal: Effect.fn("Sessions.dropProposal")(
+      function* ({ id, proposal: proposalId }) {
+        const session = yield* load(id);
+        const { proposal } = yield* openProposal(session, proposalId);
+        session.decisions.push(`Dropped ${quoted(proposal)}.`);
+        yield* patch(session, (view) => ({
+          ...view,
+          entries: setProposal(view.entries, proposalId, { state: "dropped" }),
+        }));
+        yield* save(session);
+      },
+      (effect) => deciding.withPermit(effect),
+    ),
   });
 });
 

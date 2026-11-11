@@ -2,6 +2,7 @@ import type {
   ChatGptProblem,
   GraphFolderAction,
   GraphFolderUnavailable,
+  ProposalState,
   ReadingStep,
   SessionProblem,
   SessionTool,
@@ -109,7 +110,13 @@ export const en = {
     notesNearEmpty:
       "Notes from the Source in progress, and the Notes they link to, appear here. Notes come from Extraction.",
     recall: "Recall",
-    recallEmpty: "No Cards yet. Cards are made from Notes, and Recall schedules them for Review.",
+    recallEmpty:
+      "No Cards yet. Open a Note in the Graph and choose Make Cards. Recall will schedule them for Review.",
+    recallCounts: (cards: number, ai: number) =>
+      ai === 0
+        ? count(cards, "Card", "Cards")
+        : `${count(cards, "Card", "Cards")}, ${numbers.format(ai)} with AI text`,
+    openRecall: "Open Recall",
     writingProject: "Writing project",
     writingEmpty: "No Writing projects yet. They come in a later version of Glose.",
     aiText: "Notes with AI text",
@@ -275,7 +282,10 @@ export const en = {
     tools: {
       "read-source": "The AI read this Source and your Free text.",
       "list-sources": "The AI looked at the list of your Sources.",
+      "read-note": "The AI read a Note.",
+      "list-cards": "The AI looked at the Cards this Note already has.",
     } satisfies Record<SessionTool, string>,
+    passage: "Passage",
     working: "The AI is working",
     messageLabel: "Your answer",
     messageHint: "Press Ctrl+Enter or Cmd+Enter to send.",
@@ -300,6 +310,7 @@ export const en = {
     paragraphs: (n: number): string => (n === 1 ? "AI paragraph" : "AI paragraphs"),
     part: "AI-written Part",
     note: "AI-written Note",
+    card: "AI-written Card",
   },
   graph: {
     title: "Graph",
@@ -330,6 +341,8 @@ export const en = {
     notesFromSource: "Notes from this Source",
     openSource: "Open the Source",
     missingLink: (name: string) => `No file is named ${name} yet.`,
+    makeCards: "Make Cards",
+    cardCount: (n: number) => (n === 0 ? "No Cards yet" : count(n, "Card", "Cards")),
   },
   writing: {
     title: "Writing projects",
@@ -339,7 +352,68 @@ export const en = {
   recall: {
     title: "Recall",
     empty:
-      "Recall asks you about Cards made from your Notes and schedules each one with FSRS. It stays empty until you have Notes.",
+      "Recall asks you about Cards made from your Notes and schedules each one with FSRS. To make Cards, open a Note in the Graph and choose Make Cards.",
+    reviewLater:
+      "Review comes in the next version. Until then, you can read, edit and rewrite your Cards here.",
+    counts: (cards: number, ai: number) =>
+      ai === 0
+        ? count(cards, "Card", "Cards")
+        : `${count(cards, "Card", "Cards")} · ${numbers.format(ai)} with AI text`,
+    findLabel: "Find Cards",
+    findPlaceholder: "Find a question, answer or Note",
+    onlyAi: "Only Cards with AI text",
+    shown: (shown: number, total: number) =>
+      `Showing ${numbers.format(shown)} of ${count(total, "Card", "Cards")}.`,
+    showMore: "Show more",
+    nothingFound: "No Card matches.",
+  },
+  cards: {
+    extraction: "Card Extraction",
+    title: "Cards",
+    start: "Make Cards from the whole Note",
+    startPassage: "Make Cards from the passage",
+    startHint:
+      "The AI reads the Note and proposes Cards. You keep, edit or drop each one. A kept Card is marked as AI text until you rewrite it in your own words.",
+    needsChatGpt: "Card Extraction needs ChatGPT",
+    needsChatGptBody:
+      "Connect your ChatGPT plan in Settings, then come back to this Note. You can still write your own Cards.",
+    noteNotFound: "This Note does not exist. Its Markdown file may have been renamed or deleted.",
+    backToGraph: "Back to the Graph",
+    openInGraph: "Open in the Graph",
+    passage: "Passage",
+    passageHint:
+      "To make Cards from part of the Note, select the text above and choose Use the selected text.",
+    useSelection: "Use the selected text",
+    noSelection: "Select text in the Note first.",
+    clearPassage: "Remove the passage",
+    sendPassage: "Make Cards from the passage",
+    proposals: "Proposed Cards",
+    question: "Question",
+    answer: "Answer",
+    keep: "Keep",
+    edit: "Edit",
+    drop: "Drop",
+    save: "Save",
+    cancel: "Cancel",
+    states: {
+      open: "Proposed",
+      kept: "Kept",
+      dropped: "Dropped",
+    } satisfies Record<ProposalState, string>,
+    keepFailed: "Glose could not save the Card. Try again.",
+    fromNote: (n: number) => (n === 0 ? "No Cards from this Note yet." : count(n, "Card", "Cards")),
+    write: "Write your own Card",
+    writeHint: "A Card in your own words has no AI mark.",
+    add: "Add Card",
+    saveFailed: "Glose could not save the Card. Try again.",
+    from: "From",
+    fromNone: "From no Note",
+    rewrote: "I rewrote it",
+    rewroteHint:
+      "Removes the AI mark. Choose this when the question and answer are in your own words.",
+    delete: "Delete",
+    deleteConfirm: "Delete this Card? Glose removes its file from the Cards folder.",
+    file: (file: string) => `Cards/${file}.md`,
   },
   settings: {
     title: "Settings",

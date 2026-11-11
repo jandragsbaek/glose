@@ -5,11 +5,12 @@ import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { Maximize, Minus, Plus, Search, X } from "lucide-react";
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 
+import { MissingLink, NoteText } from "../components/NoteText.tsx";
 import { CallNumber, Page, Panel, SkeletonPanel, StorageProblem } from "../components/ui.tsx";
 import { callNumber } from "../domain/source.ts";
 import { GraphCanvas, type GraphCanvasEvents, type NodeLabel } from "../graph/GraphCanvas.ts";
-import { type AiScope, type Block, type Inline, parseNoteText } from "../graph/noteText.ts";
 import { useT } from "../i18n/I18n.tsx";
+import { cardsAtom } from "../state/cards.ts";
 import { graphAtom, sourcesAtom } from "../state/graph.ts";
 
 /** `?node=` names the selected node, so Back returns to the Note read before. */
@@ -396,14 +397,29 @@ function NodePanel({
             </NodeLink>
           </p>
         )}
-        <NoteText markdown={node.body} aiText={node.aiText} index={index} onShow={onShow} />
+        <NoteText
+          markdown={node.body}
+          aiText={node.aiText}
+          renderLink={(part) => {
+            const target = index.byKey.get(linkKey(part.target));
+            return target === undefined ? (
+              <MissingLink key={part.at} name={part.target} label={part.label} />
+            ) : (
+              <NodeLink key={part.at} id={target.id} className="graph__wikilink" onShow={onShow}>
+                {part.label}
+              </NodeLink>
+            );
+          }}
+        />
         {isSource ? (
           <p>
             <Link to="/sources/$sourceId" params={{ sourceId: node.id }} className="button">
               {t.graph.openSource}
             </Link>
           </p>
-        ) : null}
+        ) : (
+          <NoteCards noteId={node.id} />
+        )}
       </div>
       {isSource && fromSource.length > 0 ? (
         <div className="panel__body">
@@ -443,85 +459,25 @@ function NodeList({
   );
 }
 
-function NoteText({
-  markdown,
-  aiText,
-  index,
-  onShow,
-}: {
-  readonly markdown: string;
-  readonly aiText: boolean;
-  readonly index: GraphIndex;
-  readonly onShow: (id: string) => void;
-}) {
-  const inline = (parts: ReadonlyArray<Inline>) =>
-    parts.map((part) => {
-      if (part.kind === "text") return part.text;
-      const target = index.byKey.get(linkKey(part.target));
-      return target === undefined ? (
-        <MissingLink key={part.at} name={part.target} label={part.label} />
-      ) : (
-        <NodeLink key={part.at} id={target.id} className="graph__wikilink" onShow={onShow}>
-          {part.label}
-        </NodeLink>
-      );
-    });
-  const render = (block: Block): ReactNode => {
-    switch (block.kind) {
-      case "paragraph":
-        return <p key={block.at}>{inline(block.inlines)}</p>;
-      case "list":
-        return (
-          <ul key={block.at}>
-            {block.items.map((item) => (
-              <li key={item.at}>{inline(item.inlines)}</li>
-            ))}
-          </ul>
-        );
-      case "heading": {
-        // The Note's title is the panel's h3, so its own headings sit below it.
-        const Tag = block.level === 1 ? "h4" : block.level === 2 ? "h5" : "h6";
-        return (
-          <Tag key={block.at} className="graph__heading">
-            {inline(block.inlines)}
-          </Tag>
-        );
-      }
-      case "ai":
-        return (
-          <AiText key={block.at} scope={block.scope} count={block.blocks.length}>
-            {block.heading === null ? null : render(block.heading)}
-            {block.blocks.map(render)}
-          </AiText>
-        );
-    }
-  };
-  return <div className="graph__text">{parseNoteText(markdown, aiText).map(render)}</div>;
-}
-
-/**
- * AI text wears its mark in the app too, at the edge: a rubric rule beside it and a gloss that
- * says how much the AI wrote. A ¶ opens the gloss on paragraphs, a § on a whole Part or Note.
- */
-function AiText({
-  scope,
-  count,
-  children,
-}: {
-  readonly scope: AiScope;
-  /** How many paragraphs and lists the AI wrote. */
-  readonly count: number;
-  readonly children: ReactNode;
-}) {
+/** How many Cards a Note has, and the way to make more. */
+function NoteCards({ noteId }: { readonly noteId: string }) {
   const t = useT();
-  const glossId = useId();
+  const cards = useAtomValue(cardsAtom);
+  const count = AsyncResult.getOrElse(
+    AsyncResult.map(
+      cards,
+      (all) =>
+        all.filter((card) => card.from !== null && linkKey(card.from) === linkKey(noteId)).length,
+    ),
+    () => null,
+  );
   return (
-    <div className="ai-text" data-scope={scope} role="group" aria-labelledby={glossId}>
-      <p className="ai-text__gloss" id={glossId}>
-        {scope === "paragraphs" ? t.aiText.paragraphs(count) : t.aiText[scope]}
-      </p>
-      {children}
-    </div>
+    <p className="button-row">
+      <Link to="/notes/$noteId/cards" params={{ noteId }} className="button">
+        {t.graph.makeCards}
+      </Link>
+      {count === null ? null : <span className="status">{t.graph.cardCount(count)}</span>}
+    </p>
   );
 }
 
@@ -549,14 +505,5 @@ function NodeLink({
     >
       {children}
     </Link>
-  );
-}
-
-function MissingLink({ name, label }: { readonly name: string; readonly label: string }) {
-  const t = useT();
-  return (
-    <span className="graph__wikilink graph__wikilink--missing" title={t.graph.missingLink(name)}>
-      {label}
-    </span>
   );
 }

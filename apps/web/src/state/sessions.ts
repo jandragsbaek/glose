@@ -11,7 +11,16 @@ export const SESSION_KEYS = { sessions: ["sessions"] } as const;
 export const extractionSessionAtom = Atom.family((sourceId: string) =>
   GloseClient.query(
     RPC_METHODS.sessionsFind,
-    { kind: "extraction", sourceId },
+    { kind: "extraction", subject: sourceId },
+    { reactivityKeys: SESSION_KEYS.sessions },
+  ),
+);
+
+/** The latest Card Extraction Session of a Note, or null; it refetches when one starts. */
+export const cardExtractionSessionAtom = Atom.family((noteId: string) =>
+  GloseClient.query(
+    RPC_METHODS.sessionsFind,
+    { kind: "card-extraction", subject: noteId },
     { reactivityKeys: SESSION_KEYS.sessions },
   ),
 );
@@ -29,3 +38,6 @@ export const startSessionAtom = GloseClient.mutation(RPC_METHODS.sessionsStart);
 export const sendMessageAtom = GloseClient.mutation(RPC_METHODS.sessionsSend);
 export const retrySessionAtom = GloseClient.mutation(RPC_METHODS.sessionsRetry);
 export const stopSessionAtom = GloseClient.mutation(RPC_METHODS.sessionsStop);
+export const sendPassageAtom = GloseClient.mutation(RPC_METHODS.sessionsSendPassage);
+export const keepProposalAtom = GloseClient.mutation(RPC_METHODS.sessionsKeepProposal);
+export const dropProposalAtom = GloseClient.mutation(RPC_METHODS.sessionsDropProposal);

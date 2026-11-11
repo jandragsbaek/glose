@@ -7,9 +7,12 @@ sourced Markdown notes, spaced-repetition recall, and writing projects where the
 and suggests but never writes. [docs/ideas.md](docs/ideas.md) has the full idea.
 
 Today Glose has its frame and first working slice, in English and Danish: a first-start setup,
-Today, Add Source, the Reading Stage up to Extraction, and a zoomable Graph view. Sources are saved as Markdown files in
+Today, Add Source, the Reading Stage up to Extraction, a zoomable Graph view, and Card
+Extraction from a Note into Recall. Sources are saved as Markdown files in
 the Graph folder. Extraction is an agentic Session with the AI, on the user's own ChatGPT plan
-("Sign in with ChatGPT"); the Probe comes later. The visual design is
+("Sign in with ChatGPT"); so is Card Extraction, which proposes Cards from a Note that the user
+keeps, edits or drops. Cards are Markdown files in the Graph folder's `Cards` folder. The Probe
+and the Review come later. The visual design is
 recorded in [PRODUCT.md](PRODUCT.md) and [DESIGN.md](DESIGN.md).
 
 Glose uses the architecture and stack of [T3 Code](https://github.com/pingdotgg/t3code), scaled
@@ -72,6 +75,7 @@ apps/server                         apps/web (:5183)
   rpc.ts     thin RPC handlers
   chatgpt/   Sign in with ChatGPT, tokens, the streaming Responses client
   sessions/  the agent loop and its Sessions, kept in .glose/sessions/
+  cards/     Card files in Cards/, read through an index of changed files
         │
 apps/desktop                        Electron main process
   backend/   starts the server as a child process and waits for /health

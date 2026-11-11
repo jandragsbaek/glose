@@ -79,6 +79,11 @@ _Avoid_: drill, flashcards
 One question and its answer in **Recall**, usually made from a **Note**.
 _Avoid_: flashcard, item, question, prompt
 
+**Proposed Card**:
+A **Card** the AI suggests during **Extraction** from a **Note**. It becomes a **Card** only when
+the user keeps it, edited or not.
+_Avoid_: draft, suggestion, candidate
+
 **Review**:
 One answer to one due **Card**. It sets when the **Card** comes back.
 _Avoid_: recall quiz, drill
@@ -118,6 +123,8 @@ The text the tool builds from a **Reference** in the style the **Writing project
   **Citation** from it
 - A **Card** is usually made from a **Note** by **Extraction**; each **Review** sets when it comes
   back
+- In **Extraction** from a **Note**, the AI makes **Proposed Cards**; a kept one is a **Card** with
+  an **AI mark**
 - An **AI mark** flags **AI text** in a **Note** or a **Card**; a whole **Part** and a paragraph wear
   different marks
 
