@@ -11,8 +11,6 @@ import * as Settings from "../settings/Settings.ts";
 import { makeDirs } from "../testkit/graph.ts";
 import * as Catalog from "./Catalog.ts";
 
-const SEARCH_URL = "https://catalog.test/search.json";
-
 /** A Catalog over a fake Open Library that gives one answer and records the request. */
 const withCatalog = <A, E>(
   answer: { readonly status: number; readonly body: unknown },
@@ -40,7 +38,6 @@ const withCatalog = <A, E>(
     const layer = Catalog.layer.pipe(
       Layer.provideMerge(Settings.layer),
       Layer.provide(Layer.succeed(HttpClient.HttpClient, client)),
-      Layer.provide(Layer.succeed(Catalog.OpenLibrary, { searchUrl: SEARCH_URL })),
       Layer.provide(ServerConfig.layerTest(dirs)),
     );
     return yield* Effect.gen(function* () {

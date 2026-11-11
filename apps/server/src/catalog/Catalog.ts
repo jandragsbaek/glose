@@ -9,14 +9,8 @@ import * as Schema from "effect/Schema";
 
 import * as Settings from "../settings/Settings.ts";
 
-/**
- * Open Library's search API: open data from the Internet Archive, free and without a key.
- * https://openlibrary.org/dev/docs/api/search. A test points this at a fake.
- */
-export const OpenLibrary = Context.Reference<{ readonly searchUrl: string }>(
-  "glose/catalog/OpenLibrary",
-  { defaultValue: () => ({ searchUrl: "https://openlibrary.org/search.json" }) },
-);
+/** Open Library's search API: open data, free and without a key. https://openlibrary.org/dev/docs/api/search */
+const SEARCH_URL = "https://openlibrary.org/search.json";
 
 /** Open Library asks every app to name itself and a way to reach its makers. */
 const USER_AGENT = "Glose (jan@dragsbaek.tech)";
@@ -133,7 +127,6 @@ export const make = Effect.gen(function* () {
 
   return Catalog.of({
     search: Effect.fn("Catalog.search")(function* (query) {
-      const { searchUrl } = yield* OpenLibrary;
       // Editions in the interface language come first, so a Danish reader finds the Danish one.
       const language = yield* settings.get.pipe(
         Effect.map(({ settings }) => settings.language ?? "en"),
@@ -141,7 +134,7 @@ export const make = Effect.gen(function* () {
       );
       const body = yield* http
         .execute(
-          HttpClientRequest.get(searchUrl).pipe(
+          HttpClientRequest.get(SEARCH_URL).pipe(
             HttpClientRequest.setUrlParams({
               q: query,
               fields: FIELDS,

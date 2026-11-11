@@ -14,7 +14,6 @@ import {
   fillFromCatalog,
   type FormValues,
   formValuesOf,
-  isFromCatalog,
 } from "../domain/sourceForm.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { createSourceAtom, KEYS, searchCatalogAtom } from "../state/graph.ts";
@@ -34,10 +33,10 @@ const year = (values: FormValues, name: FieldName) => {
   return value === null ? null : Number(value);
 };
 
-/** The last Catalog fill: which record, what it wrote, and the form before it, for Undo. */
+/** The last Catalog fill: which record, the fields it still holds, and the form before it, for Undo. */
 interface Fill {
   readonly record: CatalogRecord;
-  readonly values: FormValues;
+  readonly filled: ReadonlyArray<FieldName>;
   readonly kept: ReadonlyArray<FieldName>;
   readonly before: { readonly values: FormValues; readonly fill: Fill | null };
 }
@@ -66,10 +65,10 @@ function AddSource() {
   };
 
   const choose = (record: CatalogRecord) => {
-    const filled = fillFromCatalog(values, fill?.values ?? null, formValuesOf(record.details));
+    const filled = fillFromCatalog(values, fill?.filled ?? [], formValuesOf(record.details));
     setFill({
       record,
-      values: formValuesOf(record.details),
+      filled: filled.filled,
       kept: filled.kept,
       before: { values, fill },
     });
@@ -128,8 +127,16 @@ function AddSource() {
       year={options.year}
       error={invalidYears.includes(name) ? t.addSource.yearInvalid : undefined}
       value={values[name]}
-      fromCatalog={isFromCatalog(values, fill?.values ?? null, name)}
-      onChange={(value) => setValues((current) => ({ ...current, [name]: value }))}
+      fromCatalog={fill?.filled.includes(name) ?? false}
+      onChange={(value) => {
+        setValues((current) => ({ ...current, [name]: value }));
+        // An edited field is the user's now: no marker, and the next fill leaves it alone.
+        setFill((current) =>
+          current === null
+            ? null
+            : { ...current, filled: current.filled.filter((n) => n !== name) },
+        );
+      }}
       inputRef={name === "familyName" ? firstFieldRef : undefined}
     />
   );

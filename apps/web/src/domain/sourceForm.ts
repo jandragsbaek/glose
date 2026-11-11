@@ -31,30 +31,29 @@ export const formValuesOf = (details: SourceDetails): FormValues => ({
 
 /**
  * Fills the form from a Catalog record without losing the user's own typing. A field is
- * replaced when it is empty or still holds what the previous Catalog fill put there; anything
- * the user typed or changed stays. `kept` names the fields that stayed.
+ * replaced when it is empty or an earlier Catalog fill wrote it and the user has not edited it
+ * since; anything else is the user's. `filled` names the fields the Catalog now holds; `kept`
+ * names typed fields that differ from the record.
  */
 export const fillFromCatalog = (
   current: FormValues,
-  previousFill: FormValues | null,
+  filledBefore: ReadonlyArray<FieldName>,
   record: FormValues,
-): { readonly values: FormValues; readonly kept: ReadonlyArray<FieldName> } => {
+): {
+  readonly values: FormValues;
+  readonly filled: ReadonlyArray<FieldName>;
+  readonly kept: ReadonlyArray<FieldName>;
+} => {
   const values = { ...current };
+  const filled: Array<FieldName> = [];
   const kept: Array<FieldName> = [];
   for (const name of FIELD_NAMES) {
-    const typed = current[name].trim() !== "" && current[name] !== previousFill?.[name];
-    if (typed) {
-      if (current[name] !== record[name]) kept.push(name);
-    } else {
+    if (current[name].trim() === "" || filledBefore.includes(name)) {
       values[name] = record[name];
+      if (record[name] !== "") filled.push(name);
+    } else if (current[name] !== record[name]) {
+      kept.push(name);
     }
   }
-  return { values, kept };
+  return { values, filled, kept };
 };
-
-/** A field shows "from the Catalog" while it still holds the value the Catalog gave. */
-export const isFromCatalog = (
-  values: FormValues,
-  fill: FormValues | null,
-  name: FieldName,
-): boolean => fill !== null && values[name] !== "" && values[name] === fill[name];
