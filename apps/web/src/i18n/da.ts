@@ -9,6 +9,7 @@ const count = (n: number, one: string, other: string) =>
   `${numbers.format(n)} ${plurals.select(n) === "one" ? one : other}`;
 const list = new Intl.ListFormat("da", { type: "conjunction" });
 const clockTime = new Intl.DateTimeFormat("da-DK", { timeStyle: "short" });
+const shortDate = new Intl.DateTimeFormat("da-DK", { day: "numeric", month: "short" });
 const longDate = new Intl.DateTimeFormat("da-DK", {
   weekday: "long",
   day: "numeric",
@@ -623,6 +624,51 @@ export const da: Messages = {
         tip: "Svaret skal stå i noten, uden tilføjede fakta.",
       },
     },
+  },
+  versions: {
+    title: "Versioner af din graf",
+    off: "Ingen versioner",
+    offReasons: {
+      "no-graph": "Glose gemmer versioner, når du har valgt en graf-mappe.",
+      "no-git":
+        "Git er ikke installeret på denne computer. Installer Git, og start Glose igen for at gemme versioner af din graf.",
+      "other-repository":
+        "Graf-mappen ligger i et andet git-repository. Glose laver ikke commits der.",
+      failed: "Git kunne ikke oprette et repository i graf-mappen.",
+    },
+    saved: (at: Date, today: boolean) =>
+      `Gemt ${today ? clockTime.format(at) : shortDate.format(at)}`,
+    notSavedYet: "Ikke gemt endnu",
+    saving: "Gemmer…",
+    syncing: "Synkroniserer…",
+    unsaved: "Ændringer er ikke gemt endnu",
+    changes: "Ændringer",
+    allSaved: "Alt er gemt.",
+    pending: "Ikke gemt endnu. Glose gemmer dem efter 5 minutter uden ændringer.",
+    remote: "Remote",
+    noRemote:
+      "Ingen. Versionerne bliver på denne computer. Tilføj et git-remote for at tage backup.",
+    sync: "Synkronisering",
+    synced: (at: Date, today: boolean) =>
+      `Synkroniseret ${today ? clockTime.format(at) : shortDate.format(at)}.`,
+    notSynced: "Ikke synkroniseret, siden Glose startede.",
+    unpushed: (n: number) => `${count(n, "version", "versioner")} er ikke pushet endnu.`,
+    problemsShort: {
+      conflict: "Konflikt ved synkronisering",
+      "sync-failed": "Ikke synkroniseret",
+      "save-failed": "Ikke gemt",
+    },
+    problems: {
+      conflict:
+        "De samme linjer er ændret på denne computer og på remote. Glose beholdt alle versioner og synkroniserede ikke. Saml ændringerne med git. Så synkroniserer Glose igen.",
+      "sync-failed": "Glose kunne ikke synkronisere med remote. Glose prøver igen efter næste gem.",
+      "save-failed": "Git kunne ikke gemme en version. Glose prøver igen ved næste ændring.",
+    },
+    endDay: "Afslut dagen",
+    endDayHint: "Skriv én linje om i dag. Glose gemmer den som en version og synkroniserer den.",
+    summary: "I dag",
+    summaryPlaceholder: "Læste Arendt, skrev to noter",
+    dayEnded: "Dagen er gemt som en version.",
   },
   settings: {
     title: "Indstillinger",

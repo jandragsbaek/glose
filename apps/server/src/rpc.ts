@@ -11,6 +11,7 @@ import * as ServerInfo from "./info/ServerInfo.ts";
 import * as Recall from "./recall/Recall.ts";
 import * as Sessions from "./sessions/Sessions.ts";
 import * as Settings from "./settings/Settings.ts";
+import * as Versions from "./versions/Versions.ts";
 
 /** Thin transport: RpcServer decodes the payload, the handler calls one service method. */
 export const layer = GloseRpcGroup.toLayer(
@@ -25,6 +26,7 @@ export const layer = GloseRpcGroup.toLayer(
     const cards = yield* Cards.Cards;
     const checks = yield* CardChecks.CardChecks;
     const recall = yield* Recall.Recall;
+    const versions = yield* Versions.Versions;
     return GloseRpcGroup.of({
       [RPC_METHODS.serverInfo]: () => info.get,
       [RPC_METHODS.settingsGet]: () => settings.get,
@@ -63,6 +65,8 @@ export const layer = GloseRpcGroup.toLayer(
       [RPC_METHODS.cardsDelete]: ({ file }) => cards.remove(file),
       [RPC_METHODS.recallQueue]: () => recall.queue,
       [RPC_METHODS.recallReview]: (input) => recall.review(input),
+      [RPC_METHODS.versionsWatch]: () => versions.status,
+      [RPC_METHODS.versionsEndDay]: (input) => versions.endDay(input),
     });
   }),
 );

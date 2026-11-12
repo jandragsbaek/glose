@@ -50,6 +50,7 @@ import {
   SourceNotFound,
   SourceRef,
 } from "./source.ts";
+import { EndDay, VersionsStatus } from "./versions.ts";
 
 export const RPC_METHODS = {
   serverInfo: "server.info",
@@ -89,6 +90,8 @@ export const RPC_METHODS = {
   cardsDelete: "cards.delete",
   recallQueue: "recall.queue",
   recallReview: "recall.review",
+  versionsWatch: "versions.watch",
+  versionsEndDay: "versions.endDay",
 } as const;
 
 export const RPC_PATH = "/rpc";
@@ -246,4 +249,8 @@ export const GloseRpcGroup = RpcGroup.make(
     payload: RecordReview,
     error: Schema.Union([CardNotFound, GraphFolderNotSet, StorageError]),
   }),
+  /** The Versions status now, then every change to it. */
+  Rpc.make(RPC_METHODS.versionsWatch, { success: VersionsStatus, stream: true }),
+  /** Makes a Version named by the user's line about the day, then syncs; the status follows. */
+  Rpc.make(RPC_METHODS.versionsEndDay, { payload: EndDay }),
 );

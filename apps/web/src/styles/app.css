@@ -244,9 +244,179 @@ a:hover {
 
 .main {
   display: flex;
+  flex: 1;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
   overflow-y: auto;
+}
+
+/* Status bar: the running foot of the window, as the foot of a printed page carries the folio.
+   Paper under the main column only, so the lapis rail stays a full-height spine. */
+
+.frame__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.status-bar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 28px;
+  padding: 0 12px 0 32px;
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--mute);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.status-bar__end {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.status-bar__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 22px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background-color 160ms var(--ease-out),
+    color 160ms var(--ease-out);
+}
+
+.status-bar__item:hover,
+.status-bar__item:has(+ .status-panel:popover-open) {
+  background: var(--tint);
+  color: var(--ink);
+}
+
+.status-bar__icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  stroke-width: 1.6;
+}
+
+/* Changes not saved yet: a small ink dot, like a wet mark on the page. */
+.status-bar__unsaved {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+
+.status-bar__problem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+  color: var(--rubric);
+  font-weight: 600;
+}
+
+/* The Versions panel: a Glose panel leaf, opened from the bar and set above its right end. */
+.status-panel {
+  inset: auto 12px 36px auto;
+  width: min(380px, calc(100vw - 24px));
+  max-height: calc(100vh - 56px);
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 160ms var(--ease-out),
+    transform 160ms var(--ease-out),
+    display 160ms allow-discrete,
+    overlay 160ms allow-discrete;
+}
+
+.status-panel:not(:popover-open) {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+@starting-style {
+  .status-panel:popover-open {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.status-panel .panel {
+  border-color: var(--line-strong);
+}
+
+.status-panel__off {
+  color: var(--mute);
+}
+
+.status-panel__problem {
+  margin-bottom: 14px;
+}
+
+.status-panel__facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 8px 16px;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.status-panel__facts dt {
+  color: var(--mute);
+  font-size: 13px;
+  line-height: 21px;
+}
+
+.status-panel__facts dd {
+  margin: 0;
+}
+
+.status-panel__none {
+  color: var(--mute);
+}
+
+.status-panel__form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.status-panel__form .button-row {
+  margin-top: 8px;
+}
+
+.status-panel__result {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--mute);
+  font-size: 13px;
+}
+
+.status-panel__done {
+  width: 16px;
+  height: 16px;
+  color: var(--verdigris);
 }
 
 .page-head {

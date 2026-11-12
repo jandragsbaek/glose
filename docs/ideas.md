@@ -290,6 +290,34 @@ The Probe and Review are different things with different goals.
   regard to case, a wikilink inside code is not a Link, and a wikilink to a missing file draws no
   Link.
 
+Decided, Versions (November 2026):
+
+- Glose keeps a full history of the Graph folder in git. Each Version is a commit. The Graph
+  folder is the repository; Glose runs the user's own `git`, so their remotes, SSH keys and
+  credential helpers work as they do in a terminal. Without git, Glose keeps no Versions and
+  says so.
+- A Graph folder that is no repository gets `git init` (branch `main`) and a `.gitignore` for
+  half-written temporaries, OS litter and Obsidian's layout files. A Graph folder inside another
+  repository is left alone.
+- Glose looks at the folder every 30 seconds. A change is saved once the folder has been quiet
+  for 5 minutes, so edits from Obsidian count too. The message is `Auto-save: N files` with the
+  files listed. What changed while Glose was closed is saved when it opens, and what is unsaved
+  when it closes is saved then (on Windows the server is killed, so the next start saves it).
+- End of day is the user's active choice: one line about the day names a Version, made even
+  without changes. The automatic Versions stay.
+- Sync: after each save and when Glose opens, Glose fetches, rebases this computer's Versions on
+  the remote's, and pushes. Opening pulls, so the user starts on the latest Graph. The remote is
+  the branch's own, else `origin`, else the only one. When both sides changed the same lines,
+  Glose undoes the rebase, keeps every Version, and shows the conflict; the user joins the
+  changes with git. Without a remote the Versions stay on the computer.
+- Glose's commits are never signed (no prompt nobody is there to answer) and skip hooks. Without
+  a git name and e-mail, they are signed with the computer's user and host name.
+- A bar along the bottom of the window shows the time of the last Version ("Saved 14:32") with a
+  git icon at its right end, a mark while changes are unsaved, and a warning icon on a problem.
+  It opens a panel with the details and "End the day". Review's focus screen has no bar.
+- Not yet: adding a remote in Glose, browsing or restoring old Versions, resolving a conflict in
+  Glose, refreshing open pages after a pull, and a periodic pull while nothing changes.
+
 ## Graph view
 
 - The Graph Section draws every file as a node and every Link as a line, like Obsidian's graph

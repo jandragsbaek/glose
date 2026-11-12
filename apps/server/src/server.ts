@@ -27,6 +27,8 @@ import * as Recall from "./recall/Recall.ts";
 import * as Rpc from "./rpc.ts";
 import * as Sessions from "./sessions/Sessions.ts";
 import * as Settings from "./settings/Settings.ts";
+import * as Git from "./versions/Git.ts";
+import * as Versions from "./versions/Versions.ts";
 
 /** Newline-delimited JSON, so a streamed reply reaches the client as it happens. */
 const layerRpcRoute = RpcServer.layerHttp({
@@ -64,7 +66,15 @@ const layerChatGpt = ChatGpt.layer.pipe(Layer.provide([ChatGpt.layerCrypto, Cred
  */
 export const layerApp = Sessions.layer.pipe(
   Layer.provideMerge(CardChecks.layer),
-  Layer.provideMerge(Layer.mergeAll(layerChatGpt, Responses.layer, Catalog.layer, Recall.layer)),
+  Layer.provideMerge(
+    Layer.mergeAll(
+      layerChatGpt,
+      Responses.layer,
+      Catalog.layer,
+      Recall.layer,
+      Versions.layer.pipe(Layer.provide(Git.layer)),
+    ),
+  ),
   Layer.provideMerge(Layer.mergeAll(Sources.layer, Graph.layer, Notes.layer, Cards.layer)),
   Layer.provideMerge(Settings.layer),
 );
@@ -87,10 +97,11 @@ export const layerServices = layerApp.pipe(
 export const layerRoutes = Layer.mergeAll(layerRpcRoute, layerHealthRoute, layerSpaRoute);
 
 /**
- * The services are built before the port opens. A request that reached the port first would
+ * The services are built before the port opens, and the Versions runner starts with them. A request that reached the port first would
  * find no handler yet and hang, and the desktop app's first health check could be that request.
  */
 export const layer = HttpRouter.serve(layerRoutes).pipe(
+  Layer.merge(Versions.layerRunner),
   Layer.provide(ServerInfo.layer),
   Layer.provide(layerHttpServer),
   Layer.provide(layerServices),
