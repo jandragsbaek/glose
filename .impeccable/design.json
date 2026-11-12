@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-11T13:07:47+00:00",
+  "generatedAt": "2026-11-12T15:00:00+00:00",
   "title": "Design System: Glose",
   "extensions": {
     "colorMeta": {
@@ -318,7 +318,7 @@
       },
       "call": {
         "displayName": "Call",
-        "purpose": "Call numbers and step numbers only."
+        "purpose": "Call numbers and step numbers."
       },
       "review-question": {
         "displayName": "Review question",
@@ -327,6 +327,10 @@
       "review-answer": {
         "displayName": "Review answer",
         "purpose": "The answer on the Review leaf; max 40ch; 18px on phones."
+      },
+      "code": {
+        "displayName": "Code",
+        "purpose": "A code the user types elsewhere (the GitHub sign-in code in the Backup sheet), typed like a call-number label at reading size."
       }
     },
     "shadows": [
@@ -366,6 +370,11 @@
         "name": "leaf-rise",
         "value": "280ms ease-out, from translateY(10px) and opacity 0.6",
         "purpose": "The next Review leaf rises from the stack; stopped under prefers-reduced-motion."
+      },
+      {
+        "name": "sheet-enter",
+        "value": "160ms ease-out, from translateY(4px) and opacity 0; backdrop fades in from rgb(20 20 20 / 0%) to 32%",
+        "purpose": "A sheet opens over the dimmed page."
       }
     ],
     "breakpoints": [
@@ -505,6 +514,37 @@
       "description": "AI text in a Note or Card keeps ink and body type; its mark sits at the edge: a rubric rule and a rubric gloss above it that says how much the AI wrote. Paragraphs: 2px rule and a ¶ gloss. A whole Part, Note or Card: 3px rule and a § gloss. The block is a group named by its gloss.",
       "html": "<div class=\"ds-ai\" role=\"group\" aria-labelledby=\"ds-ai-gloss\"><p class=\"ds-ai-gloss\" id=\"ds-ai-gloss\">AI-written Note</p><p>Newport draws on research by Sophie Leroy: after a switch, part of the attention stays with the last task.</p></div><div class=\"ds-ai ds-ai--paragraphs\" role=\"group\" aria-labelledby=\"ds-ai-gloss-2\"><p class=\"ds-ai-gloss\" id=\"ds-ai-gloss-2\">AI paragraph</p><p>One paragraph the AI wrote.</p></div>",
       "css": ".ds-ai { margin:0 0 16px; padding-left:11px; border-left:3px solid var(--rubric,#b3261e); color:var(--ink,#141414); font:400 15px/1.5 'Public Sans',system-ui,sans-serif; } .ds-ai--paragraphs { padding-left:12px; border-left-width:2px; } .ds-ai p { margin:0; } .ds-ai > * + * { margin-top:2px; } .ds-ai-gloss { display:flex; align-items:baseline; gap:6px; color:var(--rubric,#b3261e); font-size:12px; font-weight:600; line-height:1.3; letter-spacing:0.06em; text-transform:uppercase; } .ds-ai-gloss::before { content:'\\00A7'; font-size:15px; letter-spacing:0; } .ds-ai--paragraphs .ds-ai-gloss::before { content:'\\00B6'; }"
+    },
+    {
+      "name": "Sheet",
+      "kind": "custom",
+      "refersTo": "sheet",
+      "description": "A modal leaf for a one-time task (the Backup sheet): a Glose panel with a Strong Hairline border over an Ink 32% veil, panel head with Initial and step Meta, flourish rule, a 16px-gap body and a foot with the action left and a quiet Cancel right. No shadow.",
+      "html": "<div class=\"ds-veil\"><section class=\"ds-sheet\" role=\"dialog\" aria-labelledby=\"ds-sheet-t\"><div class=\"ds-sheet-head\"><h2 class=\"ds-sheet-title\" id=\"ds-sheet-t\">Back up to GitHub</h2><span class=\"ds-sheet-meta\">Step 1 of 2</span></div><div class=\"ds-sheet-rule\"><svg class=\"ds-flourish\" viewBox=\"0 0 64 10\" aria-hidden=\"true\"><path d=\"M2 6.5c8 0 12-3 20-3 4 0 6 2.2 10 2.2s6-4.2 10-4.2c8 0 12 5 20 5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\"/><circle cx=\"32\" cy=\"5.7\" r=\"1.3\" fill=\"currentColor\"/></svg></div><div class=\"ds-sheet-body\"><p>Type this code on GitHub's page. It lets Glose make your private repository.</p><div class=\"ds-code-row\"><span class=\"ds-code\">WDJB-MJHT</span><button class=\"ds-btn\"><svg class=\"ds-btn-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect width=\"14\" height=\"14\" x=\"8\" y=\"8\" rx=\"2\"/><path d=\"M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2\"/></svg>Copy code</button></div><p class=\"ds-sheet-wait\">Waiting for GitHub. Type the code on the page that opened. Glose continues by itself.</p><div class=\"ds-sheet-foot\"><a class=\"ds-btn\" href=\"#\"><svg class=\"ds-btn-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M15 3h6v6\"/><path d=\"M10 14 21 3\"/><path d=\"M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6\"/></svg>Open GitHub again</a><button class=\"ds-quiet\">Cancel</button></div></div></section></div>",
+      "css": ".ds-veil { padding:32px 16px; background:rgb(20 20 20 / 32%); } .ds-sheet { width:min(560px,100%); margin:auto; background:var(--paper,#fff); border:1px solid var(--line-strong,#c9c8d1); border-radius:4px; color:var(--ink,#141414); font:400 15px/1.5 'Public Sans',system-ui,sans-serif; animation:ds-sheet-in 160ms cubic-bezier(0.22,1,0.36,1); } @keyframes ds-sheet-in { from { opacity:0; transform:translateY(4px); } } .ds-sheet-head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:14px 20px 0; } .ds-sheet-title { margin:0; font-size:13px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; line-height:1.3; } .ds-sheet-title::first-letter { font-family:'Cinzel Decorative','Cinzel',serif; font-weight:700; font-size:2em; letter-spacing:0; line-height:.9; color:var(--rubric,#b3261e); } .ds-sheet-meta { color:var(--mute,#5c5f6a); font-size:13px; font-variant-numeric:tabular-nums; } .ds-sheet-rule { display:flex; align-items:center; gap:10px; margin:10px 20px 0; } .ds-sheet-rule::before, .ds-sheet-rule::after { content:''; flex:1; height:1px; background:var(--line,#dedde3); } .ds-flourish { display:block; flex:none; width:64px; height:10px; color:var(--rubric,#b3261e); } .ds-sheet-body { display:flex; flex-direction:column; gap:16px; padding:16px 20px 20px; } .ds-sheet-body p { margin:0; max-width:62ch; } .ds-code-row { display:flex; flex-wrap:wrap; align-items:center; gap:12px 16px; } .ds-code { display:inline-flex; padding:6px 14px; border:1px solid var(--ink,#141414); border-radius:2px; background:var(--paper,#fff); font:700 28px/36px 'Courier Prime',ui-monospace,monospace; letter-spacing:.14em; font-variant-numeric:tabular-nums; user-select:all; } .ds-sheet-wait { color:var(--mute,#5c5f6a); font-size:13px; } .ds-sheet-foot { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-top:4px; } .ds-btn { display:inline-flex; align-items:center; gap:8px; min-height:36px; padding:0 16px; border:1px solid var(--ink,#141414); border-radius:4px; background:var(--paper,#fff); color:var(--ink,#141414); font:600 14px/1.2 'Public Sans',system-ui,sans-serif; text-decoration:none; cursor:pointer; transition:background-color 160ms cubic-bezier(0.22,1,0.36,1); } .ds-btn:hover { background:var(--tint,#eef0f8); } .ds-btn:focus-visible, .ds-quiet:focus-visible { outline:2px solid var(--lapis,#1e2f7a); outline-offset:2px; } .ds-btn-icon { width:16px; height:16px; flex:none; } .ds-quiet { margin-left:auto; min-height:36px; padding:0 16px; border:1px solid transparent; border-radius:4px; background:none; color:var(--mute,#5c5f6a); font:600 14px/1.2 'Public Sans',system-ui,sans-serif; cursor:pointer; } .ds-quiet:hover { color:var(--ink,#141414); text-decoration:underline; text-underline-offset:3px; }"
+    },
+    {
+      "name": "Typed Code",
+      "kind": "custom",
+      "refersTo": "typed-code",
+      "description": "A code the user types on another site, typed like a call-number label at reading size; selects as one unit.",
+      "html": "<span class=\"ds-typed-code\" aria-label=\"Code for GitHub: W D J B - M J H T\">WDJB-MJHT</span>",
+      "css": ".ds-typed-code { display:inline-flex; align-items:center; padding:6px 14px; border:1px solid var(--ink,#141414); border-radius:2px; background:var(--paper,#fff); color:var(--ink,#141414); font:700 28px/36px 'Courier Prime',ui-monospace,monospace; letter-spacing:.14em; font-variant-numeric:tabular-nums; user-select:all; }"
+    },
+    {
+      "name": "Facts",
+      "kind": "custom",
+      "description": "A two-column description list of states: Mute labels, Ink values, tabular numerals; values wrap anywhere. The Versions panel and the Backup panel.",
+      "html": "<dl class=\"ds-facts\"><dt>Backed up to</dt><dd><a href=\"#\">github.com/jan/glose-graph</a></dd><dt>Last sync</dt><dd>Today 14:50</dd><dt>GitHub</dt><dd class=\"ds-facts-account\">jan<button class=\"ds-facts-quiet\">Disconnect GitHub</button></dd></dl>",
+      "css": ".ds-facts { display:grid; grid-template-columns:max-content minmax(0,1fr); gap:8px 16px; margin:0; color:var(--ink,#141414); font:400 14px/1.5 'Public Sans',system-ui,sans-serif; font-variant-numeric:tabular-nums; } .ds-facts dt { color:var(--mute,#5c5f6a); font-size:13px; line-height:21px; } .ds-facts dd { margin:0; overflow-wrap:anywhere; } .ds-facts a { color:var(--lapis,#1e2f7a); } .ds-facts-account { display:flex; flex-wrap:wrap; align-items:center; gap:2px 8px; } .ds-facts-quiet { min-height:21px; padding:0 4px; border:1px solid transparent; border-radius:4px; background:none; color:var(--mute,#5c5f6a); font:600 13px/1.2 'Public Sans',system-ui,sans-serif; cursor:pointer; } .ds-facts-quiet:hover { color:var(--ink,#141414); text-decoration:underline; text-underline-offset:3px; } .ds-facts-quiet:focus-visible { outline:2px solid var(--lapis,#1e2f7a); outline-offset:2px; }"
+    },
+    {
+      "name": "Link Button",
+      "kind": "button",
+      "refersTo": "link-button",
+      "description": "A button that reads as a Lapis underlined link inside running text.",
+      "html": "<p class=\"ds-link-p\">Signed in to GitHub as jan. <button class=\"ds-link-button\">Use another account</button></p>",
+      "css": ".ds-link-p { margin:0; color:var(--ink,#141414); font:400 15px/1.5 'Public Sans',system-ui,sans-serif; } .ds-link-button { padding:0; border:0; background:none; color:var(--lapis,#1e2f7a); font:inherit; text-align:left; text-decoration:underline 1px; text-underline-offset:3px; cursor:pointer; } .ds-link-button:hover { text-decoration-thickness:2px; } .ds-link-button:focus-visible { outline:2px solid var(--lapis,#1e2f7a); outline-offset:2px; }"
     }
   ],
   "narrative": {
@@ -541,7 +581,7 @@
       },
       {
         "name": "The Typed Label Rule",
-        "body": "Courier Prime is for call numbers and step numbers only.",
+        "body": "Courier Prime is for call numbers, step numbers and a code the user types elsewhere (the GitHub sign-in code) only.",
         "section": "typography"
       },
       {
@@ -570,7 +610,7 @@
       "Don't decorate data, Note text, inputs or buttons (no initials, flourishes or gilt there).",
       "Don't use red alone to mean anything; color never carries a message by itself.",
       "Don't add resting shadows or new fields of color beyond the lapis rail, spine and primary.",
-      "Don't use Cinzel Decorative beyond a single heading initial, or Courier Prime beyond call and step numbers.",
+      "Don't use Cinzel Decorative beyond a single heading initial, or Courier Prime beyond call numbers, step numbers and a code the user types elsewhere.",
       "Don't fix widths to English text, truncate labels, or block wrapping.",
       "Don't build a file-tree-plus-editor arrangement in neutral grey, a busy dashboard, or gamification."
     ]

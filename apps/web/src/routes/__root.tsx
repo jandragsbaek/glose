@@ -5,6 +5,7 @@ import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { PlanNotice } from "../components/PlanNotice.tsx";
 import { Rail } from "../components/Rail.tsx";
 import { Setup } from "../components/Setup.tsx";
+import { BackupSheet } from "../components/Backup.tsx";
 import { StatusBar } from "../components/StatusBar.tsx";
 import { Notice, Page } from "../components/ui.tsx";
 import { I18nProvider, systemLanguage, useT } from "../i18n/I18n.tsx";
@@ -64,6 +65,7 @@ function Root() {
             </div>
           </div>
           <PlanNotice />
+          <BackupSheet />
         </I18nProvider>
       );
     },

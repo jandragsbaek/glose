@@ -5,6 +5,7 @@ import * as CardChecks from "./cards/CardChecks.ts";
 import * as Cards from "./cards/Cards.ts";
 import * as Catalog from "./catalog/Catalog.ts";
 import * as ChatGpt from "./chatgpt/ChatGpt.ts";
+import * as GitHub from "./github/GitHub.ts";
 import * as Graph from "./graph/Graph.ts";
 import * as Sources from "./graph/Sources.ts";
 import * as ServerInfo from "./info/ServerInfo.ts";
@@ -27,6 +28,7 @@ export const layer = GloseRpcGroup.toLayer(
     const checks = yield* CardChecks.CardChecks;
     const recall = yield* Recall.Recall;
     const versions = yield* Versions.Versions;
+    const github = yield* GitHub.GitHub;
     return GloseRpcGroup.of({
       [RPC_METHODS.serverInfo]: () => info.get,
       [RPC_METHODS.settingsGet]: () => settings.get,
@@ -43,6 +45,10 @@ export const layer = GloseRpcGroup.toLayer(
       [RPC_METHODS.chatgptCancel]: () => chatGpt.cancel,
       [RPC_METHODS.chatgptDisconnect]: () => chatGpt.disconnect,
       [RPC_METHODS.chatgptDismissPlanNotice]: () => chatGpt.dismissPlanNotice,
+      [RPC_METHODS.githubWatch]: () => github.status,
+      [RPC_METHODS.githubConnect]: () => github.connect,
+      [RPC_METHODS.githubCancel]: () => github.cancel,
+      [RPC_METHODS.githubDisconnect]: () => github.disconnect,
       [RPC_METHODS.sessionsFind]: (input) => sessions.find(input),
       [RPC_METHODS.sessionsStart]: (input) => sessions.start(input),
       [RPC_METHODS.sessionsWatch]: ({ id }) => sessions.watch(id),
@@ -67,6 +73,9 @@ export const layer = GloseRpcGroup.toLayer(
       [RPC_METHODS.recallReview]: (input) => recall.review(input),
       [RPC_METHODS.versionsWatch]: () => versions.status,
       [RPC_METHODS.versionsEndDay]: (input) => versions.endDay(input),
+      [RPC_METHODS.versionsBackUpToGitHub]: (input) => versions.backUpToGitHub(input),
+      [RPC_METHODS.versionsSetRemote]: (input) => versions.setRemote(input),
+      [RPC_METHODS.versionsRemoveRemote]: () => versions.removeRemote,
     });
   }),
 );

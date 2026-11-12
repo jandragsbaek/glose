@@ -27,6 +27,7 @@ import * as Recall from "./recall/Recall.ts";
 import * as Rpc from "./rpc.ts";
 import * as Sessions from "./sessions/Sessions.ts";
 import * as Settings from "./settings/Settings.ts";
+import * as GitHub from "./github/GitHub.ts";
 import * as Git from "./versions/Git.ts";
 import * as Versions from "./versions/Versions.ts";
 
@@ -72,7 +73,7 @@ export const layerApp = Sessions.layer.pipe(
       Responses.layer,
       Catalog.layer,
       Recall.layer,
-      Versions.layer.pipe(Layer.provide(Git.layer)),
+      Versions.layer.pipe(Layer.provide(Git.layer), Layer.provideMerge(GitHub.layer)),
     ),
   ),
   Layer.provideMerge(Layer.mergeAll(Sources.layer, Graph.layer, Notes.layer, Cards.layer)),

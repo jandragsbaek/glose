@@ -15,3 +15,10 @@ export const versionsStatusAtom = GloseClient.runtime
   .pipe(Atom.keepAlive);
 
 export const endDayAtom = GloseClient.mutation(RPC_METHODS.versionsEndDay);
+export const backUpToGitHubAtom = GloseClient.mutation(RPC_METHODS.versionsBackUpToGitHub);
+export const setRemoteAtom = GloseClient.mutation(RPC_METHODS.versionsSetRemote);
+export const removeRemoteAtom = GloseClient.mutation(RPC_METHODS.versionsRemoveRemote);
+
+/** Which way the Backup sheet sets up a remote, or null while it is closed. */
+export type BackupSheetMode = "github" | "remote";
+export const backupSheetAtom = Atom.make<BackupSheetMode | null>(null).pipe(Atom.keepAlive);

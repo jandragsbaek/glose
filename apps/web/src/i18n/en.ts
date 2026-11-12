@@ -1,5 +1,6 @@
 import type {
   ChatGptProblem,
+  GitHubProblem,
   GraphFolderAction,
   GraphFolderUnavailable,
   CheckId,
@@ -8,6 +9,7 @@ import type {
   PointState,
   ProposalState,
   ReadingStep,
+  RemoteRefusedReason,
   SessionProblem,
   SessionTool,
   Verdict,
@@ -678,7 +680,7 @@ export const en = {
     allSaved: "All saved.",
     pending: "Not saved yet. Glose saves them after 5 minutes without changes.",
     remote: "Remote",
-    noRemote: "None. The versions stay on this computer. Add a git remote to back them up.",
+    noRemote: "Only on this computer.",
     sync: "Sync",
     synced: (at: Date, today: boolean) =>
       `Synced ${today ? clockTime.format(at) : shortDate.format(at)}.`,
@@ -700,6 +702,76 @@ export const en = {
     summary: "Today",
     summaryPlaceholder: "Read Arendt, wrote two Notes",
     dayEnded: "The day is saved as a version.",
+  },
+  backup: {
+    title: "Backup",
+    versions: "Versions",
+    onlyHere: "Only on this computer",
+    lastSaved: "Last saved",
+    savedAt: (at: Date, today: boolean) =>
+      today ? `Today ${clockTime.format(at)}` : shortDate.format(at),
+    risk: "If this computer is lost or breaks, your Graph is lost with it.",
+    backUpToGitHub: "Back up to GitHub",
+    useRemote: "Use another git remote",
+    backedUpTo: "Backed up to",
+    lastSync: "Last sync",
+    github: "GitHub",
+    notConnected: "Not connected",
+    disconnectGitHub: "Disconnect GitHub",
+    stop: "Stop backing up",
+    stopQuestion: (place: string) =>
+      `Stop backing up? Glose keeps every version on this computer, and the copy at ${place} stays as it is.`,
+    keep: "Keep backing up",
+    step: (n: number, of: number) => `Step ${n} of ${of}`,
+    intro:
+      "GitHub keeps a private copy of every version, free. Only you can see it, and later you can open your Graph on another computer.",
+    connect: "Connect GitHub",
+    noAccount: "No GitHub account?",
+    createAccount: "Create one, free",
+    unavailable:
+      "This copy of Glose cannot connect to GitHub. You can still use another git remote.",
+    codeIntro: "Type this code on GitHub's page. It lets Glose make your private repository.",
+    code: "Code for GitHub",
+    copy: "Copy code",
+    copied: "Copied",
+    openAgain: "Open GitHub again",
+    waiting:
+      "Waiting for GitHub. Type the code on the page that opened. Glose continues by itself.",
+    cancel: "Cancel",
+    signedIn: (login: string) => `Signed in to GitHub as ${login}.`,
+    otherAccount: "Use another account",
+    repository: "Repository name",
+    repositoryHint:
+      "Private. Glose makes it if you have no repository of this name. If you have one, Glose uses it.",
+    repositoryInvalid: "Use only letters, digits and the signs - _ and .",
+    backUp: "Back up",
+    backingUp: "Backing up…",
+    done: "Backed up. Every version is on GitHub now, and Glose keeps it up to date after each save.",
+    close: "Done",
+    remoteIntro:
+      "Glose pushes to a git remote you already have, with your own git sign-in: an SSH key or a credential helper.",
+    remoteUrl: "Remote address",
+    remotePlaceholder: "git@example.com:you/glose-graph.git",
+    useThisRemote: "Use this remote",
+    checking: "Checking…",
+    remoteDone: "Backed up. Glose keeps the remote up to date after each save.",
+    problems: {
+      declined: "You declined on GitHub, so Glose is not connected.",
+      "timed-out": "The code expired before GitHub got it. Connect again for a new code.",
+      expired: "GitHub no longer accepts the sign-in. Connect again.",
+      failed: "Glose could not connect to GitHub. Try again.",
+    } satisfies Record<GitHubProblem, string>,
+    refused: {
+      "versions-off": "Glose keeps no versions now, so there is nothing to back up.",
+      "github-not-connected": "Glose is not connected to GitHub now. Connect again.",
+      "public-repository":
+        "You have a public repository of this name. Glose never puts your Graph where everyone can read it. Choose another name.",
+      "github-failed": "GitHub did not make the repository. Try again in a moment.",
+      unreachable:
+        "Git could not reach that remote, or could not sign in to it. Check the address, and that git on this computer can push there.",
+      "other-graph":
+        "That remote holds another Graph. Glose does not mix two Graphs. Use an empty remote, or the one of this Graph.",
+    } satisfies Record<RemoteRefusedReason, string>,
   },
   settings: {
     title: "Settings",

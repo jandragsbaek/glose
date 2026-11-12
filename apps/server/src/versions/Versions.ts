@@ -1,4 +1,11 @@
-import type { EndDay, VersionsProblem, VersionsStatus } from "@glose/contracts";
+import {
+  type BackUpToGitHub,
+  type EndDay,
+  RemoteRefused,
+  type SetRemote,
+  type VersionsProblem,
+  type VersionsStatus,
+} from "@glose/contracts";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -13,6 +20,7 @@ import * as SubscriptionRef from "effect/SubscriptionRef";
 import * as NodeOS from "node:os";
 
 import * as ServerConfig from "../config.ts";
+import { GitHub } from "../github/GitHub.ts";
 import * as Settings from "../settings/Settings.ts";
 import { Git } from "./Git.ts";
 
@@ -30,6 +38,15 @@ export class Versions extends Context.Service<
     readonly endDay: (input: EndDay) => Effect.Effect<void>;
     /** Saves what changed without syncing, as Glose closes. */
     readonly close: Effect.Effect<void>;
+    /** Makes the user's private GitHub repository of that name the remote, made first if missing. */
+    readonly backUpToGitHub: (input: BackUpToGitHub) => Effect.Effect<void, RemoteRefused>;
+    /**
+     * Makes a git remote the remote, in place of the one before, and syncs. A remote git cannot
+     * reach, or one that holds another history, is refused, and nothing changes.
+     */
+    readonly setRemote: (input: SetRemote) => Effect.Effect<void, RemoteRefused>;
+    /** Stops syncing; the Versions stay here and on the old remote. */
+    readonly removeRemote: Effect.Effect<void>;
   }
 >()("glose/versions/Versions") {}
 
@@ -72,6 +89,7 @@ const OFF_NO_GRAPH: VersionsStatus = { _tag: "Off", reason: "no-graph" };
 
 export const make = Effect.gen(function* () {
   const git = yield* Git;
+  const github = yield* GitHub;
   const settings = yield* Settings.Settings;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -165,17 +183,26 @@ export const make = Effect.gen(function* () {
     const remote = branch === null ? null : yield* remoteOf(folder, branch);
     const remoteBranch = branch === null ? null : yield* remoteBranchOf(folder, branch);
     const time = yield* output(folder, ["log", "-1", "--format=%ct"]);
+    // The address as the user set it; `remote get-url` would apply their `insteadOf` rewrites.
+    const url =
+      remote === null ? null : yield* output(folder, ["config", "--get", `remote.${remote}.url`]);
     yield* SubscriptionRef.set(status, {
       _tag: "On",
       savedAt: time ? Number(time) * 1000 : null,
       unsaved: fingerprint !== "",
       activity,
       remote,
+      remoteUrl: url === null ? null : withoutPassword(url),
       unpushed: yield* unpushedOf(folder, remote, remoteBranch),
       syncedAt,
       problem,
     });
   });
+
+  /** A longer limit, and the GitHub sign-in when the user connected GitHub. */
+  const networkOptions = github.gitConfig.pipe(
+    Effect.map((config) => ({ timeoutMs: NETWORK_TIMEOUT_MS, config })),
+  );
 
   const setActivity = (folder: string, next: typeof activity) =>
     Effect.suspend(() => {
@@ -244,7 +271,7 @@ export const make = Effect.gen(function* () {
     if (branch === null || remote === null) return;
     const remoteBranch = yield* remoteBranchOf(folder, branch);
     yield* setActivity(folder, "syncing");
-    const network = { timeoutMs: NETWORK_TIMEOUT_MS };
+    const network = yield* networkOptions;
     const outcome = yield* Effect.gen(function* () {
       yield* git.run(folder, ["fetch", "--quiet", remote], network);
       const ref = `refs/remotes/${remote}/${remoteBranch}`;
@@ -290,9 +317,11 @@ export const make = Effect.gen(function* () {
     if (outcome !== "later" && (problem !== "save-failed" || outcome !== null)) problem = outcome;
     fingerprint = yield* fingerprintOf(folder).pipe(Effect.orElseSucceed(() => fingerprint));
     yield* setActivity(folder, "idle");
+    return outcome;
   });
 
   /** Starts versioning a Graph folder: a repository of its own, or none at all. */
+
   const open = Effect.fn("Versions.open")(function* (folder: string) {
     fingerprint = "";
     syncedAt = null;
@@ -319,6 +348,44 @@ export const make = Effect.gen(function* () {
       return false;
     }
     return true;
+  });
+
+  /**
+   * Checks that git reaches the remote and that its history, if any, is this Graph's. Then the
+   * remote replaces the one before; its old branches and upstream go with it.
+   */
+  const connectRemote = Effect.fn("Versions.connectRemote")(function* (url: string) {
+    if (opened === null || !opened.usable)
+      return yield* new RemoteRefused({ reason: "versions-off" });
+    const folder = opened.folder;
+    const branch = (yield* branchOf(folder)) ?? "main";
+    const network = yield* networkOptions;
+    const heads = yield* git.run(folder, ["ls-remote", "--heads", url], network).pipe(
+      Effect.tapError((error) => Effect.logWarning("Glose could not reach the remote", error)),
+      Effect.mapError(() => new RemoteRefused({ reason: "unreachable" })),
+    );
+    if (heads.trim() !== "" && (yield* hasCommits(folder))) {
+      // Any branch of the remote that shares a Version with this Graph shows it is this Graph's.
+      yield* git.run(folder, ["fetch", "--quiet", url, `refs/heads/${branch}`], network).pipe(
+        Effect.flatMap(() => git.run(folder, ["merge-base", "HEAD", "FETCH_HEAD"])),
+        Effect.mapError(() => new RemoteRefused({ reason: "other-graph" })),
+      );
+    }
+    const name = (yield* remoteOf(folder, branch)) ?? REMOTE_NAME;
+    yield* git.run(folder, ["remote", "remove", name]).pipe(Effect.ignore);
+    yield* git.run(folder, ["remote", "add", name, url]).pipe(
+      Effect.tapError((error) => Effect.logWarning("Glose could not add the remote", error)),
+      Effect.mapError(() => new RemoteRefused({ reason: "unreachable" })),
+    );
+    problem = problem === "save-failed" ? problem : null;
+    syncedAt = null;
+    // A remote git reaches but will not take the push (no write access, say) is no backup.
+    if ((yield* sync(folder)) === "sync-failed") {
+      yield* git.run(folder, ["remote", "remove", name]).pipe(Effect.ignore);
+      problem = null;
+      yield* publish(folder);
+      return yield* new RemoteRefused({ reason: "unreachable" });
+    }
   });
 
   const graphFolder = settings.get.pipe(
@@ -368,11 +435,55 @@ export const make = Effect.gen(function* () {
       },
       (effect) => lock.withPermit(effect),
     ),
+    backUpToGitHub: Effect.fn("Versions.backUpToGitHub")(
+      function* ({ name }) {
+        if (opened === null || !opened.usable) {
+          return yield* new RemoteRefused({ reason: "versions-off" });
+        }
+        yield* connectRemote(yield* github.repository(name));
+      },
+      (effect) => lock.withPermit(effect),
+    ),
+    setRemote: Effect.fn("Versions.setRemote")(
+      function* ({ url }) {
+        yield* connectRemote(url);
+      },
+      (effect) => lock.withPermit(effect),
+    ),
+    removeRemote: Effect.fn("Versions.removeRemote")(
+      function* () {
+        if (opened === null || !opened.usable) return;
+        const folder = opened.folder;
+        const branch = yield* branchOf(folder);
+        const name = branch === null ? null : yield* remoteOf(folder, branch);
+        if (name !== null) yield* git.run(folder, ["remote", "remove", name]).pipe(Effect.ignore);
+        if (problem !== "save-failed") problem = null;
+        syncedAt = null;
+        yield* publish(folder);
+      },
+      (effect) => lock.withPermit(effect),
+    )(),
     close: Effect.suspend(() =>
       opened?.usable ? save(opened.folder, null, false).pipe(Effect.asVoid) : Effect.void,
     ).pipe((effect) => lock.withPermit(effect), Effect.withSpan("Versions.close")),
   });
 });
+
+/** The name Glose gives a remote it adds, as `git clone` does. */
+const REMOTE_NAME = "origin";
+
+/** A remote address to show: an `https://user:token@host/…` address loses its user and token. */
+export const withoutPassword = (url: string) => {
+  if (!/^https?:\/\//i.test(url)) return url;
+  try {
+    const parsed = new URL(url);
+    parsed.username = "";
+    parsed.password = "";
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+};
 
 /** "Auto-save: 3 files", then the files, so the history says what changed. */
 const autoMessage = (files: ReadonlyArray<string>) => {

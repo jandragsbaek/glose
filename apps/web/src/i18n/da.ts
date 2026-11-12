@@ -646,8 +646,7 @@ export const da: Messages = {
     allSaved: "Alt er gemt.",
     pending: "Ikke gemt endnu. Glose gemmer dem efter 5 minutter uden ændringer.",
     remote: "Remote",
-    noRemote:
-      "Ingen. Versionerne bliver på denne computer. Tilføj et git-remote for at tage backup.",
+    noRemote: "Kun på denne computer.",
     sync: "Synkronisering",
     synced: (at: Date, today: boolean) =>
       `Synkroniseret ${today ? clockTime.format(at) : shortDate.format(at)}.`,
@@ -669,6 +668,75 @@ export const da: Messages = {
     summary: "I dag",
     summaryPlaceholder: "Læste Arendt, skrev to noter",
     dayEnded: "Dagen er gemt som en version.",
+  },
+  backup: {
+    title: "Backup",
+    versions: "Versioner",
+    onlyHere: "Kun på denne computer",
+    lastSaved: "Sidst gemt",
+    savedAt: (at: Date, today: boolean) =>
+      today ? `I dag ${clockTime.format(at)}` : shortDate.format(at),
+    risk: "Hvis computeren bliver væk eller går i stykker, mister du din graf med den.",
+    backUpToGitHub: "Tag backup på GitHub",
+    useRemote: "Brug et andet git-remote",
+    backedUpTo: "Backup på",
+    lastSync: "Sidst synkroniseret",
+    github: "GitHub",
+    notConnected: "Ikke forbundet",
+    disconnectGitHub: "Afbryd GitHub",
+    stop: "Stop backup",
+    stopQuestion: (place: string) =>
+      `Stop backup? Glose beholder alle versioner på denne computer, og kopien på ${place} bliver, som den er.`,
+    keep: "Fortsæt backup",
+    step: (n: number, of: number) => `Trin ${n} af ${of}`,
+    intro:
+      "GitHub gemmer en privat kopi af alle versioner, gratis. Kun du kan se den, og senere kan du åbne din graf på en anden computer.",
+    connect: "Forbind GitHub",
+    noAccount: "Ingen GitHub-konto?",
+    createAccount: "Opret en gratis",
+    unavailable:
+      "Denne udgave af Glose kan ikke forbinde til GitHub. Du kan stadig bruge et andet git-remote.",
+    codeIntro: "Skriv denne kode på GitHubs side. Så kan Glose oprette dit private repository.",
+    code: "Kode til GitHub",
+    copy: "Kopiér kode",
+    copied: "Kopieret",
+    openAgain: "Åbn GitHub igen",
+    waiting: "Venter på GitHub. Skriv koden på siden, der åbnede. Glose fortsætter selv.",
+    cancel: "Annullér",
+    signedIn: (login: string) => `Logget ind på GitHub som ${login}.`,
+    otherAccount: "Brug en anden konto",
+    repository: "Navn på repository",
+    repositoryHint:
+      "Privat. Glose opretter det, hvis du ikke har et repository med det navn. Har du et, bruger Glose det.",
+    repositoryInvalid: "Brug kun bogstaver, tal og tegnene - _ og .",
+    backUp: "Tag backup",
+    backingUp: "Tager backup…",
+    done: "Backup taget. Alle versioner er på GitHub nu, og Glose holder dem opdateret efter hvert gem.",
+    close: "Færdig",
+    remoteIntro:
+      "Glose pusher til et git-remote, du allerede har, med dit eget git-login: en SSH-nøgle eller en credential helper.",
+    remoteUrl: "Adresse på remote",
+    remotePlaceholder: "git@example.com:dig/glose-graf.git",
+    useThisRemote: "Brug dette remote",
+    checking: "Tjekker…",
+    remoteDone: "Backup taget. Glose holder remote opdateret efter hvert gem.",
+    problems: {
+      declined: "Du sagde nej på GitHub, så Glose er ikke forbundet.",
+      "timed-out": "Koden udløb, før GitHub fik den. Forbind igen for at få en ny kode.",
+      expired: "GitHub godtager ikke længere login. Forbind igen.",
+      failed: "Glose kunne ikke forbinde til GitHub. Prøv igen.",
+    },
+    refused: {
+      "versions-off": "Glose gemmer ingen versioner nu, så der er intet at tage backup af.",
+      "github-not-connected": "Glose er ikke forbundet til GitHub nu. Forbind igen.",
+      "public-repository":
+        "Du har et offentligt repository med det navn. Glose lægger aldrig din graf, hvor alle kan læse den. Vælg et andet navn.",
+      "github-failed": "GitHub oprettede ikke dit repository. Prøv igen om lidt.",
+      unreachable:
+        "Git kunne ikke nå det remote eller kunne ikke logge ind på det. Tjek adressen, og at git på denne computer kan pushe dertil.",
+      "other-graph":
+        "Det remote indeholder en anden graf. Glose blander ikke to grafer. Brug et tomt remote eller grafens eget.",
+    },
   },
   settings: {
     title: "Indstillinger",

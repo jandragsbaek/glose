@@ -13,6 +13,7 @@ import {
 } from "./card.ts";
 import { CatalogRecord, CatalogSearch, CatalogUnavailable } from "./catalog.ts";
 import { ChatGptStatus, ConnectChatGpt, DisconnectResult } from "./chatgpt.ts";
+import { GitHubStatus } from "./github.ts";
 import { GraphView, NoteNameTaken, NoteNotFound } from "./graph.ts";
 import { RecordReview, ReviewQueue } from "./recall.ts";
 import { ServerInfo } from "./server.ts";
@@ -50,7 +51,7 @@ import {
   SourceNotFound,
   SourceRef,
 } from "./source.ts";
-import { EndDay, VersionsStatus } from "./versions.ts";
+import { BackUpToGitHub, EndDay, RemoteRefused, SetRemote, VersionsStatus } from "./versions.ts";
 
 export const RPC_METHODS = {
   serverInfo: "server.info",
@@ -68,6 +69,10 @@ export const RPC_METHODS = {
   chatgptCancel: "chatgpt.cancel",
   chatgptDisconnect: "chatgpt.disconnect",
   chatgptDismissPlanNotice: "chatgpt.dismissPlanNotice",
+  githubWatch: "github.watch",
+  githubConnect: "github.connect",
+  githubCancel: "github.cancel",
+  githubDisconnect: "github.disconnect",
   sessionsFind: "sessions.find",
   sessionsStart: "sessions.start",
   sessionsWatch: "sessions.watch",
@@ -92,6 +97,9 @@ export const RPC_METHODS = {
   recallReview: "recall.review",
   versionsWatch: "versions.watch",
   versionsEndDay: "versions.endDay",
+  versionsBackUpToGitHub: "versions.backUpToGitHub",
+  versionsSetRemote: "versions.setRemote",
+  versionsRemoveRemote: "versions.removeRemote",
 } as const;
 
 export const RPC_PATH = "/rpc";
@@ -144,6 +152,13 @@ export const GloseRpcGroup = RpcGroup.make(
   Rpc.make(RPC_METHODS.chatgptCancel),
   Rpc.make(RPC_METHODS.chatgptDisconnect, { success: DisconnectResult, error: StorageError }),
   Rpc.make(RPC_METHODS.chatgptDismissPlanNotice, { error: StorageError }),
+  /** The GitHub connection now, then every change to it. */
+  Rpc.make(RPC_METHODS.githubWatch, { success: GitHubStatus, stream: true }),
+  /** Asks GitHub for a code and opens its page; the status shows the code and follows it. */
+  Rpc.make(RPC_METHODS.githubConnect),
+  Rpc.make(RPC_METHODS.githubCancel),
+  /** Forgets this computer's GitHub sign-in. The repository and its Versions stay on GitHub. */
+  Rpc.make(RPC_METHODS.githubDisconnect, { error: StorageError }),
   /** The latest Session of a kind for a Graph file, or null when there is none. */
   Rpc.make(RPC_METHODS.sessionsFind, {
     payload: FindSession,
@@ -253,4 +268,10 @@ export const GloseRpcGroup = RpcGroup.make(
   Rpc.make(RPC_METHODS.versionsWatch, { success: VersionsStatus, stream: true }),
   /** Makes a Version named by the user's line about the day, then syncs; the status follows. */
   Rpc.make(RPC_METHODS.versionsEndDay, { payload: EndDay }),
+  /** Makes or finds the private repository on GitHub, makes it the remote, and syncs. */
+  Rpc.make(RPC_METHODS.versionsBackUpToGitHub, { payload: BackUpToGitHub, error: RemoteRefused }),
+  /** Makes a git remote the user already has the remote, and syncs. */
+  Rpc.make(RPC_METHODS.versionsSetRemote, { payload: SetRemote, error: RemoteRefused }),
+  /** Stops syncing. The Versions stay on this computer and on the old remote. */
+  Rpc.make(RPC_METHODS.versionsRemoveRemote),
 );

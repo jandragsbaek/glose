@@ -1,4 +1,4 @@
-import type { VersionsStatus } from "@glose/contracts";
+import { RemoteRefused, type VersionsStatus } from "@glose/contracts";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -10,6 +10,7 @@ import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 
 import * as ServerConfig from "../config.ts";
+import { GitHub } from "../github/GitHub.ts";
 import * as Settings from "../settings/Settings.ts";
 import { makeDirs } from "../testkit/graph.ts";
 import * as Git from "./Git.ts";
@@ -51,9 +52,20 @@ const withGraph = <A, E>(
     const git = (cwd: string, ...args: ReadonlyArray<string>) =>
       runner.run(cwd, args).pipe(Effect.map((text) => text.trim()));
 
-    const deps = Layer.mergeAll(Settings.layer, Git.layerTest(globalConfig)).pipe(
-      Layer.provideMerge(ServerConfig.layerTest(dirs)),
-    );
+    // GitHub as far as Versions sees it: each repository name is the bare remote of the test.
+    const github = GitHub.of({
+      status: Stream.empty,
+      connect: Effect.void,
+      cancel: Effect.void,
+      disconnect: Effect.void,
+      repository: () => Effect.succeed(remote),
+      gitConfig: Effect.succeed({}),
+    });
+    const deps = Layer.mergeAll(
+      Settings.layer,
+      Git.layerTest(globalConfig),
+      Layer.succeed(GitHub, github),
+    ).pipe(Layer.provideMerge(ServerConfig.layerTest(dirs)));
     const start = Versions.make.pipe(Effect.provide(deps));
     yield* Effect.gen(function* () {
       const settings = yield* Settings.Settings;
@@ -232,6 +244,112 @@ it.layer(NodeServices.layer)("Versions", (it) => {
         assert.strictEqual(yield* read("A Note.md"), "My line.\n");
         assert.strictEqual(yield* git(folder, "status", "--porcelain"), "");
         assert.strictEqual(yield* git(folder, "log", "-1", "--format=%s"), "Mine");
+      }),
+    ),
+  );
+
+  it.effect("backs up to GitHub: the repository becomes the remote and gets every Version", () =>
+    withGraph(({ folder, remote, git, start, status }) =>
+      Effect.gen(function* () {
+        yield* git(folder, "init", "--quiet", "--bare", "--initial-branch=main", remote);
+        const versions = yield* start;
+        yield* versions.tick;
+        assert.isNull(on(yield* status(versions)).remote);
+
+        yield* versions.backUpToGitHub({ name: "glose-graph" });
+
+        const now = on(yield* status(versions));
+        assert.strictEqual(now.remote, "origin");
+        assert.strictEqual(now.remoteUrl, remote);
+        assert.strictEqual(now.unpushed, 0);
+        assert.isNull(now.problem);
+        assert.strictEqual(yield* git(remote, "log", "--format=%s", "main"), "Auto-save: 2 files");
+      }),
+    ),
+  );
+
+  it.effect("refuses a remote that holds another Graph, and keeps none", () =>
+    withGraph(({ folder, remote, git, start, status }) =>
+      Effect.gen(function* () {
+        yield* git(folder, "init", "--quiet", "--bare", "--initial-branch=main", remote);
+        const other = `${remote}-other`;
+        yield* git(folder, "init", "--quiet", "--initial-branch=main", other);
+        yield* git(other, ...OTHER, "commit", "--quiet", "--allow-empty", "-m", "Another Graph");
+        yield* git(other, "push", "--quiet", remote, "main");
+        const versions = yield* start;
+        yield* versions.tick;
+
+        const refused = yield* versions.setRemote({ url: remote }).pipe(Effect.flip);
+
+        assert.deepStrictEqual(refused, new RemoteRefused({ reason: "other-graph" }));
+        assert.strictEqual(yield* git(folder, "remote"), "");
+        assert.isNull(on(yield* status(versions)).remote);
+        assert.strictEqual(yield* git(remote, "rev-list", "--count", "main"), "1");
+      }),
+    ),
+  );
+
+  it.effect("refuses a remote git cannot reach", () =>
+    withGraph(({ folder, remote, git, start }) =>
+      Effect.gen(function* () {
+        const versions = yield* start;
+        yield* versions.tick;
+
+        const refused = yield* versions.setRemote({ url: `${remote}-missing` }).pipe(Effect.flip);
+
+        assert.deepStrictEqual(refused, new RemoteRefused({ reason: "unreachable" }));
+        assert.strictEqual(yield* git(folder, "remote"), "");
+      }),
+    ),
+  );
+
+  it.effect("refuses a remote that git reaches but that does not take the push", () =>
+    withGraph(({ folder, remote, git, start, status }) =>
+      Effect.gen(function* () {
+        yield* git(folder, "init", "--quiet", "--bare", "--initial-branch=main", remote);
+        const fs = yield* FileSystem.FileSystem;
+        yield* fs.writeFileString(`${remote}/hooks/pre-receive`, "#!/bin/sh\nexit 1\n", {
+          mode: 0o755,
+        });
+        const versions = yield* start;
+        yield* versions.tick;
+
+        const refused = yield* versions.setRemote({ url: remote }).pipe(Effect.flip);
+
+        assert.deepStrictEqual(refused, new RemoteRefused({ reason: "unreachable" }));
+        assert.strictEqual(yield* git(folder, "remote"), "");
+        const now = on(yield* status(versions));
+        assert.isNull(now.remote);
+        assert.isNull(now.problem);
+      }),
+    ),
+  );
+
+  it.effect("moves to a new remote without the old one's branches, and stops on removal", () =>
+    withGraph(({ folder, remote, git, write, start, status }) =>
+      Effect.gen(function* () {
+        const old = `${remote}-old`;
+        yield* git(folder, "init", "--quiet", "--bare", "--initial-branch=main", old);
+        yield* git(folder, "init", "--quiet", "--bare", "--initial-branch=main", remote);
+        const versions = yield* start;
+        yield* versions.tick;
+        yield* versions.setRemote({ url: old });
+
+        yield* versions.setRemote({ url: remote });
+        assert.strictEqual(
+          yield* git(folder, "for-each-ref", "--format=%(refname)", "refs/remotes"),
+          "refs/remotes/origin/main",
+        );
+        assert.strictEqual(on(yield* status(versions)).remoteUrl, remote);
+        assert.strictEqual(yield* git(remote, "rev-list", "--count", "main"), "1");
+
+        yield* versions.removeRemote;
+        yield* write("A Note.md", "Kept here.\n");
+        yield* versions.endDay({ summary: "Offline" });
+        const now = on(yield* status(versions));
+        assert.isNull(now.remote);
+        assert.isNull(now.problem);
+        assert.strictEqual(yield* git(remote, "rev-list", "--count", "main"), "1");
       }),
     ),
   );
