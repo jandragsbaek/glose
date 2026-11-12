@@ -6,7 +6,11 @@ import {
   GraphFolderNotSet,
   type JudgeState,
   linkKey,
+  type NoteNameTaken,
   NoteNotFound,
+  type Point,
+  PointNotFound,
+  type PointState,
   ProposalNotOpen,
   RULE_CHECKS,
   ruleChecks,
@@ -41,6 +45,7 @@ import * as ChatGpt from "../chatgpt/ChatGpt.ts";
 import { Responses, type ResponsesError } from "../chatgpt/Responses.ts";
 import { isFileName } from "../graph/fileName.ts";
 import * as Graph from "../graph/Graph.ts";
+import * as Notes from "../graph/Notes.ts";
 import { GLOSE_DIR } from "../graph/GraphFolder.ts";
 import * as Sources from "../graph/Sources.ts";
 import * as Settings from "../settings/Settings.ts";
@@ -68,6 +73,8 @@ export class Sessions extends Context.Service<
     readonly send: (input: {
       readonly id: string;
       readonly text: string;
+      /** The Point the message is about. */
+      readonly about?: string;
     }) => Effect.Effect<void, SessionNotFound | SessionBusy | GraphError>;
     readonly retry: (id: string) => Effect.Effect<void, SessionNotFound | SessionBusy | GraphError>;
     readonly stop: (id: string) => Effect.Effect<void>;
@@ -87,8 +94,38 @@ export class Sessions extends Context.Service<
       readonly id: string;
       readonly proposal: string;
     }) => Effect.Effect<void, SessionNotFound | ProposalNotOpen | GraphError>;
+    /** Keeps a proposed Point to write, with the user's words for it. */
+    readonly keepPoint: (
+      input: PointInput & { readonly title: string },
+    ) => Effect.Effect<void, SessionNotFound | PointNotFound | GraphError>;
+    readonly dropPoint: (
+      input: PointInput,
+    ) => Effect.Effect<void, SessionNotFound | PointNotFound | GraphError>;
+    readonly restorePoint: (
+      input: PointInput,
+    ) => Effect.Effect<void, SessionNotFound | PointNotFound | GraphError>;
+    /** A Point in the user's own words, kept to write. */
+    readonly addPoint: (input: {
+      readonly id: string;
+      readonly title: string;
+    }) => Effect.Effect<void, SessionNotFound | GraphError>;
+    /** Writes a kept Point as a Note file; answers with the Note's name. */
+    readonly writePoint: (
+      input: PointInput & {
+        readonly title: string;
+        readonly text: string;
+        readonly page: string | null;
+        readonly links: ReadonlyArray<string>;
+        readonly useDraft: boolean;
+      },
+    ) => Effect.Effect<string, SessionNotFound | PointNotFound | NoteNameTaken | GraphError>;
   }
 >()("glose/sessions/Sessions") {}
+
+interface PointInput {
+  readonly id: string;
+  readonly point: string;
+}
 
 /**
  * A Session as kept in the Graph folder, in `.glose/sessions/<id>.json`: what the user saw
@@ -190,6 +227,24 @@ const mapProposal = (
       : entry,
   );
 
+const pointsOf = (entries: ReadonlyArray<SessionEntry>) =>
+  entries.flatMap((entry) => (entry._tag === "Points" ? entry.points : []));
+
+/** Changes one Point in the Session's entries, wherever it is. */
+const mapPoint = (
+  entries: ReadonlyArray<SessionEntry>,
+  id: string,
+  change: (point: Point) => Point,
+): ReadonlyArray<SessionEntry> =>
+  entries.map((entry) =>
+    entry._tag === "Points" && entry.points.some((point) => point.id === id)
+      ? { ...entry, points: entry.points.map((point) => (point.id === id ? change(point) : point)) }
+      : entry,
+  );
+
+/** A Point in the AI's words: its number and title. */
+const pointName = (point: Point) => `point ${Extraction.numberOf(point)} "${point.title}"`;
+
 const isRuleCheck = (check: Check) => (RULE_CHECKS as ReadonlyArray<string>).includes(check.id);
 
 /** The proposal's rule Checks with the AI's answer added, or with why it has none. */
@@ -222,6 +277,7 @@ export const make = Effect.gen(function* () {
   const settings = yield* Settings.Settings;
   const sources = yield* Sources.Sources;
   const graph = yield* Graph.Graph;
+  const notes = yield* Notes.Notes;
   const cards = yield* Cards.Cards;
   const checks = yield* CardChecks.CardChecks;
   const chatGpt = yield* ChatGpt.ChatGpt;
@@ -235,6 +291,8 @@ export const make = Effect.gen(function* () {
   const turns = yield* FiberMap.make<string>();
   /** Runs of the AI Checks of proposals so far; each runs under its own key in `turns`. */
   let judgeRuns = 0;
+  /** Turns ask for reasoning summaries until the route refuses them once. */
+  let summaries = true;
   // Signing out stops every request on the user's plan, before the sign-in ends.
   yield* chatGpt.beforeSignOut(FiberMap.clear(turns));
 
@@ -436,11 +494,71 @@ export const make = Effect.gen(function* () {
     if (ids.length > 0) yield* startJudging(session, ids);
   });
 
+  /** New Points join the Session as one entry, numbered on from the Points before them. */
+  const addPoints = (session: Live, added: ReadonlyArray<Omit<Point, "id">>) =>
+    SubscriptionRef.modify(session.view, (view) => {
+      const before = pointsOf(view.entries).length;
+      const points = added.map((point, index): Point => ({
+        ...point,
+        id: `p${before + index + 1}`,
+      }));
+      return [points, { ...view, entries: [...view.entries, { _tag: "Points" as const, points }] }];
+    });
+
+  /** Changes a Point the AI named by number, if it is in one of these states. */
+  const changeNumbered = (
+    session: Live,
+    number: number,
+    states: ReadonlyArray<PointState>,
+    change: (point: Point) => Point,
+  ) =>
+    SubscriptionRef.modify(session.view, (view) => {
+      const point = pointsOf(view.entries).find((other) => other.id === `p${number}`);
+      if (point === undefined || !states.includes(point.state)) return [false, view];
+      return [true, { ...view, entries: mapPoint(view.entries, point.id, change) }];
+    });
+
   /** What the AI of each kind of Session is told, and may do. */
   const rulesOf = (session: Live, { kind, subject }: Session) => {
     switch (kind) {
       case "extraction":
-        return { instructions: Extraction.INSTRUCTIONS, tools: Extraction.tools(sources, subject) };
+        return {
+          instructions: Extraction.INSTRUCTIONS,
+          tools: Extraction.tools({
+            sources,
+            graph,
+            source: subject,
+            points: SubscriptionRef.get(session.view).pipe(
+              Effect.map((view) => pointsOf(view.entries)),
+            ),
+            propose: (proposed) =>
+              addPoints(
+                session,
+                proposed.map((point) => ({
+                  ...point,
+                  draft: null,
+                  state: "open" as const,
+                  note: null,
+                  page: null,
+                })),
+              ).pipe(Effect.map((points) => points.map(Extraction.numberOf))),
+            addLinks: (number, links) =>
+              changeNumbered(session, number, ["open", "kept"], (point) => {
+                const known = new Set(point.links.map((link) => linkKey(link.note)));
+                const fresh = links.filter((link) => !known.has(linkKey(link.note)));
+                return {
+                  ...point,
+                  links: [...point.links, ...fresh].slice(0, Extraction.MAX_LINKS),
+                };
+              }),
+            setDraft: (number, text) =>
+              changeNumbered(session, number, ["open", "kept"], (point) => ({
+                ...point,
+                state: "kept",
+                draft: text,
+              })),
+          }),
+        };
       case "card-extraction":
         return {
           instructions: CardExtraction.INSTRUCTIONS,
@@ -473,6 +591,10 @@ export const make = Effect.gen(function* () {
             session.items = items;
             return save(session).pipe(Effect.ignore);
           }),
+        summaries,
+        onSummariesRefused: Effect.sync(() => {
+          summaries = false;
+        }),
       }).pipe(Effect.provideService(Responses, responses));
     },
     (effect, session) =>
@@ -540,8 +662,15 @@ export const make = Effect.gen(function* () {
     );
     const { id } = yield* SubscriptionRef.get(session.view);
     if (!started) return yield* new SessionBusy({ id });
+    const { kind } = yield* SubscriptionRef.get(session.view);
     const decisions =
-      session.decisions.length === 0 ? [] : [CardExtraction.decisionsMessage(session.decisions)];
+      session.decisions.length === 0
+        ? []
+        : [
+            kind === "extraction"
+              ? Extraction.decisionsMessage(session.decisions)
+              : CardExtraction.decisionsMessage(session.decisions),
+          ];
     session.decisions = [];
     session.items = [...session.items, ...decisions, ...items];
     yield* save(session);
@@ -575,6 +704,34 @@ export const make = Effect.gen(function* () {
       return yield* new ProposalNotOpen({ id: view.id, proposal: proposalId });
     }
     return { proposal, subject: view.subject };
+  });
+
+  const findPoint = Effect.fn("Sessions.findPoint")(function* (
+    session: Live,
+    pointId: string,
+    states: ReadonlyArray<PointState>,
+  ) {
+    const view = yield* SubscriptionRef.get(session.view);
+    const point = pointsOf(view.entries).find((other) => other.id === pointId);
+    if (point === undefined || !states.includes(point.state)) {
+      return yield* new PointNotFound({ id: view.id, point: pointId });
+    }
+    return { point, view };
+  });
+
+  /** Changes a Point, notes what the user did for the next turn, and keeps the Session. */
+  const decidePoint = Effect.fn("Sessions.decidePoint")(function* (
+    session: Live,
+    pointId: string,
+    change: (point: Point) => Point,
+    decision: string,
+  ) {
+    session.decisions.push(decision);
+    yield* patch(session, (view) => ({
+      ...view,
+      entries: mapPoint(view.entries, pointId, change),
+    }));
+    yield* save(session);
   });
 
   return Sessions.of({
@@ -621,12 +778,21 @@ export const make = Effect.gen(function* () {
     watch: (id) =>
       Stream.unwrap(Effect.map(load(id), (session) => SubscriptionRef.changes(session.view))),
 
-    send: Effect.fn("Sessions.send")(function* ({ id, text }) {
+    send: Effect.fn("Sessions.send")(function* ({ id, text, about }) {
       const session = yield* load(id);
+      const view = yield* SubscriptionRef.get(session.view);
+      // A message about a Point that is not in the Session is a message about the Source.
+      const point = pointsOf(view.entries).find((other) => other.id === about);
       yield* beginTurn(
         session,
-        [{ _tag: "UserMessage", text }],
-        [{ type: "message", role: "user", content: text }],
+        [{ _tag: "UserMessage", text, ...(point === undefined ? {} : { about: point.id }) }],
+        [
+          {
+            type: "message",
+            role: "user",
+            content: point === undefined ? text : Extraction.aboutMessage(point, text),
+          },
+        ],
       );
     }),
 
@@ -680,6 +846,128 @@ export const make = Effect.gen(function* () {
           entries: setProposal(view.entries, proposalId, { state: "dropped" }),
         }));
         yield* save(session);
+      },
+      (effect) => deciding.withPermit(effect),
+    ),
+
+    keepPoint: Effect.fn("Sessions.keepPoint")(
+      function* ({ id, point: pointId, title }) {
+        const session = yield* load(id);
+        const { point } = yield* findPoint(session, pointId, ["open"]);
+        yield* decidePoint(
+          session,
+          pointId,
+          (now) => ({ ...now, title, state: "kept" }),
+          title === point.title
+            ? `Kept ${pointName(point)} to write as a Note.`
+            : `Kept ${pointName(point)} to write as a Note, with the title changed to "${title}".`,
+        );
+      },
+      (effect) => deciding.withPermit(effect),
+    ),
+
+    dropPoint: Effect.fn("Sessions.dropPoint")(
+      function* ({ id, point: pointId }) {
+        const session = yield* load(id);
+        const { point } = yield* findPoint(session, pointId, ["open", "kept"]);
+        yield* decidePoint(
+          session,
+          pointId,
+          (now) => ({ ...now, state: "dropped" }),
+          `Dropped ${pointName(point)}.`,
+        );
+      },
+      (effect) => deciding.withPermit(effect),
+    ),
+
+    restorePoint: Effect.fn("Sessions.restorePoint")(
+      function* ({ id, point: pointId }) {
+        const session = yield* load(id);
+        const { point } = yield* findPoint(session, pointId, ["dropped"]);
+        yield* decidePoint(
+          session,
+          pointId,
+          (now) => ({ ...now, state: "open" }),
+          `Brought back ${pointName(point)}, to decide on again.`,
+        );
+      },
+      (effect) => deciding.withPermit(effect),
+    ),
+
+    addPoint: Effect.fn("Sessions.addPoint")(
+      function* ({ id, title }) {
+        const session = yield* load(id);
+        const [point] = yield* addPoints(session, [
+          {
+            title,
+            origin: "user",
+            quote: null,
+            repeats: null,
+            pullsAgainst: null,
+            links: [],
+            draft: null,
+            state: "kept",
+            note: null,
+            page: null,
+          },
+        ]);
+        if (point !== undefined) {
+          session.decisions.push(`Added ${pointName(point)} in their own words, to write.`);
+        }
+        yield* save(session);
+      },
+      (effect) => deciding.withPermit(effect),
+    ),
+
+    writePoint: Effect.fn("Sessions.writePoint")(
+      function* ({ id, point: pointId, title, text, page, links, useDraft }) {
+        const session = yield* load(id);
+        const { point, view } = yield* findPoint(session, pointId, ["kept"]);
+        const { language } = (yield* settings.get).settings;
+        // Only Links the AI proposed for this Point, under the names the Graph gives them.
+        const asked = new Set(links.map(linkKey));
+        const related = point.links
+          .filter((link) => asked.has(linkKey(link.note)))
+          .map((link) => link.note);
+        const draft = useDraft ? point.draft : null;
+        const note = yield* notes.create({
+          title,
+          source: view.subject,
+          page,
+          text,
+          draft,
+          // The AI wrote the title of every Point but the user's own, edited or not.
+          aiTitle: point.origin !== "user",
+          related,
+          language: language ?? "en",
+        });
+        const added = new Set(related.map(linkKey));
+        yield* decidePoint(
+          session,
+          pointId,
+          (now) => ({
+            ...now,
+            title,
+            state: "written",
+            note,
+            page,
+            draft,
+            links: now.links.map((link) => ({ ...link, added: added.has(linkKey(link.note)) })),
+          }),
+          [
+            `Wrote ${pointName(point)} as the Note [[${note}]]${page === null ? "" : `, page ${page}`}.`,
+            text === ""
+              ? "None of its text is in their own words."
+              : `In their own words: """${text}"""`,
+            draft === null ? "" : "The Note keeps your draft, marked as AI text.",
+            related.length === 0
+              ? ""
+              : `It links to ${related.map((name) => `[[${name}]]`).join(", ")}.`,
+          ]
+            .filter((line) => line !== "")
+            .join(" "),
+        );
+        return note;
       },
       (effect) => deciding.withPermit(effect),
     ),

@@ -124,7 +124,8 @@ function NotePanel({
       <div className="panel__body" ref={text}>
         <NoteText
           markdown={note.body}
-          aiText={note.aiText}
+          // A Note marked only for its AI title holds no AI text in its body.
+          aiText={note.aiText && !note.aiTitle}
           renderLink={(part) => {
             const target = byKey.get(linkKey(part.target));
             return target === undefined ? (

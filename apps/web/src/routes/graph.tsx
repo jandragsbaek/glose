@@ -5,7 +5,7 @@ import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { Maximize, Minus, Plus, Search, X } from "lucide-react";
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 
-import { MissingLink, NoteText } from "../components/NoteText.tsx";
+import { AiText, MissingLink, NoteText } from "../components/NoteText.tsx";
 import { CallNumber, Page, Panel, SkeletonPanel, StorageProblem } from "../components/ui.tsx";
 import { callNumber } from "../domain/source.ts";
 import { GraphCanvas, type GraphCanvasEvents, type NodeLabel } from "../graph/GraphCanvas.ts";
@@ -379,7 +379,13 @@ function NodePanel({
       }
     >
       <div className="panel__body graph__node">
-        <h3 className="graph__title">{node.title}</h3>
+        {node.aiTitle ? (
+          <AiText scope="title">
+            <h3 className="graph__title">{node.title}</h3>
+          </AiText>
+        ) : (
+          <h3 className="graph__title">{node.title}</h3>
+        )}
         {isSource ? (
           source === undefined ? null : (
             <p className="graph__source">
@@ -391,7 +397,7 @@ function NodePanel({
           <p className="graph__source graph__source--none">{t.graph.noSource}</p>
         ) : (
           <p className="graph__source">
-            <CallNumber source={source} />
+            <CallNumber source={source} page={node.page} />
             <NodeLink id={source.id} className="graph__link" onShow={onShow}>
               {source.title}
             </NodeLink>
@@ -399,7 +405,8 @@ function NodePanel({
         )}
         <NoteText
           markdown={node.body}
-          aiText={node.aiText}
+          // A Note marked only for its AI title holds no AI text in its body.
+          aiText={node.aiText && !node.aiTitle}
           renderLink={(part) => {
             const target = index.byKey.get(linkKey(part.target));
             return target === undefined ? (

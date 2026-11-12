@@ -15,6 +15,7 @@ export const SessionTool = Schema.Literals([
   "list-sources",
   "read-note",
   "list-cards",
+  "search-graph",
 ]);
 export type SessionTool = typeof SessionTool.Type;
 
@@ -36,11 +37,69 @@ export const CardProposal = Schema.Struct({
 });
 export type CardProposal = typeof CardProposal.Type;
 
+/** Where a Point comes from: the user's Free text, the AI's knowledge of the Source, or the user. */
+export const PointOrigin = Schema.Literals(["free-text", "ai", "user"]);
+export type PointOrigin = typeof PointOrigin.Type;
+
+/**
+ * What the user did with a Point: open (proposed, not decided), kept (to write), written (a
+ * Note file now), or dropped.
+ */
+export const PointState = Schema.Literals(["open", "kept", "written", "dropped"]);
+export type PointState = typeof PointState.Type;
+
+/** A Link the AI proposes from a Point's Note to a Note that exists, and why. */
+export const PointLink = Schema.Struct({
+  note: Schema.String,
+  why: Schema.String,
+  /** The written Note holds it. */
+  added: Schema.Boolean,
+});
+export type PointLink = typeof PointLink.Type;
+
+/**
+ * A core point of a Source in Extraction: one claim, which becomes a Note's title when the user
+ * writes it. The AI proposes Points, or the user adds one in their own words.
+ */
+export const Point = Schema.Struct({
+  /** Unique in its Session, in order of arrival: `p1`, `p2`… The number the user sees. */
+  id: Schema.String,
+  title: Schema.String,
+  origin: PointOrigin,
+  /** The words of the Free text the Point comes from, exactly as the user wrote them. */
+  quote: Schema.NullOr(Schema.String),
+  /** A Note that already says this. */
+  repeats: Schema.NullOr(Schema.String),
+  /** A Note this Point disagrees with, and how. */
+  pullsAgainst: Schema.NullOr(Schema.Struct({ note: Schema.String, why: Schema.String })),
+  links: Schema.Array(PointLink),
+  /** Note text the AI wrote when the user asked; AI text, marked if the Note keeps it. */
+  draft: Schema.NullOr(Schema.String),
+  state: PointState,
+  /** The Note file a written Point became. */
+  note: Schema.NullOr(Schema.String),
+  /** The Location of a written Point in its Source, such as a page. */
+  page: Schema.NullOr(Schema.String),
+});
+export type Point = typeof Point.Type;
+
 /** One visible step of a Session, in order. */
 export const SessionEntry = Schema.Union([
-  Schema.TaggedStruct("UserMessage", { text: Schema.String }),
+  Schema.TaggedStruct("UserMessage", {
+    text: Schema.String,
+    /** The Point the message is about. */
+    about: Schema.optionalKey(Schema.String),
+  }),
   Schema.TaggedStruct("AiMessage", { text: Schema.String }),
-  Schema.TaggedStruct("ToolUse", { tool: SessionTool }),
+  Schema.TaggedStruct("ToolUse", {
+    tool: SessionTool,
+    /** What the tool used: a Note's name, or the words searched for. */
+    detail: Schema.optionalKey(Schema.String),
+  }),
+  /** A summary of the AI's reasoning before it acted, and how long it took. */
+  Schema.TaggedStruct("Thinking", { text: Schema.String, ms: Schema.Number }),
+  /** Points the AI proposed, or the user added, in Extraction. */
+  Schema.TaggedStruct("Points", { points: Schema.Array(Point) }),
   /** A passage of the Note that the user chose to make Cards from. */
   Schema.TaggedStruct("Passage", { text: Schema.String }),
   Schema.TaggedStruct("CardProposals", { proposals: Schema.Array(CardProposal) }),
@@ -106,9 +165,35 @@ export const KeepProposal = Schema.Struct({
 
 export const DropProposal = Schema.Struct({ id: Schema.String, proposal: Schema.String });
 
+const Words = Schema.Trim.pipe(Schema.check(Schema.isNonEmpty()));
+
 export const SendMessage = Schema.Struct({
   id: Schema.String,
-  text: Schema.Trim.pipe(Schema.check(Schema.isNonEmpty())),
+  text: Words,
+  /** The Point the message is about. */
+  about: Schema.optionalKey(Schema.String),
+});
+
+export const PointRef = Schema.Struct({ id: Schema.String, point: Schema.String });
+
+/** Keeps a proposed Point to write, with the user's changes to its words. */
+export const KeepPoint = Schema.Struct({ ...PointRef.fields, title: Words });
+
+/** A Point in the user's own words. */
+export const AddPoint = Schema.Struct({ id: Schema.String, title: Words });
+
+/** Writes a kept Point as a Note file. */
+export const WritePoint = Schema.Struct({
+  ...PointRef.fields,
+  title: Words,
+  /** The user's own words. */
+  text: Schema.Trim,
+  /** The Location in the Source, such as a page; null when not given. */
+  page: Schema.NullOr(Words),
+  /** The proposed Links the user added. */
+  links: Schema.Array(Schema.String),
+  /** The Note keeps the AI's draft, marked as AI text. */
+  useDraft: Schema.Boolean,
 });
 
 export class SessionNotFound extends Schema.TaggedError<SessionNotFound>()("SessionNotFound", {
@@ -124,4 +209,10 @@ export class SessionBusy extends Schema.TaggedError<SessionBusy>()("SessionBusy"
 export class ProposalNotOpen extends Schema.TaggedError<ProposalNotOpen>()("ProposalNotOpen", {
   id: Schema.String,
   proposal: Schema.String,
+}) {}
+
+/** No Point with this id is in a state that allows this. */
+export class PointNotFound extends Schema.TaggedError<PointNotFound>()("PointNotFound", {
+  id: Schema.String,
+  point: Schema.String,
 }) {}

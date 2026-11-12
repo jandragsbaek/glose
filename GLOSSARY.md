@@ -57,6 +57,11 @@ Turning a **Source** into **Notes**, or a **Note** into **Cards**. Extraction fr
 a step of the Reading **Stage**, where the AI helps the user.
 _Avoid_: assisted extraction, distillation, summarising, note-taking
 
+**Point**:
+One core claim of a **Source** in **Extraction**, said as a full sentence. The AI proposes
+**Points**, or the user adds one; a kept **Point** becomes a **Note** whose title is the claim.
+_Avoid_: key point, takeaway, insight, idea (alone), claim (as the term), candidate
+
 **Probe**:
 A **Session** in the Reading **Stage**, once per **Source**, in which the AI adapts its questions
 to find what the user knows and does not know.
@@ -132,6 +137,8 @@ The text the tool builds from a **Reference** in the style the **Writing project
 - A **Writing project** reads from the **Graph** but is not part of it
 - A **Reference** points to a **Note** or a **Source** at a **Location**; the tool builds a
   **Citation** from it
+- In **Extraction** from a **Source**, the AI proposes **Points**; the user writes each kept **Point**
+  as a **Note** in their own words, and its title stays **AI text** when the AI proposed it
 - A **Card** is usually made from a **Note** by **Extraction**; each **Review** sets when it comes
   back
 - In **Extraction** from a **Note**, the AI makes **Proposed Cards**; a kept one is a **Card** with

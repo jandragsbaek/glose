@@ -1,4 +1,5 @@
 import type { SessionEntry, SessionTool } from "@glose/contracts";
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import type * as Redacted from "effect/Redacted";
@@ -19,6 +20,8 @@ export interface AgentTool {
   readonly description: string;
   /** JSON Schema of the arguments, strict: every property required, nothing extra. */
   readonly parameters: Readonly<Record<string, unknown>>;
+  /** What the user sees the tool use: a Note's name, or the words searched for. */
+  readonly detail?: (args: unknown) => string | undefined;
   /** Answers with JSON for the model. A failure is also an answer, never a crash. */
   readonly run: (args: unknown) => Effect.Effect<unknown>;
 }
@@ -49,6 +52,33 @@ const decodeAssistantMessage = Schema.decodeUnknownOption(AssistantMessage);
 
 const decodeArguments = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.Unknown));
 
+/** A reasoning item with the summary OpenAI writes of the model's reasoning. */
+const ReasoningItem = Schema.Struct({
+  type: Schema.Literal("reasoning"),
+  summary: Schema.optionalKey(
+    Schema.Array(Schema.Struct({ type: Schema.String, text: Schema.optionalKey(Schema.String) })),
+  ),
+});
+const decodeReasoningItem = Schema.decodeUnknownOption(ReasoningItem);
+
+const summaryText = (item: OutputItem) =>
+  Option.flatMap(decodeReasoningItem(item), (reasoning) => {
+    const text = (reasoning.summary ?? [])
+      .filter((part) => part.type === "summary_text")
+      .map((part) => (part.text ?? "").trim())
+      .filter((part) => part !== "")
+      .join("\n\n");
+    return text === "" ? Option.none() : Option.some(text);
+  });
+
+/**
+ * The route refused the request for its reasoning summary: a model or account without
+ * summaries. The turn goes on without them.
+ */
+const refusesSummaries = (error: ResponsesError) =>
+  (error.status === 400 || error.status === null) &&
+  /reasoning/i.test(`${error.code ?? ""} ${error.detail}`);
+
 /**
  * Output items go back without their `id`: with `store: false` OpenAI keeps no items to look
  * up, and the encrypted reasoning travels in the item itself.
@@ -75,6 +105,10 @@ export interface Turn {
   readonly onEntry: (entry: SessionEntry) => Effect.Effect<void>;
   /** The whole input so far, after each model call and its tool calls, ready to keep. */
   readonly onItems: (items: ReadonlyArray<InputItem>) => Effect.Effect<void>;
+  /** Ask for a summary of the model's reasoning, shown as a Thinking entry. */
+  readonly summaries: boolean;
+  /** The route refused reasoning summaries; later turns should not ask. */
+  readonly onSummariesRefused: Effect.Effect<void>;
 }
 
 /**
@@ -97,39 +131,63 @@ export const runTurn = Effect.fn("agent.runTurn")(function* (turn: Turn) {
     })),
   };
   const items: Array<InputItem> = [...turn.items];
+  let summaries = turn.summaries;
 
   for (let round = 0; round < MAX_ROUNDS; round++) {
-    const output: Array<OutputItem> = [];
+    let output: Array<OutputItem> = [];
     let completed = false;
-    yield* responses
-      .stream(turn.token, {
-        model: turn.model,
-        instructions: turn.instructions,
-        input: items,
-        tools: turn.tools.length === 0 ? [] : [toolSpec],
-        tool_choice: "auto",
-        parallel_tool_calls: false,
-        include: ["reasoning.encrypted_content"],
-        store: false,
-        stream: true,
-      })
-      .pipe(
-        Stream.runForEach((event) => {
-          switch (event._tag) {
-            case "TextDelta":
-              return turn.onDelta(event.delta);
-            case "ItemDone":
-              output.push(event.item);
-              return Option.match(messageText(event.item), {
-                onNone: () => Effect.void,
-                onSome: (text) => turn.onEntry({ _tag: "AiMessage", text }),
-              });
-            case "Completed":
-              completed = true;
-              return Effect.void;
-          }
-        }),
-      );
+    const request = Effect.fn("agent.request")(function* (withSummaries: boolean) {
+      output = [];
+      const started = yield* Clock.currentTimeMillis;
+      yield* responses
+        .stream(turn.token, {
+          model: turn.model,
+          instructions: turn.instructions,
+          input: items,
+          tools: turn.tools.length === 0 ? [] : [toolSpec],
+          tool_choice: "auto",
+          parallel_tool_calls: false,
+          ...(withSummaries ? { reasoning: { summary: "auto" } } : {}),
+          include: ["reasoning.encrypted_content"],
+          store: false,
+          stream: true,
+        })
+        .pipe(
+          Stream.runForEach((event) => {
+            switch (event._tag) {
+              case "TextDelta":
+                return turn.onDelta(event.delta);
+              case "ItemDone":
+                output.push(event.item);
+                return Option.match(messageText(event.item), {
+                  onSome: (text) => turn.onEntry({ _tag: "AiMessage", text }),
+                  onNone: () =>
+                    Option.match(summaryText(event.item), {
+                      onNone: () => Effect.void,
+                      onSome: (text) =>
+                        Clock.currentTimeMillis.pipe(
+                          Effect.flatMap((now) =>
+                            turn.onEntry({ _tag: "Thinking", text, ms: now - started }),
+                          ),
+                        ),
+                    }),
+                });
+              case "Completed":
+                completed = true;
+                return Effect.void;
+            }
+          }),
+        );
+    });
+    yield* request(summaries).pipe(
+      Effect.catchIf(
+        (error) => summaries && output.length === 0 && refusesSummaries(error),
+        () => {
+          summaries = false;
+          return turn.onSummariesRefused.pipe(Effect.andThen(request(false)));
+        },
+      ),
+    );
     if (!completed) {
       return yield* new ResponsesError({ status: null, code: null, detail: "stream ended early" });
     }
@@ -139,11 +197,17 @@ export const runTurn = Effect.fn("agent.runTurn")(function* (turn: Turn) {
       const call = decodeFunctionCall(item);
       if (Option.isNone(call)) continue;
       const tool = tools.get(call.value.name);
+      const args = decodeArguments(call.value.arguments);
       if (tool !== undefined && tool.entry !== null) {
-        yield* turn.onEntry({ _tag: "ToolUse", tool: tool.entry });
+        const detail = Option.isSome(args) ? tool.detail?.(args.value) : undefined;
+        yield* turn.onEntry({
+          _tag: "ToolUse",
+          tool: tool.entry,
+          ...(detail === undefined || detail === "" ? {} : { detail }),
+        });
       }
       const result = tool
-        ? yield* Option.match(decodeArguments(call.value.arguments), {
+        ? yield* Option.match(args, {
             onNone: () => Effect.succeed({ error: "The arguments are not valid JSON." }),
             onSome: tool.run,
           })

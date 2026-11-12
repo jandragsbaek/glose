@@ -357,6 +357,12 @@ Spacing steps through 4, 6, 8, 12, 16, 20, 24 and 32px; panel bodies pad 16px 20
 heads pad 14px 20px. Forms use a two-column field grid (16px row, 20px column gaps) with wide
 fields spanning both.
 
+Extraction (the Reading Stage past the Free text) fills the window under the header: a work
+column (24px 32px 48px padding, content up to 960px, its own scroll) and a 360 to 420px margin
+column for the Session on Paper, divided by a full-height Hairline. The margin's transcript
+scrolls; its message box stays at the foot (16px 24px 18px, a Hairline above). Below 1080px the
+margin moves under the points and the page scrolls as one; below 720px the work column pads 16px.
+
 A focus screen (today only Review, at `/review`) fills the window without the rail and the page
 header. A 64px bar (12px 32px padding) holds the title left, a centred progress line and the way
 out right; the desk below centres one 720px column (68px top, 32px sides, 48px bottom). Below
@@ -409,7 +415,8 @@ Firm and plain, ink-outlined.
 - **Disabled:** 55% opacity, no shadow, not-allowed cursor.
 - **Quiet:** no border or fill, Mute 600 13px, 36px minimum height, 12px side padding; hover turns
   it Ink and underlines it (3px offset). For a way out of a slip, set apart from the choices
-  (Review's Back).
+  (Review's Back), and for Discuss, Drop and Undo beside a choice.
+- **Small:** 30px tall, 12px side padding, 13px, for choices repeated down a list (Keep, Add).
 
 ### Choices
 
@@ -483,6 +490,48 @@ much the AI wrote.
   colour.
 
 Note headings in the side panel: 700 15px, 18px above when they follow other text.
+
+- **A title:** "¶ AI-written title" ("AI-skrevet titel") with the lighter 2px rule, above a
+  Note's title in the Graph panel and above the title field of a Point the AI proposed.
+
+### Core Points (Extraction)
+
+One panel, its groups divided by Hairlines (22px 28px 26px padding), in this order:
+
+- **The open Point:** the kept Point being written gets the room. Its number in a 28px column;
+  the title as a borderless 19px 600 field with a Strong Hairline under it (Lapis on focus);
+  where it comes from; the Note text (16px/1.65, 168px tall); a small page field and a word
+  count; the AI's draft, if asked for, under the AI Text mark with a quiet toggle to leave it out;
+  the proposed Links as a plain list (Note link, Mute reason, Add or Drop); then Save Note
+  (primary), Ask for a draft, and a quiet Drop pushed right.
+- **Proposed by the AI:** one AI Text mark for the whole group ("¶ Proposed by the AI · 3"),
+  not one per Point. Each row: number, 16px 600 claim, small Keep (secondary) and quiet Discuss
+  and Drop; under it one line each for where it comes from and how it meets the Graph.
+- **Written:** one line each: a Verdigris check, the Note as a link, its call number with page,
+  its Links counted.
+- **Foot:** Add a point in your words, Propose more, and the dropped count as a quiet toggle.
+
+Origin lines are Mute 13px with a 14px icon: a quote mark and the user's words in Ink, or a book
+and "Not in your Free text. Check it against your copy." Graph lines are Ink with a Lapis icon:
+"You have this Note:" (copy icon) and "Pulls against" (compare icon) with a Mute reason.
+
+The Point under discussion wears the Gilt "you are here" mark: a 3px underline under its
+number, as the current step has.
+
+### Session
+
+The transcript in turns, 28px apart. An AI turn opens with "AI" in Mute 600 13px. What the AI
+read folds into one quiet Mute line per run of tool uses ("Read your Free text and 2 Notes ·
+searched your Graph"), its reasoning into "Thought for 21 s"; open, each lists its lines beside a
+Strong Hairline, Notes as links. The answer is Body at 15px/1.65; a closing question is 600.
+Wikilinks are Lapis links into the Graph; a Point's number is a small typed tab (Strong
+Hairline, 2px corners, Lapis 700 12px) that shows the Point. The user's turn is a Ground box (no
+border) with "You · about 2" in Mute 600 12px. While the AI works, one line says what it does,
+with a 16px Lapis tick moving beside it (stopped by reduced motion).
+
+The message box: the Point it is about as a Mute line with the title in Ink 600 and a way to
+clear it; the textarea; then Send (primary, with its key cap) and Stop, and the plan line pushed
+right.
 
 ### Key Cap
 

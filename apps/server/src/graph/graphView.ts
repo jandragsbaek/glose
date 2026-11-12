@@ -48,6 +48,18 @@ const hasAiText = (frontmatter: unknown, body: string): boolean =>
     frontmatter.ai === true) ||
   hasAiCallout(body);
 
+const field = (frontmatter: unknown, key: string): unknown =>
+  typeof frontmatter === "object" && frontmatter !== null && key in frontmatter
+    ? (frontmatter as Record<string, unknown>)[key]
+    : undefined;
+
+/** A Note's Location: `page: 47` or `page: "47–49"`. */
+const pageOf = (frontmatter: unknown): string | null => {
+  const value = field(frontmatter, "page");
+  if (typeof value === "number") return String(value);
+  return typeof value === "string" && value.trim() !== "" ? value.trim() : null;
+};
+
 interface ParsedFile {
   readonly node: Omit<GraphNode, "sourceId">;
   readonly sourceName: string | null;
@@ -67,12 +79,22 @@ const parseFile = ({ name, markdown }: GraphFile): ParsedFile => {
         title: source.title,
         body: source.freeText,
         aiText: hasAiText(frontmatter, source.freeText),
+        aiTitle: false,
+        page: null,
       },
       sourceName: null,
       targets,
     }),
     onNone: () => ({
-      node: { id: name, kind: "note", title: name, body, aiText: hasAiText(frontmatter, body) },
+      node: {
+        id: name,
+        kind: "note",
+        title: name,
+        body,
+        aiText: hasAiText(frontmatter, body),
+        aiTitle: field(frontmatter, "ai-title") === true,
+        page: pageOf(frontmatter),
+      },
       sourceName: sourceName(frontmatter),
       targets,
     }),

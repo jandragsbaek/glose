@@ -19,6 +19,10 @@ export const GraphNode = Schema.Struct({
   body: Schema.String,
   /** The file holds AI text: an AI mark in its frontmatter (`ai: true`) or in its text. */
   aiText: Schema.Boolean,
+  /** The AI wrote the Note's title, its file name (`ai-title: true`). */
+  aiTitle: Schema.Boolean,
+  /** The Location in the Source a Note comes from, such as a page (`page`); null when not given. */
+  page: Schema.NullOr(Schema.String),
 });
 export type GraphNode = typeof GraphNode.Type;
 
@@ -72,4 +76,9 @@ export const hasAiCallout = (markdown: string): boolean =>
 /** No Markdown file in the Graph folder has this name. */
 export class NoteNotFound extends Schema.TaggedError<NoteNotFound>()("NoteNotFound", {
   id: Schema.String,
+}) {}
+
+/** Another file already has this name, compared without regard to case. */
+export class NoteNameTaken extends Schema.TaggedError<NoteNameTaken>()("NoteNameTaken", {
+  fileName: Schema.String,
 }) {}

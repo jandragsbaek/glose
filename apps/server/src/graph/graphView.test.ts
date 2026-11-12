@@ -35,6 +35,8 @@ describe("buildGraphView", () => {
         sourceId: null,
         body: "Start at [[Natality]].",
         aiText: false,
+        aiTitle: false,
+        page: null,
       },
       {
         id: "Inbox",
@@ -43,6 +45,8 @@ describe("buildGraphView", () => {
         sourceId: null,
         body: "Written in another editor.",
         aiText: false,
+        aiTitle: false,
+        page: null,
       },
       {
         id: "Natality",
@@ -51,6 +55,8 @@ describe("buildGraphView", () => {
         sourceId: "Arendt 1958 The Human Condition",
         body: "Beginnings.",
         aiText: false,
+        aiTitle: false,
+        page: null,
       },
       {
         id: "Plurality",
@@ -59,6 +65,8 @@ describe("buildGraphView", () => {
         sourceId: "Arendt 1958 The Human Condition",
         body: "Many.",
         aiText: false,
+        aiTitle: false,
+        page: null,
       },
     ]);
   });

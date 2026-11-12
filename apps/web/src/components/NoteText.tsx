@@ -60,8 +60,8 @@ export function AiText({
   count = 1,
   children,
 }: {
-  /** How much the AI wrote: some paragraphs, a Part, or a whole Note or Card. */
-  readonly scope: AiScope | "card";
+  /** How much the AI wrote: some paragraphs, a Part, a title, or a whole Note or Card. */
+  readonly scope: AiScope | "card" | "title";
   /** How many paragraphs and lists the AI wrote. */
   readonly count?: number;
   readonly children: ReactNode;

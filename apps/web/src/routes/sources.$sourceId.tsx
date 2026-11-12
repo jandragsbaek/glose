@@ -5,7 +5,7 @@ import * as Exit from "effect/Exit";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useId, useState } from "react";
 
-import { ExtractionPanel } from "../components/ExtractionPanel.tsx";
+import { Extraction } from "../components/Extraction.tsx";
 import { StepBar } from "../components/StepBar.tsx";
 import {
   CallNumber,
@@ -59,21 +59,34 @@ function ReadingStage() {
 
 function SourceView({ source }: { readonly source: Source }) {
   const author = [source.givenName, source.familyName].filter(Boolean).join(" ");
+  const sub = (
+    <span className="button-row">
+      {author}
+      <CallNumber source={source} />
+    </span>
+  );
+  // Past the Free text, Extraction is the page: the points beside the Session in the margin.
+  if (source.readingStep !== "free-text") {
+    return (
+      <Page title={source.title} sub={sub} fill flush>
+        <Extraction
+          source={source}
+          sourcePanels={
+            <div className="columns">
+              <FreeText source={source} />
+              <Details source={source} />
+            </div>
+          }
+        />
+      </Page>
+    );
+  }
   return (
-    <Page
-      title={source.title}
-      sub={
-        <span className="button-row">
-          {author}
-          <CallNumber source={source} />
-        </span>
-      }
-    >
+    <Page title={source.title} sub={sub}>
       <div className="columns">
         <div className="stack">
           <StepBar source={source} />
           <FreeText source={source} />
-          {source.readingStep === "free-text" ? null : <ExtractionPanel source={source} />}
         </div>
         <div className="stack">
           <Details source={source} />

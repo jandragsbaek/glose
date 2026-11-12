@@ -354,7 +354,7 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
       );
       assert.deepStrictEqual(withoutScores, [
         { _tag: "Passage", text: "Leroy found that attention lingers." },
-        { _tag: "ToolUse", tool: "read-note" },
+        { _tag: "ToolUse", tool: "read-note", detail: NOTE },
         {
           _tag: "CardProposals",
           proposals: [
@@ -631,6 +631,235 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
       ).pipe(Effect.provide(layer));
       assert.strictEqual(found?.subject, sourceId);
       assert.deepStrictEqual(found?.entries, [{ _tag: "AiMessage", text: "Kept from before." }]);
+    }).pipe(Effect.scoped),
+  );
+  it.effect(
+    "proposes Points with Graph flags, keeps only true quotes and real Notes, and writes a kept Point as a Note",
+    () =>
+      Effect.gen(function* () {
+        const { fake, layer, graphFolder, sourceId, bodies } = yield* setUp;
+        fake.answer(MODELS, MODEL_LIST, MODEL_LIST);
+        fake.answer(
+          RESPONSES,
+          toolCall("search_graph", { query: "attention lingers" }),
+          toolCall("propose_points", {
+            points: [
+              {
+                title: "Labour leaves nothing behind",
+                origin: "free-text",
+                // Spacing and case differ from the Free text; the Free text's words are kept.
+                quote: "“labour  leaves nothing behind”",
+                repeats: null,
+                pulls_against_note: null,
+                pulls_against_why: null,
+                links: [
+                  { note: NOTE.toLowerCase(), why: "Both are about what remains." },
+                  { note: "A Note that does not exist", why: "Made up." },
+                ],
+              },
+              {
+                title: "Work builds a lasting world",
+                origin: "ai",
+                quote: "Work builds a world.",
+                repeats: NOTE,
+                pulls_against_note: "Nowhere",
+                pulls_against_why: "Made up.",
+                links: [],
+              },
+            ],
+          }),
+          answer("Start with [1]."),
+          answer("Good."),
+        );
+
+        const session = yield* Effect.gen(function* () {
+          const { id } = yield* (yield* Sessions).start({ kind: "extraction", subject: sourceId });
+          return yield* afterTurn(id);
+        }).pipe(Effect.provide(layer));
+
+        assert.deepStrictEqual(session.entries, [
+          { _tag: "ToolUse", tool: "search-graph", detail: "attention lingers" },
+          {
+            _tag: "Points",
+            points: [
+              {
+                id: "p1",
+                title: "Labour leaves nothing behind",
+                origin: "free-text",
+                quote: "Labour leaves nothing behind",
+                repeats: null,
+                pullsAgainst: null,
+                links: [{ note: NOTE, why: "Both are about what remains.", added: false }],
+                draft: null,
+                state: "open",
+                note: null,
+                page: null,
+              },
+              {
+                id: "p2",
+                title: "Work builds a lasting world",
+                origin: "ai",
+                quote: null,
+                repeats: NOTE,
+                pullsAgainst: null,
+                links: [],
+                draft: null,
+                state: "open",
+                note: null,
+                page: null,
+              },
+            ],
+          },
+          { _tag: "AiMessage", text: "Start with [1]." },
+        ]);
+        const searched = bodies()[1]!.input.find((item) => item.type === "function_call_output");
+        assert.include(String(searched?.["output"]), NOTE);
+
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const note = yield* Effect.gen(function* () {
+          const sessions = yield* Sessions;
+          yield* sessions.keepPoint({
+            id: session.id,
+            point: "p1",
+            title: "Labour leaves nothing",
+          });
+          const name = yield* sessions.writePoint({
+            id: session.id,
+            point: "p1",
+            title: "Labour leaves nothing",
+            text: "My own words.",
+            page: "7",
+            links: [NOTE.toUpperCase(), "Not proposed"],
+            useDraft: false,
+          });
+          yield* sessions.dropPoint({ id: session.id, point: "p2" });
+          // A Point the user writes in their own words; its name is taken by the Note above.
+          yield* sessions.addPoint({ id: session.id, title: "labour leaves nothing" });
+          const taken = yield* Effect.flip(
+            sessions.writePoint({
+              id: session.id,
+              point: "p3",
+              title: "labour leaves nothing",
+              text: "Twice.",
+              page: null,
+              links: [],
+              useDraft: false,
+            }),
+          );
+          assert.strictEqual(taken._tag, "NoteNameTaken");
+          yield* sessions.send({ id: session.id, text: "Is this right?", about: "p1" });
+          yield* afterTurn(session.id);
+          return name;
+        }).pipe(Effect.provide(layer));
+
+        assert.strictEqual(note, "Labour leaves nothing");
+        // The AI proposed the title, so the Note carries the AI mark on its title.
+        assert.strictEqual(
+          yield* fs.readFileString(path.join(graphFolder, `${note}.md`)),
+          [
+            "---",
+            "glose: note",
+            `source: "[[${sourceId}]]"`,
+            'page: "7"',
+            "ai: true",
+            "ai-title: true",
+            "---",
+            "",
+            "My own words.",
+            "",
+            `Related: [[${NOTE}]]`,
+            "",
+          ].join("\n"),
+        );
+        // The next turn tells the AI what the user did, and which Point the message is about.
+        const next = bodies().at(-1)!.input;
+        const decisions = String(next.at(-2)?.["content"]);
+        assert.include(decisions, 'Kept point 1 "Labour leaves nothing behind"');
+        assert.include(decisions, "Wrote point 1");
+        assert.include(decisions, 'In their own words: """My own words."""');
+        assert.include(decisions, 'Dropped point 2 "Work builds a lasting world"');
+        assert.include(decisions, 'Added point 3 "labour leaves nothing" in their own words');
+        assert.deepStrictEqual(next.at(-1), {
+          type: "message",
+          role: "user",
+          content: '(About point 1: "Labour leaves nothing")\n\nIs this right?',
+        });
+      }).pipe(Effect.scoped),
+  );
+
+  it.effect("shows the AI's reasoning summary as Thinking before its answer", () =>
+    Effect.gen(function* () {
+      const { fake, layer, sourceId, bodies } = yield* setUp;
+      fake.answer(MODELS, MODEL_LIST);
+      fake.answer(RESPONSES, {
+        status: 200,
+        sse: true,
+        body: [
+          {
+            type: "response.output_item.done",
+            item: {
+              id: "rs_1",
+              type: "reasoning",
+              summary: [
+                { type: "summary_text", text: "**Reading** the Free text first." },
+                { type: "summary_text", text: "Then the Graph." },
+              ],
+              encrypted_content: "secret",
+            },
+          },
+          ...answer("Here are the points.").body,
+        ],
+      });
+      const session = yield* Effect.gen(function* () {
+        const { id } = yield* (yield* Sessions).start({ kind: "extraction", subject: sourceId });
+        return yield* afterTurn(id);
+      }).pipe(Effect.provide(layer));
+
+      const [thinking, message] = session.entries;
+      assert.deepStrictEqual(
+        thinking?._tag === "Thinking" ? thinking.text : null,
+        "**Reading** the Free text first.\n\nThen the Graph.",
+      );
+      assert.deepStrictEqual(message, { _tag: "AiMessage", text: "Here are the points." });
+      const [body] = bodies() as ReadonlyArray<Body & { readonly reasoning?: unknown }>;
+      assert.deepStrictEqual(body?.reasoning, { summary: "auto" });
+    }).pipe(Effect.scoped),
+  );
+
+  it.effect("goes on without reasoning summaries when ChatGPT refuses them", () =>
+    Effect.gen(function* () {
+      const { fake, layer, sourceId, bodies } = yield* setUp;
+      fake.answer(MODELS, MODEL_LIST, MODEL_LIST);
+      fake.answer(
+        RESPONSES,
+        {
+          status: 400,
+          body: {
+            error: {
+              code: "unsupported_parameter",
+              message:
+                "Unsupported parameter: 'reasoning.summary' is not supported with this model.",
+            },
+          },
+        },
+        answer("Without a summary."),
+        answer("Still without."),
+      );
+      const session = yield* Effect.gen(function* () {
+        const sessions = yield* Sessions;
+        const { id } = yield* sessions.start({ kind: "extraction", subject: sourceId });
+        yield* afterTurn(id);
+        yield* sessions.send({ id, text: "Go on." });
+        return yield* afterTurn(id);
+      }).pipe(Effect.provide(layer));
+
+      assert.isNull(session.problem);
+      assert.deepStrictEqual(session.entries.at(-1), { _tag: "AiMessage", text: "Still without." });
+      const asked = (bodies() as ReadonlyArray<Body & { readonly reasoning?: unknown }>).map(
+        (body) => body.reasoning,
+      );
+      assert.deepStrictEqual(asked, [{ summary: "auto" }, undefined, undefined]);
     }).pipe(Effect.scoped),
   );
 });
