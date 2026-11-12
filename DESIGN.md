@@ -348,6 +348,9 @@ A two-column frame: the 96px lapis rail, then a scrolling main area. The main ar
 white page header (title, a muted sub-line such as the date, actions pushed right; it wraps), and
 then the page body (24px top, 32px sides, 40px bottom) on Ground.
 
+The main column ends in the Status Bar, a 28px running foot under the main area only, so the
+rail stays a full-height spine.
+
 Working pages use a main column plus a 300 to 380px side column with 20px gaps; panels stack in
 each column with 20px gaps. Below 1080px the columns become one, in reading order. Form and
 single-topic pages cap at 760px. First start keeps a bare lapis band at rail width with the
@@ -458,6 +461,24 @@ Firm and plain, ink-outlined.
   icon turns Gilt. 160ms transitions.
 - **Foot:** the EN/DA switch (a stacked segmented control, checked segment white with lapis text)
   and Settings.
+
+### Status Bar
+
+The running foot of the window, as the foot of a printed page carries the folio: Paper, a
+Hairline above, 28px tall (32px left and 12px right padding), Mute 13px with tabular numerals.
+The left end is free for later status. At the right end sits the Versions item: a 16px Lucide
+git-commit icon (1.6 stroke) and "Saved 14:32" ("Gemt 14.12"), or "Saving…" and "Syncing…" while
+Glose works. A 6px Ink dot follows while changes are not saved yet (named for screen readers).
+On a problem, a Rubric triangle and words ("Not synced") follow, in 600. The item is a 22px
+button with 4px corners; hover and an open panel fill it with Lapis Tint and turn it Ink.
+
+The Versions panel opens above the item's right end as a Glose panel leaf (380px, Strong
+Hairline border, no shadow): the heading "Versions of your Graph" with a lapis Initial and the
+flourish; a problem as an in-panel warning notice; the facts as a two-column list (Mute 13px
+labels, Ink 14px values, a missing remote in Mute); then, under a Hairline, the End the day
+form: a field label, the input, a Meta hint, and the primary End the day button with a Mute
+status beside it (a Verdigris check after the day is saved). It fades in and rises 4px in
+160ms on the shared ease-out; Esc and a click outside close it.
 
 ### Call Number (signature)
 

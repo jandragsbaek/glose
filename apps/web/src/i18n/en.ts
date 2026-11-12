@@ -11,6 +11,8 @@ import type {
   SessionProblem,
   SessionTool,
   Verdict,
+  VersionsOffReason,
+  VersionsProblem,
 } from "@glose/contracts";
 import { ANSWER_WORDS, QUESTION_WORDS } from "@glose/contracts";
 
@@ -22,6 +24,7 @@ const count = (n: number, one: string, other: string) =>
   `${numbers.format(n)} ${plurals.select(n) === "one" ? one : other}`;
 const list = new Intl.ListFormat("en", { type: "conjunction" });
 const clockTime = new Intl.DateTimeFormat("en-GB", { timeStyle: "short" });
+const shortDate = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" });
 const longDate = new Intl.DateTimeFormat("en-GB", {
   weekday: "long",
   day: "numeric",
@@ -653,6 +656,50 @@ export const en = {
         tip: "The answer must be in the Note, with no added facts.",
       },
     } satisfies Record<CheckId, { readonly name: string; readonly tip: string }>,
+  },
+  versions: {
+    title: "Versions of your Graph",
+    off: "No versions",
+    offReasons: {
+      "no-graph": "Glose keeps versions once you choose a Graph folder.",
+      "no-git":
+        "Git is not installed on this computer. Install Git and start Glose again to keep versions of your Graph.",
+      "other-repository":
+        "The Graph folder is inside another git repository. Glose does not make commits there.",
+      failed: "Git could not start a repository in the Graph folder.",
+    } satisfies Record<VersionsOffReason, string>,
+    saved: (at: Date, today: boolean) =>
+      `Saved ${today ? clockTime.format(at) : shortDate.format(at)}`,
+    notSavedYet: "Not saved yet",
+    saving: "Saving…",
+    syncing: "Syncing…",
+    unsaved: "Changes not saved yet",
+    changes: "Changes",
+    allSaved: "All saved.",
+    pending: "Not saved yet. Glose saves them after 5 minutes without changes.",
+    remote: "Remote",
+    noRemote: "None. The versions stay on this computer. Add a git remote to back them up.",
+    sync: "Sync",
+    synced: (at: Date, today: boolean) =>
+      `Synced ${today ? clockTime.format(at) : shortDate.format(at)}.`,
+    notSynced: "Not synced since Glose started.",
+    unpushed: (n: number) => `${count(n, "version", "versions")} not pushed yet.`,
+    problemsShort: {
+      conflict: "Sync conflict",
+      "sync-failed": "Not synced",
+      "save-failed": "Not saved",
+    } satisfies Record<VersionsProblem, string>,
+    problems: {
+      conflict:
+        "The same lines changed on this computer and on the remote. Glose kept all versions and did not sync. Join the changes with git. Then Glose syncs again.",
+      "sync-failed": "Glose could not sync with the remote. Glose tries again after the next save.",
+      "save-failed": "Git could not save a version. Glose tries again at the next change.",
+    } satisfies Record<VersionsProblem, string>,
+    endDay: "End the day",
+    endDayHint: "Write one line about today. Glose saves it as a version and syncs it.",
+    summary: "Today",
+    summaryPlaceholder: "Read Arendt, wrote two Notes",
+    dayEnded: "The day is saved as a version.",
   },
   settings: {
     title: "Settings",

@@ -8,4 +8,5 @@ export * from "./server.ts";
 export * from "./session.ts";
 export * from "./settings.ts";
 export * from "./source.ts";
+export * from "./versions.ts";
 export * from "./rpc.ts";
