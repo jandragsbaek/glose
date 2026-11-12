@@ -259,7 +259,14 @@ export const make = Effect.gen(function* () {
           // work is saved first, and the next sync takes the remote's Versions.
           if ((yield* git.run(folder, ["status", "--porcelain"])) !== "") return "later" as const;
           const rebased = yield* git
-            .run(folder, [...COMMIT_CONFIG, ...(yield* identity(folder)), "rebase", "--quiet", ref])
+            .run(folder, [
+              ...COMMIT_CONFIG,
+              ...(yield* identity(folder)),
+              "rebase",
+              "--quiet",
+              "--no-autostash",
+              ref,
+            ])
             .pipe(Effect.result);
           if (rebased._tag === "Failure") {
             yield* git.run(folder, ["rebase", "--abort"]).pipe(Effect.ignore);
