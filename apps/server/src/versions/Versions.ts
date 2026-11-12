@@ -112,6 +112,12 @@ export const make = Effect.gen(function* () {
     return remotes.length === 1 ? (remotes[0] ?? null) : null;
   });
 
+  /** The remote's branch this one follows: its configured upstream, else one of the same name. */
+  const remoteBranchOf = (folder: string, branch: string) =>
+    output(folder, ["config", "--get", `branch.${branch}.merge`]).pipe(
+      Effect.map((merge) => merge?.replace(/^refs\/heads\//, "") || branch),
+    );
+
   const hasCommits = (folder: string) => succeeds(folder, ["rev-parse", "--verify", "-q", "HEAD"]);
 
   const count = (folder: string, range: string) =>
@@ -121,10 +127,10 @@ export const make = Effect.gen(function* () {
   const unpushedOf = Effect.fn("Versions.unpushedOf")(function* (
     folder: string,
     remote: string | null,
-    branch: string | null,
+    remoteBranch: string | null,
   ) {
-    if (remote === null || branch === null || !(yield* hasCommits(folder))) return 0;
-    const ref = `refs/remotes/${remote}/${branch}`;
+    if (remote === null || remoteBranch === null || !(yield* hasCommits(folder))) return 0;
+    const ref = `refs/remotes/${remote}/${remoteBranch}`;
     return (yield* succeeds(folder, ["rev-parse", "--verify", "-q", ref]))
       ? yield* count(folder, `${ref}..HEAD`)
       : yield* count(folder, "HEAD");
@@ -157,6 +163,7 @@ export const make = Effect.gen(function* () {
   const publish = Effect.fn("Versions.publish")(function* (folder: string) {
     const branch = yield* branchOf(folder);
     const remote = branch === null ? null : yield* remoteOf(folder, branch);
+    const remoteBranch = branch === null ? null : yield* remoteBranchOf(folder, branch);
     const time = yield* output(folder, ["log", "-1", "--format=%ct"]);
     yield* SubscriptionRef.set(status, {
       _tag: "On",
@@ -164,7 +171,7 @@ export const make = Effect.gen(function* () {
       unsaved: fingerprint !== "",
       activity,
       remote,
-      unpushed: yield* unpushedOf(folder, remote, branch),
+      unpushed: yield* unpushedOf(folder, remote, remoteBranch),
       syncedAt,
       problem,
     });
@@ -235,19 +242,24 @@ export const make = Effect.gen(function* () {
     const branch = yield* branchOf(folder);
     const remote = branch === null ? null : yield* remoteOf(folder, branch);
     if (branch === null || remote === null) return;
+    const remoteBranch = yield* remoteBranchOf(folder, branch);
     yield* setActivity(folder, "syncing");
     const network = { timeoutMs: NETWORK_TIMEOUT_MS };
     const outcome = yield* Effect.gen(function* () {
       yield* git.run(folder, ["fetch", "--quiet", remote], network);
-      const ref = `refs/remotes/${remote}/${branch}`;
+      const ref = `refs/remotes/${remote}/${remoteBranch}`;
       const remoteHasBranch = yield* succeeds(folder, ["rev-parse", "--verify", "-q", ref]);
       if (remoteHasBranch && (yield* count(folder, `HEAD..${ref}`)) > 0) {
         if (!(yield* hasCommits(folder))) {
           // A new repository with nothing saved yet takes the remote's history as it is.
           yield* git.run(folder, ["reset", "--quiet", ref]);
         } else {
+          // Only a clean folder is rebased: work saved after the fetch would need a stash, and a
+          // stash that fails to apply leaves conflict markers the next save would commit. That
+          // work is saved first, and the next sync takes the remote's Versions.
+          if ((yield* git.run(folder, ["status", "--porcelain"])) !== "") return "later" as const;
           const rebased = yield* git
-            .run(folder, [...COMMIT_CONFIG, "rebase", "--quiet", "--autostash", ref])
+            .run(folder, [...COMMIT_CONFIG, ...(yield* identity(folder)), "rebase", "--quiet", ref])
             .pipe(Effect.result);
           if (rebased._tag === "Failure") {
             yield* git.run(folder, ["rebase", "--abort"]).pipe(Effect.ignore);
@@ -255,8 +267,12 @@ export const make = Effect.gen(function* () {
           }
         }
       }
-      if ((yield* unpushedOf(folder, remote, branch)) > 0) {
-        yield* git.run(folder, ["push", "--quiet", "--set-upstream", remote, branch], network);
+      if ((yield* unpushedOf(folder, remote, remoteBranch)) > 0) {
+        yield* git.run(
+          folder,
+          ["push", "--quiet", "--set-upstream", remote, `HEAD:refs/heads/${remoteBranch}`],
+          network,
+        );
       }
       return null;
     }).pipe(
@@ -264,7 +280,7 @@ export const make = Effect.gen(function* () {
       Effect.orElseSucceed(() => "sync-failed" as const),
     );
     if (outcome === null) syncedAt = yield* Clock.currentTimeMillis;
-    if (problem !== "save-failed" || outcome !== null) problem = outcome;
+    if (outcome !== "later" && (problem !== "save-failed" || outcome !== null)) problem = outcome;
     fingerprint = yield* fingerprintOf(folder).pipe(Effect.orElseSucceed(() => fingerprint));
     yield* setActivity(folder, "idle");
   });

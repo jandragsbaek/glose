@@ -178,6 +178,34 @@ it.layer(NodeServices.layer)("Versions", (it) => {
     ),
   );
 
+  it.effect("syncs with the branch the local one follows, even under another name", () =>
+    withGraph(({ folder, remote, git, read, start }) =>
+      Effect.gen(function* () {
+        yield* git(folder, "init", "--quiet", "--bare", "--initial-branch=master", remote);
+        yield* git(folder, "init", "--quiet", "--initial-branch=main");
+        yield* git(folder, "remote", "add", "origin", remote);
+        yield* git(folder, "config", "branch.main.remote", "origin");
+        yield* git(folder, "config", "branch.main.merge", "refs/heads/master");
+        yield* (yield* start).tick;
+
+        const other = `${remote}-clone`;
+        yield* git(folder, "clone", "--quiet", remote, other);
+        const fs = yield* FileSystem.FileSystem;
+        yield* fs.writeFileString(`${other}/From the other computer.md`, "Hello.\n");
+        yield* git(other, "add", "--all");
+        yield* git(other, ...OTHER, "commit", "--quiet", "-m", "Other");
+        yield* git(other, "push", "--quiet");
+
+        yield* (yield* start).tick;
+        assert.strictEqual(yield* read("From the other computer.md"), "Hello.\n");
+        assert.strictEqual(
+          yield* git(remote, "for-each-ref", "--format=%(refname)", "refs/heads"),
+          "refs/heads/master",
+        );
+      }),
+    ),
+  );
+
   it.effect("keeps every Version and undoes the sync when both computers changed one line", () =>
     withGraph(({ folder, remote, git, read, write, start, status }) =>
       Effect.gen(function* () {
