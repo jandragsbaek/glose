@@ -81,6 +81,13 @@ typography:
     fontWeight: 700
     lineHeight: "18px"
     fontFeature: '"tnum"'
+  code:
+    fontFamily: "Courier Prime, ui-monospace, monospace"
+    fontSize: "28px"
+    fontWeight: 700
+    lineHeight: "36px"
+    letterSpacing: "0.14em"
+    fontFeature: '"tnum"'
   review-question:
     fontFamily: "Public Sans, system-ui, sans-serif"
     fontSize: "28px"
@@ -207,6 +214,19 @@ components:
     rounded: "{rounded.base}"
     padding: "40px 48px 36px"
     width: "720px"
+  sheet:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.base}"
+    width: "min(560px, calc(100vw - 32px))"
+  typed-code:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
+    typography: "{typography.code}"
+    rounded: "{rounded.label}"
+    padding: "6px 14px"
+  link-button:
+    textColor: "{colors.lapis}"
 ---
 
 # Design System: Glose
@@ -257,7 +277,7 @@ three small pigments (gold, rubric red, verdigris) each with one job.
 
 ### Primary
 
-- **Lapis** (lapis): the rail, the Source spine, the primary button, links, focus outlines on
+- **Lapis** (lapis): the rail, the Source spine, the primary button, links and link buttons, focus outlines on
   paper, the caret and native accent color. The one large field of color on any screen.
 - **Raised Lapis** (lapis-raised): rail item hover and current state; primary button hover.
 - **Lapis Rule** (lapis-line): hairlines and outlines on the lapis field (rail divider, the
@@ -277,17 +297,20 @@ three small pigments (gold, rubric red, verdigris) each with one job.
   signals of missing data or error, always paired with an icon and words.
 - **Rubric Wash** (rubric-wash): the background of a stand-alone warning notice.
 - **Rubric Line** (rubric-line): the border of a stand-alone warning notice.
-- **Verdigris** (verdigris): done. The check icon and 3px underline of a finished step.
+- **Verdigris** (verdigris): done. The check icon and 3px underline of a finished step, the
+  check of a finished sheet and the "Copied" check.
 
 ### Neutral
 
 - **Ground** (ground): the page behind panels and the setup body.
 - **Paper** (paper): panels, the page header, inputs, buttons, call-number labels.
-- **Ink** (ink): text, secondary button border, call-number border.
-- **Mute** (mute): secondary text, hints, meta, empty-state copy, field legends, the Review
-  progress line, rating intervals and key-cap letters.
+- **Ink** (ink): text, secondary button border, call-number and typed-code border; at 32%
+  (`rgb(20 20 20 / 32%)`) the veil behind a sheet.
+- **Mute** (mute): secondary text, hints, meta, empty-state copy, field legends, fact labels,
+  the Review progress line, rating intervals and key-cap letters.
 - **Hairline** (line): panel borders, header rule, row and step dividers, the flourish rule.
-- **Strong Hairline** (line-strong): input and choice borders, key-cap borders, scrollbar thumb.
+- **Strong Hairline** (line-strong): input and choice borders, key-cap borders, the border of a
+  leaf over the page (the Versions panel, a sheet), scrollbar thumb.
 - **Lapis Tint** (tint): secondary button hover, the current step, a selected choice.
 
 ### Named Rules
@@ -333,6 +356,8 @@ heading like an illuminated initial.
 - **Rail label** (500, 12px, 1.25): Section names under rail icons; they wrap and hyphenate.
 - **Call** (Courier Prime 700, 12px/18px, tabular): call numbers and step numbers; the Location
   part of a call number is 400 in Mute.
+- **Code** (Courier Prime 700, 28px/36px, 0.14em tracking, tabular): a code the user types
+  elsewhere, today the GitHub sign-in code in the Backup sheet; see Typed Code.
 
 ### Named Rules
 
@@ -340,7 +365,8 @@ heading like an illuminated initial.
 the setup title or the Review bar title, through `::first-letter`, so the heading text stays
 whole for screen readers. Never on data, buttons or body.
 
-**The Typed Label Rule.** Courier Prime is for call numbers and step numbers only.
+**The Typed Label Rule.** Courier Prime is for call numbers, step numbers and a code the user
+types elsewhere (the GitHub sign-in code) only.
 
 ## Layout
 
@@ -392,6 +418,9 @@ Elsewhere, focus is a 2px lapis outline at 2px offset (gold on the rail).
 The Review stack shows depth the same way: the Cards still to come are paper edges under the
 leaf, each narrower, with hairline borders and no shadow.
 
+A sheet lifts off the page without a shadow: the page behind it dims under an Ink veil at 32%,
+and the leaf takes a Strong Hairline border.
+
 ### Named Rules
 
 **The Hairline Rule.** Panels separate by a 1px Hairline and a white leaf on Ground. Don't add
@@ -400,8 +429,8 @@ resting shadows.
 ## Shapes
 
 Quiet, nearly square corners: 4px on panels, buttons, inputs, choices, notices, the step bar and
-rail items, key caps and the Review leaf; 2px on call-number labels and skeleton bars; 3px on the
-spine. Review leaf edges round only their two lower corners (4px). The one curve is the
+rail items, key caps, the Review leaf and a sheet; 2px on call-number labels, the typed code
+and skeleton bars; 3px on the spine. Review leaf edges round only their two lower corners (4px). The one curve is the
 pen flourish (a 64 by 10px stroked SVG with a center dot) set between two hairlines.
 
 ## Components
@@ -411,15 +440,23 @@ pen flourish (a 64 by 10px stroked SVG with a center dot) set between two hairli
 Firm and plain, ink-outlined.
 
 - **Shape:** gently squared (4px), 36px minimum height, 16px side padding, 8px gap to an icon.
-- **Primary:** Lapis fill and border, white label, for the next step forward (Add Source, Continue, Start, Skip, Start Review, Show answer, Recalled, Back to Recall).
+- **Primary:** Lapis fill and border, white label, for the next step forward (Add Source, Continue, Start, Skip, Start Review, Show answer, Recalled, Back to Recall, Back up to GitHub, Connect GitHub).
 - **Hover / Focus:** primary moves to Raised Lapis with the lapis lift; secondary fills with
   Lapis Tint. 160ms on the shared ease-out. Focus is the 2px lapis outline.
-- **Secondary:** Paper with a 1px Ink border and Ink label (Open, Cancel, Save, Retry).
+- **Secondary:** Paper with a 1px Ink border and Ink label (Open, Cancel, Save, Retry, Copy
+  code, Open GitHub again).
+- **Icon:** a 16px Lucide icon (1.8 stroke) before the label, as on Copy code and Open GitHub
+  again.
 - **Disabled:** 55% opacity, no shadow, not-allowed cursor.
 - **Quiet:** no border or fill, Mute 600 13px, 36px minimum height, 12px side padding; hover turns
   it Ink and underlines it (3px offset). For a way out of a slip, set apart from the choices
-  (Review's Back), and for Discuss, Drop and Undo beside a choice.
+  (Review's Back), for Discuss, Drop and Undo beside a choice, for the second path beside a
+  primary (Use another git remote), for Cancel in a sheet foot, and for an action that undoes a
+  setting (Stop backing up).
 - **Small:** 30px tall, 12px side padding, 13px, for choices repeated down a list (Keep, Add).
+- **Link button:** a button that reads as a link inside running text: no box, Lapis, inherits the
+  text's font, a 1px underline at 3px offset that thickens to 2px on hover. For an action that
+  belongs to a sentence ("Use another account", "Back up to GitHub" in the Versions panel).
 
 ### Choices
 
@@ -443,6 +480,14 @@ Firm and plain, ink-outlined.
 - **Hover / Focus:** hover darkens the border to Mute; focus turns it Lapis with the focus halo.
 - **Error:** border Rubric, and below the field a Rubric line with a circle-alert icon and the
   words. Never the border alone.
+
+### Facts
+
+A short ledger of states as a two-column description list: labels in Mute 13px/21px, values in
+Ink 14px, 8px row and 16px column gaps, tabular numerals. Labels take their own width; values
+wrap anywhere, so a long remote address never widens the panel. A value may carry a link (where
+the backup is) or a small quiet button after it (Disconnect GitHub). Used by the Versions panel
+and the Backup panel.
 
 ### Notices
 
@@ -474,11 +519,67 @@ button with 4px corners; hover and an open panel fill it with Lapis Tint and tur
 
 The Versions panel opens above the item's right end as a Glose panel leaf (380px, Strong
 Hairline border, no shadow): the heading "Versions of your Graph" with a lapis Initial and the
-flourish; a problem as an in-panel warning notice; the facts as a two-column list (Mute 13px
-labels, Ink 14px values, a missing remote in Mute); then, under a Hairline, the End the day
+flourish; a problem as an in-panel warning notice; the Facts (a remote as `github.com/<login>/<repo>`;
+a missing one as "Only on this computer." ("Kun på denne computer.") in Mute, followed by a
+"Back up to GitHub" link button that opens the Backup sheet); then, under a Hairline, the End the day
 form: a field label, the input, a Meta hint, and the primary End the day button with a Mute
 status beside it (a Verdigris check after the day is saved). It fades in and rises 4px in
 160ms on the shared ease-out; Esc and a click outside close it.
+
+### Sheet
+
+A modal leaf for a one-time task: it opens over the page, does the task, and leaves. A native
+`<dialog>` opened with `showModal`, `min(560px, 100vw - 32px)` wide, at most the window height
+less 32px, scrolling inside when taller.
+
+- **Leaf:** a Glose panel with a Strong Hairline border: the panel head (Initial, optional Meta
+  pushed right such as "Step 1 of 2" ("Trin 1 af 2")), then the flourish rule.
+- **Body:** a column with 16px gaps; paragraphs cap at 62ch. Field errors keep their icon at the
+  first line when the words wrap.
+- **Foot:** a button row 4px under the body: the action on the left (primary for the next step,
+  secondary for a way back to an outside page), and a quiet Cancel pushed right.
+- **Veil and motion:** the page dims under Ink at 32%. The leaf fades in and rises 4px in 160ms on
+  the shared ease-out while the veil fades in. No shadow.
+- **Leaving:** Esc cancels, as Cancel does. The task's first control takes focus.
+
+**Backup sheet.** Opened from Settings (Back up to GitHub, Use another git remote) and from the
+Versions panel's link button. Titled "Back up to GitHub" ("Tag backup på GitHub") with a rubric
+Initial.
+
+- **Step 1, connect:** one sentence on what GitHub keeps, then Connect GitHub (primary), "No
+  GitHub account? Create one, free" in Mute 13px, and Cancel.
+- **Step 1, the code:** "Type this code on GitHub's page." over the Typed Code and Copy code
+  (secondary; its icon turns to a Verdigris check and "Copied" for 2s); a Mute 13px line with the
+  16px Lapis tick, ending "Glose continues by itself" ("Glose fortsætter selv"); the foot carries
+  Open GitHub again (secondary with an external-link icon) and Cancel.
+- **Step 2, Repository name:** "Signed in to GitHub as <login>." with a "Use another account"
+  link button; the Repository name field (320px max, a suggested name, a hint) with the field
+  error line; Back up (primary) and Cancel.
+- **Done:** an 18px Verdigris check and a 15px sentence ("Backed up. …"), the place as a link
+  under it, and Done (primary).
+- **Another git remote:** the same sheet without steps: a sentence, the Remote address field,
+  Use this remote (primary) and Cancel.
+
+### Typed Code
+
+A code the user types on another site, set like a call-number label at reading size: Paper, 1px
+Ink border, 2px corners, 6px 14px padding, Code type (`WDJB-MJHT`). It selects as one unit, and
+its accessible name spells it out character by character. It sits in a wrapping row with Copy
+code (12px 16px gaps).
+
+### Backup Panel
+
+The third Settings panel, rubric Initial (ChatGPT below it turned lapis to keep the alternation).
+A ledger, not a form; setting up happens in the Backup sheet.
+
+- **Not backed up:** Facts ("Versions: Only on this computer", "Last saved: Today 14:37"), the
+  rubric inline warning ("If this computer is lost or breaks, your Graph is lost with it."), then
+  Back up to GitHub (primary) and a quiet Use another git remote, 18px below.
+- **Backed up:** a sync problem as an in-panel warning notice; Facts ("Backed up to" with
+  `github.com/<login>/<repo>` as a link, "Last sync", and "GitHub" with the login and a small
+  quiet Disconnect GitHub); then a quiet Stop backing up whose words line up with the fact labels.
+- **Stop:** an inline confirm under a Hairline (62ch max): the question, which says where the copy
+  stays, then Stop backing up (secondary) and Keep backing up (quiet, focused).
 
 ### Call Number (signature)
 
@@ -624,7 +725,7 @@ Skeleton bars (14px, 2px corners) shimmer Tint to Ground over 1.4s inside a pane
 - **Don't** use red alone to mean anything; color never carries a message by itself.
 - **Don't** add resting shadows or new fields of color beyond the lapis rail, spine and primary.
 - **Don't** use Cinzel Decorative beyond a single heading initial, or Courier Prime beyond call
-  and step numbers.
+  numbers, step numbers and a code the user types elsewhere.
 - **Don't** fix widths to English text, truncate labels, or block wrapping.
 - **Don't** build a file-tree-plus-editor arrangement in neutral grey, a busy dashboard, or
   gamification.

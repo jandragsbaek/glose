@@ -315,8 +315,34 @@ Decided, Versions (November 2026):
 - A bar along the bottom of the window shows the time of the last Version ("Saved 14:32") with a
   git icon at its right end, a mark while changes are unsaved, and a warning icon on a problem.
   It opens a panel with the details and "End the day". Review's focus screen has no bar.
-- Not yet: adding a remote in Glose, browsing or restoring old Versions, resolving a conflict in
-  Glose, refreshing open pages after a pull, and a periodic pull while nothing changes.
+- Not yet: browsing or restoring old Versions, resolving a conflict in Glose, refreshing open
+  pages after a pull, and a periodic pull while nothing changes.
+
+Decided, Backup (November 2026):
+
+- Settings has a Backup panel: a short list of where the Versions are. Without a remote it says
+  "Only on this computer" and what that risks, and offers Back up to GitHub (suggested: free, and
+  private) and, quieter, Use another git remote. The setup runs once, in a sheet over the page;
+  the Versions panel in the status bar opens the same sheet. Jan chose this ("Ledger and sheet")
+  with impeccable over a step list in the panel and a choice followed by the step bar.
+- GitHub: Glose connects with GitHub's device flow. It shows a code; the user types it on
+  github.com, and Glose continues by itself. Then Glose makes a private repository of the name the
+  user gives (suggested `glose-graph`), or uses the user's own private one of that name, and
+  pushes every Version. It never pushes to a public repository.
+- The GitHub sign-in is per computer, in `github.json` beside the computer settings, readable only
+  by the user. It needs the `repo` scope, so it can reach all of the user's repositories; GitHub
+  has no narrower scope for making one. Git gets it per run through the environment, so it never
+  lands in `.git/config` or the process list. Disconnecting forgets it; the user revokes it on
+  GitHub's page of applications.
+- Another git remote: the user gives its address, and Glose uses their own git sign-in (SSH key
+  or credential helper). Glose checks that git reaches it first.
+- Glose refuses a remote that holds another history, so two Graphs never mix. Stop backing up
+  removes the remote; the Versions stay here and on the old remote.
+- Glose's OAuth app on GitHub is registered under Jan's account (Device Flow on; the callback URL
+  is the unused `http://127.0.0.1/`). Its public client ID is in
+  `apps/server/src/github/GitHubApi.ts`; `GLOSE_GITHUB_CLIENT_ID` replaces it.
+- Not yet: opening an existing backup on a second computer (cloning a Graph from GitHub at first
+  start).
 
 ## Graph view
 

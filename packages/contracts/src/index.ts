@@ -2,6 +2,7 @@ export * from "./card.ts";
 export * from "./cardScore.ts";
 export * from "./catalog.ts";
 export * from "./chatgpt.ts";
+export * from "./github.ts";
 export * from "./graph.ts";
 export * from "./recall.ts";
 export * from "./server.ts";

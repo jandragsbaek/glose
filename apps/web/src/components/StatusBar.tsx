@@ -8,6 +8,7 @@ import { type FormEvent, useId, useState, useSyncExternalStore } from "react";
 import type { Messages } from "../i18n/en.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { endDayAtom, versionsStatusAtom } from "../state/versions.ts";
+import { remotePlace, useOpenBackup } from "./Backup.tsx";
 import { Notice, Panel } from "./ui.tsx";
 
 type On = Extract<VersionsStatus, { _tag: "On" }>;
@@ -97,6 +98,7 @@ function label(t: Messages, status: VersionsStatus, today: string) {
 function VersionsDetails({ status, today }: { readonly status: On; readonly today: string }) {
   const t = useT();
   const synced = status.syncedAt === null ? null : new Date(status.syncedAt);
+  const openBackup = useOpenBackup();
   return (
     <>
       <div className="panel__body">
@@ -107,14 +109,21 @@ function VersionsDetails({ status, today }: { readonly status: On; readonly toda
             </Notice>
           </div>
         )}
-        <dl className="status-panel__facts">
+        <dl className="facts">
           <dt>{t.versions.changes}</dt>
           <dd>{status.unsaved ? t.versions.pending : t.versions.allSaved}</dd>
           <dt>{t.versions.remote}</dt>
-          <dd className={status.remote === null ? "status-panel__none" : undefined}>
-            {status.remote ?? t.versions.noRemote}
-          </dd>
-          {status.remote === null ? null : (
+          {status.remoteUrl === null ? (
+            <dd className="status-panel__none">
+              {t.versions.noRemote}{" "}
+              <button type="button" className="link-button" onClick={() => openBackup("github")}>
+                {t.backup.backUpToGitHub}
+              </button>
+            </dd>
+          ) : (
+            <dd className="status-panel__remote">{remotePlace(status.remoteUrl).label}</dd>
+          )}
+          {status.remoteUrl === null ? null : (
             <>
               <dt>{t.versions.sync}</dt>
               <dd>

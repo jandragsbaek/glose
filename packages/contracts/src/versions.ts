@@ -38,6 +38,8 @@ export const VersionsStatus = Schema.Union([
     activity: Schema.Literals(["idle", "saving", "syncing"]),
     /** The git remote Glose syncs with, or null when the repository has none. */
     remote: Schema.NullOr(Schema.String),
+    /** The remote's address without any password in it, or null. */
+    remoteUrl: Schema.NullOr(Schema.String),
     /** Versions on this computer that the remote does not have yet. */
     unpushed: Schema.Number,
     /** When Glose last synced with the remote while it ran, or null. */
@@ -50,3 +52,42 @@ export type VersionsStatus = typeof VersionsStatus.Type;
 /** The user ends the day: one line about it names the Version. */
 export const EndDay = Schema.Struct({ summary: Schema.String });
 export type EndDay = typeof EndDay.Type;
+
+/** A name GitHub accepts for a repository. */
+export const GITHUB_REPOSITORY_NAME = /^[A-Za-z0-9._-]{1,100}$/;
+
+/** The repository name Glose suggests for a Graph's backup. */
+export const DEFAULT_BACKUP_REPOSITORY = "glose-graph";
+
+/** Backs the Versions up to a private repository of the connected GitHub account. */
+export const BackUpToGitHub = Schema.Struct({
+  /** The repository's name; Glose makes it, or uses the user's private one of that name. */
+  name: Schema.String.pipe(Schema.check(Schema.isPattern(GITHUB_REPOSITORY_NAME))),
+});
+export type BackUpToGitHub = typeof BackUpToGitHub.Type;
+
+/** Backs the Versions up to a git remote the user already has, at any host. */
+export const SetRemote = Schema.Struct({
+  url: Schema.Trim.pipe(Schema.check(Schema.isNonEmpty())),
+});
+export type SetRemote = typeof SetRemote.Type;
+
+/** Why Glose did not back the Versions up to that remote. Nothing changed. */
+export const RemoteRefusedReason = Schema.Literals([
+  /** Glose keeps no Versions now (no git, say); the status says why. */
+  "versions-off",
+  "github-not-connected",
+  /** A public repository of that name exists; Glose never pushes the Graph where all can read it. */
+  "public-repository",
+  /** GitHub refused or did not answer when Glose looked for or made the repository. */
+  "github-failed",
+  /** Git could not reach the remote, or could not sign in to it. */
+  "unreachable",
+  /** The remote holds a history that is not this Graph's. */
+  "other-graph",
+]);
+export type RemoteRefusedReason = typeof RemoteRefusedReason.Type;
+
+export class RemoteRefused extends Schema.TaggedError<RemoteRefused>()("RemoteRefused", {
+  reason: RemoteRefusedReason,
+}) {}

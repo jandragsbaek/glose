@@ -17,6 +17,11 @@ export class GitMissing extends Data.TaggedError("GitMissing")<{}> {}
 export interface RunOptions {
   /** Network commands (fetch, push) get a longer limit than local ones. */
   readonly timeoutMs?: number;
+  /**
+   * Config for this one run, such as a sign-in header. It goes through the environment, so a
+   * secret never shows in the process list or lands in the repository's config.
+   */
+  readonly config?: Readonly<Record<string, string>>;
 }
 
 /** Runs the user's own `git`, so their remotes, SSH keys and credential helpers just work. */
@@ -53,9 +58,18 @@ const REPOSITORY_VARIABLES = [
 export const environment = (
   base: NodeJS.ProcessEnv,
   extra: Readonly<Record<string, string>> = {},
+  config: Readonly<Record<string, string>> = {},
 ): NodeJS.ProcessEnv => {
   const env: NodeJS.ProcessEnv = { ...base, ...extra };
   for (const name of REPOSITORY_VARIABLES) delete env[name];
+  // Added after any config the environment already gives git, so both apply.
+  let index = Number(env.GIT_CONFIG_COUNT ?? 0) || 0;
+  for (const [key, value] of Object.entries(config)) {
+    env[`GIT_CONFIG_KEY_${index}`] = key;
+    env[`GIT_CONFIG_VALUE_${index}`] = value;
+    index++;
+  }
+  if (index > 0) env.GIT_CONFIG_COUNT = String(index);
   // Nobody can answer a password prompt: fail instead of waiting for one.
   env.GIT_TERMINAL_PROMPT = "0";
   // Glose looks at the folder often; its reads must not hold a lock the user's own git needs.
@@ -72,7 +86,7 @@ export const make = (extraEnv: Readonly<Record<string, string>> = {}) =>
           [...args],
           {
             cwd,
-            env: environment(process.env, extraEnv),
+            env: environment(process.env, extraEnv, options?.config),
             signal,
             timeout: options?.timeoutMs ?? LOCAL_TIMEOUT_MS,
             maxBuffer: MAX_OUTPUT,

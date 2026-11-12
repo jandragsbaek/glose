@@ -2,6 +2,7 @@ import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { createFileRoute } from "@tanstack/react-router";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 
+import { BackupPanel } from "../components/Backup.tsx";
 import { ChatGptConnection } from "../components/ChatGptConnection.tsx";
 import { Page, Panel } from "../components/ui.tsx";
 import { LANGUAGES, useT } from "../i18n/I18n.tsx";
@@ -51,7 +52,8 @@ function Settings() {
             <p className="field__hint">{t.settings.graphFolderHint}</p>
           </div>
         </Panel>
-        <Panel title={t.chatgpt.title} initial="rubric">
+        <BackupPanel />
+        <Panel title={t.chatgpt.title} initial="lapis">
           <div className="panel__body stack">
             <p className="field__hint">{t.chatgpt.intro}</p>
             <ChatGptConnection />
