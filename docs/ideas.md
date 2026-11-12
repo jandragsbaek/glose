@@ -486,6 +486,8 @@ Taken from learnharness: the user thinks out loud, by typing or by dictation, an
 - Release platforms: macOS and Windows. One user is on macOS, and Jan uses glose on Windows.
 - One design language on both platforms. Details that belong to the OS (window controls, menu
   bar, keyboard shortcuts) follow each OS.
+- No menu bar in the window on Windows and Linux. macOS keeps only the standard app, Edit and
+  Window menus in its screen menu bar, because its copy, paste and quit shortcuts need them.
 - Development happens on Linux and macOS nodes, load-balanced through T3. The app must therefore also run on Linux for development, including in a plain browser without Electron on headless nodes.
 - File names must be safe on all three systems: no characters that Windows forbids, and no two notes whose names differ only in upper and lower case.
 - The macOS app is signed and notarized, because self-update on macOS needs it. This needs an Apple Developer account, which Jan plans to get anyway for other macOS apps.
