@@ -302,13 +302,18 @@ function ExtractionView({
         ) : null}
         {writing === undefined ? null : (
           <div className="points__group">
-            <WritePoint
-              key={writing.id}
-              session={session}
-              point={writing}
-              about={about?.id === writing.id}
-              onAbout={() => setAbout(writing.id)}
-            />
+            {/* Every kept Point's form stays mounted, so switching Points keeps unsaved words. */}
+            {groups.kept.map((point) => (
+              <div key={point.id} hidden={point.id !== writing.id}>
+                <WritePoint
+                  session={session}
+                  point={point}
+                  shown={point.id === writing.id}
+                  about={about?.id === point.id}
+                  onAbout={() => setAbout(point.id)}
+                />
+              </div>
+            ))}
           </div>
         )}
         {groups.kept.length > 1 ? (
@@ -534,11 +539,14 @@ type SaveProblem = { readonly kind: "taken"; readonly name: string } | { readonl
 function WritePoint({
   session,
   point,
+  shown,
   about,
   onAbout,
 }: {
   readonly session: Session;
   readonly point: Point;
+  /** The open Point; a hidden form keeps its words for when the user comes back. */
+  readonly shown: boolean;
   readonly about: boolean;
   readonly onAbout: () => void;
 }) {
@@ -601,7 +609,7 @@ function WritePoint({
   );
 
   return (
-    <form className="write" id={elementOf(point.id)} onSubmit={save}>
+    <form className="write" id={shown ? elementOf(point.id) : undefined} onSubmit={save}>
       <span className="point__num" data-about={about ? true : undefined}>
         {pointNumber(point)}
       </span>
