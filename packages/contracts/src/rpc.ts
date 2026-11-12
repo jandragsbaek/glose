@@ -13,13 +13,17 @@ import {
 } from "./card.ts";
 import { CatalogRecord, CatalogSearch, CatalogUnavailable } from "./catalog.ts";
 import { ChatGptStatus, ConnectChatGpt, DisconnectResult } from "./chatgpt.ts";
-import { GraphView, NoteNotFound } from "./graph.ts";
+import { GraphView, NoteNameTaken, NoteNotFound } from "./graph.ts";
 import { RecordReview, ReviewQueue } from "./recall.ts";
 import { ServerInfo } from "./server.ts";
 import {
+  AddPoint,
   DropProposal,
   FindSession,
+  KeepPoint,
   KeepProposal,
+  PointNotFound,
+  PointRef,
   ProposalNotOpen,
   SendMessage,
   SendPassage,
@@ -28,6 +32,7 @@ import {
   SessionNotFound,
   SessionRef,
   StartSession,
+  WritePoint,
 } from "./session.ts";
 import {
   CompleteSetup,
@@ -71,6 +76,11 @@ export const RPC_METHODS = {
   sessionsSendPassage: "sessions.sendPassage",
   sessionsKeepProposal: "sessions.keepProposal",
   sessionsDropProposal: "sessions.dropProposal",
+  sessionsKeepPoint: "sessions.keepPoint",
+  sessionsDropPoint: "sessions.dropPoint",
+  sessionsRestorePoint: "sessions.restorePoint",
+  sessionsAddPoint: "sessions.addPoint",
+  sessionsWritePoint: "sessions.writePoint",
   cardsList: "cards.list",
   cardsJudge: "cards.judge",
   cardsCreate: "cards.create",
@@ -175,6 +185,37 @@ export const GloseRpcGroup = RpcGroup.make(
   Rpc.make(RPC_METHODS.sessionsDropProposal, {
     payload: DropProposal,
     error: Schema.Union([SessionNotFound, ProposalNotOpen, GraphFolderNotSet, StorageError]),
+  }),
+  /** Keeps a proposed Point to write as a Note; the next turn tells the AI. */
+  Rpc.make(RPC_METHODS.sessionsKeepPoint, {
+    payload: KeepPoint,
+    error: Schema.Union([SessionNotFound, PointNotFound, GraphFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.sessionsDropPoint, {
+    payload: PointRef,
+    error: Schema.Union([SessionNotFound, PointNotFound, GraphFolderNotSet, StorageError]),
+  }),
+  /** Brings a dropped Point back to decide on again. */
+  Rpc.make(RPC_METHODS.sessionsRestorePoint, {
+    payload: PointRef,
+    error: Schema.Union([SessionNotFound, PointNotFound, GraphFolderNotSet, StorageError]),
+  }),
+  /** A Point in the user's own words, kept to write. */
+  Rpc.make(RPC_METHODS.sessionsAddPoint, {
+    payload: AddPoint,
+    error: Schema.Union([SessionNotFound, GraphFolderNotSet, StorageError]),
+  }),
+  /** Writes a kept Point as a Note file in the Graph folder; returns the Note's name. */
+  Rpc.make(RPC_METHODS.sessionsWritePoint, {
+    payload: WritePoint,
+    success: Schema.String,
+    error: Schema.Union([
+      SessionNotFound,
+      PointNotFound,
+      NoteNameTaken,
+      GraphFolderNotSet,
+      StorageError,
+    ]),
   }),
   /** Every Card in the Graph folder, in file name order, with its Checks. */
   Rpc.make(RPC_METHODS.cardsList, { success: Schema.Array(ScoredCard), error: GraphErrors }),

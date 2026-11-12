@@ -28,7 +28,8 @@ Working notes from early conversations. Nothing here is final.
   tekst (Free text), Udtræk (Extraction), Sondering (Probe), Læsning (the Reading Stage),
   AI-tekst (AI text), Kildehenvisning (Citation), Kortudtræk (Card Extraction), Foreslået kort
   (Proposed Card), Tjek (Check), Vurdering (Grade), Gennemgang (Review), Glemt / Husket
-  (Forgot / Recalled), and Med besvær, Normalt, Med det samme (With effort, Normal, At once).
+  (Forgot / Recalled), Med besvær, Normalt, Med det samme (With effort, Normal, At once), and
+  Punkt, Kernepunkter (Point, Core points).
 
 ## First start
 
@@ -278,11 +279,12 @@ The Probe and Review are different things with different goals.
   Glose and a contact address in its `User-Agent`, as Open Library asks.
 - A Source's call number (`ARE 1958`) is the first three letters of the family name and the
   year of first publication. It is shown, not stored.
-- First form of a Note file, used by the demo Graph and read by the Graph view (nothing writes
-  Notes yet): `<Note title>.md` in the Graph folder, with frontmatter `glose: note` and
-  `source: "[[<Source file name>]]"`, then the Note text with wikilinks. The `source` field is
-  itself a wikilink, so Obsidian links a Note to its Source too. AI text in it carries the AI mark
-  (see "AI-written text in the graph").
+- The Note file: `<Note title>.md` in the Graph folder, with frontmatter `glose: note`,
+  `source: "[[<Source file name>]]"` and, when the user gives one, the Location as `page` (a string,
+  so "47–49" and "xii" work too), then the Note text with wikilinks. The `source` field is itself a
+  wikilink, so Obsidian links a Note to its Source too. AI text in it carries the AI mark (see
+  "AI-written text in the graph"). Extraction writes Notes in this form (see "Decided,
+  Extraction from a Source"); a title another file has, in any case, is refused, not numbered.
 - Any other Markdown file in the Graph folder is a Note without a Source. Links follow Obsidian:
   `[[name]]`, `[[name|shown words]]`, `[[name#heading]]` and embeds count, names match without
   regard to case, a wikilink inside code is not a Link, and a wikilink to a missing file draws no
@@ -332,6 +334,10 @@ heading and its text, up to the next heading) or a whole Note, and the mark says
   Obsidian cannot link to a heading inside one (`[[Note#Heading]]`) or show it in the Outline.
   The heading counts as AI text.
 - A whole AI-written Note has `ai: true` and no callout. This also covers a file marked by hand.
+- A title the AI wrote (the file name) has `ai-title: true` beside `ai: true`. Then `ai: true`
+  without a callout means the title only, not the whole Note. The app shows "¶ AI-written title"
+  ("AI-skrevet titel") above it. Decided November 2026: AI text always carries the mark, so a
+  Point the AI proposed keeps it as a title, edited or not, until the user removes it.
 - Any file with AI text has `ai: true` in its frontmatter, so Obsidian search, Dataview and other
   tools find it without reading callouts.
 
@@ -414,14 +420,46 @@ Decided, first version (November 2026):
 - Following OpenAI's guidelines: the button reads "Continue with ChatGPT", a one-time notice says
   "You're using your ChatGPT plan", and "Using ChatGPT plan" with a "Manage usage" link to
   ChatGPT's usage page sits next to the Session's message box. The ChatGPT logo is not used yet.
-- First Session kind: Extraction. The agent has two read-only tools, `read_source` (bibliographic
-  data and Free text) and `list_sources`. It cannot write Notes, because the Note format and the
-  AI mark are not decided. One Extraction Session per Source; reopening the Source continues it.
+- First Session kind: Extraction (see "Decided, Extraction from a Source"). One Extraction Session
+  per Source; reopening the Source continues it.
+- Glose's own tools are plain functions in its agent loop, sent in the `glose` namespace. MCP is
+  not needed: Glose owns the loop, and OpenAI's hosted MCP would need a public address for a Graph
+  that is local.
+- Each request asks for a summary of the model's reasoning (`reasoning.summary: "auto"`). The
+  Session shows it as "Thought for N s", folded. If ChatGPT refuses the request for its reasoning
+  summary (a model or account without them), the turn is sent again without it, and later turns
+  in that run of Glose do not ask.
 - A Session is kept in the Graph folder as `.glose/sessions/<id>.json`: what the user saw, and the
   exact model input that the next turn continues from.
 - Developing on a headless node: the callback reaches the computer that runs the browser, so
   forward the port first (`ssh -L 1455:127.0.0.1:1455 <node>`), or sign in on a computer with a
   browser.
+
+## Decided, Extraction from a Source (November 2026)
+
+- The core points are the page; the Session sits beside them in a margin column, the full height
+  of the window, with its message box always at hand. Under 1080px the margin moves below the
+  points. The Free text and the Source's details open from the step bar ("Read").
+- The AI proposes Points through `propose_points`: a claim as a full sentence (the Note's title),
+  where it comes from (`free-text` with the exact words, or `ai` for its own knowledge of the
+  Source), a Note it `repeats`, a Note it `pulls against` and how, and Links to existing Notes
+  with a reason. Glose keeps a quote only when the Free text holds those words (case, spacing and
+  quotation marks aside), and keeps only Note names that exist in the Graph.
+- The AI reads the Graph with `search_graph` (words in titles and text, ten matches with a
+  snippet) and `read_note` (text, Source, page, Links both ways), besides `read_source`,
+  `list_sources` and `list_points`. The Session shows what it read as one folded line per run
+  ("Read your Free text and 2 Notes · searched your Graph"), the Notes as links.
+- The user keeps, drops or discusses each Point, or adds one in their own words. A kept Point
+  opens in place to write: title, the Note in the user's own words, an optional page, and the
+  proposed Links to add or drop. "Ask for a draft" makes the AI write one (`draft_note`); the
+  Note keeps it as an `[!ai]` callout unless the user leaves it out. Added Links go on a closing
+  line, `Related: [[…]]` ("Se også:" in Danish), which the user may move into a sentence later.
+- The Point the user talks about wears the gilt mark, and the message box names it; the model
+  reads the message as about that Point. The AI refers to Points as `[3]` and to Notes as
+  wikilinks; both are links in the Session.
+- The next turn tells the AI what the user kept, wrote (with their words), dropped and added.
+- Not yet: editing a written Note in Glose, Points from a passage of the Free text, and checks of
+  a Point's quality like the Card Checks.
 
 ## Reasoning as part of the answer
 
@@ -466,7 +504,8 @@ Taken from learnharness: the user thinks out loud, by typing or by dictation, an
 - Is a note that the AI arranges from the user's own transcript marked as AI text or as human text?
 
 - What is the source of a note that holds the user's own idea, or that combines several notes?
-- Is the exact location (page number, timestamp) required on every note, or only when the note is cited?
+- Is the exact location (page number, timestamp) required on every note, or only when the note is
+  cited? For now a Note's page is optional.
 - Are session records kept as transcripts only, or with the audio?
 - Does each user have a separate graph and separate records?
 - Which reference system does the university require?

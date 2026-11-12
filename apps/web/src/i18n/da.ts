@@ -137,6 +137,7 @@ export const da: Messages = {
   source: {
     firstPublished: (year: number) => `først udgivet ${year}`,
     callNumberLabel: (callNumber: string) => `Opstillingssignatur ${callNumber}`,
+    page: (page: string) => `s. ${page}`,
     missingTitle: "Mangler for en korrekt kildehenvisning",
     missing: {
       firstPublished: "Året for første udgivelse",
@@ -264,10 +265,6 @@ export const da: Messages = {
     gotIt: "Forstået",
   },
   session: {
-    title: "Udtræk",
-    start: "Start udtræk",
-    startHint:
-      "AI'en læser din frie tekst og kildens data, foreslår hovedpointerne og spørger dig om dem. Glose gemmer ikke noter endnu.",
     needsChatGpt: "Udtræk kræver ChatGPT",
     needsChatGptBody:
       "Forbind dit ChatGPT-abonnement under Indstillinger, og kom så tilbage til denne kilde.",
@@ -280,9 +277,60 @@ export const da: Messages = {
       "list-sources": "AI'en så på listen over dine kilder.",
       "read-note": "AI'en læste en note.",
       "list-cards": "AI'en så på de kort, noten allerede har.",
+      "search-graph": "AI'en søgte i din graf.",
     },
+    trail: {
+      readSource: "Læste kilden og din frie tekst",
+      listSources: "Så på dine kilder",
+      readNote: "Læste",
+      listCards: "Så på notens kort",
+      searchGraph: (query: string) => `Søgte i din graf efter »${query}«`,
+    },
+    trailSummary: (read) => {
+      const things = [
+        ...(read.freeText ? ["din frie tekst"] : []),
+        ...(read.notes > 0 ? [count(read.notes, "note", "noter")] : []),
+        ...(read.sources ? ["dine kilder"] : []),
+        ...(read.cards ? ["notens kort"] : []),
+      ];
+      const searched =
+        read.searches === 0
+          ? null
+          : read.searches === 1
+            ? "søgte i din graf"
+            : `søgte i din graf ${numbers.format(read.searches)} gange`;
+      const line = [things.length === 0 ? null : `læste ${list.format(things)}`, searched]
+        .filter((part) => part !== null)
+        .join(" · ");
+      return line.charAt(0).toUpperCase() + line.slice(1);
+    },
+    live: (tool, detail) => {
+      switch (tool) {
+        case "read-source":
+          return "Læser din frie tekst";
+        case "list-sources":
+          return "Ser på dine kilder";
+        case "read-note":
+          return detail === undefined ? "Læser en note" : `Læser ${detail}`;
+        case "list-cards":
+          return "Ser på notens kort";
+        case "search-graph":
+          return detail === undefined ? "Søger i din graf" : `Søger i din graf efter »${detail}«`;
+        case null:
+          return "Tænker";
+      }
+    },
+    thought: (ms: number) =>
+      ms < 1000 ? "Tænkte kort" : `Tænkte i ${numbers.format(Math.round(ms / 1000))} s`,
+    youAbout: (point: number) => `Dig · om ${numbers.format(point)}`,
+    about: "Om",
+    clearAbout: "Tal om hele kilden",
+    placeholder: "Svar, spørg eller sig imod",
+    sendKey: { mac: "⌘ ↵", other: "Ctrl ↵" },
+    pointsProposed: (n: number) => `Foreslog ${count(n, "punkt", "punkter")}`,
+    pointAdded: "Tilføjede et punkt med dine ord",
+    pointRef: (point: number) => `Punkt ${numbers.format(point)}`,
     passage: "Passage",
-    working: "AI'en arbejder",
     messageLabel: "Dit svar",
     messageHint: "Tryk Ctrl+Enter eller Cmd+Enter for at sende.",
     send: "Send",
@@ -307,6 +355,73 @@ export const da: Messages = {
     part: "AI-skrevet del",
     note: "AI-skrevet note",
     card: "AI-skrevet kort",
+    title: "AI-skrevet titel",
+  },
+  extraction: {
+    title: "Kernepunkter",
+    count: (n: number) => count(n, "punkt", "punkter"),
+    stepNote: (written: number, total: number) =>
+      total === 0
+        ? "med ChatGPT"
+        : `${numbers.format(written)} af ${count(total, "punkt", "punkter")} skrevet`,
+    showFreeText: "Læs",
+    hideFreeText: "Skjul",
+    startLead: "Find kildens kernepunkter",
+    startBody:
+      "AI'en læser din frie tekst og søger i din graf. Den foreslår kernepunkterne, siger hvor hvert punkt kommer fra, og hvordan det møder de noter, du har, og spørger dig om dem. Hvert punkt, du beholder, skriver du som en note med dine egne ord.",
+    start: "Start udtræk",
+    waiting: "AI'en læser. Dens punkter kommer her.",
+    noPoints: "Ingen åbne punkter. Bed AI'en om flere, eller tilføj et punkt med dine egne ord.",
+    proposed: (n: number) => `Foreslået af AI'en · ${numbers.format(n)}`,
+    toWrite: "At skrive",
+    written: "Skrevet",
+    dropped: "Droppet",
+    fromFreeText: "Fra din frie tekst:",
+    notInFreeText: "Ikke i din frie tekst. Tjek det i dit eget eksemplar.",
+    ownWords: "Dit eget punkt",
+    repeats: "Du har denne note:",
+    pullsAgainst: "Trækker imod",
+    keep: "Behold",
+    discuss: "Drøft",
+    drop: "Drop",
+    write: "Skriv",
+    bringBack: "Hent tilbage",
+    titleLabel: "Punkt, notens titel",
+    textLabel: "Noten, med dine egne ord",
+    page: "Side",
+    linksHead: "Links fra din graf",
+    addLink: "Tilføj",
+    linkAdded: "Tilføjet",
+    undo: "Fortryd",
+    dropLink: "Drop",
+    draftKept: "Noten beholder dette udkast, mærket som AI-tekst.",
+    draftLeftOut: "Noten udelader dette udkast.",
+    leaveDraftOut: "Udelad udkastet",
+    keepDraft: "Behold udkastet",
+    save: "Gem note",
+    askDraft: "Bed om et udkast",
+    draftRequest: "Skriv et udkast til dette punkts note.",
+    proposeMore: "Foreslå flere",
+    proposeMoreRequest: "Foreslå flere kernepunkter.",
+    addOwn: "Tilføj et punkt med dine ord",
+    addOwnLabel: "Dit punkt",
+    addOwnHint: "Én påstand, som en hel sætning. Den bliver notens titel.",
+    add: "Tilføj",
+    cancel: "Annullér",
+    showDropped: (n: number) => `${numbers.format(n)} droppet`,
+    hideDropped: "Skjul droppede",
+    openInGraph: "Åbn i grafen",
+    links: (n: number) => count(n, "link", "links"),
+    states: {
+      open: "Foreslået",
+      kept: "Beholdt",
+      written: "Skrevet",
+      dropped: "Droppet",
+    },
+    nameTaken: (name: string) =>
+      `Din graf har allerede en fil med navnet »${name}«. Ret titlen, eller åbn den note.`,
+    saveFailed: "Glose kunne ikke gemme noten. Prøv igen.",
+    actionFailed: "Glose kunne ikke gemme det. Prøv igen.",
   },
   graph: {
     title: "Graf",

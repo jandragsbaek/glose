@@ -10,6 +10,7 @@ export function Page({
   sub,
   actions,
   fill = false,
+  flush = false,
   children,
 }: {
   readonly title: string;
@@ -17,6 +18,8 @@ export function Page({
   readonly actions?: ReactNode;
   /** The body takes the rest of the window's height instead of scrolling (the Graph). */
   readonly fill?: boolean;
+  /** The filled body has no padding: its columns pad themselves and reach the edges. */
+  readonly flush?: boolean;
   readonly children: ReactNode;
 }) {
   return (
@@ -26,7 +29,13 @@ export function Page({
         {sub === undefined ? null : <span className="page-head__sub">{sub}</span>}
         {actions === undefined ? null : <div className="page-head__actions">{actions}</div>}
       </header>
-      <div className={fill ? "page-body page-body--fill" : "page-body"}>{children}</div>
+      <div
+        className={
+          fill ? `page-body page-body--fill${flush ? " page-body--flush" : ""}` : "page-body"
+        }
+      >
+        {children}
+      </div>
     </>
   );
 }
@@ -81,8 +90,11 @@ export function Panel({
 
 export function CallNumber({
   source,
+  page = null,
 }: {
   readonly source: Pick<Source, "familyName" | "firstPublished">;
+  /** The Location in the Source, typed after the call number. */
+  readonly page?: string | null;
 }) {
   const t = useT();
   const label = callNumber(source);
@@ -90,10 +102,13 @@ export function CallNumber({
   return (
     <span
       className={missing ? "call call--missing" : "call"}
-      aria-label={t.source.callNumberLabel(label)}
+      aria-label={t.source.callNumberLabel(
+        page === null ? label : `${label} · ${t.source.page(page)}`,
+      )}
     >
       {missing ? <TriangleAlert className="call__icon" aria-hidden="true" /> : null}
       {label}
+      {page === null ? null : <span className="call__loc">· {t.source.page(page)}</span>}
     </span>
   );
 }

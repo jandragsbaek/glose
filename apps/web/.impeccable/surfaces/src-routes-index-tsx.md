@@ -63,3 +63,13 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 - Real Notes, Cards and Writing projects do not exist yet; their panels show empty states.
 - Final faces and the icon set may change when Jan reviews the built app.
+
+## Extraction (November 2026)
+
+Confirmed with Jan from mock v2 (`.impeccable/mocks/extraction/extraction-v2.html`, not in git):
+the core points are the page and the Session sits in a full-height margin column; Points first,
+the user's own words after; one AI mark for the group of proposed Points; one primary button in
+sight (Save Note, Send); written Points one line each; what the AI read and thought folds into
+one quiet line each. AI text is always marked, a Point's title included. Below 1080px the margin
+moves under the points (Claude's call, delegated by Jan). Anti-goals: a chat page with a list
+beside it, cards in cards, a red rule per row.

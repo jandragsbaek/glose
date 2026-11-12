@@ -5,6 +5,7 @@ import type {
   CheckId,
   Grade,
   JudgeState,
+  PointState,
   ProposalState,
   ReadingStep,
   SessionProblem,
@@ -150,6 +151,7 @@ export const en = {
   source: {
     firstPublished: (year: number) => `first published ${year}`,
     callNumberLabel: (callNumber: string) => `Call number ${callNumber}`,
+    page: (page: string) => `p. ${page}`,
     missingTitle: "Missing for a correct Citation",
     missing: {
       firstPublished: "The year of first publication",
@@ -277,10 +279,6 @@ export const en = {
     gotIt: "Got it",
   },
   session: {
-    title: "Extraction",
-    start: "Start Extraction",
-    startHint:
-      "The AI reads your Free text and the Source's data, suggests the core points, and asks you about them. Glose does not save Notes yet.",
     needsChatGpt: "Extraction needs ChatGPT",
     needsChatGptBody: "Connect your ChatGPT plan in Settings, then come back to this Source.",
     openSettings: "Open Settings",
@@ -292,9 +290,71 @@ export const en = {
       "list-sources": "The AI looked at the list of your Sources.",
       "read-note": "The AI read a Note.",
       "list-cards": "The AI looked at the Cards this Note already has.",
+      "search-graph": "The AI searched your Graph.",
     } satisfies Record<SessionTool, string>,
+    /** One line of what the AI read; a Note's name follows `readNote` as a link. */
+    trail: {
+      readSource: "Read the Source and your Free text",
+      listSources: "Looked at your Sources",
+      readNote: "Read",
+      listCards: "Looked at the Note's Cards",
+      searchGraph: (query: string) => `Searched your Graph for “${query}”`,
+    },
+    /** What the AI read in one turn, in one line. */
+    trailSummary: (read: {
+      readonly freeText: boolean;
+      readonly notes: number;
+      readonly searches: number;
+      readonly sources: boolean;
+      readonly cards: boolean;
+    }) => {
+      const things = [
+        ...(read.freeText ? ["your Free text"] : []),
+        ...(read.notes > 0 ? [count(read.notes, "Note", "Notes")] : []),
+        ...(read.sources ? ["your Sources"] : []),
+        ...(read.cards ? ["the Note's Cards"] : []),
+      ];
+      const searched =
+        read.searches === 0
+          ? null
+          : read.searches === 1
+            ? "searched your Graph"
+            : `searched your Graph ${numbers.format(read.searches)} times`;
+      const line = [things.length === 0 ? null : `read ${list.format(things)}`, searched]
+        .filter((part) => part !== null)
+        .join(" · ");
+      return line.charAt(0).toUpperCase() + line.slice(1);
+    },
+    /** What the AI does now, while it works. */
+    live: (tool: SessionTool | null, detail: string | undefined) => {
+      switch (tool) {
+        case "read-source":
+          return "Reading your Free text";
+        case "list-sources":
+          return "Looking at your Sources";
+        case "read-note":
+          return detail === undefined ? "Reading a Note" : `Reading ${detail}`;
+        case "list-cards":
+          return "Looking at the Note's Cards";
+        case "search-graph":
+          return detail === undefined
+            ? "Searching your Graph"
+            : `Searching your Graph for “${detail}”`;
+        case null:
+          return "Thinking";
+      }
+    },
+    thought: (ms: number) =>
+      ms < 1000 ? "Thought briefly" : `Thought for ${numbers.format(Math.round(ms / 1000))} s`,
+    youAbout: (point: number) => `You · about ${numbers.format(point)}`,
+    about: "About",
+    clearAbout: "Talk about the whole Source",
+    placeholder: "Answer, ask, or push back",
+    sendKey: { mac: "⌘ ↵", other: "Ctrl ↵" },
+    pointsProposed: (n: number) => `Proposed ${count(n, "point", "points")}`,
+    pointAdded: "Added a point in your words",
+    pointRef: (point: number) => `Point ${numbers.format(point)}`,
     passage: "Passage",
-    working: "The AI is working",
     messageLabel: "Your answer",
     messageHint: "Press Ctrl+Enter or Cmd+Enter to send.",
     send: "Send",
@@ -319,6 +379,73 @@ export const en = {
     part: "AI-written Part",
     note: "AI-written Note",
     card: "AI-written Card",
+    title: "AI-written title",
+  },
+  extraction: {
+    title: "Core points",
+    count: (n: number) => count(n, "point", "points"),
+    stepNote: (written: number, total: number) =>
+      total === 0
+        ? "with ChatGPT"
+        : `${numbers.format(written)} of ${count(total, "point", "points")} written`,
+    showFreeText: "Read",
+    hideFreeText: "Hide",
+    startLead: "Find the core points of this Source",
+    startBody:
+      "The AI reads your Free text and searches your Graph. It proposes the core points, says where each comes from and how it meets the Notes you have, and asks you about them. You write each point you keep as a Note in your own words.",
+    start: "Start Extraction",
+    waiting: "The AI is reading. Its points appear here.",
+    noPoints: "No open points. Ask the AI for more, or add a point in your own words.",
+    proposed: (n: number) => `Proposed by the AI · ${numbers.format(n)}`,
+    toWrite: "To write",
+    written: "Written",
+    dropped: "Dropped",
+    fromFreeText: "From your Free text:",
+    notInFreeText: "Not in your Free text. Check it against your copy.",
+    ownWords: "Your own point",
+    repeats: "You have this Note:",
+    pullsAgainst: "Pulls against",
+    keep: "Keep",
+    discuss: "Discuss",
+    drop: "Drop",
+    write: "Write",
+    bringBack: "Bring back",
+    titleLabel: "Point, the Note's title",
+    textLabel: "The Note, in your own words",
+    page: "Page",
+    linksHead: "Links from your Graph",
+    addLink: "Add",
+    linkAdded: "Added",
+    undo: "Undo",
+    dropLink: "Drop",
+    draftKept: "The Note keeps this draft, marked as AI text.",
+    draftLeftOut: "The Note leaves this draft out.",
+    leaveDraftOut: "Leave the draft out",
+    keepDraft: "Keep the draft",
+    save: "Save Note",
+    askDraft: "Ask for a draft",
+    draftRequest: "Please write a draft of this point's Note.",
+    proposeMore: "Propose more",
+    proposeMoreRequest: "Please propose more core points.",
+    addOwn: "Add a point in your words",
+    addOwnLabel: "Your point",
+    addOwnHint: "One claim, as a full sentence. It becomes the Note's title.",
+    add: "Add",
+    cancel: "Cancel",
+    showDropped: (n: number) => `${numbers.format(n)} dropped`,
+    hideDropped: "Hide dropped",
+    openInGraph: "Open in Graph",
+    links: (n: number) => count(n, "Link", "Links"),
+    states: {
+      open: "Proposed",
+      kept: "Kept",
+      written: "Written",
+      dropped: "Dropped",
+    } satisfies Record<PointState, string>,
+    nameTaken: (name: string) =>
+      `Your Graph already has a file named “${name}”. Change the title, or open that Note.`,
+    saveFailed: "Glose could not save the Note. Try again.",
+    actionFailed: "Glose could not save that. Try again.",
   },
   graph: {
     title: "Graph",

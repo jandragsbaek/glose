@@ -6,6 +6,7 @@ import * as Schema from "effect/Schema";
 import type * as Cards from "../cards/Cards.ts";
 import type * as Graph from "../graph/Graph.ts";
 import type { AgentTool, InputItem } from "./agent.ts";
+import { readNoteTool } from "./graphTools.ts";
 
 const LANGUAGE_NAMES: Record<Language, string> = { en: "English", da: "Danish" };
 
@@ -56,11 +57,9 @@ const NO_ARGUMENTS = {
   additionalProperties: false,
 } as const;
 
-const ReadNoteArguments = Schema.Struct({ name: Schema.String });
 const ProposeArguments = Schema.Struct({
   cards: Schema.Array(Schema.Struct({ question: Schema.String, answer: Schema.String })),
 });
-const decodeReadNote = Schema.decodeUnknownOption(ReadNoteArguments);
 const decodePropose = Schema.decodeUnknownOption(ProposeArguments);
 
 export interface Context {
@@ -73,39 +72,7 @@ export interface Context {
 }
 
 export const tools = ({ graph, cards, note, propose }: Context): AgentTool[] => [
-  {
-    name: "read_note",
-    entry: "read-note",
-    description:
-      "Read a Note in the user's Graph by name: its Markdown text, its Source, and the Notes it links to.",
-    parameters: {
-      type: "object",
-      properties: { name: { type: "string", description: "The Note's name." } },
-      required: ["name"],
-      additionalProperties: false,
-    },
-    run: (args) =>
-      Option.match(decodeReadNote(args), {
-        onNone: () => Effect.succeed({ error: "Give the Note's name." }),
-        onSome: ({ name }) =>
-          graph.read.pipe(
-            Effect.map((view) => {
-              const node = view.nodes.find((other) => linkKey(other.id) === linkKey(name));
-              if (node === undefined) return { error: `There is no Note named ${name}.` };
-              const titles = new Map(view.nodes.map((other) => [other.id, other.title]));
-              return {
-                name: node.id,
-                kind: node.kind,
-                text: node.body,
-                source: node.sourceId === null ? null : (titles.get(node.sourceId) ?? null),
-                links: view.links.filter((link) => link.from === node.id).map((link) => link.to),
-                containsAiText: node.aiText,
-              };
-            }),
-            Effect.orElseSucceed(() => ({ error: "The Graph could not be read." })),
-          ),
-      }),
-  },
+  readNoteTool(graph),
   {
     name: "list_cards",
     entry: "list-cards",
