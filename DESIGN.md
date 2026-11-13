@@ -797,8 +797,7 @@ and the Source's details (lapis Initial) in the side column.
 
 - **Answers:** a Mute 13px hint, then three stacked Choice rows (640px max, 10px gaps, 12px 16px
   padding): the radio at the first line, a 600 label over a Mute 13px hint. Hover darkens the
-  border to Mute; checked turns it Lapis on Lapis Tint. An answer that cannot be chosen yet is
-  Mute with a not-allowed cursor, and its hint says why.
+  border to Mute; checked turns it Lapis on Lapis Tint.
 - **What follows:** under a Hairline, a Mute 600 13px uppercase label (no Initial), then the
   checked answer's steps as a Step Bar strip (220px a step; one column under 520px). The first
   step wears the current step's Lapis Tint and Gilt underline. Before an answer, a Mute line says

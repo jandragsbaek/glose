@@ -291,8 +291,8 @@ The Probe and Review are different things with different goals.
 - First decision, the Source file: `<Family name> <year> <Title>.md` in the Graph folder,
   with YAML frontmatter (`glose: source`, `author-family`, `author-given`, `title`,
   `first-published`, `edition`, `edition-year`, `publisher`, `translator`, `reading-step`,
-  `reading-start`) and the user's Free text as the body. `reading-start` is left out for the usual
-  start, `write` (see "Decided, the Probe"). Empty fields are left out. Glose reads any Markdown file
+  `reading-start`) and the user's Free text as the body (see "Decided, the first page of a
+  Source"). Empty fields are left out. Glose reads any Markdown file
   with `glose: source` as a Source, so a Source can be written or fixed by hand.
 - File names drop characters Windows forbids, and two names that differ only in case count as
   the same file.
@@ -621,17 +621,14 @@ Decided, first version (November 2026):
   text already written or past the Free text, has no `reading-start` and opens where it is.
 - Under the answers, "What follows" shows the steps of the checked answer, then one button that
   names the first step. Choosing "write" opens the Free text with the cursor in it.
-- Until the Probe is built, the two Probe answers cannot be chosen and say that the Probe comes
-  in a later version. Designing the Probe is the next task.
+- The two Probe answers can be chosen since the Probe is built (see "Decided, the Probe").
 
 ## Decided, the Probe (November 2026)
 
-- Where the user starts a Source is `reading-start` in the Source file: `write` (Free text,
-  Extraction, then the Probe; the usual start, left out of the file), `probe` (the Probe, then
-  Extraction) or `catch-up` (the same, for a book read long ago or in part: the Probe explains each
-  topic before it asks). A Source that starts with the Probe starts at `reading-step: probe`. Free
-  text stays open whatever the start. The first page of a Source, which asks where the user is with
-  the book and writes the field, is designed in its own thread.
+- The Probe works from all three starts of `reading-start` (see "Decided, the first page of a
+  Source"): after Extraction on a `write` start, or first on a `probe` or `catch-up` start, where
+  it explains each topic before it asks. A Source without `reading-start` (from before the
+  question) follows the `write` order. Free text stays open whatever the start.
 - The step bar, the Reading marks and the next step follow the start's order. Extraction does not
   end by itself: under the core points, "Continue to the Probe" or "Mark the Source as read" moves
   the Source on (`sources.advance`, which changes nothing when the Source is at another step).
@@ -669,8 +666,7 @@ Decided, first version (November 2026):
   limitations, November 2026). So the user dictates with the computer's own dictation (macOS
   dictation, Windows voice typing with Windows + H), which writes into the Reasoning box. An
   in-app recorder needs another transcriber (a local model, or an API key) and is not decided.
-- Not yet: the first page that sets `reading-start`, reading a finished Probe again from the step
-  bar, and an in-app recorder.
+- Not yet: reading a finished Probe again from the step bar, and an in-app recorder.
 
 ## Reasoning as part of the answer
 

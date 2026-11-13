@@ -1,5 +1,5 @@
 import { useAtomSet } from "@effect/atom-react";
-import type { ReadingStart as Start, ReadingStep, Source } from "@glose/contracts";
+import { type ReadingStart as Start, readingStepsOf, type Source } from "@glose/contracts";
 import * as Exit from "effect/Exit";
 import { useId, useState } from "react";
 
@@ -8,16 +8,6 @@ import { chooseStartAtom, KEYS } from "../state/graph.ts";
 import { Notice, Panel } from "./ui.tsx";
 
 const STARTS = ["write", "probe", "catch-up"] as const satisfies ReadonlyArray<Start>;
-
-/** The Probe is not built yet, so only the Free text start can be chosen. */
-const AVAILABLE: ReadonlySet<Start> = new Set(["write"]);
-
-/** The steps each answer leads through. */
-const ROUTES: Record<Start, ReadonlyArray<Exclude<ReadingStep, "done">>> = {
-  write: ["free-text", "extraction", "probe"],
-  probe: ["probe", "extraction"],
-  "catch-up": ["probe", "extraction"],
-};
 
 /** "Where are you with this book?": the first page of a Source, whose answer sets the first step. */
 export function ReadingStart({ source }: { readonly source: Source }) {
@@ -47,27 +37,21 @@ export function ReadingStart({ source }: { readonly source: Source }) {
           <p className="field__hint start-choices__hint" id={hintId}>
             {t.start.hint}
           </p>
-          {STARTS.map((option) => {
-            const available = AVAILABLE.has(option);
-            return (
-              <label key={option} className="choice start-choice">
-                <input
-                  type="radio"
-                  name={`reading-start-${source.id}`}
-                  value={option}
-                  checked={start === option}
-                  disabled={!available}
-                  onChange={() => setStart(option)}
-                />
-                <span className="start-choice__text">
-                  <span className="start-choice__label">{t.start.choices[option]}</span>
-                  <span className="start-choice__hint">
-                    {available ? t.start.choiceHints[option] : t.start.probeLater}
-                  </span>
-                </span>
-              </label>
-            );
-          })}
+          {STARTS.map((option) => (
+            <label key={option} className="choice start-choice">
+              <input
+                type="radio"
+                name={`reading-start-${source.id}`}
+                value={option}
+                checked={start === option}
+                onChange={() => setStart(option)}
+              />
+              <span className="start-choice__text">
+                <span className="start-choice__label">{t.start.choices[option]}</span>
+                <span className="start-choice__hint">{t.start.choiceHints[option]}</span>
+              </span>
+            </label>
+          ))}
         </fieldset>
       </div>
       <div className="panel__body">
@@ -79,10 +63,10 @@ export function ReadingStart({ source }: { readonly source: Source }) {
         ) : (
           <ol
             className="steps start-route"
-            data-count={ROUTES[start].length}
+            data-count={readingStepsOf(start).length}
             aria-labelledby={followsId}
           >
-            {ROUTES[start].map((step, index) => (
+            {readingStepsOf(start).map((step, index) => (
               <li key={step} className="step" data-state={index === 0 ? "first" : "next"}>
                 <span className="step__name">
                   <span className="step__num">{index + 1}</span>

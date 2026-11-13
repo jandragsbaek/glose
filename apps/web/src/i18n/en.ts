@@ -389,7 +389,6 @@ export const en = {
       probe: "The AI asks; you answer with your Reasoning.",
       "catch-up": "The AI asks, and explains the parts you are missing.",
     },
-    probeLater: "The Probe comes in a later version of Glose.",
     follows: "What follows",
     chooseFirst: "Choose an answer to see the steps that follow.",
     stepNotes: {

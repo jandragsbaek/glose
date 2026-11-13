@@ -373,7 +373,6 @@ export const da: Messages = {
       probe: "AI'en spørger; du svarer med din begrundelse.",
       "catch-up": "AI'en spørger og forklarer de dele, du mangler.",
     },
-    probeLater: "Sonderingen kommer i en senere version af Glose.",
     follows: "Det, der følger",
     chooseFirst: "Vælg et svar for at se de trin, der følger.",
     stepNotes: {
