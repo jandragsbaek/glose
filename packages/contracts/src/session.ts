@@ -73,7 +73,10 @@ export const Point = Schema.Struct({
   /** A Note this Point disagrees with, and how. */
   pullsAgainst: Schema.NullOr(Schema.Struct({ note: Schema.String, why: Schema.String })),
   links: Schema.Array(PointLink),
-  /** Note text the AI wrote when the user asked; AI text, marked if the Note keeps it. */
+  /**
+   * Note text the AI wrote, with the Point or when the user asked for a new one. AI text: the
+   * user's form starts with it, and the Note keeps the AI mark until the user rewrites it.
+   */
   draft: Schema.NullOr(Schema.String),
   state: PointState,
   /** The Note file a written Point became. */
@@ -186,14 +189,17 @@ export const AddPoint = Schema.Struct({ id: Schema.String, title: Words });
 export const WritePoint = Schema.Struct({
   ...PointRef.fields,
   title: Words,
-  /** The user's own words. */
+  /** The Note's text. */
   text: Schema.Trim,
+  /**
+   * The text is AI text: the AI's draft, edited or not, that the user has not marked as
+   * rewritten. The Note keeps it marked; otherwise the text is the user's own words.
+   */
+  aiText: Schema.Boolean,
   /** The Location in the Source, such as a page; null when not given. */
   page: Schema.NullOr(Words),
   /** The proposed Links the user added. */
   links: Schema.Array(Schema.String),
-  /** The Note keeps the AI's draft, marked as AI text. */
-  useDraft: Schema.Boolean,
 });
 
 export class SessionNotFound extends Schema.TaggedError<SessionNotFound>()("SessionNotFound", {

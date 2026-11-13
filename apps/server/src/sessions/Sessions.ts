@@ -114,9 +114,10 @@ export class Sessions extends Context.Service<
       input: PointInput & {
         readonly title: string;
         readonly text: string;
+        /** The text is the AI's draft, edited or not; the Note keeps it marked. */
+        readonly aiText: boolean;
         readonly page: string | null;
         readonly links: ReadonlyArray<string>;
-        readonly useDraft: boolean;
       },
     ) => Effect.Effect<string, SessionNotFound | PointNotFound | NoteNameTaken | GraphError>;
   }
@@ -536,7 +537,6 @@ export const make = Effect.gen(function* () {
                 session,
                 proposed.map((point) => ({
                   ...point,
-                  draft: null,
                   state: "open" as const,
                   note: null,
                   page: null,
@@ -920,7 +920,7 @@ export const make = Effect.gen(function* () {
     ),
 
     writePoint: Effect.fn("Sessions.writePoint")(
-      function* ({ id, point: pointId, title, text, page, links, useDraft }) {
+      function* ({ id, point: pointId, title, text, aiText, page, links }) {
         const session = yield* load(id);
         const { point, view } = yield* findPoint(session, pointId, ["kept"]);
         const { language } = (yield* settings.get).settings;
@@ -929,12 +929,14 @@ export const make = Effect.gen(function* () {
         const related = point.links
           .filter((link) => asked.has(linkKey(link.note)))
           .map((link) => link.note);
-        const draft = useDraft ? point.draft : null;
+        // AI text stays marked, edited or not, until the user says they rewrote it.
+        const draft = aiText && text !== "" ? text : null;
+        const own = draft === null ? text : "";
         const note = yield* notes.create({
           title,
           source: view.subject,
           page,
-          text,
+          text: own,
           draft,
           // The AI wrote the title of every Point but the user's own, edited or not.
           aiTitle: point.origin !== "user",
@@ -956,10 +958,13 @@ export const make = Effect.gen(function* () {
           }),
           [
             `Wrote ${pointName(point)} as the Note [[${note}]]${page === null ? "" : `, page ${page}`}.`,
-            text === ""
-              ? "None of its text is in their own words."
-              : `In their own words: """${text}"""`,
-            draft === null ? "" : "The Note keeps your draft, marked as AI text.",
+            draft !== null
+              ? draft === point.draft
+                ? "It keeps your draft unchanged, marked as AI text."
+                : `It keeps your draft, edited by them and marked as AI text: """${draft}"""`
+              : own === ""
+                ? "It has no text."
+                : `In their own words: """${own}"""`,
             related.length === 0
               ? ""
               : `It links to ${related.map((name) => `[[${name}]]`).join(", ")}.`,

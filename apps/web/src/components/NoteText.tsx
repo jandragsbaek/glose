@@ -58,21 +58,51 @@ export function NoteText({
 export function AiText({
   scope,
   count = 1,
+  marked = true,
+  note,
+  action,
   children,
 }: {
   /** How much the AI wrote: some paragraphs, a Part, a title, or a whole Note or Card. */
   readonly scope: AiScope | "card" | "title";
   /** How many paragraphs and lists the AI wrote. */
   readonly count?: number;
+  /**
+   * False when the text is no longer the AI's. The children keep their place, so a field the
+   * user types in keeps its focus when the mark comes or goes.
+   */
+  readonly marked?: boolean;
+  /** Words after the gloss, such as how long the mark stays. */
+  readonly note?: string;
+  /** A way out of the mark, at the end of the gloss line, such as "I rewrote it". */
+  readonly action?: ReactNode;
   readonly children: ReactNode;
 }) {
   const t = useT();
   const glossId = useId();
+  const gloss = (
+    <p className="ai-text__gloss" id={glossId}>
+      {scope === "paragraphs" ? t.aiText.paragraphs(count) : t.aiText[scope]}
+      {note === undefined ? null : ` · ${note}`}
+    </p>
+  );
   return (
-    <div className="ai-text" data-scope={scope} role="group" aria-labelledby={glossId}>
-      <p className="ai-text__gloss" id={glossId}>
-        {scope === "paragraphs" ? t.aiText.paragraphs(count) : t.aiText[scope]}
-      </p>
+    <div
+      className={marked ? "ai-text" : undefined}
+      data-scope={marked ? scope : undefined}
+      role={marked ? "group" : undefined}
+      aria-labelledby={marked ? glossId : undefined}
+    >
+      {marked ? (
+        action === undefined ? (
+          gloss
+        ) : (
+          <div className="ai-text__head">
+            {gloss}
+            {action}
+          </div>
+        )
+      ) : null}
       {children}
     </div>
   );

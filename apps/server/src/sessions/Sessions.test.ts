@@ -656,6 +656,7 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
                   { note: NOTE.toLowerCase(), why: "Both are about what remains." },
                   { note: "A Note that does not exist", why: "Made up." },
                 ],
+                draft: "  ",
               },
               {
                 title: "Work builds a lasting world",
@@ -665,6 +666,7 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
                 pulls_against_note: "Nowhere",
                 pulls_against_why: "Made up.",
                 links: [],
+                draft: " Work outlasts the worker.\n\nWhat it makes stays. ",
               },
             ],
           }),
@@ -703,7 +705,7 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
                 repeats: NOTE,
                 pullsAgainst: null,
                 links: [],
-                draft: null,
+                draft: "Work outlasts the worker.\n\nWhat it makes stays.",
                 state: "open",
                 note: null,
                 page: null,
@@ -729,11 +731,25 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
             point: "p1",
             title: "Labour leaves nothing",
             text: "My own words.",
+            aiText: false,
             page: "7",
             links: [NOTE.toUpperCase(), "Not proposed"],
-            useDraft: false,
           });
-          yield* sessions.dropPoint({ id: session.id, point: "p2" });
+          // The AI's draft, edited by the user and not marked as rewritten, stays AI text.
+          yield* sessions.keepPoint({
+            id: session.id,
+            point: "p2",
+            title: "Work builds a lasting world",
+          });
+          const drafted = yield* sessions.writePoint({
+            id: session.id,
+            point: "p2",
+            title: "Work builds a lasting world",
+            text: "Work outlasts the worker.\n\nWhat it makes stays, for a time.",
+            aiText: true,
+            page: null,
+            links: [],
+          });
           // A Point the user writes in their own words; its name is taken by the Note above.
           yield* sessions.addPoint({ id: session.id, title: "labour leaves nothing" });
           const taken = yield* Effect.flip(
@@ -742,21 +758,21 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
               point: "p3",
               title: "labour leaves nothing",
               text: "Twice.",
+              aiText: false,
               page: null,
               links: [],
-              useDraft: false,
             }),
           );
           assert.strictEqual(taken._tag, "NoteNameTaken");
           yield* sessions.send({ id: session.id, text: "Is this right?", about: "p1" });
           yield* afterTurn(session.id);
-          return name;
+          return { name, drafted };
         }).pipe(Effect.provide(layer));
 
-        assert.strictEqual(note, "Labour leaves nothing");
+        assert.strictEqual(note.name, "Labour leaves nothing");
         // The AI proposed the title, so the Note carries the AI mark on its title.
         assert.strictEqual(
-          yield* fs.readFileString(path.join(graphFolder, `${note}.md`)),
+          yield* fs.readFileString(path.join(graphFolder, `${note.name}.md`)),
           [
             "---",
             "glose: note",
@@ -772,13 +788,34 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
             "",
           ].join("\n"),
         );
+        assert.strictEqual(
+          yield* fs.readFileString(path.join(graphFolder, `${note.drafted}.md`)),
+          [
+            "---",
+            "glose: note",
+            `source: "[[${sourceId}]]"`,
+            "ai: true",
+            "ai-title: true",
+            "---",
+            "",
+            "> [!ai]",
+            "> Work outlasts the worker.",
+            ">",
+            "> What it makes stays, for a time.",
+            "",
+          ].join("\n"),
+        );
         // The next turn tells the AI what the user did, and which Point the message is about.
         const next = bodies().at(-1)!.input;
         const decisions = String(next.at(-2)?.["content"]);
         assert.include(decisions, 'Kept point 1 "Labour leaves nothing behind"');
         assert.include(decisions, "Wrote point 1");
         assert.include(decisions, 'In their own words: """My own words."""');
-        assert.include(decisions, 'Dropped point 2 "Work builds a lasting world"');
+        assert.include(decisions, "Wrote point 2");
+        assert.include(
+          decisions,
+          'It keeps your draft, edited by them and marked as AI text: """Work outlasts the worker.\n\nWhat it makes stays, for a time."""',
+        );
         assert.include(decisions, 'Added point 3 "labour leaves nothing" in their own words');
         assert.deepStrictEqual(next.at(-1), {
           type: "message",
