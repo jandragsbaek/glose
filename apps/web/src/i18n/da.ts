@@ -608,11 +608,16 @@ export const da: Messages = {
     title: "Sondering",
     stepNote: (questions: number) =>
       questions === 0 ? "med ChatGPT" : count(questions, "spørgsmål", "spørgsmål"),
-    tally: (known: number, open: number, taught: number) =>
+    tally: (tally) =>
       [
-        `${numbers.format(known)} kendt`,
-        open === 0 ? null : count(open, "åbent hul", "åbne huller"),
-        taught === 0 ? null : `${numbers.format(taught)} undervist`,
+        `${numbers.format(tally.known)} kendt`,
+        tally.afterTeaching === 0
+          ? null
+          : `${numbers.format(tally.afterTeaching)} kendt efter undervisning`,
+        tally.taught === 0
+          ? null
+          : `${numbers.format(tally.taught)} undervist, ikke bekræftet endnu`,
+        tally.open === 0 ? null : `${numbers.format(tally.open)} stadig åben`,
       ]
         .filter((part) => part !== null)
         .join(" · "),
@@ -674,7 +679,7 @@ export const da: Messages = {
     continueHint: "Udtrækket laver noter af det, sonderingen fandt, med dine egne ord.",
     doneRead: (title: string) => `Færdig: ${title} er læst`,
     doneHint: "Kilden forlader skrivebordet. Dens noter, frie tekst og sondering bliver.",
-    reasoningHint: "Tænk højt: hvordan kommer du frem til det?",
+    reasoningPlaceholder: "Tænk højt: hvordan kommer du frem til det?",
     dictate: {
       mac: "Vil du hellere tale, så start din Macs diktering: tryk to gange på Fn eller på mikrofontasten.",
       windows: "Vil du hellere tale, så tryk Windows + H for Windows' stemmeindtastning.",

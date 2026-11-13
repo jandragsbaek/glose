@@ -84,7 +84,12 @@ describe("probeFindings", () => {
         ["Social media", "asking", [6]],
       ],
     );
-    assert.deepStrictEqual(probeTally(findings), { known: 2, open: 2, taught: 2 });
+    assert.deepStrictEqual(probeTally(findings), {
+      known: 1,
+      afterTeaching: 1,
+      taught: 1,
+      open: 1,
+    });
   });
 });
 

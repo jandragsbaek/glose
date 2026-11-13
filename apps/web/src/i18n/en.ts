@@ -636,11 +636,19 @@ export const en = {
     title: "Probe",
     stepNote: (questions: number) =>
       questions === 0 ? "with ChatGPT" : count(questions, "question", "questions"),
-    tally: (known: number, open: number, taught: number) =>
+    tally: (tally: {
+      readonly known: number;
+      readonly afterTeaching: number;
+      readonly taught: number;
+      readonly open: number;
+    }) =>
       [
-        `${numbers.format(known)} known`,
-        open === 0 ? null : count(open, "open gap", "open gaps"),
-        taught === 0 ? null : `${numbers.format(taught)} taught`,
+        `${numbers.format(tally.known)} known`,
+        tally.afterTeaching === 0
+          ? null
+          : `${numbers.format(tally.afterTeaching)} known after teaching`,
+        tally.taught === 0 ? null : `${numbers.format(tally.taught)} taught, not confirmed yet`,
+        tally.open === 0 ? null : `${numbers.format(tally.open)} still open`,
       ]
         .filter((part) => part !== null)
         .join(" · "),
@@ -702,7 +710,7 @@ export const en = {
     continueHint: "Extraction makes Notes from what the Probe found, with your own words.",
     doneRead: (title: string) => `Done: ${title} is read`,
     doneHint: "The Source leaves the desk. Its Notes, Free text and Probe stay.",
-    reasoningHint: "Think out loud: how do you get there?",
+    reasoningPlaceholder: "Think out loud: how do you get there?",
     dictate: {
       mac: "To speak instead, start your Mac's dictation: press Fn twice, or the microphone key.",
       windows: "To speak instead, press Windows + H for Windows voice typing.",

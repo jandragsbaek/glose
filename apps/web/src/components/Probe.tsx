@@ -39,7 +39,7 @@ import {
   useChatGptReady,
 } from "./Session.tsx";
 import { StepBar } from "./StepBar.tsx";
-import { Notice, Page, SkeletonPanel, StorageProblem } from "./ui.tsx";
+import { Flourish, Notice, Page, SkeletonPanel, StorageProblem } from "./ui.tsx";
 
 type Entry<T extends SessionEntry["_tag"]> = Extract<SessionEntry, { _tag: T }>;
 
@@ -167,7 +167,7 @@ function ProbePage({
           <StepBar source={source} probeNote={t.probe.stepNote(questions)} />
           {questions === 0 ? null : (
             <p className="probe__tally" role="status">
-              {t.probe.tally(tally.known, tally.open, tally.taught)}
+              {t.probe.tally(tally)}
             </p>
           )}
         </div>
@@ -579,12 +579,13 @@ function AnswerBox({ session }: { readonly session: Session }) {
             )}
           </label>
           <p className="field__hint" id={reasoningHintId}>
-            {t.probe.reasoningHint} {t.probe.dictate[DICTATION]}
+            {t.probe.dictate[DICTATION]}
           </p>
           <textarea
             className="composer__text probe__reasoning"
             id={reasoningId}
             aria-describedby={reasoningHintId}
+            placeholder={t.probe.reasoningPlaceholder}
             value={reasoning}
             onChange={(event) => setReasoning(event.target.value)}
             onKeyDown={onKeyDown}
@@ -682,9 +683,14 @@ function Findings({ session, source }: { readonly session: Session; readonly sou
 
   return (
     <section className="probe__found" aria-labelledby={headingId} ref={followRow}>
-      <h2 className="probe__found-title" id={headingId}>
-        {t.probe.found}
-      </h2>
+      <div className="panel__head">
+        <h2 className="panel__title" id={headingId}>
+          {t.probe.found}
+        </h2>
+      </div>
+      <div className="panel__rule" aria-hidden="true">
+        <Flourish />
+      </div>
       {findings.length === 0 ? (
         <p className="empty">{t.probe.foundEmpty}</p>
       ) : (

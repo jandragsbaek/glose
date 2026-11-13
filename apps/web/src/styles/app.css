@@ -4132,6 +4132,7 @@ a.written__title:hover {
 .probe__row {
   display: grid;
   grid-column: 1 / -1;
+  scroll-margin-bottom: 24px;
   grid-template-columns: subgrid;
   align-items: start;
 }
@@ -4315,28 +4316,20 @@ a.written__title:hover {
 }
 
 .probe__found {
+  scroll-margin-bottom: 24px;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  margin-top: 32px;
-  padding-top: 24px;
-  border-top: 1px solid var(--line);
+  margin-top: 40px;
 }
 
-.probe__found-title {
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.3;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+/* The found heading is a panel heading on the leaf: the initial over the flourish rule. */
+.probe__found .panel__head {
+  padding: 0;
 }
 
-.probe__found-title::first-letter {
-  color: var(--rubric);
-  font-family: var(--font-initial);
-  font-size: 2em;
-  line-height: 0.9;
-  letter-spacing: 0;
+.probe__found .panel__rule {
+  margin: 0 0 4px;
 }
 
 .probe__found-list {
@@ -4399,9 +4392,18 @@ a.written__title:hover {
     flex: 1;
   }
 
-  .probe__sheet,
-  .probe__box-in {
+  .probe__sheet {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* The box keeps two columns, so the transcript keeps its height. */
+  .probe__box-in {
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 270px);
+    column-gap: 20px;
+  }
+
+  .probe__reasoning {
+    min-height: 64px;
   }
 
   .probe__gloss {

@@ -114,12 +114,19 @@ export const probeFindings = (
     }));
 };
 
-/** The counts a Probe shows while it runs: topics known, gaps still open, gaps taught. */
-export const probeTally = (findings: ReadonlyArray<TopicFinding>) => ({
-  known: findings.filter((f) => f.state === "known" || f.state === "known-after-teaching").length,
-  open: findings.filter((f) => f.state === "gap" || f.state === "taught").length,
-  taught: findings.filter((f) => f.state === "taught" || f.state === "known-after-teaching").length,
-});
+/**
+ * The topics of a Probe by state, as "What the Probe found" names them: each topic counts once,
+ * so the counts add up to the topics asked about.
+ */
+export const probeTally = (findings: ReadonlyArray<TopicFinding>) => {
+  const count = (state: TopicState) => findings.filter((f) => f.state === state).length;
+  return {
+    known: count("known"),
+    afterTeaching: count("known-after-teaching"),
+    taught: count("taught"),
+    open: count("gap"),
+  };
+};
 
 /** The question the user may answer now: the last one asked, while it has no answer. */
 export const openQuestion = (
