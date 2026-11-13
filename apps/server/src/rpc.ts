@@ -7,6 +7,7 @@ import * as Catalog from "./catalog/Catalog.ts";
 import * as ChatGpt from "./chatgpt/ChatGpt.ts";
 import * as GitHub from "./github/GitHub.ts";
 import * as Graph from "./graph/Graph.ts";
+import * as Notes from "./graph/Notes.ts";
 import * as Sources from "./graph/Sources.ts";
 import * as ServerInfo from "./info/ServerInfo.ts";
 import * as Recall from "./recall/Recall.ts";
@@ -23,6 +24,7 @@ export const layer = GloseRpcGroup.toLayer(
     const setup = yield* Setup.Setup;
     const sources = yield* Sources.Sources;
     const graph = yield* Graph.Graph;
+    const notes = yield* Notes.Notes;
     const catalog = yield* Catalog.Catalog;
     const chatGpt = yield* ChatGpt.ChatGpt;
     const sessions = yield* Sessions.Sessions;
@@ -43,6 +45,7 @@ export const layer = GloseRpcGroup.toLayer(
       [RPC_METHODS.sourcesSaveFreeText]: (input) => sources.saveFreeText(input),
       [RPC_METHODS.sourcesChooseStart]: (input) => sources.chooseStart(input),
       [RPC_METHODS.graphRead]: () => graph.read,
+      [RPC_METHODS.notesSave]: (input) => notes.save(input),
       [RPC_METHODS.catalogSearch]: ({ query }) => catalog.search(query),
       [RPC_METHODS.chatgptWatch]: () => chatGpt.status,
       [RPC_METHODS.chatgptConnect]: (input) => chatGpt.connect(input),

@@ -14,7 +14,7 @@ import {
 import { CatalogRecord, CatalogSearch, CatalogUnavailable } from "./catalog.ts";
 import { ChatGptStatus, ConnectChatGpt, DisconnectResult } from "./chatgpt.ts";
 import { GitHubRepository, GitHubStatus } from "./github.ts";
-import { GraphView, NoteNameTaken, NoteNotFound } from "./graph.ts";
+import { GraphView, NoteNameTaken, NoteNotFound, SaveNote } from "./graph.ts";
 import { RecordReview, ReviewQueue } from "./recall.ts";
 import { ServerInfo } from "./server.ts";
 import {
@@ -68,6 +68,7 @@ export const RPC_METHODS = {
   sourcesSaveFreeText: "sources.saveFreeText",
   sourcesChooseStart: "sources.chooseStart",
   graphRead: "graph.read",
+  notesSave: "notes.save",
   catalogSearch: "catalog.search",
   chatgptWatch: "chatgpt.watch",
   chatgptConnect: "chatgpt.connect",
@@ -153,6 +154,15 @@ export const GloseRpcGroup = RpcGroup.make(
     error: Schema.Union([SourceNotFound, GraphFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.graphRead, { success: GraphView, error: GraphErrors }),
+  /**
+   * Saves a Note the user edited; returns its file name. A new title renames the file, and every
+   * wikilink to the Note in the Graph folder and its Cards follows the new name.
+   */
+  Rpc.make(RPC_METHODS.notesSave, {
+    payload: SaveNote,
+    success: Schema.String,
+    error: Schema.Union([NoteNotFound, NoteNameTaken, GraphFolderNotSet, StorageError]),
+  }),
   /** Works in the Catalog that match the search, best match first. */
   Rpc.make(RPC_METHODS.catalogSearch, {
     payload: CatalogSearch,

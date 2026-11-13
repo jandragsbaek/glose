@@ -469,7 +469,8 @@ heading and its text, up to the next heading) or a whole Note, and the mark says
 - Either mark counts. If the two drift apart after a hand edit, the file still shows as holding
   AI text: Glose never hides AI text because one mark is missing.
 - To rewrite AI text, the user replaces the callout with their own words. When no callout is
-  left, the user removes `ai: true` (Glose does not edit Notes yet).
+  left, `ai: true` goes. In Glose this is the rewrite in the Graph (see "Decided, editing a Note
+  in the Graph"); in any other editor the user removes `ai: true` by hand.
 - In the app, AI text keeps ink colour. A rubric rule is beside it and a rubric gloss above it
   says how much the AI wrote: "¶ AI paragraph(s)", "§ AI-written Part" or "§ AI-written Note"
   (Danish "AI-afsnit", "AI-skrevet del", "AI-skrevet note"). A Part or a Note has a heavier rule
@@ -568,8 +569,34 @@ Decided, first version (November 2026):
   reads the message as about that Point. The AI refers to Points as `[3]` and to Notes as
   wikilinks; both are links in the Session.
 - The next turn tells the AI what the user kept, wrote (with their words), dropped and added.
-- Not yet: editing a written Note in Glose, Points from a passage of the Free text, and checks of
-  a Point's quality like the Card Checks.
+- Not yet: Points from a passage of the Free text, and checks of a Point's quality like the Card
+  Checks. A written Note is edited in the Graph (see "Decided, editing a Note in the Graph").
+
+## Decided, editing a Note in the Graph (November 2026)
+
+- A Note in the Graph's side panel has a way to edit it: "Rewrite in your words" (primary) while
+  it holds AI text, "Edit" when it holds none. It opens the Note on a desk over the canvas; the
+  side panel stays free to read other Notes, and Esc or Cancel leaves. With unsaved words, Glose
+  asks first when the user leaves the desk, opens another Note on it or leaves the Graph; not yet
+  when the window closes.
+- The user writes beside the AI's words, not over them. Each run of AI text (the title, an
+  `[!ai]` callout, an `[!ai-part]` Part, or a Note marked as a whole) stays on the left, read-only
+  and marked, and the user writes their own words in an empty field beside it. Words in that
+  field replace the AI text on save, and the mark goes with it: the user wrote them, so they are
+  not AI text, and no "I rewrote it" is needed. A field left empty keeps the AI text, marked. The
+  user's own Markdown is edited in place, as written.
+- AI text can be corrected (a typo, a wrong number) without rewriting it: "Correct the AI text"
+  makes it editable in place, and it keeps the mark, since the words are still the AI's. The same
+  holds for an AI title.
+- A rewritten Part keeps a heading: the user's, or the AI's when the user writes none, so its text
+  does not run into the Part above.
+- A new title renames the Note's file. Every wikilink to it, in Notes, Sources and Cards, follows
+  the new name, as Obsidian does on a rename; a title another file has, in any case, is refused.
+  The desk says how many files link to the Note before the user saves.
+- Every other frontmatter field (tags and the user's own) stays as written. `ai: true` stays while
+  any AI text does; `ai-title: true` goes when the user writes the title.
+- Extraction keeps its own rule for now: a kept Point's text starts as the AI's draft, marked
+  until "I rewrote it". Open question: should Extraction also write beside the draft?
 
 ## Decided, the first page of a Source (November 2026)
 
