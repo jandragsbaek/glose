@@ -371,6 +371,31 @@ export const en = {
     finished: "Free text is finished. You can still change it.",
     nextStep: "Next step",
   },
+  start: {
+    title: "Where are you with this book?",
+    hint: "Your answer sets the first step. You can still take the other path later.",
+    choices: {
+      write: "I have thoughts I want to write down",
+      probe: "I read it, and I want to be questioned on it",
+      "catch-up": "I read it a while ago, or only in part",
+    },
+    choiceHints: {
+      write: "Start with Free text in your own words.",
+      probe: "The AI asks; you answer with your Reasoning.",
+      "catch-up": "The AI asks, and explains the parts you are missing.",
+    },
+    probeLater: "The Probe comes in a later version of Glose.",
+    follows: "What follows",
+    chooseFirst: "Choose an answer to see the steps that follow.",
+    stepNotes: {
+      "free-text": "your own words",
+      extraction: "core points as Notes",
+      probe: "questions and answers",
+    },
+    startWriting: "Start Free text",
+    startProbe: "Start the Probe",
+    starting: "Starting",
+  },
   chatgpt: {
     title: "ChatGPT",
     intro:

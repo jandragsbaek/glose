@@ -20,6 +20,7 @@ const source = (
   publisher: "A publisher",
   translator: null,
   readingStep: "done",
+  readingStart: null,
   freeText: "",
   modified: added.getTime(),
   added: added.getTime(),

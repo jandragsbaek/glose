@@ -484,6 +484,8 @@ Trigger: the user is reading, or has finished, a book and adds it as a source.
 ### Steps
 
 1. **Free text.** The user writes freely about the book. This step is optional; the user says when they are done or skips it.
+   The first page asks where the user is with the book; a Probe start goes Probe → Extraction
+   (see "Decided, the first page of a Source").
 2. **Extraction.** The AI helps the user pull out the core beliefs and points of the book.
 3. **Probe.** Like learnharness, the AI questions the user to find what they already know, what they do not know, and what still must be learned.
 
@@ -568,6 +570,25 @@ Decided, first version (November 2026):
 - The next turn tells the AI what the user kept, wrote (with their words), dropped and added.
 - Not yet: editing a written Note in Glose, Points from a passage of the Free text, and checks of
   a Point's quality like the Card Checks.
+
+## Decided, the first page of a Source (November 2026)
+
+- A Source opens on one question, "Where are you with this book?", with three answers:
+  "I have thoughts I want to write down" (Free text → Extraction → Probe), "I read it, and I want
+  to be questioned on it" (Probe → Extraction) and "I read it a while ago, or only in part" (the
+  same, but the Probe explains more). Chosen on the impeccable decision page over a page that
+  opens on the Free text box and over two equal panels, one per path.
+- The Probe is one adaptive Session: the AI questions first, and where the answers show a gap, it
+  explains that part and questions again. After a Probe-first start, what the Probe found feeds
+  Extraction, which makes the Notes.
+- The answer is a start, not a lock: the user can still write Free text or start a Probe later.
+- The answer is kept in the Source file as `reading-start` (`write`, `probe` or `catch-up`). A
+  Probe start sets `reading-step` to `probe`. A Source from before the question, or one with Free
+  text already written or past the Free text, has no `reading-start` and opens where it is.
+- Under the answers, "What follows" shows the steps of the checked answer, then one button that
+  names the first step. Choosing "write" opens the Free text with the cursor in it.
+- Until the Probe is built, the two Probe answers cannot be chosen and say that the Probe comes
+  in a later version. Designing the Probe is the next task.
 
 ## Reasoning as part of the answer
 

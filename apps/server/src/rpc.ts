@@ -41,6 +41,7 @@ export const layer = GloseRpcGroup.toLayer(
       [RPC_METHODS.sourcesGet]: ({ id }) => sources.get(id),
       [RPC_METHODS.sourcesCreate]: (details) => sources.create(details),
       [RPC_METHODS.sourcesSaveFreeText]: (input) => sources.saveFreeText(input),
+      [RPC_METHODS.sourcesChooseStart]: (input) => sources.chooseStart(input),
       [RPC_METHODS.graphRead]: () => graph.read,
       [RPC_METHODS.catalogSearch]: ({ query }) => catalog.search(query),
       [RPC_METHODS.chatgptWatch]: () => chatGpt.status,

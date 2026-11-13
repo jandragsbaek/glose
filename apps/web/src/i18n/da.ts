@@ -359,6 +359,31 @@ export const da: Messages = {
     finished: "Fri tekst er afsluttet. Du kan stadig ændre den.",
     nextStep: "Næste trin",
   },
+  start: {
+    title: "Hvor er du med denne bog?",
+    hint: "Dit svar bestemmer det første trin. Du kan stadig tage den anden vej senere.",
+    choices: {
+      write: "Jeg har tanker, jeg vil skrive ned",
+      probe: "Jeg har læst den, og jeg vil udspørges om den",
+      "catch-up": "Jeg læste den for længe siden, eller kun delvist",
+    },
+    choiceHints: {
+      write: "Begynd med fri tekst med dine egne ord.",
+      probe: "AI'en spørger; du svarer med din begrundelse.",
+      "catch-up": "AI'en spørger og forklarer de dele, du mangler.",
+    },
+    probeLater: "Sonderingen kommer i en senere version af Glose.",
+    follows: "Det, der følger",
+    chooseFirst: "Vælg et svar for at se de trin, der følger.",
+    stepNotes: {
+      "free-text": "dine egne ord",
+      extraction: "kernepunkter som noter",
+      probe: "spørgsmål og svar",
+    },
+    startWriting: "Begynd fri tekst",
+    startProbe: "Begynd sonderingen",
+    starting: "Begynder",
+  },
   chatgpt: {
     title: "ChatGPT",
     intro:

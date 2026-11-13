@@ -1,4 +1,4 @@
-import { ReadingStep, type Source, SourceDetails } from "@glose/contracts";
+import { ReadingStart, ReadingStep, type Source, SourceDetails } from "@glose/contracts";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as Yaml from "yaml";
@@ -23,6 +23,7 @@ const SourceFrontmatter = Schema.Struct({
   publisher: MaybeText,
   translator: MaybeText,
   "reading-step": Schema.optionalKey(ReadingStep),
+  "reading-start": Schema.optionalKey(ReadingStart),
   /** Read leniently: a date Glose cannot read is left out, and the file stays a Source. */
   added: Schema.optionalKey(Schema.Unknown),
 });
@@ -87,6 +88,7 @@ export const parseSourceFile = (markdown: string): Option.Option<SourceFileConte
         Option.map((details) => ({
           ...details,
           readingStep: data["reading-step"] ?? "free-text",
+          readingStart: data["reading-start"] ?? null,
           added: addedTime(data.added),
           freeText: (match[2] ?? "").replace(/^\r?\n/, "").trimEnd(),
         })),
@@ -110,6 +112,7 @@ export const renderSourceFile = (source: SourceFileContent): string => {
       publisher: details.publisher,
       translator: details.translator,
       "reading-step": source.readingStep,
+      "reading-start": source.readingStart,
       added: source.added === null ? null : localDate(source.added),
     }).filter(([, value]) => value !== null),
   );

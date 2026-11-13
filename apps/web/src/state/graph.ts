@@ -31,6 +31,7 @@ export const completeSetupAtom = GloseClient.mutation(RPC_METHODS.setupComplete)
 export const checkRemoteAtom = GloseClient.mutation(RPC_METHODS.setupCheckRemote);
 export const createSourceAtom = GloseClient.mutation(RPC_METHODS.sourcesCreate);
 export const saveFreeTextAtom = GloseClient.mutation(RPC_METHODS.sourcesSaveFreeText);
+export const chooseStartAtom = GloseClient.mutation(RPC_METHODS.sourcesChooseStart);
 
 /** Searches the Catalog on demand; nothing is cached, since each search is typed afresh. */
 export const searchCatalogAtom = GloseClient.mutation(RPC_METHODS.catalogSearch);
