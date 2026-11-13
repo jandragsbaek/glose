@@ -1,6 +1,8 @@
 import {
   GraphFolderNotSet,
   type ReadingStart,
+  nextReadingStep,
+  type ReadingStep,
   type Source,
   type SourceDetails,
   SourceNameTaken,
@@ -38,6 +40,14 @@ export class Sources extends Context.Service<
     readonly chooseStart: (input: {
       readonly id: string;
       readonly start: ReadingStart;
+    }) => Effect.Effect<Source, SourceNotFound | GraphError>;
+    /**
+     * Moves a Source to the step after `from` in its start's order. A Source at another step
+     * stays where it is, so a second click or a second window changes nothing.
+     */
+    readonly advance: (input: {
+      readonly id: string;
+      readonly from: ReadingStep;
     }) => Effect.Effect<Source, SourceNotFound | GraphError>;
   }
 >()("glose/Sources") {}
@@ -148,7 +158,9 @@ export const make = Effect.gen(function* () {
       const source = yield* get(id);
       const folder = yield* graphFolder;
       const readingStep =
-        finish && source.readingStep === "free-text" ? "extraction" : source.readingStep;
+        finish && source.readingStep === "free-text"
+          ? nextReadingStep(source.readingStart, "free-text")
+          : source.readingStep;
       return yield* writeSource(folder, id, { ...source, freeText, readingStep }).pipe(
         Effect.mapError(storageError),
       );
@@ -163,6 +175,16 @@ export const make = Effect.gen(function* () {
       return yield* writeSource(folder, id, { ...source, readingStart: start, readingStep }).pipe(
         Effect.mapError(storageError),
       );
+    }),
+
+    advance: Effect.fn("Sources.advance")(function* ({ id, from }) {
+      const source = yield* get(id);
+      if (source.readingStep !== from) return source;
+      const folder = yield* graphFolder;
+      return yield* writeSource(folder, id, {
+        ...source,
+        readingStep: nextReadingStep(source.readingStart, from),
+      }).pipe(Effect.mapError(storageError));
     }),
   });
 });

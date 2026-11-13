@@ -1,5 +1,5 @@
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
-import type { ReadingStep } from "@glose/contracts";
+import { type ReadingStart, type ReadingStep, readingStepsOf } from "@glose/contracts";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { Check, ChevronDown, Plus, Search, TriangleAlert } from "lucide-react";
@@ -34,7 +34,6 @@ export const Route = createFileRoute("/sources/")({
     typeof search.source === "string" ? { source: search.source } : {},
 });
 
-const STEPS: ReadonlyArray<ReadingStep> = ["free-text", "extraction", "probe", "done"];
 const ORDERS: ReadonlyArray<RegisterOrder> = ["added", "call", "author"];
 const READING_FILTERS: ReadonlyArray<ReadingFilter> = ["all", "in-progress", "done"];
 const CITATION_FILTERS: ReadonlyArray<CitationFilter> = ["all", "ready", "missing"];
@@ -91,25 +90,31 @@ function SourcesPage() {
   );
 }
 
-/** Three marks for the Reading steps: filled when done, gilt-underlined at the current one. */
+/**
+ * One mark per Reading step, in the order the Source's start gives them: filled when done,
+ * gilt-underlined at the current one.
+ */
 function ReadingMarks({
   step,
+  start,
   labelled,
 }: {
   readonly step: ReadingStep;
+  readonly start: ReadingStart | null;
   readonly labelled: boolean;
 }) {
   const t = useT();
-  const at = STEPS.indexOf(step);
+  const steps = readingStepsOf(start);
+  const at = step === "done" ? steps.length : steps.indexOf(step);
   const label = t.sources.steps[step];
   return (
     <span
       className="marks"
       {...(labelled ? { role: "img", "aria-label": label, title: label } : { "aria-hidden": true })}
     >
-      {[0, 1, 2].map((index) => (
+      {steps.map((step, index) => (
         <span
-          key={index}
+          key={step}
           className="marks__dot"
           data-state={index < at ? "done" : index === at ? "current" : "later"}
         />
@@ -171,7 +176,7 @@ function DeskItem({ record }: { readonly record: SourceRecord }) {
         </h3>
         <p className="desk__author">{authorOf(record)}</p>
         <p className="desk__state">
-          <ReadingMarks step={source.readingStep} labelled={false} />
+          <ReadingMarks step={source.readingStep} start={source.readingStart} labelled={false} />
           {t.sources.state(source.readingStep, wordCount(source.freeText), record.notes)}
         </p>
         {record.missing.length === 0 ? null : (
@@ -401,7 +406,7 @@ function RegisterRow({
         <span className="register__author">{authorOf(record)}</span>
       </th>
       <td>
-        <ReadingMarks step={source.readingStep} labelled />
+        <ReadingMarks step={source.readingStep} start={source.readingStart} labelled />
       </td>
       <td className="register__num">{record.notes}</td>
       <td className="register__num">

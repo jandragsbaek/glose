@@ -1,5 +1,5 @@
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { linkKey, type Point, type Session, type Source } from "@glose/contracts";
+import { linkKey, nextReadingStep, type Point, type Session, type Source } from "@glose/contracts";
 import { Link } from "@tanstack/react-router";
 import * as Cause from "effect/Cause";
 import * as Exit from "effect/Exit";
@@ -10,12 +10,13 @@ import { type FormEvent, type ReactNode, useId, useState } from "react";
 
 import { wordCount } from "../domain/source.ts";
 import { useT } from "../i18n/I18n.tsx";
-import { KEYS } from "../state/graph.ts";
+import { advanceReadingAtom, KEYS } from "../state/graph.ts";
 import {
   addPointAtom,
   dropPointAtom,
   extractionSessionAtom,
   keepPointAtom,
+  probeSessionAtom,
   restorePointAtom,
   SESSION_KEYS,
   sendMessageAtom,
@@ -95,6 +96,9 @@ function Desk({
   const t = useT();
   const [showSource, setShowSource] = useState(false);
   const counted = points.filter((point) => point.state !== "dropped");
+  // A Probe before or after Extraction says on its step how much it asked.
+  const probe = AsyncResult.getOrElse(useAtomValue(probeSessionAtom(source.id)), () => null);
+  const asked = probe?.entries.filter((entry) => entry._tag === "ProbeQuestion").length ?? 0;
   return (
     <div className="extraction" data-margin={margin === undefined ? undefined : true}>
       <div className="extraction__work">
@@ -104,6 +108,7 @@ function Desk({
             counted.filter((point) => point.state === "written").length,
             counted.length,
           )}
+          probeNote={asked === 0 ? undefined : t.probe.stepNote(asked)}
           freeTextAction={
             <button
               type="button"
@@ -382,8 +387,56 @@ function ExtractionView({
           </div>
         )}
         <PointsFoot session={session} dropped={groups.dropped} />
+        {source.readingStep === "extraction" ? <NextStep source={source} /> : null}
       </PointsPanel>
     </Desk>
+  );
+}
+
+/**
+ * The way on from Extraction: to the Probe when the Source started with writing, else the
+ * Source is read. Extraction does not end by itself; the user says when the points are written.
+ */
+function NextStep({ source }: { readonly source: Source }) {
+  const t = useT();
+  const [failed, setFailed] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const advance = useAtomSet(advanceReadingAtom, { mode: "promiseExit" });
+  const next = nextReadingStep(source.readingStart, "extraction") === "probe" ? "probe" : "done";
+  const hintId = useId();
+
+  const go = async () => {
+    setBusy(true);
+    const exit = await advance({
+      payload: { id: source.id, from: "extraction" },
+      reactivityKeys: KEYS.sources,
+    });
+    setBusy(false);
+    setFailed(Exit.isFailure(exit));
+  };
+
+  return (
+    <div className="points__group points__next">
+      <p className="field__hint" id={hintId}>
+        {t.extraction.nextHint[next]}
+      </p>
+      {failed ? (
+        <Notice tone="error">
+          <p>{t.extraction.nextFailed}</p>
+        </Notice>
+      ) : null}
+      <div className="button-row">
+        <button
+          type="button"
+          className="button button--primary"
+          aria-describedby={hintId}
+          disabled={busy}
+          onClick={go}
+        >
+          {t.extraction.next[next]}
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -397,6 +450,14 @@ function PointSource({ point }: { readonly point: Point }) {
           <Quote className="point__icon" aria-hidden="true" />
           <span>
             {t.extraction.fromFreeText} <q>{point.quote}</q>
+          </span>
+        </p>
+      ) : null}
+      {point.origin === "probe" && point.quote !== null ? (
+        <p className="point__from">
+          <Quote className="point__icon" aria-hidden="true" />
+          <span>
+            {t.extraction.fromProbe} <q>{point.quote}</q>
           </span>
         </p>
       ) : null}

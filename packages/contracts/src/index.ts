@@ -5,6 +5,7 @@ export * from "./chatgpt.ts";
 export * from "./desktop.ts";
 export * from "./github.ts";
 export * from "./graph.ts";
+export * from "./probe.ts";
 export * from "./recall.ts";
 export * from "./server.ts";
 export * from "./session.ts";

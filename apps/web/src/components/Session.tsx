@@ -217,7 +217,7 @@ export function Transcript({ session, onPoint }: TranscriptProps) {
 }
 
 /** The AI's answer as it arrives, or else what it does now. */
-function Live({
+export function Live({
   session,
   points,
   onPoint,
@@ -277,7 +277,7 @@ function UserEntry({
   }
 }
 
-function AiStep({
+export function AiStep({
   entry,
   session,
   points,
@@ -362,7 +362,7 @@ function PointRef({
 }
 
 /** A run of tool uses as one quiet line; open, it lists each, with the Notes as links. */
-function ToolUses({
+export function ToolUses({
   uses,
 }: {
   readonly uses: ReadonlyArray<Extract<SessionEntry, { _tag: "ToolUse" }>>;
@@ -376,6 +376,8 @@ function ToolUses({
     searches: count("search-graph"),
     sources: count("list-sources") > 0,
     cards: count("list-cards") > 0,
+    sourceNotes: count("list-notes") > 0,
+    probe: count("read-probe") > 0,
   });
   return (
     <details className="aside">
@@ -404,6 +406,10 @@ function ToolUseLine({ use }: { readonly use: Extract<SessionEntry, { _tag: "Too
       return t.session.trail.listSources;
     case "list-cards":
       return t.session.trail.listCards;
+    case "list-notes":
+      return t.session.trail.listNotes;
+    case "read-probe":
+      return t.session.trail.readProbe;
     case "search-graph":
       return use.detail === undefined
         ? t.session.tools["search-graph"]
@@ -442,7 +448,7 @@ const REFERENCE = new RegExp(`${WIKILINK.source}|\\[(\\d{1,3})\\]`, "g");
  * The AI's words, with its wikilinks as links into the Graph and its Point numbers as buttons
  * that show the Point. A closing question stands out: it is what the AI asks the user.
  */
-function MessageText({
+export function MessageText({
   text,
   points,
   onPoint,
@@ -531,7 +537,8 @@ export function SessionProblem({ session }: { readonly session: Session }) {
   );
 }
 
-const IS_MAC = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.userAgent);
+export const IS_MAC =
+  typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.userAgent);
 
 /** The message box. A message may be about one Point, named above the box. */
 export function Composer({

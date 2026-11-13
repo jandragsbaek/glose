@@ -9,11 +9,15 @@ import type {
   JudgeState,
   PointState,
   ProposalState,
+  ReadingStart,
   ReadingStep,
+  ReasoningVerdict,
   RemoteRefusedReason,
+  ResultVerdict,
   UpdatesProblem,
   SessionProblem,
   SessionTool,
+  TopicState,
   Verdict,
   VersionsOffReason,
   VersionsProblem,
@@ -198,7 +202,6 @@ export const en = {
     words: (n: number) => count(n, "word", "words"),
     noFreeText: "skipped",
     withChatGpt: "with ChatGPT",
-    later: "comes later",
   },
   source: {
     firstPublished: (year: number) => `first published ${year}`,
@@ -369,6 +372,8 @@ export const en = {
     finish: "Finish Free text",
     skip: "Skip Free text",
     finished: "Free text is finished. You can still change it.",
+    anytime:
+      "Write freely about the book in your own words, whenever you want. It stays beside the Probe and Extraction.",
     nextStep: "Next step",
   },
   start: {
@@ -448,6 +453,8 @@ export const en = {
       "read-note": "The AI read a Note.",
       "list-cards": "The AI looked at the Cards this Note already has.",
       "search-graph": "The AI searched your Graph.",
+      "list-notes": "The AI looked at the Notes you made from this Source.",
+      "read-probe": "The AI read your Probe.",
     } satisfies Record<SessionTool, string>,
     /** One line of what the AI read; a Note's name follows `readNote` as a link. */
     trail: {
@@ -456,6 +463,8 @@ export const en = {
       readNote: "Read",
       listCards: "Looked at the Note's Cards",
       searchGraph: (query: string) => `Searched your Graph for “${query}”`,
+      listNotes: "Looked at your Notes from this Source",
+      readProbe: "Read your Probe",
     },
     /** What the AI read in one turn, in one line. */
     trailSummary: (read: {
@@ -464,9 +473,13 @@ export const en = {
       readonly searches: number;
       readonly sources: boolean;
       readonly cards: boolean;
+      readonly sourceNotes: boolean;
+      readonly probe: boolean;
     }) => {
       const things = [
         ...(read.freeText ? ["your Free text"] : []),
+        ...(read.probe ? ["your Probe"] : []),
+        ...(read.sourceNotes ? ["your Notes from this Source"] : []),
         ...(read.notes > 0 ? [count(read.notes, "Note", "Notes")] : []),
         ...(read.sources ? ["your Sources"] : []),
         ...(read.cards ? ["the Note's Cards"] : []),
@@ -497,6 +510,10 @@ export const en = {
           return detail === undefined
             ? "Searching your Graph"
             : `Searching your Graph for “${detail}”`;
+        case "list-notes":
+          return "Looking at your Notes from this Source";
+        case "read-probe":
+          return "Reading your Probe";
         case null:
           return "Thinking";
       }
@@ -558,6 +575,7 @@ export const en = {
     written: "Written",
     dropped: "Dropped",
     fromFreeText: "From your Free text:",
+    fromProbe: "From your words in the Probe:",
     notInFreeText: "Not in your Free text. Check it against your copy.",
     ownWords: "Your own point",
     repeats: "You have this Note:",
@@ -604,6 +622,97 @@ export const en = {
       `Your Graph already has a file named “${name}”. Change the title, or open that Note.`,
     saveFailed: "Glose could not save the Note. Try again.",
     actionFailed: "Glose could not save that. Try again.",
+    next: {
+      probe: "Continue to the Probe",
+      done: "Mark the Source as read",
+    },
+    nextHint: {
+      probe: "Next, the Probe questions you on the book. Your points and Notes stay here.",
+      done: "When its points are written, the Source leaves the desk. Its Notes stay in your Graph.",
+    },
+    nextFailed: "Glose could not move on to the next step. Try again.",
+  },
+  probe: {
+    title: "Probe",
+    stepNote: (questions: number) =>
+      questions === 0 ? "with ChatGPT" : count(questions, "question", "questions"),
+    tally: (known: number, open: number, taught: number) =>
+      [
+        `${numbers.format(known)} known`,
+        open === 0 ? null : count(open, "open gap", "open gaps"),
+        taught === 0 ? null : `${numbers.format(taught)} taught`,
+      ]
+        .filter((part) => part !== null)
+        .join(" · "),
+    startLead: {
+      write: "Be questioned on the book",
+      probe: "Be questioned on the book",
+      "catch-up": "Catch up on the book, then be questioned",
+    } satisfies Record<ReadingStart, string>,
+    startBody: {
+      write:
+        "The AI asks about the book's main ideas, one question at a time, and tests the Notes you made. Answer with your Reasoning, how you got there, then your answer. Where an answer shows a gap, the AI teaches that part and asks again.",
+      probe:
+        "The AI asks about the book's main ideas, one question at a time. Answer with your Reasoning, how you got there, then your answer. Where an answer shows a gap, the AI teaches that part and asks again. Then Extraction makes Notes from what the Probe found.",
+      "catch-up":
+        "The AI explains each main idea of the book briefly, then asks about it. Answer with your Reasoning, how you got there, then your answer. Where an answer shows a gap, the AI teaches that part and asks again. Then Extraction makes Notes from what the Probe found.",
+    } satisfies Record<ReadingStart, string>,
+    start: "Start the Probe",
+    needsChatGpt: "The Probe needs ChatGPT",
+    showFreeText: "Free text",
+    hideFreeText: "Hide Free text",
+    finish: "Finish the Probe",
+    finishFailed: "Glose could not finish the Probe. Try again.",
+    question: (n: number) => `Q${numbers.format(n)}`,
+    questionLabel: (n: number) => `Question ${numbers.format(n)}`,
+    again: (n: number) => `Q${numbers.format(n)} again`,
+    reasoning: "Your Reasoning",
+    answer: "Your answer",
+    teachMeAsked: "You asked to be taught.",
+    judged: "Judged",
+    reasoningVerdicts: {
+      sound: "Reasoning: sound",
+      "partly-sound": "Reasoning: partly sound",
+      flawed: "Reasoning: flawed",
+      none: "No Reasoning given",
+    } satisfies Record<ReasoningVerdict, string>,
+    resultVerdicts: {
+      right: "Result: right",
+      "partly-right": "Result: partly right",
+      wrong: "Result: wrong",
+    } satisfies Record<ResultVerdict, string>,
+    taught: (question: number | null) =>
+      question === null ? "Taught" : `Taught · the gap in Q${numbers.format(question)}`,
+    intro: "Before the question",
+    checkCopy: "From the AI's knowledge of the book, not your copy. Check it there.",
+    waiting: "The AI is reading. Its first question appears here.",
+    covered:
+      "The AI has covered the book's main ideas. Finish the Probe when you are ready, or go on answering.",
+    found: "What the Probe found",
+    states: {
+      asking: "Asked, no answer yet",
+      known: "Known",
+      "known-after-teaching": "Known after teaching",
+      taught: "Taught, not confirmed yet",
+      gap: "Still open",
+    } satisfies Record<TopicState, string>,
+    foundEmpty: "The Probe ended before any answer.",
+    keptIn: (file: string) => `The Probe is kept in ${file} in your Graph folder.`,
+    continueExtraction: "Continue to Extraction",
+    continueHint: "Extraction makes Notes from what the Probe found, with your own words.",
+    doneRead: (title: string) => `Done: ${title} is read`,
+    doneHint: "The Source leaves the desk. Its Notes, Free text and Probe stay.",
+    reasoningHint: "Think out loud: how do you get there?",
+    dictate: {
+      mac: "To speak instead, start your Mac's dictation: press Fn twice, or the microphone key.",
+      windows: "To speak instead, press Windows + H for Windows voice typing.",
+      other: "Type your Reasoning. Your computer's dictation also writes into this box.",
+    },
+    answerPlaceholder: "In one or two sentences",
+    send: "Send",
+    teachMe: "I don't know, teach me",
+    wait: "Wait for the AI's next question.",
+    sendFailed: "Glose could not send your answer. Try again.",
   },
   graph: {
     title: "Graph",

@@ -12,6 +12,8 @@ import {
   PointNotFound,
   type PointState,
   ProposalNotOpen,
+  QuestionNotOpen,
+  openQuestion,
   RULE_CHECKS,
   ruleChecks,
   scoreOf,
@@ -53,6 +55,7 @@ import { writeFileAtomic } from "../storage.ts";
 import { type InputItem, runTurn } from "./agent.ts";
 import * as CardExtraction from "./cardExtraction.ts";
 import * as Extraction from "./extraction.ts";
+import * as Probe from "./probe.ts";
 
 type GraphError = GraphFolderNotSet | StorageError;
 
@@ -120,6 +123,18 @@ export class Sessions extends Context.Service<
         readonly links: ReadonlyArray<string>;
       },
     ) => Effect.Effect<string, SessionNotFound | PointNotFound | NoteNameTaken | GraphError>;
+    /** The user's answer to the open question of a Probe; the AI judges it in a new turn. */
+    readonly answerProbe: (input: {
+      readonly id: string;
+      readonly question: number;
+      readonly reasoning: string;
+      readonly answer: string;
+      readonly teachMe: boolean;
+    }) => Effect.Effect<void, SessionNotFound | SessionBusy | QuestionNotOpen | GraphError>;
+    /** Ends a Probe. Its record in `Probes/` says what it found. */
+    readonly finishProbe: (
+      id: string,
+    ) => Effect.Effect<void, SessionNotFound | SessionBusy | GraphError>;
   }
 >()("glose/sessions/Sessions") {}
 
@@ -327,8 +342,35 @@ export const make = Effect.gen(function* () {
         Effect.flatMap((json) => writeFileAtomic(fs, fileOf(folder, view.id), json)),
         Effect.mapError(storageError),
       );
+      if (view.kind === "probe") yield* writeProbeRecord(view);
     },
     (effect) => saving.withPermit(effect),
+  );
+
+  /**
+   * A Probe is also kept as Markdown, `Probes/<Source>.md` in the Graph folder, so any editor
+   * reads what was asked, answered, judged and taught. Glose reads only the top of the folder
+   * as the Graph, so the record is no Note.
+   */
+  const writeProbeRecord = Effect.fn("Sessions.writeProbeRecord")(
+    function* (view: Session) {
+      const { graphFolder, language } = (yield* settings.get).settings;
+      if (graphFolder === null) return;
+      const source = yield* sources.get(view.subject);
+      const folder = path.join(graphFolder, Probe.PROBES_FOLDER);
+      yield* fs.makeDirectory(folder, { recursive: true });
+      yield* writeFileAtomic(
+        fs,
+        path.join(folder, `${source.id}.md`),
+        Probe.renderRecord({
+          source,
+          entries: view.entries,
+          created: view.created,
+          language: language ?? "en",
+        }),
+      );
+    },
+    Effect.catch((error) => Effect.logWarning("The Probe record was not written", error)),
   );
 
   const readRecords = Effect.gen(function* () {
@@ -519,6 +561,24 @@ export const make = Effect.gen(function* () {
       return [true, { ...view, entries: mapPoint(view.entries, point.id, change) }];
     });
 
+  /** The entries of a Source's latest Probe, from its live copy when it has one. */
+  const probeOf = (subject: string) =>
+    readRecords.pipe(
+      Effect.flatMap((records) => {
+        const [latest] = records
+          .filter(
+            (record) => record.kind === "probe" && linkKey(record.subject) === linkKey(subject),
+          )
+          .sort((a, b) => b.created - a.created);
+        if (latest === undefined) return Effect.succeed(null);
+        const running = live.get(latest.id);
+        return running === undefined
+          ? Effect.succeed(latest.entries)
+          : SubscriptionRef.get(running.view).pipe(Effect.map((view) => view.entries));
+      }),
+      Effect.orElseSucceed(() => null),
+    );
+
   /** What the AI of each kind of Session is told, and may do. */
   const rulesOf = (session: Live, { kind, subject }: Session) => {
     switch (kind) {
@@ -557,6 +617,23 @@ export const make = Effect.gen(function* () {
                 state: "kept",
                 draft: text,
               })),
+            probe: probeOf(subject),
+            probeSummary: Probe.forExtraction,
+            probeWords: Probe.userWords,
+          }),
+        };
+      case "probe":
+        return {
+          instructions: Probe.INSTRUCTIONS,
+          tools: Probe.tools({
+            sources,
+            graph,
+            source: subject,
+            update: (change) =>
+              SubscriptionRef.modify(session.view, (view) => {
+                const [result, entries] = change(view.entries);
+                return [result, { ...view, entries }];
+              }),
           }),
         };
       case "card-extraction":
@@ -684,6 +761,7 @@ export const make = Effect.gen(function* () {
   const subjectOf = Effect.fn("Sessions.subjectOf")(function* (kind: SessionKind, name: string) {
     switch (kind) {
       case "extraction":
+      case "probe":
         return (yield* sources.get(name)).id;
       case "card-extraction": {
         const view = yield* graph.read;
@@ -762,13 +840,23 @@ export const make = Effect.gen(function* () {
       const opening =
         kind === "extraction"
           ? { entries: [], items: [Extraction.kickoff(language ?? "en")] }
-          : {
-              entries: passage === undefined ? [] : [{ _tag: "Passage" as const, text: passage }],
-              items: [
-                CardExtraction.kickoff(subject, language ?? "en"),
-                ...(passage === undefined ? [] : [CardExtraction.passageMessage(passage)]),
-              ],
-            };
+          : kind === "probe"
+            ? {
+                entries: [],
+                items: [
+                  Probe.kickoff(
+                    language ?? "en",
+                    (yield* sources.get(subject)).readingStart ?? "write",
+                  ),
+                ],
+              }
+            : {
+                entries: passage === undefined ? [] : [{ _tag: "Passage" as const, text: passage }],
+                items: [
+                  CardExtraction.kickoff(subject, language ?? "en"),
+                  ...(passage === undefined ? [] : [CardExtraction.passageMessage(passage)]),
+                ],
+              };
       yield* beginTurn(session, opening.entries, opening.items).pipe(
         Effect.catchTags({ SessionBusy: () => Effect.void }),
       );
@@ -915,6 +1003,49 @@ export const make = Effect.gen(function* () {
           session.decisions.push(`Added ${pointName(point)} in their own words, to write.`);
         }
         yield* save(session);
+      },
+      (effect) => deciding.withPermit(effect),
+    ),
+
+    answerProbe: Effect.fn("Sessions.answerProbe")(
+      function* ({ id, question, reasoning, answer, teachMe }) {
+        const session = yield* load(id);
+        const view = yield* SubscriptionRef.get(session.view);
+        const open = view.kind === "probe" ? openQuestion(view.entries) : null;
+        if (open === null || open.number !== question || (!teachMe && answer === "")) {
+          return yield* new QuestionNotOpen({ id, question });
+        }
+        const entry = { _tag: "ProbeAnswer" as const, question, reasoning, answer, teachMe };
+        yield* beginTurn(
+          session,
+          [entry],
+          [{ type: "message", role: "user", content: Probe.answerMessage(entry) }],
+        );
+      },
+      (effect) => deciding.withPermit(effect),
+    ),
+
+    finishProbe: Effect.fn("Sessions.finishProbe")(
+      function* (id) {
+        const session = yield* load(id);
+        const at = yield* Clock.currentTimeMillis;
+        const finished = yield* SubscriptionRef.modify(session.view, (view) => {
+          if (view.working) return ["busy" as const, view];
+          if (view.entries.some((entry) => entry._tag === "ProbeFinished")) {
+            return ["already" as const, view];
+          }
+          return [
+            "now" as const,
+            // A turn that failed before the finish is no longer the user's next step.
+            {
+              ...view,
+              problem: null,
+              entries: [...view.entries, { _tag: "ProbeFinished" as const, at }],
+            },
+          ];
+        });
+        if (finished === "busy") return yield* new SessionBusy({ id });
+        if (finished === "now") yield* save(session);
       },
       (effect) => deciding.withPermit(effect),
     ),

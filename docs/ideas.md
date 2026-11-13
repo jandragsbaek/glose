@@ -290,8 +290,9 @@ The Probe and Review are different things with different goals.
 - The exact layout is not fixed now. It will be worked out along the way.
 - First decision, the Source file: `<Family name> <year> <Title>.md` in the Graph folder,
   with YAML frontmatter (`glose: source`, `author-family`, `author-given`, `title`,
-  `first-published`, `edition`, `edition-year`, `publisher`, `translator`, `reading-step`) and
-  the user's Free text as the body. Empty fields are left out. Glose reads any Markdown file
+  `first-published`, `edition`, `edition-year`, `publisher`, `translator`, `reading-step`,
+  `reading-start`) and the user's Free text as the body. `reading-start` is left out for the usual
+  start, `write` (see "Decided, the Probe"). Empty fields are left out. Glose reads any Markdown file
   with `glose: source` as a Source, so a Source can be written or fixed by hand.
 - File names drop characters Windows forbids, and two names that differ only in case count as
   the same file.
@@ -623,6 +624,54 @@ Decided, first version (November 2026):
 - Until the Probe is built, the two Probe answers cannot be chosen and say that the Probe comes
   in a later version. Designing the Probe is the next task.
 
+## Decided, the Probe (November 2026)
+
+- Where the user starts a Source is `reading-start` in the Source file: `write` (Free text,
+  Extraction, then the Probe; the usual start, left out of the file), `probe` (the Probe, then
+  Extraction) or `catch-up` (the same, for a book read long ago or in part: the Probe explains each
+  topic before it asks). A Source that starts with the Probe starts at `reading-step: probe`. Free
+  text stays open whatever the start. The first page of a Source, which asks where the user is with
+  the book and writes the field, is designed in its own thread.
+- The step bar, the Reading marks and the next step follow the start's order. Extraction does not
+  end by itself: under the core points, "Continue to the Probe" or "Mark the Source as read" moves
+  the Source on (`sources.advance`, which changes nothing when the Source is at another step).
+- The Probe is one Session of kind `probe` per Source. Jan chose "The Glossed Transcript" with
+  impeccable over a topic register beside the Session and a Review-like focus screen. The
+  conversation is the page, at reading width: each question (`Q5`, its topic, "Q4 again"), the
+  user's turn ("Your Reasoning", "Your answer"), and beside it in the margin the AI's judgment
+  ("Judged": Reasoning sound, partly sound, flawed or none; Result right, partly right or wrong;
+  each with an icon, the words and one line of why). The words of the Reasoning the judgment points
+  at are underlined; the AI's quote counts only when it is the user's exact words.
+- A gap is taught in the column as AI text ("§ Taught · the gap in Q5", "From the AI's knowledge
+  of the book, not your copy. Check it there."), then the AI asks again in other words. A gap
+  closes only when the user answers it. "I don't know, teach me" asks for the teaching instead of
+  an answer.
+- The AI works through tools: `ask_question` (one at a time; the turn ends there), `judge_answer`,
+  `teach` (`gap`, or `intro` before a topic's first question on a catch-up start) and
+  `mark_covered`, besides `read_source`, `list_notes`, `search_graph` and `read_note`. It asks
+  in the language the user answers in.
+- What the Probe found is counted per topic: known, known after teaching, taught (not confirmed
+  yet), still open, or asked. A tally shows it while the Probe runs.
+- The AI says when it has covered the book; the user can finish at any time. Finishing shows
+  "What the Probe found" and the way on: "Continue to Extraction" after a `probe` or `catch-up`
+  start, "Done: <title> is read" after a `write` start.
+- Extraction reads the Probe (`read_probe`) after a Probe-first start and proposes Points on what
+  it found. A Point may come from the user's words in the Probe (origin `probe`, "From your words
+  in the Probe:"), with the same exact-words check as a Free text quote.
+- Kept: the Session in `.glose/sessions/<id>.json`, and a Markdown record, `Probes/<Source>.md`,
+  rewritten as the Probe goes: frontmatter `glose: probe`, `source`, `started`, `finished`,
+  `ai: true`; each question with the user's Reasoning and answer, the judgment and the teaching as
+  `[!ai]` callouts, and what the Probe found. Glose reads only the top of the Graph folder as the
+  Graph, so the record is no Note. Only the transcript is kept, never audio. Gaps do not become
+  Cards; they go to Extraction.
+- Dictation: the ChatGPT plan route does not allow the transcription API ("Audio/video input, the
+  Files upload API, and the transcription API are not supported by this flow", OpenAI's preview
+  limitations, November 2026). So the user dictates with the computer's own dictation (macOS
+  dictation, Windows voice typing with Windows + H), which writes into the Reasoning box. An
+  in-app recorder needs another transcriber (a local model, or an API key) and is not decided.
+- Not yet: the first page that sets `reading-start`, reading a finished Probe again from the step
+  bar, and an in-app recorder.
+
 ## Reasoning as part of the answer
 
 Taken from learnharness: the user thinks out loud, by typing or by dictation, and the reasoning is recorded and transcribed.
@@ -680,15 +729,12 @@ Taken from learnharness: the user thinks out loud, by typing or by dictation, an
 - What is the source of a note that holds the user's own idea, or that combines several notes?
 - Is the exact location (page number, timestamp) required on every note, or only when the note is
   cited? For now a Note's page is optional.
-- Are session records kept as transcripts only, or with the audio?
 - Does each user have a separate graph and separate records?
 - Which reference system does the university require?
 - How do references appear in a blog post: links, footnotes, or nothing?
 - How does the tool check that a quote matches the source when it does not have the full text of the book?
 - Which suggestions may the AI make in a writing project: other words, weak sentences, questions, a review at the end?
 - When a note changes, what happens to the cards made from it?
-- Does the Probe hand anything to recall (for example, suggested cards), or are cards only made from notes?
 - How does publishing to a blog work: export a file, or push directly to the site?
 - Does the AI see the book text, or only the user's free text plus what the model already knows?
-- What happens to the "unknown" items found by the Probe? Do they become cards?
 - What exactly are the richer note types (author, work, period, concept)?

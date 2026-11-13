@@ -227,4 +227,32 @@ it.layer(NodeServices.layer)("Sources", (it) => {
       }),
     ),
   );
+
+  it.effect("moves a Source on in the order its start gives", () =>
+    withGraph(({ folder, sources }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const prober = yield* sources.create(ARENDT);
+        yield* sources.chooseStart({ id: prober.id, start: "catch-up" });
+        // A second click, or a step another window took, changes nothing.
+        const stale = yield* sources.advance({ id: prober.id, from: "extraction" });
+        const extraction = yield* sources.advance({ id: prober.id, from: "probe" });
+        const done = yield* sources.advance({ id: prober.id, from: "extraction" });
+        const markdown = yield* fs.readFileString(path.join(folder, `${prober.id}.md`));
+
+        assert.deepStrictEqual(
+          [stale.readingStep, extraction.readingStep, done.readingStep],
+          ["probe", "extraction", "done"],
+        );
+        assert.include(markdown, "reading-step: done\nreading-start: catch-up\n");
+
+        // A Source that starts with writing, or from before the question, goes on to the Probe.
+        const writer = yield* sources.create({ ...ARENDT, title: "Between Past and Future" });
+        yield* sources.saveFreeText({ id: writer.id, freeText: "", finish: true });
+        const probe = yield* sources.advance({ id: writer.id, from: "extraction" });
+        assert.strictEqual(probe.readingStep, "probe");
+      }),
+    ),
+  );
 });

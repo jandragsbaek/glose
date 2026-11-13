@@ -4,9 +4,9 @@ import { CardScore } from "./cardScore.ts";
 
 /**
  * What a Session is for. Each kind has its own AI rules and tools. `extraction` turns a Source
- * into Notes; `card-extraction` turns a Note into Cards.
+ * into Notes; `card-extraction` turns a Note into Cards; `probe` questions the user on a Source.
  */
-export const SessionKind = Schema.Literals(["extraction", "card-extraction"]);
+export const SessionKind = Schema.Literals(["extraction", "card-extraction", "probe"]);
 export type SessionKind = typeof SessionKind.Type;
 
 /** The tools an agent can call, named for the user. */
@@ -16,6 +16,8 @@ export const SessionTool = Schema.Literals([
   "read-note",
   "list-cards",
   "search-graph",
+  "list-notes",
+  "read-probe",
 ]);
 export type SessionTool = typeof SessionTool.Type;
 
@@ -37,8 +39,11 @@ export const CardProposal = Schema.Struct({
 });
 export type CardProposal = typeof CardProposal.Type;
 
-/** Where a Point comes from: the user's Free text, the AI's knowledge of the Source, or the user. */
-export const PointOrigin = Schema.Literals(["free-text", "ai", "user"]);
+/**
+ * Where a Point comes from: the user's Free text, the user's Reasoning or answers in the Probe,
+ * the AI's knowledge of the Source, or the user.
+ */
+export const PointOrigin = Schema.Literals(["free-text", "probe", "ai", "user"]);
 export type PointOrigin = typeof PointOrigin.Type;
 
 /**
@@ -66,7 +71,10 @@ export const Point = Schema.Struct({
   id: Schema.String,
   title: Schema.String,
   origin: PointOrigin,
-  /** The words of the Free text the Point comes from, exactly as the user wrote them. */
+  /**
+   * The user's words the Point comes from, exactly as they wrote them: in the Free text, or in
+   * their Reasoning or answers in the Probe.
+   */
   quote: Schema.NullOr(Schema.String),
   /** A Note that already says this. */
   repeats: Schema.NullOr(Schema.String),
@@ -85,6 +93,18 @@ export const Point = Schema.Struct({
   page: Schema.NullOr(Schema.String),
 });
 export type Point = typeof Point.Type;
+
+/** How the AI judged the user's Reasoning in a Probe; `none` when the user gave none. */
+export const ReasoningVerdict = Schema.Literals(["sound", "partly-sound", "flawed", "none"]);
+export type ReasoningVerdict = typeof ReasoningVerdict.Type;
+
+/** How the AI judged the end result of an answer in a Probe. */
+export const ResultVerdict = Schema.Literals(["right", "partly-right", "wrong"]);
+export type ResultVerdict = typeof ResultVerdict.Type;
+
+/** Why the AI taught: a gap an answer showed, or (on a catch-up start) a topic before its question. */
+export const TaughtKind = Schema.Literals(["gap", "intro"]);
+export type TaughtKind = typeof TaughtKind.Type;
 
 /** One visible step of a Session, in order. */
 export const SessionEntry = Schema.Union([
@@ -106,6 +126,47 @@ export const SessionEntry = Schema.Union([
   /** A passage of the Note that the user chose to make Cards from. */
   Schema.TaggedStruct("Passage", { text: Schema.String }),
   Schema.TaggedStruct("CardProposals", { proposals: Schema.Array(CardProposal) }),
+  /** A question the AI asks in a Probe, numbered from 1; `again` names the question it repeats. */
+  Schema.TaggedStruct("ProbeQuestion", {
+    number: Schema.Number,
+    topic: Schema.String,
+    text: Schema.String,
+    again: Schema.NullOr(Schema.Number),
+  }),
+  /**
+   * The user's answer to a Probe question: their Reasoning (typed, or dictated with the
+   * computer's dictation) and the end result. `teachMe` when they asked to be taught instead.
+   */
+  Schema.TaggedStruct("ProbeAnswer", {
+    question: Schema.Number,
+    reasoning: Schema.String,
+    answer: Schema.String,
+    teachMe: Schema.Boolean,
+  }),
+  /**
+   * The AI's judgment of an answer: the Reasoning and the result apart, each with why. `quote`
+   * holds the exact words of the user's Reasoning the judgment points at, when it points.
+   */
+  Schema.TaggedStruct("ProbeJudgment", {
+    question: Schema.Number,
+    reasoning: ReasoningVerdict,
+    reasoningWhy: Schema.String,
+    result: ResultVerdict,
+    resultWhy: Schema.String,
+    quote: Schema.NullOr(Schema.String),
+  }),
+  /** What the AI taught, from its knowledge of the Source: AI text, to check against the book. */
+  Schema.TaggedStruct("ProbeTaught", {
+    kind: TaughtKind,
+    topic: Schema.String,
+    /** The question whose answer showed the gap; null before a topic's first question. */
+    question: Schema.NullOr(Schema.Number),
+    text: Schema.String,
+  }),
+  /** The AI has covered the Source and suggests the user finish the Probe. */
+  Schema.TaggedStruct("ProbeCovered", {}),
+  /** The user finished the Probe, in epoch milliseconds. */
+  Schema.TaggedStruct("ProbeFinished", { at: Schema.Number }),
 ]);
 export type SessionEntry = typeof SessionEntry.Type;
 
@@ -177,6 +238,16 @@ export const SendMessage = Schema.Struct({
   about: Schema.optionalKey(Schema.String),
 });
 
+/** The user's answer to the open question of a Probe. */
+export const AnswerProbe = Schema.Struct({
+  id: Schema.String,
+  question: Schema.Number,
+  reasoning: Schema.Trim,
+  answer: Schema.Trim,
+  /** The user does not know, and asks to be taught. */
+  teachMe: Schema.Boolean,
+});
+
 export const PointRef = Schema.Struct({ id: Schema.String, point: Schema.String });
 
 /** Keeps a proposed Point to write, with the user's changes to its words. */
@@ -215,6 +286,12 @@ export class SessionBusy extends Schema.TaggedError<SessionBusy>()("SessionBusy"
 export class ProposalNotOpen extends Schema.TaggedError<ProposalNotOpen>()("ProposalNotOpen", {
   id: Schema.String,
   proposal: Schema.String,
+}) {}
+
+/** The Probe has no open question of this number, or it is finished. */
+export class QuestionNotOpen extends Schema.TaggedError<QuestionNotOpen>()("QuestionNotOpen", {
+  id: Schema.String,
+  question: Schema.Number,
 }) {}
 
 /** No Point with this id is in a state that allows this. */

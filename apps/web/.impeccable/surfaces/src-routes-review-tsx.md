@@ -1,8 +1,8 @@
 ---
 version: 1
-slug: "apps-web-src-routes-review-tsx"
-primary_target: "apps/web/src/routes/review.tsx"
-related_targets: ["apps/web/src/components/Review.tsx", "apps/web/src/routes/recall.tsx"]
+slug: "src-routes-review-tsx"
+primary_target: "src/routes/review.tsx"
+related_targets: ["src/components/Review.tsx", "src/routes/recall.tsx"]
 ---
 
 # Review (focus screen)
