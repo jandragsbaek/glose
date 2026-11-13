@@ -70,6 +70,88 @@
         "files": [".impeccable/mocks/decision/trays-recall.html"],
         "createdAt": "2026-11-13T21:00:02.105Z",
         "reason": "Claude: decision-round sketch; the 3px rubric edge is DESIGN.md's AI Text signature (AI-written Card mark)"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "prime",
+        "createdAt": "2026-11-13T20:44:03.279Z",
+        "reason": "Claude: Courier Prime is DESIGN.md's call face; the detector reads the font shorthand's last word as a family"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "sans",
+        "createdAt": "2026-11-13T20:44:03.294Z",
+        "reason": "Claude: Public Sans is DESIGN.md's UI face; the detector reads the font shorthand's last word as a family"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [".impeccable/mocks/decision/ledger.html"],
+        "createdAt": "2026-11-13T20:58:51.350Z",
+        "reason": "Claude: decision-round sketch; the 28px Status Bar centres its text by height, and call-number labels and key caps use DESIGN.md's padding, as in the app"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [".impeccable/mocks/decision/gloss.html"],
+        "createdAt": "2026-11-13T20:58:51.365Z",
+        "reason": "Claude: decision-round sketch; the 28px Status Bar centres its text by height, and call-number labels and key caps use DESIGN.md's padding, as in the app"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [".impeccable/mocks/decision/stage.html"],
+        "createdAt": "2026-11-13T20:58:51.378Z",
+        "reason": "Claude: decision-round sketch; the 28px Status Bar centres its text by height, and call-number labels and key caps use DESIGN.md's padding, as in the app"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [".impeccable/mocks/decision/type-margin.html"],
+        "createdAt": "2026-11-13T20:58:51.394Z",
+        "reason": "Claude: decision-round sketch; the 28px Status Bar centres its text by height, and call-number labels and key caps use DESIGN.md's padding, as in the app"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [".impeccable/mocks/decision/type-specimens.html"],
+        "createdAt": "2026-11-13T20:58:51.407Z",
+        "reason": "Claude: decision-round sketch; the 28px Status Bar centres its text by height, and call-number labels and key caps use DESIGN.md's padding, as in the app"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [".impeccable/mocks/decision/publish-proof.html"],
+        "createdAt": "2026-11-13T20:58:51.420Z",
+        "reason": "Claude: decision-round sketch; the 28px Status Bar centres its text by height, and call-number labels and key caps use DESIGN.md's padding, as in the app"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [".impeccable/mocks/decision/publish-colophon.html"],
+        "createdAt": "2026-11-13T20:58:51.433Z",
+        "reason": "Claude: decision-round sketch; the 28px Status Bar centres its text by height, and call-number labels and key caps use DESIGN.md's padding, as in the app"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [".impeccable/mocks/decision/type-specimens.html"],
+        "createdAt": "2026-11-13T20:58:51.446Z",
+        "reason": "Claude: decision-round sketch; the small text is a miniature picture of a finished page, not interface text"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "font-size: 9px",
+        "files": ["apps/web/src/styles/app.css"],
+        "createdAt": "2026-11-13T21:28:49.123Z",
+        "reason": "Claude: the .miniature specimen is a small picture of a finished page (aria-hidden), not reading text"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "font-size: 10px",
+        "files": ["apps/web/src/styles/app.css"],
+        "createdAt": "2026-11-13T21:28:49.136Z",
+        "reason": "Claude: the .miniature specimen is a small picture of a finished page (aria-hidden), not reading text"
       }
     ]
   }

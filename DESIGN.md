@@ -515,6 +515,13 @@ in the one column, the answer box keeps two columns (the answer side 220 to 270p
 the transcript keeps its height, and the Probe keeps its own scroll. Below 720px the three bands
 pad 16px at the sides.
 
+Writing projects (`/writing`) is one column of two full-width panels: "Start a new piece" (the
+Specimen Leaves) above "Your pieces" (a register table). A Writing project (`/writing/<id>`) is the
+Writing Desk: a sticky 56px bar, then a five-track grid, `1fr | 180–250px | up to 680px |
+200–290px | 1fr`, that sets the leaf between two margins (32px top). Below 1200px the margins fold
+under the leaf in reading order (left margin, then right) and the desk pads 24px; below 720px it
+pads 16px.
+
 A focus screen (today only Review, at `/review`) fills the window without the rail and the page
 header. A 64px bar (12px 32px padding) holds the title left, a centred progress line and the way
 out right; the desk below centres one 720px column (68px top, 32px sides, 48px bottom). Below
@@ -1035,6 +1042,67 @@ The tally in the band above says the same in one Mute 13px line with tabular num
 1 known after teaching · 1 taught, not confirmed yet"), with `role="status"`. Before the first
 question, the leaf holds a 680px start: the empty-state lead line, a Mute body that follows the
 Source's start, and Start the Probe.
+
+### Specimen Leaves
+
+"Start a new piece" shows each type of Writing project as a small finished page beside its
+words, so the choice shows what it becomes. Each specimen is a Strong Hairline box (18px padding,
+20px gap, Lapis border on hover and focus-within): a 200px miniature (aria-hidden; Ground for a
+blog post with numbered notes under a rule, Paper for an assignment with a bibliography; 9–10px
+text, a picture, not reading text), then the type in 700 16px, a Mute lead line, two points, and
+the start button (primary for Blog post, secondary for University assignment). Two specimens sit
+side by side at 460px minimum and stack below; under 720px the miniature goes on top. Starting a
+piece saves it at once as "Untitled blog post" (numbered when taken) and opens its desk with the
+title selected.
+
+### Writing Desk (signature: The Glossed Manuscript)
+
+One Paper leaf in the middle (44px 56px 64px padding, Hairline border, lower edge open), its
+Citations in the right margin beside their lines and its checks in the left.
+
+- **Bar:** "Writing projects /" in Mute 600 13px, the title in 600 15px, the Settings Slip chip,
+  the save state in Mute 13px pushed right, Write | Proof as a Segmented control, then in Write
+  "Cite a Note" (secondary with a Key Cap, ⌘K or Ctrl+K) and "Ask the AI to check" (quiet); in Proof
+  the post's path in Courier 12px Mute and "Write to site" (primary; "Choose your site" until a
+  site folder is set). A one-line note under the bar reports the AI review or the Publication.
+- **Leaf:** the title as a borderless 700 30px field over a Strong Hairline (Lapis on focus,
+  Rubric with the field error when taken), a Mute meta line ("Blog post · 83 words · 3
+  References"), then the prose at 16px/1.65 in CodeMirror with no chrome; Gilt Wash selection,
+  Lapis caret. A Reference shows as its number, raised, Courier 700 12px Lapis (Rubric when a check
+  flags it); with the cursor in it, it shows its token (`[[Note]]{p. 64}`) on Lapis Tint (Rubric
+  Wash when flagged).
+- **Right margin (glosses):** per Reference, beside its line: a Hairline above, the number in
+  Courier Lapis, the full note Citation (title in italic), the Note in Ink 600, and its Call Number
+  with the page. Glosses never overlap; a later one moves down 12px past the one above.
+- **Left margin (flags):** right-aligned beside the line, each problem as a Rubric uppercase
+  12px line with a 14px triangle ("No page", "The quote is not in the Note word for word"), the
+  Reference in Mute, and the fix as a link button ("Add the page", "Choose a Note", "Open the
+  Source", "Show the Note"). After an AI review: "No Reference" flags with "Find a Note", and Notes
+  for a passage under the AI Text mark (a 2px Rubric rule on the margin side and a ¶ gloss), each
+  with "Cite".
+- **Proof:** the leaf shows the post as readers will see it, in its Reference form: raised
+  numbers and a numbered note list under a Hairline (footnotes), the short Citation in brackets and
+  a list of Sources (links + list), or notes under each paragraph (side notes). A flagged Citation
+  is Rubric with a triangle and words. The left margin becomes "Before you publish" (Verdigris
+  check lines and Rubric problem lines, each with its fix); the right margin "Questions from the
+  AI", each question beside a Strong Hairline under a Mute "AI · About …" line.
+
+### Settings Slip
+
+The chip in the desk bar ("Blog post · Footnotes": Lapis 600 13px, Strong Hairline, 4px) opens a
+420px Paper slip under it (Strong Hairline, no shadow): the type as choice rows that say what each
+ends as, "References appear as" as a Segmented control with a sample sentence and its note on
+Ground, a hint that the text stays the same, and the language of the text as a Select. A click
+outside or Esc closes it.
+
+### Writing Sheets
+
+Three sheets on the Sheet pattern. **Cite a Note:** the find field, matches as choice rows (title,
+Note or Source in Mute 12px, the Call Number with the Note's page), an optional Page field (160px)
+with its hint, Cite (primary) and Cancel; `[[` in the prose or ⌘K opens it at the cursor.
+**Your Bridgetown site:** a sentence, the Site folder field with its hint and the field error
+line, "Use this folder" (primary) and Cancel. **Replace the post in your site?:** what is lost,
+"Replace it" (secondary) and "Keep it" (quiet, focused).
 
 ### Key Cap
 

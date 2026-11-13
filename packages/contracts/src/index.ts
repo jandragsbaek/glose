@@ -13,4 +13,5 @@ export * from "./settings.ts";
 export * from "./source.ts";
 export * from "./updates.ts";
 export * from "./versions.ts";
+export * from "./writing.ts";
 export * from "./rpc.ts";

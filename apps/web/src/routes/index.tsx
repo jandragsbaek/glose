@@ -17,6 +17,7 @@ import { missingDetails } from "../domain/source.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { cardsAtom } from "../state/cards.ts";
 import { graphAtom, sourcesAtom } from "../state/graph.ts";
+import { writingListAtom } from "../state/writing.ts";
 
 /** The date is read when Today is opened, not on every render. */
 export const Route = createFileRoute("/")({
@@ -49,11 +50,7 @@ function Today() {
         </div>
         <div className="stack">
           <RecallToday />
-          <Panel title={t.today.writingProject} initial="lapis">
-            <div className="panel__body">
-              <p className="empty">{t.today.writingEmpty}</p>
-            </div>
-          </Panel>
+          <WritingToday />
           <NotesWithAiText />
         </div>
       </div>
@@ -245,5 +242,39 @@ function NoSource() {
         </Link>
       </p>
     </div>
+  );
+}
+
+/** The piece written last, to go on with it. */
+function WritingToday() {
+  const t = useT();
+  const projects = AsyncResult.getOrElse(useAtomValue(writingListAtom), () => null);
+  const latest = projects?.[0] ?? null;
+  return (
+    <Panel title={t.today.writingProject} initial="lapis">
+      <div className="panel__body">
+        {latest === null ? (
+          <p className="empty">
+            {t.today.writingEmpty} <Link to="/writing">{t.writing.title}</Link>
+          </p>
+        ) : (
+          <div className="stack" style={{ gap: 12 }}>
+            <p>
+              <strong>{latest.title}</strong>
+              <span className="field__hint"> · {t.writing.types[latest.type]}</span>
+            </p>
+            <p>
+              <Link
+                to="/writing/$projectId"
+                params={{ projectId: latest.id }}
+                className="button button--primary button--small"
+              >
+                {t.today.writingContinue}
+              </Link>
+            </p>
+          </div>
+        )}
+      </div>
+    </Panel>
   );
 }

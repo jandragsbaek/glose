@@ -76,6 +76,14 @@ A set of prose files that the user writes, outside the **Graph**, that ends in o
 **Publication**. The AI never writes its prose.
 _Avoid_: project (alone), document, draft, essay, assignment, manuscript
 
+**Blog post**:
+A type of **Writing project** whose **Publication** is a post on the user's own website.
+_Avoid_: article, entry, post (alone)
+
+**University assignment**:
+A type of **Writing project** for a course, whose **Publication** is a PDF with a bibliography.
+_Avoid_: assignment (alone), paper, essay
+
 **Recall**:
 The **Section** of **Cards** that spaced repetition (FSRS) schedules.
 _Avoid_: drill, flashcards
@@ -135,6 +143,8 @@ The text the tool builds from a **Reference** in the style the **Writing project
   is the truth
 - A **Probe** is a **Session**; the user's **Reasoning** in it is kept
 - A **Writing project** reads from the **Graph** but is not part of it
+- A **Writing project** is a **Blog post** or a **University assignment**; its type decides how
+  **Citations** appear and what the **Publication** is
 - A **Reference** points to a **Note** or a **Source** at a **Location**; the tool builds a
   **Citation** from it
 - In **Extraction** from a **Source**, the AI proposes **Points**; the user writes each kept **Point**
@@ -155,5 +165,7 @@ The text the tool builds from a **Reference** in the style the **Writing project
   section, so the Danish term is "del".)
 - "reference" meant both the book a user reads ("core reference") and the pointer in prose.
   Resolved: the book is a **Source**; "reference" is kept for the pointer in prose.
+- "assignment" alone could mean any **Writing project**. Resolved: the type is a **University
+  assignment**; a Writing project is never called an assignment.
 - "reading quiz" and "recall quiz" shared a word though they have different goals. Resolved: the
   Reading **Stage** conversation is a **Probe**; answering a due **Card** is a **Review**.

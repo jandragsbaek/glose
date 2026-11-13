@@ -29,7 +29,8 @@ import * as Stream from "effect/Stream";
 import * as NodeCrypto from "node:crypto";
 
 import * as ChatGpt from "../chatgpt/ChatGpt.ts";
-import { Responses, ResponsesError } from "../chatgpt/Responses.ts";
+import { Responses } from "../chatgpt/Responses.ts";
+import { askStructured, strictObject } from "../chatgpt/structured.ts";
 import * as ServerConfig from "../config.ts";
 import * as Graph from "../graph/Graph.ts";
 import * as Settings from "../settings/Settings.ts";
@@ -123,13 +124,6 @@ const Judgements = Schema.Struct({
   ),
 });
 
-const strictObject = (properties: Record<string, unknown>) => ({
-  type: "object",
-  properties,
-  required: Object.keys(properties),
-  additionalProperties: false,
-});
-
 const BLIND_SCHEMA = strictObject({
   cards: {
     type: "array",
@@ -166,22 +160,6 @@ const decodeJudgements = Schema.decodeUnknownEffect(Schema.fromJsonString(Judgem
 const CacheJson = Schema.fromJsonString(CacheFile);
 const decodeCache = Schema.decodeUnknownEffect(CacheJson);
 const encodeCache = Schema.encodeEffect(CacheJson);
-
-const outputText = (item: Readonly<Record<string, unknown>>) => {
-  if (item.type !== "message" || !Array.isArray(item.content)) return "";
-  return item.content
-    .map((part: unknown) =>
-      typeof part === "object" &&
-      part !== null &&
-      "type" in part &&
-      part.type === "output_text" &&
-      "text" in part &&
-      typeof part.text === "string"
-        ? part.text
-        : "",
-    )
-    .join("");
-};
 
 /** The Note as the AI reads it, under its name. */
 const noteBlock = (name: string, text: string) =>
@@ -270,7 +248,7 @@ export const make = Effect.gen(function* () {
   };
 
   /** One call with a structured answer. */
-  const ask = Effect.fn("CardChecks.ask")(function* <A>(
+  const ask = <A>(
     token: Redacted.Redacted<string>,
     model: string,
     instructions: string,
@@ -278,42 +256,7 @@ export const make = Effect.gen(function* () {
     name: string,
     schema: Readonly<Record<string, unknown>>,
     decode: (text: string) => Effect.Effect<A, Schema.SchemaError>,
-  ) {
-    let text = "";
-    let completed = false;
-    yield* responses
-      .stream(token, {
-        model,
-        instructions,
-        input: [{ type: "message", role: "user", content: input }],
-        tools: [],
-        tool_choice: "auto",
-        parallel_tool_calls: false,
-        store: false,
-        stream: true,
-        text: { format: { type: "json_schema", name, strict: true, schema } },
-      })
-      .pipe(
-        Stream.runForEach((event) =>
-          Effect.sync(() => {
-            if (event._tag === "ItemDone") text += outputText(event.item);
-            if (event._tag === "Completed") completed = true;
-          }),
-        ),
-      );
-    if (!completed) {
-      return yield* new ResponsesError({
-        status: null,
-        code: null,
-        detail: "stream ended early",
-      });
-    }
-    return yield* decode(text).pipe(
-      Effect.mapError(
-        (error) => new ResponsesError({ status: null, code: null, detail: String(error) }),
-      ),
-    );
-  });
+  ) => askStructured(responses, { token, model, instructions, input, name, schema, decode });
 
   /** The AI Checks of one batch: a blind call, then the judge. */
   const judgeBatch = Effect.fn("CardChecks.judgeBatch")(function* (

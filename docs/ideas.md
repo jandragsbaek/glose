@@ -97,12 +97,67 @@ Decided, the Sources page (November 2026):
 
 ## Writing projects
 
-- There is one type of writing project. Practice writing and university assignments use the same thing.
+- A writing project has a type (see "Decided, Writing project types" below). Practice writing and
+  university assignments share the same writing desk; the type decides how References look and
+  what the Publication is.
 - A writing project holds one or more files. Files can be re-ordered and joined together.
 - A writing project ends in a Publication: a PDF, or a post published to a blog or website.
 - Jan's use: practise writing and publish to his own website/blog.
 - Girlfriend's use: university assignments, most likely as PDF.
 - Writing practice has no curriculum and no set exercises. Jan writes about whatever inspires him that day. The practice is the writing itself, with the AI suggesting and referencing.
+
+Decided, Writing project types (November 2026):
+
+- Two types: **Blog post** and **University assignment**. Blog post is built first and in full;
+  University assignment can be created and set up (citation style, PDF), and reuses the Blog
+  post's desk until its own flow is designed.
+- Blog post: the References appear as footnotes, as links with a list of sources at the end, or as
+  side notes. The user chooses per post; footnotes are the default. The form is a setting of the
+  post and can change until it is published without rewriting the text.
+- Blog post Publication: a Markdown file for Jan's Bridgetown site (YAML frontmatter, kramdown
+  footnotes `[^1]`), written into the site's `src/_posts/` as `YYYY-MM-DD-<slug>.md`. The site
+  folder is chosen on first use and kept in Settings.
+- Writing projects live in a `Writing` folder inside the Graph folder, so Versions and the GitHub
+  backup keep them. The Graph does not read that folder as Notes.
+- The AI in a Blog post may suggest Notes to cite for the paragraph being written, flag a claim
+  that states a fact from a Source but cites nothing, check that a quote matches its Note and that
+  a Reference has a page, and ask questions about the argument before publishing. It never writes
+  the prose.
+- Missing data (no page, a claim without a Reference) warns; it does not stop a Publication.
+
+Decided, the Blog post flow (November 2026), chosen with impeccable:
+
+- The Writing projects page: a "Start a new piece" panel at the top shows each type as a small
+  finished page (a post with footnotes, an assignment page with a bibliography) with its own start
+  button ("Specimen leaves"); "Your pieces" lists every project under it: title, type, words,
+  References, Citation state, last change.
+- The desk is "The Glossed Manuscript": one Paper leaf in the middle. A Reference is a superscript
+  number in the text; its Citation (the short citation, the Note and the call number with page)
+  sits in the right margin beside its line. The AI's flags (no page, no Reference, Notes for this
+  paragraph) sit in the left margin, marked in Rubric. A thin bar holds the title, the type,
+  Write | Proof, Cite a Note (`[[` or ⌘K) and Publish. Below a wide window the margins fold under
+  their paragraph.
+- Publishing happens in Proof ("Publish from Proof"): the leaf shows the post as readers will see
+  it, in the chosen Reference form. The left margin lists the checks before publishing, the right
+  margin the AI's closing questions, and the bar names the target file with "Write to site".
+- A Writing project is one Markdown file, `Writing/<Title>.md`, with frontmatter `glose:
+  writing-project`, `title`, `type`, `language`, `reference-form` (Blog post) or `citation-style`
+  (assignment), and after publishing `published` and `published-file`. A new piece is saved at
+  once as "Untitled blog post"; a new title renames the file.
+- A Reference in the prose is a wikilink to a Note or a Source, then its Location in braces:
+  `[[Busyness is a proxy for productivity]]{p. 64}`. Without braces it takes the Note's own page.
+  `[[` or ⌘K in the text opens "Cite a Note".
+- The Bridgetown post has `layout: post`, `title` and `date`; footnotes and side notes are kramdown
+  footnotes (a theme sets side notes in the margin), links are short Citations linked to a list of
+  Sources at the end. The post keeps its first date, so publishing again names the same file, and
+  Glose asks before it replaces a file that is there. The site folder is a setting of each
+  computer (Settings, "Your website"), and must hold `src`.
+- Code checks each Reference at once: a missing file, a Note without a Source, no page, a Source
+  without year or publisher, and a quote the Note does not hold word for word. The AI review runs
+  on request.
+- Not yet: the University assignment's own flow and PDF, a Writing project of several files,
+  publishing straight into the site's git repository, removing the old post file when a published
+  title changes, and the AI's suggestions shown while typing (today the writer asks for a review).
 
 ## Recall
 
@@ -727,10 +782,8 @@ Taken from learnharness: the user thinks out loud, by typing or by dictation, an
   cited? For now a Note's page is optional.
 - Does each user have a separate graph and separate records?
 - Which reference system does the university require?
-- How do references appear in a blog post: links, footnotes, or nothing?
 - How does the tool check that a quote matches the source when it does not have the full text of the book?
-- Which suggestions may the AI make in a writing project: other words, weak sentences, questions, a review at the end?
+- Beyond the Blog post help decided above (Notes to cite, flags, quote and page checks, closing questions), may the AI suggest other words or point at weak sentences?
 - When a note changes, what happens to the cards made from it?
-- How does publishing to a blog work: export a file, or push directly to the site?
 - Does the AI see the book text, or only the user's free text plus what the model already knows?
 - What exactly are the richer note types (author, work, period, concept)?

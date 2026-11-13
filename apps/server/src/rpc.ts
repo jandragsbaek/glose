@@ -15,6 +15,7 @@ import * as Sessions from "./sessions/Sessions.ts";
 import * as Settings from "./settings/Settings.ts";
 import * as Setup from "./settings/Setup.ts";
 import * as Versions from "./versions/Versions.ts";
+import * as Writing from "./writing/Writing.ts";
 
 /** Thin transport: RpcServer decodes the payload, the handler calls one service method. */
 export const layer = GloseRpcGroup.toLayer(
@@ -33,6 +34,7 @@ export const layer = GloseRpcGroup.toLayer(
     const recall = yield* Recall.Recall;
     const versions = yield* Versions.Versions;
     const github = yield* GitHub.GitHub;
+    const writing = yield* Writing.Writing;
     return GloseRpcGroup.of({
       [RPC_METHODS.serverInfo]: () => info.get,
       [RPC_METHODS.settingsGet]: () => settings.get,
@@ -87,6 +89,13 @@ export const layer = GloseRpcGroup.toLayer(
       [RPC_METHODS.versionsBackUpToGitHub]: (input) => versions.backUpToGitHub(input),
       [RPC_METHODS.versionsSetRemote]: (input) => versions.setRemote(input),
       [RPC_METHODS.versionsRemoveRemote]: () => versions.removeRemote,
+      [RPC_METHODS.settingsSetSiteFolder]: ({ siteFolder }) => settings.setSiteFolder(siteFolder),
+      [RPC_METHODS.writingList]: () => writing.list,
+      [RPC_METHODS.writingGet]: ({ id }) => writing.get(id),
+      [RPC_METHODS.writingCreate]: (fields) => writing.create(fields),
+      [RPC_METHODS.writingSave]: (input) => writing.save(input),
+      [RPC_METHODS.writingReview]: ({ id }) => writing.review(id),
+      [RPC_METHODS.writingPublish]: (input) => writing.publish(input),
     });
   }),
 );
