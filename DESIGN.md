@@ -703,6 +703,23 @@ triangle icon, and ends in `?`; its accessible name says what it is.
 A 56 by 136px lapis block with gilt double bands at the top and the call number set vertically
 at the foot. It stands beside the current Source and its bibliographic data.
 
+### Reading Start
+
+The first page of a Source that has not started: the Reading Stage's columns, with one panel
+(rubric Initial) "Where are you with this book?" ("Hvor er du med denne bog?") in the main column
+and the Source's details (lapis Initial) in the side column.
+
+- **Answers:** a Mute 13px hint, then three stacked Choice rows (640px max, 10px gaps, 12px 16px
+  padding): the radio at the first line, a 600 label over a Mute 13px hint. Hover darkens the
+  border to Mute; checked turns it Lapis on Lapis Tint. An answer that cannot be chosen yet is
+  Mute with a not-allowed cursor, and its hint says why.
+- **What follows:** under a Hairline, a Mute 600 13px uppercase label (no Initial), then the
+  checked answer's steps as a Step Bar strip (220px a step; one column under 520px). The first
+  step wears the current step's Lapis Tint and Gilt underline. Before an answer, a Mute line says
+  to choose one.
+- **Action:** one primary button, 18px below, that names the first step ("Start Free text",
+  "Start the Probe"); it is off until an answer is checked.
+
 ### Step Bar
 
 The three Reading steps in one bordered strip, divided by Hairlines. Each step: a Courier step

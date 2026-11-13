@@ -6,6 +6,7 @@ import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useId, useState } from "react";
 
 import { Extraction } from "../components/Extraction.tsx";
+import { ReadingStart } from "../components/ReadingStart.tsx";
 import { StepBar } from "../components/StepBar.tsx";
 import {
   CallNumber,
@@ -16,7 +17,7 @@ import {
   Spine,
   StorageProblem,
 } from "../components/ui.tsx";
-import { missingDetails, wordCount } from "../domain/source.ts";
+import { asksWhereToStart, missingDetails, wordCount } from "../domain/source.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { KEYS, saveFreeTextAtom, sourceAtom } from "../state/graph.ts";
 
@@ -81,6 +82,16 @@ function SourceView({ source }: { readonly source: Source }) {
       </Page>
     );
   }
+  if (asksWhereToStart(source)) {
+    return (
+      <Page title={source.title} sub={sub}>
+        <div className="columns">
+          <ReadingStart source={source} />
+          <Details source={source} />
+        </div>
+      </Page>
+    );
+  }
   return (
     <Page title={source.title} sub={sub}>
       <div className="columns">
@@ -138,6 +149,8 @@ function FreeText({ source }: { readonly source: Source }) {
           id={textId}
           aria-describedby={hintId}
           value={text}
+          // Right after "I have thoughts I want to write down", the box is where to go.
+          autoFocus={inFreeText && source.readingStart === "write" && source.freeText === ""}
           onChange={(event) => {
             setText(event.target.value);
             if (state === "saved") setState("idle");

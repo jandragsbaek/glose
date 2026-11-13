@@ -84,7 +84,7 @@ it.layer(NodeServices.layer)("Sources", (it) => {
         const path = yield* Path.Path;
         yield* fs.writeFileString(
           path.join(folder, "Kierkegaard 1843 Frygt og Bæven.md"),
-          "---\nglose: source\nauthor-family: Kierkegaard\ntitle: Frygt og Bæven\nfirst-published: 1843\nreading-step: probe\nadded: 2026-09-14\n---\n\nAbraham tier.\n",
+          "---\nglose: source\nauthor-family: Kierkegaard\ntitle: Frygt og Bæven\nfirst-published: 1843\nreading-step: probe\nreading-start: catch-up\nadded: 2026-09-14\n---\n\nAbraham tier.\n",
         );
         yield* fs.writeFileString(
           path.join(folder, "The leap of faith.md"),
@@ -112,6 +112,7 @@ it.layer(NodeServices.layer)("Sources", (it) => {
               publisher: null,
               translator: null,
               readingStep: "probe",
+              readingStart: "catch-up",
               freeText: "Abraham tier.",
               added: new Date(2026, 8, 14).getTime(),
             },
@@ -202,6 +203,26 @@ it.layer(NodeServices.layer)("Sources", (it) => {
         assert.deepStrictEqual(
           [draft.readingStep, finished.readingStep, reread.freeText],
           ["free-text", "extraction", "Labour, work, action."],
+        );
+      }),
+    ),
+  );
+
+  it.effect("keeps the answer to where the user is with the book, which sets the first step", () =>
+    withGraph(({ folder, sources }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const writer = yield* sources.create(ARENDT);
+        const written = yield* sources.chooseStart({ id: writer.id, start: "write" });
+        const markdown = yield* fs.readFileString(path.join(folder, `${writer.id}.md`));
+        const prober = yield* sources.create({ ...ARENDT, title: "Between Past and Future" });
+        const probed = yield* sources.chooseStart({ id: prober.id, start: "catch-up" });
+
+        assert.include(markdown, "reading-step: free-text\nreading-start: write\n");
+        assert.deepStrictEqual(
+          [written.readingStep, probed.readingStep, (yield* sources.get(prober.id)).readingStart],
+          ["free-text", "probe", "catch-up"],
         );
       }),
     ),

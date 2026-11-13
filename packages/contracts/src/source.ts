@@ -4,6 +4,14 @@ import * as Schema from "effect/Schema";
 export const ReadingStep = Schema.Literals(["free-text", "extraction", "probe", "done"]);
 export type ReadingStep = typeof ReadingStep.Type;
 
+/**
+ * How the user starts the Reading Stage, from their answer to "Where are you with this book?":
+ * `write` starts with the Free text; `probe` and `catch-up` start with the Probe, `catch-up`
+ * for a book read long ago or only in part, so the Probe explains more.
+ */
+export const ReadingStart = Schema.Literals(["write", "probe", "catch-up"]);
+export type ReadingStart = typeof ReadingStart.Type;
+
 const Text = Schema.Trim.pipe(Schema.check(Schema.isNonEmpty()));
 const OptionalText = Schema.NullOr(Text);
 const Year = Schema.NullOr(
@@ -28,6 +36,8 @@ export const Source = Schema.Struct({
   id: Schema.String,
   ...SourceDetails.fields,
   readingStep: ReadingStep,
+  /** Null until the user answers; Sources from before the question have none. */
+  readingStart: Schema.NullOr(ReadingStart),
   freeText: Schema.String,
   /** Last change of the file, in epoch milliseconds. */
   modified: Schema.Number,
@@ -46,6 +56,11 @@ export const SaveFreeText = Schema.Struct({
   freeText: Schema.String,
   /** Ends the Free text step and moves the Source to Extraction. */
   finish: Schema.Boolean,
+});
+
+export const ChooseReadingStart = Schema.Struct({
+  id: Schema.String,
+  start: ReadingStart,
 });
 
 export class SourceNotFound extends Schema.TaggedError<SourceNotFound>()("SourceNotFound", {

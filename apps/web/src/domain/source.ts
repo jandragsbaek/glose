@@ -24,3 +24,12 @@ export const missingDetails = (source: Source): ReadonlyArray<MissingDetail> => 
 
 export const wordCount = (text: string): number =>
   text.split(/\s+/u).filter((word) => /[\p{L}\p{N}]/u.test(word)).length;
+
+/**
+ * A Source opens on "Where are you with this book?" until the user answers. A Source from before
+ * the question, with Free text already written or past the Free text, opens where it is.
+ */
+export const asksWhereToStart = (source: Source): boolean =>
+  source.readingStart === null &&
+  source.readingStep === "free-text" &&
+  source.freeText.trim() === "";

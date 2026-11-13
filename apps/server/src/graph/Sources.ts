@@ -1,5 +1,6 @@
 import {
   GraphFolderNotSet,
+  type ReadingStart,
   type Source,
   type SourceDetails,
   SourceNameTaken,
@@ -33,6 +34,10 @@ export class Sources extends Context.Service<
       readonly id: string;
       readonly freeText: string;
       readonly finish: boolean;
+    }) => Effect.Effect<Source, SourceNotFound | GraphError>;
+    readonly chooseStart: (input: {
+      readonly id: string;
+      readonly start: ReadingStart;
     }) => Effect.Effect<Source, SourceNotFound | GraphError>;
   }
 >()("glose/Sources") {}
@@ -133,6 +138,7 @@ export const make = Effect.gen(function* () {
       return yield* writeSource(folder, id, {
         ...details,
         readingStep: "free-text",
+        readingStart: null,
         freeText: "",
         added: yield* Clock.currentTimeMillis,
       }).pipe(Effect.mapError(storageError));
@@ -144,6 +150,17 @@ export const make = Effect.gen(function* () {
       const readingStep =
         finish && source.readingStep === "free-text" ? "extraction" : source.readingStep;
       return yield* writeSource(folder, id, { ...source, freeText, readingStep }).pipe(
+        Effect.mapError(storageError),
+      );
+    }),
+
+    chooseStart: Effect.fn("Sources.chooseStart")(function* ({ id, start }) {
+      const source = yield* get(id);
+      const folder = yield* graphFolder;
+      // The answer sets the first step only while nothing has started; later it is just kept.
+      const readingStep =
+        start !== "write" && source.readingStep === "free-text" ? "probe" : source.readingStep;
+      return yield* writeSource(folder, id, { ...source, readingStart: start, readingStep }).pipe(
         Effect.mapError(storageError),
       );
     }),

@@ -46,6 +46,7 @@ import {
   StorageError,
 } from "./settings.ts";
 import {
+  ChooseReadingStart,
   SaveFreeText,
   Source,
   SourceDetails,
@@ -65,6 +66,7 @@ export const RPC_METHODS = {
   sourcesGet: "sources.get",
   sourcesCreate: "sources.create",
   sourcesSaveFreeText: "sources.saveFreeText",
+  sourcesChooseStart: "sources.chooseStart",
   graphRead: "graph.read",
   catalogSearch: "catalog.search",
   chatgptWatch: "chatgpt.watch",
@@ -141,6 +143,12 @@ export const GloseRpcGroup = RpcGroup.make(
   }),
   Rpc.make(RPC_METHODS.sourcesSaveFreeText, {
     payload: SaveFreeText,
+    success: Source,
+    error: Schema.Union([SourceNotFound, GraphFolderNotSet, StorageError]),
+  }),
+  /** Records the answer to "Where are you with this book?", which sets the first step. */
+  Rpc.make(RPC_METHODS.sourcesChooseStart, {
+    payload: ChooseReadingStart,
     success: Source,
     error: Schema.Union([SourceNotFound, GraphFolderNotSet, StorageError]),
   }),
