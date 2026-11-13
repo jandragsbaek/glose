@@ -31,6 +31,11 @@ export const Source = Schema.Struct({
   freeText: Schema.String,
   /** Last change of the file, in epoch milliseconds. */
   modified: Schema.Number,
+  /**
+   * When the Source was added, in epoch milliseconds: the `added` date in its frontmatter, else
+   * the file's creation time, else its last change.
+   */
+  added: Schema.Number,
 });
 export type Source = typeof Source.Type;
 

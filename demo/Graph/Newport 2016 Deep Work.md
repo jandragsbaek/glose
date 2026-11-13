@@ -6,6 +6,7 @@ title: Deep Work
 first-published: 2016
 publisher: Grand Central Publishing
 reading-step: done
+added: 2026-10-15
 ---
 
 I read this one in short bursts on my phone, which is a bit embarrassing given the topic. Newport's argument is simple and he repeats it often: the ability to focus without distraction on hard things is getting rarer just as it gets more valuable. [[Deep work is rare and valuable]] is the whole book in one sentence.

@@ -5,6 +5,7 @@ author-given: Sönke
 title: How to Take Smart Notes
 first-published: 2017
 reading-step: done
+added: 2026-09-12
 ---
 
 I picked this up because everyone who builds note apps seems to quote it, and I wanted to see what the fuss was about. The core is simple: Niklas Luhmann kept a box of small, numbered, linked notes for decades and wrote an absurd amount from it. Ahrens turns that into a method and argues for it with learning research.

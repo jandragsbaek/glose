@@ -6,6 +6,7 @@ title: Den afrikanske farm
 first-published: 1937
 publisher: Gyldendal
 reading-step: probe
+added: 2026-11-02
 ---
 
 Jeg tog Den afrikanske farm frem efter Arendt, fordi hun åbner sit kapitel om handling med en sætning af Isak Dinesen. Det var en god omvej. Bogen er hverken en roman eller helt en erindringsbog: den er en række billeder og fortællinger fra farmen ved foden af Ngong-bjergene, hvor Blixen drev en kaffefarm, indtil hun måtte rejse hjem i 1931.

@@ -227,6 +227,35 @@ components:
     padding: "6px 14px"
   link-button:
     textColor: "{colors.lapis}"
+  segmented-option:
+    textColor: "{colors.ink}"
+    rounded: "{rounded.base}"
+    padding: "9px 12px"
+  segmented-option-selected:
+    backgroundColor: "{colors.tint}"
+    textColor: "{colors.lapis}"
+  select:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.base}"
+    padding: "9px 34px 9px 12px"
+  register-cell:
+    textColor: "{colors.ink}"
+    padding: "9px 12px"
+  register-group:
+    backgroundColor: "{colors.ground}"
+    textColor: "{colors.ink}"
+    padding: "6px 12px"
+  register-row-selected:
+    backgroundColor: "{colors.tint}"
+  register-links:
+    textColor: "{colors.lapis}"
+  reading-mark:
+    backgroundColor: "{colors.paper}"
+    size: "9px"
+  reading-mark-done:
+    backgroundColor: "{colors.verdigris}"
+    size: "9px"
 ---
 
 # Design System: Glose
@@ -262,12 +291,15 @@ itself stays ink; see the AI Text component.
 
 **Key Characteristics:**
 
-- Lapis rail (96px) of large Section icons with labels under them; gold marks the current one.
+- Lapis rail (96px) of large icons with labels under them: Today and Sources above a short rule,
+  the Sections below it; gold marks the current one.
 - White panels with hairline borders; each heading opens with a rubric or lapis Cinzel initial,
   alternating down a column, above a hairline with a rubric pen flourish in its middle.
 - Call numbers as typed white spine labels in Courier Prime with a 1px ink border.
 - Flat surfaces; depth comes from hairlines and the ground/paper step, not shadows.
 - Red is a signal with fixed jobs, never a decoration of data.
+- State is a small mark in a fixed cell (Reading marks, a Citation check or triangle); rank comes
+  from weight, never from bigger type.
 - A focus screen (Review) drops the rail and the page header: one Paper leaf on Ground.
 
 ## Colors
@@ -278,7 +310,9 @@ three small pigments (gold, rubric red, verdigris) each with one job.
 ### Primary
 
 - **Lapis** (lapis): the rail, the Source spine, the primary button, links and link buttons, focus outlines on
-  paper, the caret and native accent color. The one large field of color on any screen.
+  paper, the caret and native accent color. The one large field of color on any screen. In the
+  Sources register it is also the Links toggle, the ring of the current Reading mark, the checked
+  segment's label, and the 3px edge on rows that share Links with the chosen Source.
 - **Raised Lapis** (lapis-raised): rail item hover and current state; primary button hover.
 - **Lapis Rule** (lapis-line): hairlines and outlines on the lapis field (rail divider, the
   language switch border).
@@ -288,7 +322,8 @@ three small pigments (gold, rubric red, verdigris) each with one job.
 ### Secondary
 
 - **Gilt** (gold): the "you are here" marker. The current rail icon, the current step's 3px
-  underline, the two gilt bands on a spine, and the focus outline on lapis. Never text on paper.
+  underline, the 2px underline under the current Reading mark, the two gilt bands on a spine, and
+  the focus outline on lapis. Never text on paper.
 - **Gilt Wash** (gold-wash): text selection only.
 
 ### Tertiary
@@ -298,20 +333,23 @@ three small pigments (gold, rubric red, verdigris) each with one job.
 - **Rubric Wash** (rubric-wash): the background of a stand-alone warning notice.
 - **Rubric Line** (rubric-line): the border of a stand-alone warning notice.
 - **Verdigris** (verdigris): done. The check icon and 3px underline of a finished step, the
-  check of a finished sheet and the "Copied" check.
+  check of a finished sheet and the "Copied" check, a filled (done) Reading mark, and the check
+  and "Ready" of a Source ready to cite.
 
 ### Neutral
 
-- **Ground** (ground): the page behind panels and the setup body.
+- **Ground** (ground): the page behind panels and the setup body; the group rows of the register.
 - **Paper** (paper): panels, the page header, inputs, buttons, call-number labels.
 - **Ink** (ink): text, secondary button border, call-number and typed-code border; at 32%
   (`rgb(20 20 20 / 32%)`) the veil behind a sheet.
 - **Mute** (mute): secondary text, hints, meta, empty-state copy, field legends, fact labels,
   the Review progress line, rating intervals and key-cap letters.
 - **Hairline** (line): panel borders, header rule, row and step dividers, the flourish rule.
-- **Strong Hairline** (line-strong): input and choice borders, key-cap borders, the border of a
-  leaf over the page (the Versions panel, a sheet), scrollbar thumb.
-- **Lapis Tint** (tint): secondary button hover, the current step, a selected choice.
+- **Strong Hairline** (line-strong): input and choice borders, the segmented control's border and
+  dividers, key-cap borders, the ring of a Reading mark not reached yet, the border of a leaf over
+  the page (the Versions panel, a sheet), scrollbar thumb.
+- **Lapis Tint** (tint): secondary button hover, the current step, a selected choice, a hovered or
+  checked segment, the register row whose Links are shown.
 
 ### Named Rules
 
@@ -319,11 +357,16 @@ three small pigments (gold, rubric red, verdigris) each with one job.
 When red marks an error or missing data, it always comes with a warning icon and words; red
 alone never carries a meaning.
 
-**The Gilt Marker Rule.** Gold says "here": the current Section, the current step, a spine's
-bands, focus on lapis. It is never used for text on paper or for decoration elsewhere.
+**The Gilt Marker Rule.** Gold says "here": the current Section, the current step (in the Step
+Bar and under a Reading mark), a spine's bands, focus on lapis. It is never used for text on paper or for decoration elsewhere.
 
 **The One Field Rule.** Lapis is the only large color field (rail, spine, the primary button).
 Panels and the page stay paper and ground.
+
+**The Ribbon Edge Rule.** A 3px Lapis edge on the left of a register row says "this Source shares
+Links with the one you chose", like a ribbon marker in a book. It is the one place a side edge
+marks rows, and it never comes alone: the row's Links cell reads "N shared" in Lapis 700, and the
+hint above the table repeats the same edge beside a sentence that names the Source.
 
 ## Typography
 
@@ -386,6 +429,14 @@ Spacing steps through 4, 6, 8, 12, 16, 20, 24 and 32px; panel bodies pad 16px 20
 heads pad 14px 20px. Forms use a two-column field grid (16px row, 20px column gaps) with wide
 fields spanning both.
 
+The Sources page (`/sources`) is one column of two full-width panels with 20px between: On the
+desk, then The register. The header carries "Sources", a Mute count line ("10 Sources · 2 in
+progress") and Add Source (primary) on the right. The desk sets its Sources side by side in a
+grid of 300px-minimum cells with 24px gaps. The register's tools wrap on one band (10px row, 8px
+column gaps, 16px 20px 14px padding) with the hint pushed right; the table under them scrolls
+sideways inside the panel rather than squeezing, since its cells don't wrap (only the title
+cell, at least 18em). Below 720px the segmented control and the selects wrap too.
+
 Extraction (the Reading Stage past the Free text) fills the window under the header: a work
 column (24px 32px 48px padding, content up to 960px, its own scroll) and a 360 to 420px margin
 column for the Session on Paper, divided by a full-height Hairline. The margin's transcript
@@ -421,6 +472,9 @@ leaf, each narrower, with hairline borders and no shadow.
 A sheet lifts off the page without a shadow: the page behind it dims under an Ink veil at 32%,
 and the leaf takes a Strong Hairline border.
 
+The register's lapis edge is drawn with `box-shadow: inset 3px 0 0` on a row's first cell, so it
+needs no border that would shift the columns. It is a mark, not depth.
+
 ### Named Rules
 
 **The Hairline Rule.** Panels separate by a 1px Hairline and a white leaf on Ground. Don't add
@@ -431,7 +485,8 @@ resting shadows.
 Quiet, nearly square corners: 4px on panels, buttons, inputs, choices, notices, the step bar and
 rail items, key caps, the Review leaf and a sheet; 2px on call-number labels, the typed code
 and skeleton bars; 3px on the spine. Review leaf edges round only their two lower corners (4px). The one curve is the
-pen flourish (a 64 by 10px stroked SVG with a center dot) set between two hairlines.
+pen flourish (a 64 by 10px stroked SVG with a center dot) set between two hairlines. The one circle
+is the Reading mark (9px, 1.5px ring). The register's lapis edge is a straight 3px band.
 
 ## Components
 
@@ -499,9 +554,10 @@ and the Backup panel.
 
 ### Navigation (Rail)
 
-- **Style:** Lapis column, 16px 8px padding. The mark is a call-number label ("GLO"). Each
-  Section is a 32px Lucide icon (1.6 stroke) over its rail label; a short Lapis Rule separates
-  Today from the Sections.
+- **Style:** Lapis column, 16px 8px padding. The mark is a call-number label ("GLO"). Each item is
+  a 32px Lucide icon (1.6 stroke) over its rail label. Today (calendar) and Sources (library) are
+  places and sit above a short Lapis Rule; the three Sections (Graph, Writing projects, Recall)
+  sit under it.
 - **States:** resting Lapis Mist; hover and current fill Raised Lapis with white text; the current
   icon turns Gilt. 160ms transitions.
 - **Foot:** the EN/DA switch (a stacked segmented control, checked segment white with lapis text)
@@ -614,6 +670,57 @@ at the foot. It stands beside the current Source and its bibliographic data.
 The three Reading steps in one bordered strip, divided by Hairlines. Each step: a Courier step
 number, a Label name, a Meta note. Current: Lapis Tint with a 3px Gilt underline and
 `aria-current`. Done: a 3px Verdigris underline and a Verdigris check.
+
+### Reading Marks
+
+Three small marks for the three Reading steps, read left to right: a filled Verdigris dot for a
+step done, a Lapis ring with a 2px Gilt underline (5.5px below) for the current step, and a
+hollow Strong Hairline ring for a step not reached. Each is 9px with a 1.5px ring on Paper, 5px
+apart. In the register they are one image named by the state ("In Extraction", "Read"); on the
+desk they are hidden from screen readers because the words beside them say the step.
+
+### Desk
+
+The "On the desk" panel (rubric Initial, the count in progress as Meta): every Source not yet
+read, side by side. Each holds the 56px Spine, then the title (700 16px, 1.3, an Ink link that
+underlines on hover), the author in Mute 14px, the Reading marks with the step and its count in
+600 14px tabular ("Probe · 9 Notes"), an inline warning for missing Citation data (13px with a
+16px triangle), and, 14px below, a small primary Continue that names the step. Long Danish
+step names wrap inside the button. When every Source is read, the panel says so in Mute.
+
+### Register (signature)
+
+"The register" panel (lapis Initial, the count or "4 of 10 Sources" as Meta): every Source as a
+row of a table that reads down.
+
+- **Tools:** a search form above the table. The find field is the Text Field with a drawn 16px
+  Mute Search icon at its left (36px left padding); the Order as a Segmented control (Added, Call
+  number, Author); Reading and Citation as Selects; and the hint pushed right (Mute 13px, max
+  56ch, `role="status"`).
+- **Segmented control:** one Strong Hairline box (4px) of options divided by Strong Hairlines,
+  each 600 14px/20px at 9px 12px. Hover fills Lapis Tint; checked fills Lapis Tint with a Lapis
+  label. The radio is invisible over its option; focus is a 2px Lapis outline inside the option.
+  160ms on the shared ease-out.
+- **Select:** the native select with the Text Field's border, focus and hover, set like a segment
+  (600 14px/20px, 9px top and bottom), its own arrow removed for a drawn 16px Mute ChevronDown
+  10px from the right.
+- **Table:** 14px with tabular numerals; cells 9px 12px (20px at the panel edges) with a Hairline
+  under each, no wrapping. Head cells in Mute 600 13px, and they wrap. Number columns align
+  right. A Source group opens with a row on Ground in 600 13px ("November 2026 · 2 added", or a
+  letter when ordered by Call number or Author).
+- **Cells:** the Call Number; the title as an Ink 600 link with the author after it in Mute; the
+  Reading marks; Notes; "With a Location" as "3 of 10" (a Mute dash with no Notes); Links to other
+  Sources; Citation, either a 15px Verdigris check and "Ready" or a 15px Rubric triangle and the
+  missing data in 600 ("No publisher").
+- **Links toggle:** the count of Sources a Source shares Links with ("4 Sources") is a button
+  that reads as a Lapis link, 1px underline at 3px offset, 2px on hover, with `aria-pressed`.
+  "Stands alone" in Mute when there are none.
+- **Showing Links:** pressed, its row fills Lapis Tint and its count turns Lapis 700. Every row
+  sharing Links with it gains the 3px Lapis edge and reads "N shared" in Lapis 700 (screen
+  readers hear "3 Links shared with Deep Work"). The hint changes to the same 3px edge (16px tall),
+  "6 Sources share Links with Deep Work." and a Clear link button. The chosen Source lives in the
+  address (`?source=`), so Back returns to it. The tint and the edge ease in over 160ms.
+- **Nothing found:** "No Source matches." in Mute and a "Clear search and filters" link button.
 
 ### AI Text (signature)
 
@@ -735,6 +842,10 @@ Skeleton bars (14px, 2px corners) shimmer Tint to Ground over 1.4s inside a pane
 - **Do** give every button on a focus screen that a key presses a key cap, and name the key in
   `aria-keyshortcuts`.
 - **Do** use tabular numerals for counts, years and call numbers.
+- **Do** show a Source's state as a mark in a fixed cell (Reading marks, the Citation check or
+  triangle), and rank by weight, not by bigger type.
+- **Do** keep the 3px Lapis edge for rows that share Links with a chosen Source, with "N shared"
+  and the hint saying it in words.
 
 ### Don't:
 

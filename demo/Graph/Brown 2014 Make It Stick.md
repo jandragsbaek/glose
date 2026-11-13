@@ -6,6 +6,7 @@ title: Make It Stick
 first-published: 2014
 publisher: Belknap Press
 reading-step: done
+added: 2026-09-24
 ---
 
 I picked this up because I wanted to know if my own study habits were any good. Short answer: mostly not. For years I reread and highlighted, and it felt like work, so I assumed it worked. The book (written with the cognitive scientists Henry Roediger and Mark McDaniel) takes that feeling apart. [[Rereading creates an illusion of knowing]], and the strategies that feel slow and clumsy are often the ones that last.

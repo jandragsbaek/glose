@@ -6,6 +6,7 @@ title: On Writing Well
 first-published: 1976
 publisher: Harper & Row
 reading-step: extraction
+added: 2026-11-09
 ---
 
 A classic I had been putting off because I assumed it would be a list of rules. It is not, or not only. Zinsser writes like a friendly, slightly grumpy editor who has seen every bad habit and still likes writers.

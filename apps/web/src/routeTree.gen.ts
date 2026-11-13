@@ -15,6 +15,7 @@ import { Route as RecallRouteImport } from './routes/recall'
 import { Route as ReviewRouteImport } from './routes/review'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as WritingRouteImport } from './routes/writing'
+import { Route as SourcesIndexRouteImport } from './routes/sources.index'
 import { Route as SourcesSourceIdRouteImport } from './routes/sources.$sourceId'
 import { Route as SourcesNewRouteImport } from './routes/sources.new'
 import { Route as NotesNoteIdCardsRouteImport } from './routes/notes.$noteId.cards'
@@ -49,6 +50,11 @@ const WritingRoute = WritingRouteImport.update({
   path: '/writing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SourcesIndexRoute = SourcesIndexRouteImport.update({
+  id: '/sources/',
+  path: '/sources/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SourcesSourceIdRoute = SourcesSourceIdRouteImport.update({
   id: '/sources/$sourceId',
   path: '/sources/$sourceId',
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/writing': typeof WritingRoute
   '/sources/$sourceId': typeof SourcesSourceIdRoute
   '/sources/new': typeof SourcesNewRoute
+  '/sources/': typeof SourcesIndexRoute
   '/notes/$noteId/cards': typeof NotesNoteIdCardsRoute
 }
 export interface FileRoutesByTo {
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/writing': typeof WritingRoute
   '/sources/$sourceId': typeof SourcesSourceIdRoute
   '/sources/new': typeof SourcesNewRoute
+  '/sources': typeof SourcesIndexRoute
   '/notes/$noteId/cards': typeof NotesNoteIdCardsRoute
 }
 export interface FileRoutesById {
@@ -97,6 +105,7 @@ export interface FileRoutesById {
   '/writing': typeof WritingRoute
   '/sources/$sourceId': typeof SourcesSourceIdRoute
   '/sources/new': typeof SourcesNewRoute
+  '/sources/': typeof SourcesIndexRoute
   '/notes/$noteId/cards': typeof NotesNoteIdCardsRoute
 }
 export interface FileRouteTypes {
@@ -110,6 +119,7 @@ export interface FileRouteTypes {
     | '/writing'
     | '/sources/$sourceId'
     | '/sources/new'
+    | '/sources/'
     | '/notes/$noteId/cards'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/writing'
     | '/sources/$sourceId'
     | '/sources/new'
+    | '/sources'
     | '/notes/$noteId/cards'
   id:
     | '__root__'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
     | '/writing'
     | '/sources/$sourceId'
     | '/sources/new'
+    | '/sources/'
     | '/notes/$noteId/cards'
   fileRoutesById: FileRoutesById
 }
@@ -144,6 +156,7 @@ export interface RootRouteChildren {
   WritingRoute: typeof WritingRoute
   SourcesSourceIdRoute: typeof SourcesSourceIdRoute
   SourcesNewRoute: typeof SourcesNewRoute
+  SourcesIndexRoute: typeof SourcesIndexRoute
   NotesNoteIdCardsRoute: typeof NotesNoteIdCardsRoute
 }
 
@@ -191,6 +204,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WritingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sources/': {
+      id: '/sources/'
+      path: '/sources'
+      fullPath: '/sources/'
+      preLoaderRoute: typeof SourcesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sources/$sourceId': {
       id: '/sources/$sourceId'
       path: '/sources/$sourceId'
@@ -224,6 +244,7 @@ const rootRouteChildren: RootRouteChildren = {
   WritingRoute: WritingRoute,
   SourcesSourceIdRoute: SourcesSourceIdRoute,
   SourcesNewRoute: SourcesNewRoute,
+  SourcesIndexRoute: SourcesIndexRoute,
   NotesNoteIdCardsRoute: NotesNoteIdCardsRoute,
 }
 export const routeTree = rootRouteImport

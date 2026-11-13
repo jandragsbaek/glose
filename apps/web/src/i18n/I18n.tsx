@@ -9,6 +9,7 @@ export const catalogs: Record<Language, Messages> = { en, da };
 export const LANGUAGES: ReadonlyArray<Language> = ["en", "da"];
 
 const MessagesContext = createContext<Messages>(en);
+const LanguageContext = createContext<Language>("en");
 
 /** Before the user picks a language: Danish for a Danish system, English otherwise. */
 export const systemLanguage = (): Language =>
@@ -25,10 +26,19 @@ export function I18nProvider({
   useEffect(() => {
     document.documentElement.lang = language;
   }, [language]);
-  return <MessagesContext value={catalogs[language]}>{children}</MessagesContext>;
+  return (
+    <LanguageContext value={language}>
+      <MessagesContext value={catalogs[language]}>{children}</MessagesContext>
+    </LanguageContext>
+  );
 }
 
 /** The messages of the current interface language. */
 export function useT(): Messages {
   return use(MessagesContext);
+}
+
+/** The interface language, for sorting and comparing words by its alphabet. */
+export function useLanguage(): Language {
+  return use(LanguageContext);
 }
