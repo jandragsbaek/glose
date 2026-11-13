@@ -26,18 +26,19 @@ export const MAX_LINKS = 5;
 /** The rules of an Extraction Session. They follow docs/ideas.md: the user does the thinking. */
 export const INSTRUCTIONS = `You are the AI in Glose, a desktop app where a person learns from what they read. You run the Extraction step of the Reading Stage for one Source (usually a book).
 
-Goal: help the user pull out the core points of the Source. Each Point becomes a small Note in the user's Graph: one idea, its title a full sentence that states the claim (such as "Spaced practice beats massed practice"), its text in the user's own words, linked to the Notes it relates to.
+Goal: help the user pull out the core points of the Source. Each Point becomes a small Note in the user's Graph: one idea, its title a full sentence that states the claim (such as "Spaced practice beats massed practice"), its text, linked to the Notes it relates to. The goal is that the user rewrites all of its text in their own words.
 
 How to work:
 - Start with read_source: the Source's bibliographic data and the user's Free text, what they wrote freely about it. Then use search_graph a few times, with different words for the Source's main ideas, and read_note on the Notes that matter, so you know what the user's Graph already holds. Call list_sources when other Sources may matter.
 - Propose Points only through propose_points, a few at a time (at most ${MAX_POINTS}), the ones that matter most first. list_points shows the Points already in the Session; do not propose one again.
 - Say where each Point comes from. Origin "free-text" when the user's Free text holds it: give the quote, the exact words of the Free text, copied character for character. Origin "ai" when it comes from your knowledge of the Source and not from the Free text. Never present your knowledge as something the user wrote. If you are unsure what the Source says, say so.
 - Use the Graph. When a Note already says the Point, name it in repeats. When a Note disagrees with the Point or pulls against it, name it in pulls_against_note and say how. Propose links to the Notes the Point's Note should link to, each with a short reason. Name only Notes that search_graph or read_note showed you, by their exact names.
-- Write Points in the language of the Free text.
+- Give each Point a draft of its Note: one to three short paragraphs that state the claim, explain it and stay true to the Source. The user's form starts with it. Glose marks it as AI text, edited or not, until the user says they rewrote it in their own words.
+- Write Points and drafts in the language of the Free text.
 - The user does the thinking. After you propose, write a short message: what the Points cover and which come from your own knowledge. End each message with one question that makes the user restate, test or sharpen a Point in their own words. Do not lecture, and do not repeat the Points' words in your message.
 - Refer to a Point by its number in square brackets, such as [3]. Refer to a Note as a wikilink, such as [[Note name]].
 - A user's message may be about one Point; it then starts with "(About point N: ...)". Answer about that Point.
-- When the user asks for a draft of a Point, write it with draft_note: one to three short paragraphs that state the claim, explain it and stay true to the Source. Glose marks your draft as AI text. Never write a draft that was not asked for.
+- When the user asks for a new draft of a Point, write it with draft_note. It replaces the text in the user's form. Never call draft_note when the user did not ask for a draft.
 - When the user writes a Point as a Note, you hear what they wrote. Comment only when something is wrong, missing or worth linking; propose_links adds Links to a kept Point.
 - Write your messages in the language of the user's messages, or the interface language named in the first message. Write plain text, short enough to read in a narrow column.`;
 
@@ -75,7 +76,7 @@ const describe = (source: Source) => ({
 });
 
 /** A Point as the AI proposes it, before Glose checks its quote and the Notes it names. */
-export type ProposedPoint = Omit<Point, "id" | "state" | "note" | "page" | "draft">;
+export type ProposedPoint = Omit<Point, "id" | "state" | "note" | "page">;
 
 const NullableString = Schema.NullOr(Schema.String);
 const ProposeArguments = Schema.Struct({
@@ -88,6 +89,7 @@ const ProposeArguments = Schema.Struct({
       pulls_against_note: NullableString,
       pulls_against_why: NullableString,
       links: Schema.Array(Schema.Struct({ note: Schema.String, why: Schema.String })),
+      draft: Schema.String,
     }),
   ),
 });
@@ -233,7 +235,7 @@ export const tools = ({
     {
       name: "propose_points",
       entry: null,
-      description: `Show proposed Points to the user, who keeps, edits or drops each one and writes the kept ones as Notes. At most ${MAX_POINTS} per call.`,
+      description: `Show proposed Points to the user, each with a draft of its Note. The user keeps, edits or drops each one, and writes the kept ones as Notes from your draft or in their own words. At most ${MAX_POINTS} per call.`,
       parameters: {
         type: "object",
         properties: {
@@ -252,6 +254,11 @@ export const tools = ({
                 pulls_against_note: nullable("A Note that disagrees with this Point."),
                 pulls_against_why: nullable("How that Note and this Point disagree."),
                 links: LINK_ITEMS,
+                draft: {
+                  type: "string",
+                  description:
+                    "A draft of the Note's text: one to three short paragraphs, plain text. Glose marks it as AI text.",
+                },
               },
               required: [
                 "title",
@@ -261,6 +268,7 @@ export const tools = ({
                 "pulls_against_note",
                 "pulls_against_why",
                 "links",
+                "draft",
               ],
               additionalProperties: false,
             },
@@ -297,6 +305,7 @@ export const tools = ({
                 ? null
                 : { note: against, why: (point.pulls_against_why ?? "").trim() },
             links: checkedLinks(resolve, point.links).slice(0, MAX_LINKS),
+            draft: point.draft.trim() === "" ? null : point.draft.trim(),
           });
         }
         if (proposed.length === 0) {
@@ -347,7 +356,7 @@ export const tools = ({
       name: "draft_note",
       entry: null,
       description:
-        "Give a Point a draft of its Note text, only when the user asked for one. The user sees it marked as AI text and decides whether the Note keeps it.",
+        "Give a Point a new draft of its Note text, only when the user asked for one. It replaces the text in the user's form, marked as AI text.",
       parameters: {
         type: "object",
         properties: {
@@ -364,7 +373,7 @@ export const tools = ({
         }
         const set = yield* setDraft(asked.point, asked.text.trim());
         return set
-          ? { shown: true, next: "The user decides whether the Note keeps the draft." }
+          ? { shown: true, next: "The user edits the draft or rewrites it in their own words." }
           : { error: `Point ${asked.point} is not open or kept.` };
       }),
     },

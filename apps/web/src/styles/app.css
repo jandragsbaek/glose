@@ -1851,23 +1851,6 @@ button.ref:hover {
   font-variant-numeric: tabular-nums;
 }
 
-.write__draft {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.write__draft--out {
-  opacity: 0.55;
-}
-
-.write__draft-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 8px;
-}
-
 .write__drop {
   margin-left: auto;
 }
@@ -2134,8 +2117,22 @@ a.written__title:hover {
   border-left-width: 3px;
 }
 
-.ai-text > .ai-text__gloss + * {
+.ai-text > .ai-text__gloss + *,
+.ai-text > .ai-text__head + * {
   margin-top: 2px;
+}
+
+/* The gloss with a way out of the mark at its end, such as "I rewrote it". */
+.ai-text__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 12px;
+}
+
+.ai-text__head > .button {
+  min-height: 26px;
 }
 
 .ai-text__gloss {
@@ -2157,6 +2154,7 @@ a.written__title:hover {
 }
 
 .ai-text[data-scope="paragraphs"] > .ai-text__gloss::before,
+.ai-text[data-scope="paragraphs"] > .ai-text__head > .ai-text__gloss::before,
 .ai-text[data-scope="title"] > .ai-text__gloss::before {
   content: "¶";
 }

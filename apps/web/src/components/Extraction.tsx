@@ -535,7 +535,10 @@ function ProposedPoints({
 
 type SaveProblem = { readonly kind: "taken"; readonly name: string } | { readonly kind: "failed" };
 
-/** A kept Point, open for the user to write as a Note in their own words. */
+/**
+ * A kept Point, open for the user to write as a Note. The text starts as the AI's draft, marked
+ * as AI text, edited or not, until the user says they rewrote it in their own words.
+ */
 function WritePoint({
   session,
   point,
@@ -554,19 +557,28 @@ function WritePoint({
   const textId = useId();
   const pageId = useId();
   const [title, setTitle] = useState(point.title);
-  const [text, setText] = useState("");
+  const [text, setText] = useState(point.draft ?? "");
+  /** The text is the AI's draft, edited or not; the Note keeps it marked. */
+  const [aiText, setAiText] = useState(point.draft !== null);
+  /** A new draft the user asked for replaces the text. */
+  const [draftShown, setDraftShown] = useState(point.draft);
+  if (point.draft !== draftShown) {
+    setDraftShown(point.draft);
+    if (point.draft !== null) {
+      setText(point.draft);
+      setAiText(true);
+    }
+  }
   const [page, setPage] = useState("");
   const [added, setAdded] = useState<ReadonlyArray<string>>([]);
   const [dropped, setDropped] = useState<ReadonlyArray<string>>([]);
-  const [leaveDraftOut, setLeaveDraftOut] = useState(false);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<SaveProblem | null>(null);
   const write = useAtomSet(writePointAtom, { mode: "promiseExit" });
   const drop = useAtomSet(dropPointAtom, { mode: "promiseExit" });
   const send = useAtomSet(sendMessageAtom, { mode: "promiseExit" });
 
-  const useDraft = point.draft !== null && !leaveDraftOut;
-  const canSave = !busy && title.trim() !== "" && (text.trim() !== "" || useDraft);
+  const canSave = !busy && title.trim() !== "" && text.trim() !== "";
   const isAdded = (note: string) => added.some((name) => linkKey(name) === linkKey(note));
   const links = point.links.filter(
     (link) => !dropped.some((name) => linkKey(name) === linkKey(link.note)),
@@ -582,9 +594,9 @@ function WritePoint({
         point: point.id,
         title,
         text,
+        aiText,
         page: page.trim() === "" ? null : page.trim(),
         links: added,
-        useDraft,
       },
       reactivityKeys: KEYS.sources,
     });
@@ -597,6 +609,21 @@ function WritePoint({
         : { kind: "failed" },
     );
   };
+
+  const textarea = (
+    <textarea
+      className="textarea write__text"
+      id={textId}
+      value={text}
+      onChange={(event) => {
+        setText(event.target.value);
+        // An empty box holds no AI text; what the user types next is their own.
+        if (event.target.value.trim() === "") setAiText(false);
+      }}
+      onFocus={onAbout}
+      spellCheck
+    />
+  );
 
   const titleInput = (
     <input
@@ -617,16 +644,26 @@ function WritePoint({
         {point.origin === "user" ? titleInput : <AiText scope="title">{titleInput}</AiText>}
         <PointSource point={point} />
         <label className="sr-only" htmlFor={textId}>
-          {t.extraction.textLabel}
+          {aiText ? t.extraction.draftLabel : t.extraction.textLabel}
         </label>
-        <textarea
-          className="textarea write__text"
-          id={textId}
-          value={text}
-          onChange={(event) => setText(event.target.value)}
-          onFocus={onAbout}
-          spellCheck
-        />
+        <AiText
+          scope="paragraphs"
+          count={paragraphCount(text)}
+          marked={aiText}
+          note={t.extraction.draftMarked}
+          action={
+            <button
+              type="button"
+              className="button button--quiet button--small"
+              title={t.extraction.rewroteHint}
+              onClick={() => setAiText(false)}
+            >
+              {t.extraction.rewrote}
+            </button>
+          }
+        >
+          {textarea}
+        </AiText>
         <div className="write__row">
           <label className="write__page" htmlFor={pageId}>
             {t.extraction.page}
@@ -640,33 +677,6 @@ function WritePoint({
           </label>
           <span className="write__words">{t.steps.words(wordCount(text))}</span>
         </div>
-        {point.draft === null ? null : (
-          <div className="write__draft">
-            <div className={useDraft ? undefined : "write__draft--out"}>
-              <AiText scope="paragraphs" count={paragraphCount(point.draft)}>
-                {point.draft
-                  .split(/\n[ \t]*\n/)
-                  .filter((paragraph) => paragraph.trim() !== "")
-                  .map((paragraph, index) => (
-                    // oxlint-disable-next-line react/no-array-index-key -- the draft's paragraphs change only as a whole.
-                    <p key={index}>{paragraph.trim()}</p>
-                  ))}
-              </AiText>
-            </div>
-            <p className="write__draft-row">
-              <span className="status">
-                {useDraft ? t.extraction.draftKept : t.extraction.draftLeftOut}
-              </span>
-              <button
-                type="button"
-                className="button button--quiet button--small"
-                onClick={() => setLeaveDraftOut(!leaveDraftOut)}
-              >
-                {useDraft ? t.extraction.leaveDraftOut : t.extraction.keepDraft}
-              </button>
-            </p>
-          </div>
-        )}
         {links.length === 0 ? null : (
           <div className="links">
             <p className="links__head">

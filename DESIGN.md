@@ -734,6 +734,10 @@ much the AI wrote.
   gloss cover its heading too.
 - The block is a group named by its gloss, so a screen reader hears the words, not only the
   colour.
+- **AI text the user may still rewrite** (the Note box in Extraction): the gloss says how long
+  the mark stays ("¶ AI paragraphs · marked until you rewrite it") and ends in a quiet small
+  "I rewrote it" (26px tall) pushed right on the same line; the line wraps when narrow. The
+  button takes the mark away; the field keeps its place and its focus.
 
 Note headings in the side panel: 700 15px, 18px above when they follow other text.
 
@@ -746,9 +750,9 @@ One panel, its groups divided by Hairlines (22px 28px 26px padding), in this ord
 
 - **The open Point:** the kept Point being written gets the room. Its number in a 28px column;
   the title as a borderless 19px 600 field with a Strong Hairline under it (Lapis on focus);
-  where it comes from; the Note text (16px/1.65, 168px tall); a small page field and a word
-  count; the AI's draft, if asked for, under the AI Text mark with a quiet toggle to leave it out;
-  the proposed Links as a plain list (Note link, Mute reason, Add or Drop); then Save Note
+  where it comes from; the Note text (16px/1.65, 168px tall), which starts as the AI's draft
+  under the AI Text mark until the user rewrites it; a small page field and a word count; the
+  proposed Links as a plain list (Note link, Mute reason, Add or Drop); then Save Note
   (primary), Ask for a draft, and a quiet Drop pushed right.
 - **Proposed by the AI:** one AI Text mark for the whole group ("¶ Proposed by the AI · 3"),
   not one per Point. Each row: number, 16px 600 claim, small Keep (secondary) and quiet Discuss

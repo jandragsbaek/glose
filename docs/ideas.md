@@ -525,10 +525,15 @@ Decided, first version (November 2026):
   `list_sources` and `list_points`. The Session shows what it read as one folded line per run
   ("Read your Free text and 2 Notes · searched your Graph"), the Notes as links.
 - The user keeps, drops or discusses each Point, or adds one in their own words. A kept Point
-  opens in place to write: title, the Note in the user's own words, an optional page, and the
-  proposed Links to add or drop. "Ask for a draft" makes the AI write one (`draft_note`); the
-  Note keeps it as an `[!ai]` callout unless the user leaves it out. Added Links go on a closing
-  line, `Related: [[…]]` ("Se også:" in Danish), which the user may move into a sentence later.
+  opens in place to write: title, the Note's text, an optional page, and the proposed Links to
+  add or drop. Added Links go on a closing line, `Related: [[…]]` ("Se også:" in Danish), which
+  the user may move into a sentence later.
+- Decided November 2026: each proposed Point carries the AI's draft of its Note (`draft` in
+  `propose_points`), and the text box of a kept Point starts with it. The text wears the AI mark
+  ("¶ AI paragraphs"), edited or not, until the user chooses "I rewrote it", the same rule as
+  Cards and AI titles; the Note then keeps it as an `[!ai]` callout. Emptying the box clears the
+  mark. "Ask for a draft" makes the AI write a new one (`draft_note`), which replaces the text
+  and marks it again; a Point the user added has no draft until they ask.
 - The Point the user talks about wears the gilt mark, and the message box names it; the model
   reads the message as about that Point. The AI refers to Points as `[3]` and to Notes as
   wikilinks; both are links in the Session.
