@@ -49,6 +49,27 @@
         "files": [".impeccable/mocks/decision/found.html"],
         "createdAt": "2026-11-13T19:56:17.605Z",
         "reason": "Claude: decision-round sketch; the call-number label uses DESIGN.md's 1px 7px padding, as in the app"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "sans",
+        "files": [".impeccable/mocks/decision/margin-recall.html"],
+        "createdAt": "2026-11-13T20:46:09.443Z",
+        "reason": "Claude: decision-round sketch; Public Sans is DESIGN.md's UI face, the detector reads the font shorthand's tail as a family"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "sans\",system-ui,sans-serif",
+        "files": [".impeccable/mocks/decision/margin-recall.html"],
+        "createdAt": "2026-11-13T20:46:09.458Z",
+        "reason": "Claude: decision-round sketch; Public Sans is DESIGN.md's UI face, the detector reads the font shorthand's tail as a family"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [".impeccable/mocks/decision/trays-recall.html"],
+        "createdAt": "2026-11-13T21:00:02.105Z",
+        "reason": "Claude: decision-round sketch; the 3px rubric edge is DESIGN.md's AI Text signature (AI-written Card mark)"
       }
     ]
   }

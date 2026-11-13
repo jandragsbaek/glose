@@ -8,7 +8,7 @@ import { type CSSProperties, type ReactNode, useEffect, useId, useRef, useState 
 import { useT } from "../i18n/I18n.tsx";
 import { RECALL_KEYS, recordReviewAtom, reviewQueueAtom } from "../state/recall.ts";
 import { AiText } from "./NoteText.tsx";
-import { Flourish, Notice, Panel, SkeletonPanel, StorageProblem } from "./ui.tsx";
+import { Flourish, Notice, SkeletonPanel, StorageProblem } from "./ui.tsx";
 
 /** Cards still to review today, the one on the desk included. */
 const leftToday = (counts: ReviewQueue["counts"]) => counts.new + counts.learning + counts.review;
@@ -16,35 +16,48 @@ const leftToday = (counts: ReviewQueue["counts"]) => counts.new + counts.learnin
 /** At most this many leaf edges under the leaf: they say "many" or "few"; the bar says how many. */
 const MAX_EDGES = 5;
 
-/** Recall's way in: what is due today, and the button that opens the Review screen. */
+/** At most this many edges under Recall's Review leaf: the leaf leads the page, not the stack. */
+const MAX_START_EDGES = 3;
+
+/**
+ * Recall's way in: today's Review as a leaf on top of the desk, the Cards still due as paper
+ * edges under it, and the button that opens the Review screen.
+ */
 export function ReviewStart() {
   const t = useT();
+  const headingId = useId();
   const queue = useAtomValue(reviewQueueAtom);
   const refresh = useAtomRefresh(reviewQueueAtom);
   return AsyncResult.matchWithError(queue, {
     onInitial: () => <SkeletonPanel />,
     onError: () => <StorageProblem onRetry={refresh} />,
     onDefect: () => <StorageProblem onRetry={refresh} />,
-    onSuccess: ({ value }) => (
-      <Panel
-        title={t.review.title}
-        initial="lapis"
-        meta={leftToday(value.counts) === 0 ? undefined : t.review.counts(value.counts)}
-      >
-        <div className="panel__body">
-          {value.next === null ? (
-            <NothingDue queue={value} onDue={refresh} />
-          ) : (
-            <div className="review-start">
-              <p>{t.review.dueToday(leftToday(value.counts))}</p>
-              <Link to="/review" className="button button--primary">
-                {t.review.start}
-              </Link>
-            </div>
-          )}
-        </div>
-      </Panel>
-    ),
+    onSuccess: ({ value }) => {
+      const left = leftToday(value.counts);
+      return (
+        <section className="review-start" aria-labelledby={headingId}>
+          <div className="panel review-start__leaf" data-initial="lapis">
+            <h2 className="panel__title" id={headingId}>
+              {t.review.title}
+            </h2>
+            {value.next === null ? (
+              <NothingDue queue={value} onDue={refresh} />
+            ) : (
+              <>
+                <div>
+                  <p className="review-start__count">{t.review.dueToday(left)}</p>
+                  <p className="review-start__counts">{t.review.counts(value.counts)}</p>
+                </div>
+                <Link to="/review" className="button button--primary">
+                  {t.review.start}
+                </Link>
+              </>
+            )}
+          </div>
+          {value.next === null ? null : <Edges count={Math.min(MAX_START_EDGES, left - 1)} />}
+        </section>
+      );
+    },
   });
 }
 

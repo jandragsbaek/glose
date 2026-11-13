@@ -20,6 +20,7 @@ colors:
   line: "#dedde3"
   line-strong: "#c9c8d1"
   tint: "#eef0f8"
+  tray: "#f3f2ee"
 typography:
   display:
     fontFamily: "Public Sans, system-ui, sans-serif"
@@ -99,6 +100,12 @@ typography:
     fontSize: "21px"
     fontWeight: 400
     lineHeight: 1.5
+  review-start-count:
+    fontFamily: "Public Sans, system-ui, sans-serif"
+    fontSize: "24px"
+    fontWeight: 700
+    lineHeight: 1.2
+    letterSpacing: "-0.01em"
 rounded:
   label: "2px"
   base: "4px"
@@ -256,6 +263,28 @@ components:
   reading-mark-done:
     backgroundColor: "{colors.verdigris}"
     size: "9px"
+  review-start-leaf:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
+    typography: "{typography.review-start-count}"
+    rounded: "{rounded.base}"
+    padding: "22px 28px"
+    width: "980px"
+  tray:
+    backgroundColor: "{colors.tray}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.base}"
+    padding: "14px 12px 12px"
+  slip:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.base}"
+    padding: "12px 14px"
+  tray-folded:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.base}"
+    padding: "16px"
 ---
 
 # Design System: Glose
@@ -301,6 +330,8 @@ itself stays ink; see the AI Text component.
 - State is a small mark in a fixed cell (Reading marks, a Citation check or triangle); rank comes
   from weight, never from bigger type.
 - A focus screen (Review) drops the rail and the page header: one Paper leaf on Ground.
+- Recall is a desk: today's Review leaf on top, and under it Trays (a well a step darker than
+  Ground) that hold the Cards as Paper slips, sorted by the work they need.
 
 ## Colors
 
@@ -323,13 +354,15 @@ three small pigments (gold, rubric red, verdigris) each with one job.
 
 - **Gilt** (gold): the "you are here" marker. The current rail icon, the current step's 3px
   underline, the 2px underline under the current Reading mark, the two gilt bands on a spine, and
-  the focus outline on lapis. Never text on paper.
+  the focus outline on lapis. Also the triangle of a Check that warns on a Recall slip, beside
+  Ink words. Never text on paper.
 - **Gilt Wash** (gold-wash): text selection only.
 
 ### Tertiary
 
 - **Rubric** (rubric): decorated initials, the pen flourish, AI text (the AI Text component), and
-  signals of missing data or error, always paired with an icon and words.
+  signals of missing data or error, always paired with an icon and words (on a Recall slip, the
+  triangle and words of a Check that fails).
 - **Rubric Wash** (rubric-wash): the background of a stand-alone warning notice.
 - **Rubric Line** (rubric-line): the border of a stand-alone warning notice.
 - **Verdigris** (verdigris): done. The check icon and 3px underline of a finished step, the
@@ -350,6 +383,8 @@ three small pigments (gold, rubric red, verdigris) each with one job.
   the page (the Versions panel, a sheet), scrollbar thumb.
 - **Lapis Tint** (tint): secondary button hover, the current step, a selected choice, a hovered or
   checked segment, the register row whose Links are shown.
+- **Tray** (tray): a warm well a step darker than Ground, behind the Recall Trays only, so the
+  Paper slips in it read as lying in a tray. A neutral, not a field of color.
 
 ### Named Rules
 
@@ -358,10 +393,13 @@ When red marks an error or missing data, it always comes with a warning icon and
 alone never carries a meaning.
 
 **The Gilt Marker Rule.** Gold says "here": the current Section, the current step (in the Step
-Bar and under a Reading mark), a spine's bands, focus on lapis. It is never used for text on paper or for decoration elsewhere.
+Bar and under a Reading mark), a spine's bands, focus on lapis. It has one more job: the triangle
+icon of a Check that warns on a Recall slip, always beside Ink words ("Could be better · …").
+It is never used for text on paper or for decoration elsewhere.
 
 **The One Field Rule.** Lapis is the only large color field (rail, spine, the primary button).
-Panels and the page stay paper and ground.
+Panels and the page stay paper and ground; the one other surface is the neutral Tray well under
+Recall's slips.
 
 **The Ribbon Edge Rule.** A 3px Lapis edge on the left of a register row says "this Source shares
 Links with the one you chose", like a ribbon marker in a book. It is the one place a side edge
@@ -394,6 +432,8 @@ heading like an illuminated initial.
 - **Review question** (700, 28px, 1.3, -0.01em, max 30ch, balanced wrap; 24px on phones): the
   question on the Review leaf.
 - **Review answer** (400, 21px, 1.5, max 40ch; 18px on phones): the answer on the Review leaf.
+- **Review count** (700, 24px, 1.2, -0.01em, balanced wrap): the one headline on Recall's Review
+  leaf ("12 Cards to review today"; no full stop).
 - **Label** (600, 14px): buttons, field labels, step names, row titles.
 - **Meta** (400, 13px, tabular numerals): hints, step notes, panel meta, status lines.
 - **Rail label** (500, 12px, 1.25): Section names under rail icons; they wrap and hyphenate.
@@ -438,6 +478,17 @@ column gaps, 16px 20px 14px padding) with the hint pushed right; the table under
 sideways inside the panel rather than squeezing, since its cells don't wrap (only the title
 cell, at least 18em). Below 720px the segmented control and the selects wrap too.
 
+The Recall page (`/recall`) is a desk in one column with 28px between its parts. The header
+carries "Recall" and a Mute count line ("240 Cards · 12 with AI text"). First the Recall Review
+leaf, centred, up to 980px wide, with up to three paper edges under it. Then the Card desk (16px
+gaps): a find row that wraps (8px 16px gaps) with the find field, a `role="status"` line while
+searching ("3 Cards match."), and, without ChatGPT, one quiet AI-Checks-off line pushed right
+(Mute 13px with a 16px icon, no box); under it the three Trays side by side, To fix, To rewrite
+and Good ("At rette", "At omskrive", "Gode"), in columns of 1fr, 1fr and 260 to 300px with 20px
+gaps, each as tall as its slips. Below 1080px To fix and To rewrite share a row and Good runs
+across under them; below 720px the Trays stack in one column and the Review leaf's parts stack
+too (18px 20px padding). With no Cards at all, the page is one 760px empty panel.
+
 Extraction (the Reading Stage past the Free text) fills the window under the header: a work
 column (24px 32px 48px padding, content up to 960px, its own scroll) and a 360 to 420px margin
 column for the Session on Paper, divided by a full-height Hairline. The margin's transcript
@@ -473,6 +524,10 @@ leaf, each narrower, with hairline borders and no shadow.
 A sheet lifts off the page without a shadow: the page behind it dims under an Ink veil at 32%,
 and the leaf takes a Strong Hairline border.
 
+Recall stacks the same way. The Recall Review leaf has up to three paper edges under it, and
+the folded Good pile up to two. The Trays sink one step below Ground (Tray), with a Hairline
+border, so their Paper slips lie in them; nothing casts a shadow.
+
 The register's lapis edge is drawn with `box-shadow: inset 3px 0 0` on a row's first cell, so it
 needs no border that would shift the columns. It is a mark, not depth.
 
@@ -487,7 +542,8 @@ Quiet, nearly square corners: 4px on panels, buttons, inputs, choices, notices, 
 rail items, key caps, the Review leaf and a sheet; 2px on call-number labels, the typed code
 and skeleton bars; 3px on the spine. Review leaf edges round only their two lower corners (4px). The one curve is the
 pen flourish (a 64 by 10px stroked SVG with a center dot) set between two hairlines. The one circle
-is the Reading mark (9px, 1.5px ring). The register's lapis edge is a straight 3px band.
+is the Reading mark (9px, 1.5px ring). The register's lapis edge is a straight 3px band. The one dashed line is the folded Good pile's
+1px Strong Hairline border: a leaf that stands for Cards not laid out.
 
 ## Components
 
@@ -500,19 +556,21 @@ Firm and plain, ink-outlined.
 - **Hover / Focus:** primary moves to Raised Lapis with the lapis lift; secondary fills with
   Lapis Tint. 160ms on the shared ease-out. Focus is the 2px lapis outline.
 - **Secondary:** Paper with a 1px Ink border and Ink label (Open, Cancel, Save, Retry, Copy
-  code, Open GitHub again).
+  code, Open GitHub again, Show the good Cards).
 - **Icon:** a 16px Lucide icon (1.8 stroke) before the label, as on Copy code and Open GitHub
   again.
 - **Disabled:** 55% opacity, no shadow, not-allowed cursor.
 - **Quiet:** no border or fill, Mute 600 13px, 36px minimum height, 12px side padding; hover turns
   it Ink and underlines it (3px offset). For a way out of a slip, set apart from the choices
   (Review's Back), for Discuss, Drop and Undo beside a choice, for the second path beside a
-  primary (Use another git remote), for Cancel in a sheet foot, and for an action that undoes a
-  setting (Stop backing up).
+  primary (Use another git remote), for Cancel in a sheet foot and Close in the Card sheet, for
+  an action that undoes a setting (Stop backing up), and for Fold in the Good Tray's head (26px
+  tall there).
 - **Small:** 30px tall, 12px side padding, 13px, for choices repeated down a list (Keep, Add).
 - **Link button:** a button that reads as a link inside running text: no box, Lapis, inherits the
   text's font, a 1px underline at 3px offset that thickens to 2px on hover. For an action that
-  belongs to a sentence ("Use another account", "Back up to GitHub" in the Versions panel).
+  belongs to a sentence ("Use another account", "Back up to GitHub" in the Versions panel). On a
+  Recall slip, "I rewrote it" is a link button set at 13px/600 in the AI gloss row.
 
 ### Choices
 
@@ -633,6 +691,13 @@ Initial.
   under it, and Done (primary).
 - **Another git remote:** the same sheet without steps: a sentence, the Remote address field,
   Use this remote (primary) and Cancel.
+
+**Card sheet.** Opened from a Recall slip, titled "Card" ("Kort") with a rubric Initial and the
+flourish. The leaf itself takes focus, so the Card is read first. The body is the Card as on
+other pages: its words, its Checks as callouts with the passed ones folded under a quiet Mute 13px
+disclosure ("5 Checks passed", a drawn 14px chevron that turns 90° in 160ms when open; hover turns
+it Ink), where it comes from, and Edit and Delete (secondary) with a quiet Close pushed right
+(Esc). The sheet shows each change to the Card and closes when it is deleted.
 
 **Remote Graph sheet.** The Backup sheet run the other way, opened from the first start's Graph
 folder step. Titled "Get your Graph from GitHub" ("Hent din graf fra GitHub") with a rubric Initial;
@@ -784,9 +849,10 @@ much the AI wrote.
 
 - **Paragraphs:** a 2px Rubric rule on the left with 12px padding, and above the text a Rubric
   gloss (12px, 600, 0.06em tracking, uppercase) opened by a ¶ pilcrow: "AI paragraph" ("AI-afsnit").
-- **A whole Part or Note:** a 3px Rubric rule, and a gloss opened by a § section sign: "AI-written
-  Part" or "AI-written Note" ("AI-skrevet del", "AI-skrevet note"). For a Part, the rule and the
-  gloss cover its heading too.
+- **A whole Part, Note or Card:** a 3px Rubric rule, and a gloss opened by a § section sign:
+  "AI-written Part", "AI-written Note" or "AI-written Card" ("AI-skrevet del", "AI-skrevet note",
+  "AI-skrevet kort"). For a Part, the rule and the gloss cover its heading too. On a Recall
+  slip the rule runs down the slip's own left edge.
 - The block is a group named by its gloss, so a screen reader hears the words, not only the
   colour.
 - **AI text the user may still rewrite** (the Note box in Extraction): the gloss says how long
@@ -919,6 +985,59 @@ When nothing is due, the desk shows the closing pen flourish between two short h
 across), the empty-state lead line and its Mute body, and a primary Back to Recall, centred
 with 20px gaps and 72px from the bar.
 
+### Recall Review Leaf
+
+Today's Review seen from Recall: the Review screen's leaf lying on the desk. A Paper panel leaf
+(Hairline border, 4px corners, 22px 28px padding) up to 980px, centred, with no flourish rule.
+One row of three parts (12px 32px gaps, centred): the panel heading "Review" with a lapis
+Initial; the Review count headline over the Mute 13px tabular counts ("12 new · 0 learning ·
+0 due"); and Start Review (primary) on the right. Under it, one paper edge for each Card due after
+the first, up to three, set like the Review leaf's edges. When nothing is due, the leaf holds the
+Review's nothing-due state and has no edges. Below 720px the three parts stack.
+
+### Tray (signature)
+
+A tray on the desk that holds Cards by the work they need: To fix (rubric Initial), To rewrite
+(lapis Initial) and Good (rubric Initial). A Card with a Check that warns or fails goes to To fix,
+even with AI text (fixing it rewrites the text); in To fix, Needs work comes before Could be
+better.
+
+- **Well:** Tray fill, 1px Hairline border, 4px corners, 14px 12px 12px padding, 10px gaps.
+- **Head:** the panel heading set (no flourish), the count pushed right in Mute 13px tabular
+  ("12 Cards"), and an optional quiet action; at least 36px tall, 0 6px 10px padding, a Hairline
+  under it. Heads wrap.
+- **Slips:** a list of Slips with 10px gaps, 50 at a time; past that, a foot line ("Showing 50 of
+  120 Cards." in Mute) with a small Show more.
+- **Empty:** a lead line (600 16px Ink: "Nothing to fix", "No AI text") over a Mute sentence;
+  while searching, "No Card matches." alone.
+- **Good, folded:** Good stays folded as a pile: a Paper leaf with a 1px dashed Strong Hairline
+  border, 4px corners and 16px padding, holding the lead "6 good Cards in your own words", the
+  Mute line "Nothing to do here. Show them to read or edit one." and Show the good Cards
+  (secondary, 12px below; it wraps). Up to two paper edges lie under it. A search opens it; once
+  shown by the button, a quiet Fold in the head closes it.
+
+### Slip (signature)
+
+One Card in a Tray: a Paper slip, 1px Hairline border, 4px corners, 12px 14px padding. Hover
+darkens the border to Mute (160ms). The question (600 15px/1.4, Ink, wraps anywhere) is a button
+that opens the Card sheet, and the whole slip is its target; keyboard focus draws the 2px Lapis
+outline at 2px offset around the slip. The answer follows 4px below in Mute 14px.
+
+- **Fault line:** the first Check that fails or warns, 10px below, 600 13px/1.4 beside a 16px
+  triangle (1.8 stroke, 8px gap): Grade, Check name and "1 more" when there are others ("Needs
+  work · Asks you to recall, not to choose · 1 more"). A Check that fails sets triangle and words
+  in Rubric; one that warns sets a Gilt triangle with Ink words. Failures come first.
+- **AI text:** the AI Text mark for a whole Card, its 3px Rubric rule down the slip's left edge
+  and the § gloss "AI-written Card" on top. In To rewrite, the gloss row ends in "I rewrote it",
+  a Lapis link button at 13px/600.
+- **Leaving:** "I rewrote it" lifts the slip 14px and fades it out in 200ms on the shared
+  ease-out, as a rated leaf leaves the Review; its slot then closes (grid rows 1fr to 0fr, 200ms,
+  starting at 160ms) so the slips below slide up into it. The save starts at once, but the list
+  reads again only after 380ms, so the motion is never cut short. Reduced motion moves it and closes the slot at
+  once.
+- **Not saved:** if the save fails, the slip comes back with a Rubric 16px circle-alert and the
+  words, as an alert.
+
 ### Loading
 
 Skeleton bars (14px, 2px corners) shimmer Tint to Ground over 1.4s inside a panel, with a hidden
@@ -943,6 +1062,10 @@ Skeleton bars (14px, 2px corners) shimmer Tint to Ground over 1.4s inside a pane
   triangle), and rank by weight, not by bigger type.
 - **Do** keep the 3px Lapis edge for rows that share Links with a chosen Source, with "N shared"
   and the hint saying it in words.
+- **Do** sort Recall's Cards into the Trays by the work they need (To fix, To rewrite, Good), as
+  Paper slips in the Tray well, with Good folded to its count until asked for or searched.
+- **Do** let a slip that leaves its Tray finish its lift and the closing of its slot before the
+  list reads again; under reduced motion it goes at once.
 
 ### Don't:
 

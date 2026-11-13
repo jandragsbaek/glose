@@ -6,6 +6,7 @@ import {
   ruleChecks,
   type ScoredCard,
 } from "@glose/contracts";
+import { ChevronRight } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 import { useT } from "../i18n/I18n.tsx";
@@ -91,8 +92,11 @@ export function CardChecks({ score }: { readonly score: CardScore }) {
       </p>
       <CheckCallouts checks={score.checks} />
       {passed.length === 0 ? null : (
-        <details>
-          <summary>{t.score.passed(passed.length)}</summary>
+        <details className="aside">
+          <summary>
+            <ChevronRight className="aside__chev" aria-hidden="true" />
+            {t.score.passed(passed.length)}
+          </summary>
           <ul>
             {passed.map((check) => (
               <li key={check.id} data-verdict="pass">

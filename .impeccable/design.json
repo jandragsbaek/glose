@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-13T12:00:00+00:00",
+  "generatedAt": "2026-11-13T22:30:00+00:00",
   "title": "Design System: Glose",
   "extensions": {
     "colorMeta": {
@@ -273,6 +273,21 @@
           "oklch(84% 0.006 275)",
           "oklch(95% 0.005 275)"
         ]
+      },
+      "tray": {
+        "role": "neutral",
+        "displayName": "Tray",
+        "canonical": "#f3f2ee",
+        "tonalRamp": [
+          "oklch(15% 0.003 95)",
+          "oklch(26% 0.004 95)",
+          "oklch(38% 0.005 95)",
+          "oklch(49% 0.006 95)",
+          "oklch(61% 0.006 95)",
+          "oklch(72% 0.005 95)",
+          "oklch(84% 0.004 95)",
+          "oklch(96% 0.004 95)"
+        ]
       }
     },
     "typographyMeta": {
@@ -331,6 +346,10 @@
       "code": {
         "displayName": "Code",
         "purpose": "A code the user types elsewhere (the GitHub sign-in code in the Backup sheet), typed like a call-number label at reading size."
+      },
+      "review-start-count": {
+        "displayName": "Review count",
+        "purpose": "The one headline on Recall's Review leaf (\"12 Cards to review today\"); balanced wrap, no full stop."
       }
     },
     "shadows": [
@@ -375,6 +394,26 @@
         "name": "sheet-enter",
         "value": "160ms ease-out, from translateY(4px) and opacity 0; backdrop fades in from rgb(20 20 20 / 0%) to 32%",
         "purpose": "A sheet opens over the dimmed page."
+      },
+      {
+        "name": "slip-leave",
+        "value": "200ms ease-out, translateY(-14px), opacity 0",
+        "purpose": "\"I rewrote it\" lifts a Recall slip out of its Tray, as a rated leaf leaves the Review."
+      },
+      {
+        "name": "slot-close",
+        "value": "grid-template-rows 1fr to 0fr, 200ms ease-out, 160ms delay",
+        "purpose": "The leaving slip's slot closes so the slips below slide up; under reduced motion it closes at once (no delay)."
+      },
+      {
+        "name": "slip-leave-wait",
+        "value": "380ms",
+        "purpose": "The save starts at once; the Card list reads again only after this long, so the lift and the close are never cut short; 0 under reduced motion."
+      },
+      {
+        "name": "disclosure-chevron",
+        "value": "160ms ease-out, rotate(90deg)",
+        "purpose": "The drawn chevron of a quiet Mute disclosure (passed Checks) turns when open."
       }
     ],
     "breakpoints": [
@@ -396,7 +435,12 @@
       "reviewLeaf": "720px",
       "reviewDeskPadding": "68px 32px 48px (24px 16px 32px at 720px)",
       "sourcesDesk": "repeat(auto-fill, minmax(min(300px, 100%), 1fr)), gap 24px; item 56px spine + 16px gap",
-      "registerTools": "padding 16px 20px 14px, gap 10px 8px, find field max 420px, hint max 56ch"
+      "registerTools": "padding 16px 20px 14px, gap 10px 8px, find field max 420px, hint max 56ch",
+      "recall": "one column, 28px gaps; page header sub-line with the Card counts",
+      "recallReviewLeaf": "min(980px, 100%), centred, grid auto 1fr auto, gap 12px 32px, padding 22px 28px (one column, 18px 20px at 720px); up to 3 paper edges",
+      "cardDesk": "gap 16px; find row flex-wrap, gap 8px 16px, AI-Checks-off line pushed right",
+      "trays": "minmax(0,1fr) minmax(0,1fr) minmax(260px,300px), gap 20px, align start; 2 columns with Good across at 1080px; 1 column at 720px",
+      "tray": "padding 14px 12px 12px, gap 10px; head min 36px, padding 0 6px 10px; slips 10px gaps, 50 at a time"
     },
     "focus": {
       "onPaper": "2px solid lapis, offset 2px",
@@ -587,6 +631,30 @@
       "description": "Every Source as a row: group rows on Ground, the chosen row on Lapis Tint, rows sharing its Links with a 3px lapis edge and \"N shared\" in Lapis 700; Citation as a verdigris check and Ready, or a rubric triangle and words. The hint repeats the edge.",
       "html": "<p class=\"ds-hint\" role=\"status\"><span class=\"ds-hint-edge\" aria-hidden=\"true\"></span><span>6 Sources share Links with Deep Work.</span><button class=\"ds-linkbtn\">Clear</button></p><table class=\"ds-reg\"><thead><tr><th>Call number</th><th>Title</th><th>Reading</th><th class=\"ds-num\">Notes</th><th>Links to other Sources</th><th>Citation</th></tr></thead><tbody><tr class=\"ds-group\"><th colspan=\"6\">October 2026 · 3 added</th></tr><tr class=\"ds-row\" data-linked><td><span class=\"ds-call\">CLE 2018</span></td><th class=\"ds-title\"><a href=\"#\">Atomic Habits</a> <span class=\"ds-author\">James Clear</span></th><td><span class=\"ds-marks\" role=\"img\" aria-label=\"In Extraction\"><span class=\"ds-dot\" data-state=\"done\"></span><span class=\"ds-dot\" data-state=\"done\"></span><span class=\"ds-dot\" data-state=\"done\"></span></span></td><td class=\"ds-num\">11</td><td><button class=\"ds-links\">13 shared</button></td><td><span class=\"ds-ready\"><svg class=\"ds-cite-ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M20 6 9 17l-5-5\"/></svg>Ready</span></td></tr><tr class=\"ds-row\" data-selected><td><span class=\"ds-call\">NEW 2016</span></td><th class=\"ds-title\"><a href=\"#\">Deep Work</a> <span class=\"ds-author\">Cal Newport</span></th><td><span class=\"ds-marks\" role=\"img\" aria-label=\"In Extraction\"><span class=\"ds-dot\" data-state=\"done\"></span><span class=\"ds-dot\" data-state=\"current\"></span><span class=\"ds-dot\"></span></span></td><td class=\"ds-num\">10</td><td><button class=\"ds-links\" aria-pressed=\"true\">6 Sources</button></td><td><span class=\"ds-ready\"><svg class=\"ds-cite-ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M20 6 9 17l-5-5\"/></svg>Ready</span></td></tr><tr class=\"ds-row\"><td><span class=\"ds-call\">BRO 2014</span></td><th class=\"ds-title\"><a href=\"#\">Make It Stick</a> <span class=\"ds-author\">Peter C. Brown</span></th><td><span class=\"ds-marks\" role=\"img\" aria-label=\"In Extraction\"><span class=\"ds-dot\" data-state=\"done\"></span><span class=\"ds-dot\" data-state=\"current\"></span><span class=\"ds-dot\"></span></span></td><td class=\"ds-num\">11</td><td><button class=\"ds-links\" aria-pressed=\"false\">6 Sources</button></td><td><span class=\"ds-missing\"><svg class=\"ds-cite-ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3\"/><path d=\"M12 9v4\"/><path d=\"M12 17h.01\"/></svg>No publisher</span></td></tr></tbody></table>",
       "css": ".ds-marks { display:inline-flex; align-items:center; gap:5px; vertical-align:middle; } .ds-dot { position:relative; width:9px; height:9px; border:1.5px solid var(--line-strong,#c9c8d1); border-radius:50%; background:var(--paper,#fff); box-sizing:border-box; } .ds-dot[data-state=done] { border-color:var(--verdigris,#3e7c5a); background:var(--verdigris,#3e7c5a); } .ds-dot[data-state=current] { border-color:var(--lapis,#1e2f7a); } .ds-dot[data-state=current]::after { content:\"\"; position:absolute; left:-1.5px; right:-1.5px; bottom:-5.5px; height:2px; background:var(--gold,#c8a040); } .ds-hint { display:flex; align-items:center; gap:4px 8px; margin:0 0 12px; color:var(--mute,#5c5f6a); font:400 13px/1.4 'Public Sans',system-ui,sans-serif; } .ds-hint-edge { width:3px; height:16px; background:var(--lapis,#1e2f7a); } .ds-linkbtn { padding:0; border:0; background:none; color:var(--lapis,#1e2f7a); font:inherit; text-decoration:underline 1px; text-underline-offset:3px; cursor:pointer; } .ds-reg { width:100%; border-collapse:collapse; color:var(--ink,#141414); font:400 14px/1.4 'Public Sans',system-ui,sans-serif; font-variant-numeric:tabular-nums; } .ds-reg th, .ds-reg td { padding:9px 12px; border-bottom:1px solid var(--line,#dedde3); text-align:left; vertical-align:middle; white-space:nowrap; } .ds-reg thead th { padding-top:10px; padding-bottom:8px; color:var(--mute,#5c5f6a); font-size:13px; font-weight:600; } .ds-reg .ds-num { text-align:right; } .ds-group th { padding-top:6px; padding-bottom:6px; background:var(--ground,#fbfaf7); font-size:13px; font-weight:600; } .ds-title { font-weight:400; } .ds-title a { color:var(--ink,#141414); font-weight:600; text-decoration:none; } .ds-title a:hover { text-decoration:underline; } .ds-author { color:var(--mute,#5c5f6a); } .ds-call { display:inline-flex; padding:1px 7px; border:1px solid var(--ink,#141414); border-radius:2px; background:var(--paper,#fff); font:700 12px/18px 'Courier Prime',ui-monospace,monospace; } .ds-row > * { transition:background-color 160ms cubic-bezier(0.22,1,0.36,1),box-shadow 160ms cubic-bezier(0.22,1,0.36,1); } .ds-row[data-selected] > * { background:var(--tint,#eef0f8); } .ds-row[data-linked] > :first-child { box-shadow:inset 3px 0 0 var(--lapis,#1e2f7a); } .ds-links { padding:2px 0; border:0; background:none; color:var(--lapis,#1e2f7a); font:inherit; text-decoration:underline 1px; text-underline-offset:3px; cursor:pointer; } .ds-links:hover { text-decoration-thickness:2px; } .ds-links[aria-pressed=true], .ds-row[data-linked] .ds-links { font-weight:700; text-decoration:none; } .ds-links[aria-pressed=true]:hover, .ds-row[data-linked] .ds-links:hover { text-decoration:underline; } .ds-links:focus-visible, .ds-linkbtn:focus-visible { outline:2px solid var(--lapis,#1e2f7a); outline-offset:2px; } .ds-ready, .ds-missing { display:inline-flex; align-items:center; gap:5px; } .ds-ready { color:var(--verdigris,#3e7c5a); } .ds-missing { color:var(--rubric,#b3261e); font-weight:600; } .ds-cite-ico { flex:none; width:15px; height:15px; }"
+    },
+    {
+      "name": "Recall Review Leaf",
+      "kind": "card",
+      "refersTo": "review-start-leaf",
+      "description": "Today's Review on Recall: a Paper leaf up to 980px with the lapis-Initial heading, the 24px count, Mute counts and Start Review; paper edges under it for the Cards due.",
+      "html": "<section class=\"ds-rs\"><div class=\"ds-rs-leaf\"><h2 class=\"ds-rs-title\">Review</h2><div><p class=\"ds-rs-count\">12 Cards to review today</p><p class=\"ds-rs-counts\">12 new · 0 learning · 0 due</p></div><a class=\"ds-rs-btn\" href=\"#\">Start Review</a></div><span class=\"ds-edge\" style=\"--depth:1\"></span><span class=\"ds-edge\" style=\"--depth:2\"></span><span class=\"ds-edge\" style=\"--depth:3\"></span></section>",
+      "css": ".ds-rs { width:min(980px,100%); margin:0 auto; font-family:'Public Sans',system-ui,sans-serif; color:var(--ink,#141414); } .ds-rs-leaf { position:relative; z-index:1; display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:12px 32px; padding:22px 28px; background:var(--paper,#fff); border:1px solid var(--line,#dedde3); border-radius:4px; } .ds-rs-title { margin:0; font-size:13px; font-weight:600; line-height:1.3; letter-spacing:0.06em; text-transform:uppercase; } .ds-rs-title::first-letter { font-family:'Cinzel Decorative',Cinzel,serif; font-size:2em; font-weight:700; line-height:0.9; color:var(--lapis,#1e2f7a); } .ds-rs-count { margin:0; font-size:24px; font-weight:700; line-height:1.2; letter-spacing:-0.01em; text-wrap:balance; } .ds-rs-counts { margin:4px 0 0; color:var(--mute,#5c5f6a); font-size:13px; font-variant-numeric:tabular-nums; } .ds-rs-btn { display:inline-flex; align-items:center; min-height:36px; padding:0 16px; background:var(--lapis,#1e2f7a); color:#fff; border:1px solid var(--lapis,#1e2f7a); border-radius:4px; font-size:14px; font-weight:600; text-decoration:none; transition:background 160ms cubic-bezier(0.22,1,0.36,1), box-shadow 160ms cubic-bezier(0.22,1,0.36,1); } .ds-rs-btn:hover { background:var(--lapis-raised,#2b3e92); box-shadow:0 2px 6px rgb(30 47 122 / 22%); } .ds-rs-btn:focus-visible { outline:2px solid var(--lapis,#1e2f7a); outline-offset:2px; } .ds-edge { display:block; width:calc(100% - var(--depth) * 16px); height:8px; margin:0 auto; background:var(--paper,#fff); border:1px solid var(--line,#dedde3); border-top:0; border-radius:0 0 4px 4px; }"
+    },
+    {
+      "name": "Slip",
+      "kind": "card",
+      "refersTo": "slip",
+      "description": "One Card in a Tray: the question opens it, the answer in Mute, the first failing or warning Check as a fault line; AI text carries the 3px rubric edge and \"I rewrote it\".",
+      "html": "<div class=\"ds-slips\"><article class=\"ds-slip\"><h3 class=\"ds-slip-q\"><button type=\"button\" class=\"ds-slip-open\">Is action predictable or unpredictable?</button></h3><p class=\"ds-slip-a\">Unpredictable.</p><p class=\"ds-fault\" data-verdict=\"fail\"><svg class=\"ds-tri\" viewBox=\"0 0 24 24\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3\"/><path d=\"M12 9v4\"/><path d=\"M12 17h.01\"/></svg><span>Needs work · Asks you to recall, not to choose · 1 more</span></p></article><article class=\"ds-slip\"><h3 class=\"ds-slip-q\"><button type=\"button\" class=\"ds-slip-open\">Explain the whole argument of The Human Condition</button></h3><p class=\"ds-slip-a\">Labor, work and action as the three activities of the vita activa.</p><p class=\"ds-fault\" data-verdict=\"warn\"><svg class=\"ds-tri\" viewBox=\"0 0 24 24\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3\"/><path d=\"M12 9v4\"/><path d=\"M12 17h.01\"/></svg><span>Could be better · Asks for one answer, not an essay</span></p></article><article class=\"ds-slip\"><div class=\"ds-ai\"><div class=\"ds-ai-head\"><p class=\"ds-gloss\">AI-written Card</p><button type=\"button\" class=\"ds-rewrote\">I rewrote it</button></div><h3 class=\"ds-slip-q\"><button type=\"button\" class=\"ds-slip-open\">Which two conditions make flow possible?</button></h3><p class=\"ds-slip-a\">Clear goals and immediate feedback.</p></div></article></div>",
+      "css": ".ds-slips { display:grid; gap:10px; max-width:440px; font-family:'Public Sans',system-ui,sans-serif; color:var(--ink,#141414); } .ds-slip { position:relative; padding:12px 14px; background:var(--paper,#fff); border:1px solid var(--line,#dedde3); border-radius:4px; transition:border-color 160ms cubic-bezier(0.22,1,0.36,1); } .ds-slip:hover { border-color:var(--mute,#5c5f6a); } .ds-slip:has(.ds-slip-open:focus-visible) { outline:2px solid var(--lapis,#1e2f7a); outline-offset:2px; } .ds-slip-q { margin:0; font-size:15px; font-weight:600; line-height:1.4; } .ds-slip-open { padding:0; border:0; background:none; color:inherit; font:inherit; text-align:left; cursor:pointer; } .ds-slip-open:focus-visible { outline:none; } .ds-slip-open::after { content:''; position:absolute; inset:0; } .ds-slip-a { margin:4px 0 0; color:var(--mute,#5c5f6a); font-size:14px; } .ds-fault { display:flex; align-items:flex-start; gap:8px; margin:10px 0 0; font-size:13px; font-weight:600; line-height:1.4; } .ds-fault[data-verdict='fail'] { color:var(--rubric,#b3261e); } .ds-tri { flex:none; width:16px; height:16px; margin-top:1px; color:var(--gold,#c8a040); } .ds-fault[data-verdict='fail'] .ds-tri { color:var(--rubric,#b3261e); } .ds-ai { margin-left:-14px; padding-left:11px; border-left:3px solid var(--rubric,#b3261e); } .ds-ai-head { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:0 12px; } .ds-gloss { display:flex; gap:6px; margin:0; color:var(--rubric,#b3261e); font-size:12px; font-weight:600; line-height:1.3; letter-spacing:0.06em; text-transform:uppercase; } .ds-gloss::before { content:'§'; font-size:15px; letter-spacing:0; } .ds-rewrote { position:relative; z-index:1; padding:0; border:0; background:none; color:var(--lapis,#1e2f7a); font:inherit; font-size:13px; font-weight:600; text-decoration:underline 1px; text-underline-offset:3px; cursor:pointer; } .ds-rewrote:hover { text-decoration-thickness:2px; } .ds-rewrote:focus-visible { outline:2px solid var(--lapis,#1e2f7a); outline-offset:2px; }"
+    },
+    {
+      "name": "Tray",
+      "kind": "custom",
+      "refersTo": "tray",
+      "description": "A Tray well holding Cards by the work they need: panel-heading head with a count, slips inside; Good folds into a dashed Paper pile with paper edges.",
+      "html": "<section class=\"ds-tray\"><div class=\"ds-tray-head\"><h2 class=\"ds-tray-title\">Good</h2><span class=\"ds-tray-count\">6 Cards</span></div><div><div class=\"ds-folded\"><p class=\"ds-lead\">6 good Cards in your own words</p><p class=\"ds-empty\">Nothing to do here. Show them to read or edit one.</p><button type=\"button\" class=\"ds-btn\">Show the good Cards</button></div><span class=\"ds-edge\" style=\"--depth:1\"></span><span class=\"ds-edge\" style=\"--depth:2\"></span></div></section>",
+      "css": ".ds-tray { display:flex; flex-direction:column; gap:10px; max-width:300px; padding:14px 12px 12px; background:var(--tray,#f3f2ee); border:1px solid var(--line,#dedde3); border-radius:4px; font-family:'Public Sans',system-ui,sans-serif; color:var(--ink,#141414); } .ds-tray-head { display:flex; flex-wrap:wrap; align-items:center; gap:4px 12px; min-height:36px; padding:0 6px 10px; border-bottom:1px solid var(--line,#dedde3); } .ds-tray-title { flex:1 1 0; margin:0; font-size:13px; font-weight:600; line-height:1.3; letter-spacing:0.06em; text-transform:uppercase; } .ds-tray-title::first-letter { font-family:'Cinzel Decorative',Cinzel,serif; font-size:2em; font-weight:700; line-height:0.9; color:var(--rubric,#b3261e); } .ds-tray-count { margin-left:auto; color:var(--mute,#5c5f6a); font-size:13px; font-variant-numeric:tabular-nums; white-space:nowrap; } .ds-folded { position:relative; z-index:1; display:flex; flex-direction:column; align-items:flex-start; gap:4px; padding:16px; background:var(--paper,#fff); border:1px dashed var(--line-strong,#c9c8d1); border-radius:4px; } .ds-lead { margin:0 0 6px; font-size:16px; font-weight:600; } .ds-empty { margin:0; color:var(--mute,#5c5f6a); font-size:15px; line-height:1.5; } .ds-btn { margin-top:12px; min-height:36px; padding:0 16px; background:var(--paper,#fff); color:var(--ink,#141414); border:1px solid var(--ink,#141414); border-radius:4px; font:inherit; font-size:14px; font-weight:600; cursor:pointer; transition:background 160ms cubic-bezier(0.22,1,0.36,1); } .ds-btn:hover { background:var(--tint,#eef0f8); } .ds-btn:focus-visible { outline:2px solid var(--lapis,#1e2f7a); outline-offset:2px; } .ds-edge { display:block; width:calc(100% - var(--depth) * 16px); height:8px; margin:0 auto; background:var(--paper,#fff); border:1px solid var(--line,#dedde3); border-top:0; border-radius:0 0 4px 4px; }"
     }
   ],
   "narrative": {
@@ -599,7 +667,8 @@
       "Flat surfaces; depth comes from hairlines and the ground/paper step, not shadows.",
       "Red is a signal with fixed jobs, never a decoration of data.",
       "State is a small mark in a fixed cell (Reading marks, a Citation check or triangle); rank comes from weight, never from bigger type.",
-      "A focus screen (Review) drops the rail and the page header: one Paper leaf on Ground."
+      "A focus screen (Review) drops the rail and the page header: one Paper leaf on Ground.",
+      "Recall is a desk: today's Review leaf on top, and under it Trays (a well a step darker than Ground) that hold the Cards as Paper slips, sorted by the work they need."
     ],
     "rules": [
       {
@@ -609,12 +678,12 @@
       },
       {
         "name": "The Gilt Marker Rule",
-        "body": "Gold says \"here\": the current Section, the current step (in the Step Bar and under a Reading mark), a spine's bands, focus on lapis. It is never used for text on paper or for decoration elsewhere.",
+        "body": "Gold says \"here\": the current Section, the current step (in the Step Bar and under a Reading mark), a spine's bands, focus on lapis. It has one more job: the triangle icon of a Check that warns on a Recall slip, always beside Ink words (\"Could be better · …\"). It is never used for text on paper or for decoration elsewhere.",
         "section": "colors"
       },
       {
         "name": "The One Field Rule",
-        "body": "Lapis is the only large color field (rail, spine, the primary button). Panels and the page stay paper and ground.",
+        "body": "Lapis is the only large color field (rail, spine, the primary button). Panels and the page stay paper and ground; the one other surface is the neutral Tray well under Recall's slips.",
         "section": "colors"
       },
       {
@@ -629,7 +698,7 @@
       },
       {
         "name": "The Typed Label Rule",
-        "body": "Courier Prime is for call numbers, step numbers and a code the user types elsewhere (the GitHub sign-in code) only.",
+        "body": "Courier Prime is for call numbers, step numbers, repository names in the Repository Rows (a repository is the Graph's shelf mark on GitHub) and a code the user types elsewhere (the GitHub sign-in code) only.",
         "section": "typography"
       },
       {
@@ -654,13 +723,15 @@
       "Do give every button on a focus screen that a key presses a key cap, and name the key in `aria-keyshortcuts`.",
       "Do use tabular numerals for counts, years and call numbers.",
       "Do show a Source's state as a mark in a fixed cell (Reading marks, the Citation check or triangle), and rank by weight, not by bigger type.",
-      "Do keep the 3px Lapis edge for rows that share Links with a chosen Source, with \"N shared\" and the hint saying it in words."
+      "Do keep the 3px Lapis edge for rows that share Links with a chosen Source, with \"N shared\" and the hint saying it in words.",
+      "Do sort Recall's Cards into the Trays by the work they need (To fix, To rewrite, Good), as Paper slips in the Tray well, with Good folded to its count until asked for or searched.",
+      "Do let a slip that leaves its Tray finish its lift and the closing of its slot before the list reads again; under reduced motion it goes at once."
     ],
     "donts": [
       "Don't decorate data, Note text, inputs or buttons (no initials, flourishes or gilt there).",
       "Don't use red alone to mean anything; color never carries a message by itself.",
       "Don't add resting shadows or new fields of color beyond the lapis rail, spine and primary.",
-      "Don't use Cinzel Decorative beyond a single heading initial, or Courier Prime beyond call numbers, step numbers and a code the user types elsewhere.",
+      "Don't use Cinzel Decorative beyond a single heading initial, or Courier Prime beyond call numbers, step numbers, repository names and a code the user types elsewhere.",
       "Don't fix widths to English text, truncate labels, or block wrapping.",
       "Don't build a file-tree-plus-editor arrangement in neutral grey, a busy dashboard, or gamification."
     ]

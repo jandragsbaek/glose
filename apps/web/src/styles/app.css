@@ -23,6 +23,7 @@
   --line: #dedde3;
   --line-strong: #c9c8d1;
   --tint: #eef0f8;
+  --tray: #f3f2ee;
 
   --font-ui: "Public Sans", system-ui, sans-serif;
   --font-call: "Courier Prime", ui-monospace, monospace;
@@ -2904,12 +2905,321 @@ a.written__title:hover {
   color: var(--on-lapis);
 }
 
+/*
+ * Recall is a desk: today's Review leaf lies on top, the Cards still due as paper edges under
+ * it; below, trays hold the Cards by the work they need, each Card a Paper slip.
+ */
+.recall {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
 .review-start {
+  width: min(980px, 100%);
+  margin: 0 auto;
+}
+
+.review-start__leaf {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px 32px;
+  padding: 22px 28px;
+}
+
+.review-start__count {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.review-start__counts {
+  margin-top: 4px;
+  color: var(--mute);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.card-desk {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card-desk__find {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.card-desk__find .status:empty {
+  display: none;
+}
+
+/* Without ChatGPT, one quiet line beside the find field says the AI Checks are off. */
+.card-desk__find .notice {
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--mute);
+  font-size: 13px;
+}
+
+.card-desk__find .notice__icon {
+  width: 16px;
+  height: 16px;
+}
+
+.trays {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(260px, 300px);
+  gap: 20px;
+  align-items: start;
+}
+
+.tray {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px 12px 12px;
+  background: var(--tray);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.tray__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  min-height: 36px;
+  padding: 0 6px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.tray[data-initial="lapis"] .panel__title::first-letter {
+  color: var(--lapis);
+}
+
+.tray__head .panel__title {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.tray__count {
+  margin-left: auto;
+  white-space: nowrap;
+  color: var(--mute);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tray__head .button--quiet {
+  min-height: 26px;
+  margin-right: -6px;
+  padding: 0 6px;
+}
+
+.tray__slips {
+  display: grid;
+  gap: 10px;
+}
+
+/* A slot that closes once its slip has lifted away, so the slips below slide up into it. */
+.tray__slot {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition:
+    grid-template-rows 200ms var(--ease-out) 160ms,
+    margin 200ms var(--ease-out) 160ms;
+}
+
+.tray__slot > .slip {
+  min-height: 0;
+}
+
+.tray__slot:has(.slip--leaving) {
+  grid-template-rows: 0fr;
+  margin-bottom: -10px;
+}
+
+.tray__empty {
+  padding: 6px 6px 4px;
+}
+
+.tray__pile {
+  display: flex;
+  flex-direction: column;
+}
+
+.tray__folded {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 16px;
+  background: var(--paper);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+}
+
+.tray__folded .button {
+  margin-top: 12px;
+  white-space: normal;
+}
+
+.tray__more {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px 20px;
+  gap: 8px 12px;
+  padding: 2px 4px 0;
+}
+
+/* A slip: the question opens the Card; the whole slip is its target. */
+.slip {
+  position: relative;
+  padding: 12px 14px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  transition:
+    border-color 160ms var(--ease-out),
+    transform 200ms var(--ease-out),
+    opacity 200ms var(--ease-out);
+}
+
+.slip:hover {
+  border-color: var(--mute);
+}
+
+.slip:has(.slip__open:focus-visible) {
+  outline: 2px solid var(--lapis);
+  outline-offset: 2px;
+}
+
+/* The AI mark's rule runs down the slip's own edge. */
+.slip > .ai-text {
+  margin-left: -14px;
+}
+
+/* "I rewrote it": the slip lifts out of the tray, as a rated leaf leaves the Review. */
+.slip--leaving {
+  transform: translateY(-14px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.slip__question {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.slip__open {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.slip__open:focus-visible {
+  outline: none;
+}
+
+.slip__open::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.slip__answer {
+  margin-top: 4px;
+  color: var(--mute);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.slip__more {
+  white-space: nowrap;
+}
+
+.link-button.slip__action {
+  position: relative;
+  z-index: 1;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Red fails, gold warns; the words say which, never the color alone. */
+.slip__fault,
+.slip__error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.slip__fault[data-verdict="fail"],
+.slip__error {
+  color: var(--rubric);
+}
+
+.slip__icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  color: var(--gold);
+  stroke-width: 1.8;
+}
+
+.slip__fault[data-verdict="fail"] .slip__icon,
+.slip__error .slip__icon {
+  color: var(--rubric);
+}
+
+/* Two trays side by side, Good across under them; one column on phones. */
+@media (max-width: 1080px) {
+  .trays {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .trays > .tray:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 720px) {
+  .trays {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .review-start__leaf {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 18px 20px;
+  }
 }
 
 @media (max-width: 720px) {
@@ -3353,6 +3663,11 @@ a.written__title:hover {
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+
+  /* A slot closes at once, without waiting for a lift that no longer runs. */
+  .tray__slot {
+    transition-delay: 0s !important;
   }
 
   /* An endless spin at 0.01ms would jump to random angles; the icon stands still instead. */
