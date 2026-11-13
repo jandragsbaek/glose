@@ -4,6 +4,7 @@ import {
   type Language,
   Settings as SettingsData,
   type SettingsView,
+  SiteFolderUnavailable,
   StorageError,
 } from "@glose/contracts";
 import * as Context from "effect/Context";
@@ -35,6 +36,13 @@ export class Settings extends Context.Service<
       /** A Graph copied from a remote is cloned first (see Setup), then opened. */
       readonly action: Exclude<GraphFolderAction, "clone">;
     }) => Effect.Effect<SettingsView, GraphFolderUnavailable | StorageError>;
+    /**
+     * Chooses the user's Bridgetown site on this computer: a folder that holds `src`, where Glose
+     * writes Blog posts into `src/_posts`.
+     */
+    readonly setSiteFolder: (
+      siteFolder: string,
+    ) => Effect.Effect<SettingsView, SiteFolderUnavailable | StorageError>;
   }
 >()("glose/Settings") {}
 
@@ -97,7 +105,23 @@ export const make = Effect.gen(function* () {
     }) {
       const folder = graphFolder.trim();
       yield* graphFolders[action](folder);
-      const next = { language, graphFolder: path.resolve(folder) };
+      const next = { ...(yield* read), language, graphFolder: path.resolve(folder) };
+      yield* write(next);
+      return view(next);
+    }),
+    setSiteFolder: Effect.fn("Settings.setSiteFolder")(function* (siteFolder) {
+      const folder = siteFolder.trim();
+      const unavailable = (reason: SiteFolderUnavailable["reason"]) =>
+        new SiteFolderUnavailable({ path: folder, reason });
+      if (!path.isAbsolute(folder)) return yield* unavailable("not-absolute");
+      const isFolder = (target: string) =>
+        fs.stat(target).pipe(
+          Effect.map((info) => info.type === "Directory"),
+          Effect.orElseSucceed(() => false),
+        );
+      if (!(yield* isFolder(folder))) return yield* unavailable("not-found");
+      if (!(yield* isFolder(path.join(folder, "src")))) return yield* unavailable("not-bridgetown");
+      const next = { ...(yield* read), siteFolder: path.resolve(folder) };
       yield* write(next);
       return view(next);
     }),

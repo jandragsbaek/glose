@@ -14,6 +14,11 @@ export const Settings = Schema.Struct({
   language: Schema.NullOr(Language),
   /** Absolute path of the folder that holds the Graph's Markdown files. */
   graphFolder: Schema.NullOr(Schema.String),
+  /**
+   * Absolute path of the user's Bridgetown site on this computer, where a Blog post is published;
+   * missing until the first Publication.
+   */
+  siteFolder: Schema.optionalKey(Schema.NullOr(Schema.String)),
 });
 export type Settings = typeof Settings.Type;
 

@@ -58,6 +58,23 @@ import {
   SourceRef,
 } from "./source.ts";
 import { BackUpToGitHub, EndDay, RemoteRefused, SetRemote, VersionsStatus } from "./versions.ts";
+import {
+  PublicationExists,
+  PublicationNotReady,
+  PublicationRecord,
+  PublishWritingProject,
+  SaveWritingProject,
+  SetSiteFolder,
+  SiteFolderNotSet,
+  SiteFolderUnavailable,
+  WritingProject,
+  WritingProjectFields,
+  WritingProjectNameTaken,
+  WritingProjectNotFound,
+  WritingProjectRef,
+  WritingReview,
+  WritingReviewUnavailable,
+} from "./writing.ts";
 
 export const RPC_METHODS = {
   serverInfo: "server.info",
@@ -113,6 +130,13 @@ export const RPC_METHODS = {
   versionsBackUpToGitHub: "versions.backUpToGitHub",
   versionsSetRemote: "versions.setRemote",
   versionsRemoveRemote: "versions.removeRemote",
+  settingsSetSiteFolder: "settings.setSiteFolder",
+  writingList: "writing.list",
+  writingGet: "writing.get",
+  writingCreate: "writing.create",
+  writingSave: "writing.save",
+  writingReview: "writing.review",
+  writingPublish: "writing.publish",
 } as const;
 
 export const RPC_PATH = "/rpc";
@@ -331,4 +355,62 @@ export const GloseRpcGroup = RpcGroup.make(
   Rpc.make(RPC_METHODS.versionsSetRemote, { payload: SetRemote, error: RemoteRefused }),
   /** Stops syncing. The Versions stay on this computer and on the old remote. */
   Rpc.make(RPC_METHODS.versionsRemoveRemote),
+  /** Chooses the user's Bridgetown site on this computer, where Blog posts are published. */
+  Rpc.make(RPC_METHODS.settingsSetSiteFolder, {
+    payload: SetSiteFolder,
+    success: SettingsView,
+    error: Schema.Union([SiteFolderUnavailable, StorageError]),
+  }),
+  /** Every Writing project, last changed first. */
+  Rpc.make(RPC_METHODS.writingList, {
+    success: Schema.Array(WritingProject),
+    error: GraphErrors,
+  }),
+  Rpc.make(RPC_METHODS.writingGet, {
+    payload: WritingProjectRef,
+    success: WritingProject,
+    error: Schema.Union([WritingProjectNotFound, GraphFolderNotSet, StorageError]),
+  }),
+  /** Writes a new Writing project; its file name comes from the title. */
+  Rpc.make(RPC_METHODS.writingCreate, {
+    payload: WritingProjectFields,
+    success: WritingProject,
+    error: Schema.Union([WritingProjectNameTaken, GraphFolderNotSet, StorageError]),
+  }),
+  /** Saves the prose and settings; a new title renames the file. */
+  Rpc.make(RPC_METHODS.writingSave, {
+    payload: SaveWritingProject,
+    success: WritingProject,
+    error: Schema.Union([
+      WritingProjectNotFound,
+      WritingProjectNameTaken,
+      GraphFolderNotSet,
+      StorageError,
+    ]),
+  }),
+  /** The AI reads the prose and the Graph and flags, suggests and asks; it writes no prose. */
+  Rpc.make(RPC_METHODS.writingReview, {
+    payload: WritingProjectRef,
+    success: WritingReview,
+    error: Schema.Union([
+      WritingProjectNotFound,
+      WritingReviewUnavailable,
+      GraphFolderNotSet,
+      StorageError,
+    ]),
+  }),
+  /** Writes a Blog post into the site folder as a Bridgetown post. */
+  Rpc.make(RPC_METHODS.writingPublish, {
+    payload: PublishWritingProject,
+    success: PublicationRecord,
+    error: Schema.Union([
+      WritingProjectNotFound,
+      SiteFolderNotSet,
+      SiteFolderUnavailable,
+      PublicationExists,
+      PublicationNotReady,
+      GraphFolderNotSet,
+      StorageError,
+    ]),
+  }),
 );

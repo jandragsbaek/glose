@@ -4420,3 +4420,905 @@ a.written__title:hover {
     padding-left: 16px;
   }
 }
+
+/* Writing projects: "Start a new piece" shows each type as a small finished page. */
+
+.specimens {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr));
+  gap: 24px;
+}
+
+.specimen {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+  gap: 20px;
+  padding: 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--paper);
+  transition: border-color 160ms var(--ease-out);
+}
+
+.specimen:hover,
+.specimen:focus-within {
+  border-color: var(--lapis);
+}
+
+.specimen__text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.specimen__title {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.specimen__lead {
+  color: var(--mute);
+  font-size: 14px;
+}
+
+.specimen__points {
+  margin: 0 0 8px;
+  padding-left: 18px;
+  font-size: 14px;
+}
+
+.specimen__points li + li {
+  margin-top: 2px;
+}
+
+.specimen .button {
+  white-space: normal;
+  text-align: center;
+}
+
+/* A finished page in miniature: not reading text, a picture of what the type becomes. */
+.miniature {
+  height: 200px;
+  overflow: hidden;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--ground);
+  color: var(--mute);
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.miniature--page {
+  background: var(--paper);
+}
+
+.miniature__title {
+  margin-bottom: 8px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.miniature sup {
+  color: var(--lapis);
+  font-weight: 700;
+}
+
+.miniature__notes {
+  margin: 10px 0 0;
+  padding: 6px 0 0 14px;
+  border-top: 1px solid var(--line-strong);
+}
+
+.miniature__heading {
+  margin-top: 10px;
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.miniature__entry {
+  font-style: italic;
+}
+
+@media (max-width: 720px) {
+  .specimen {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .miniature {
+    height: 150px;
+  }
+}
+
+/* The writing desk, "The Glossed Manuscript": a thin bar, then one leaf between two margins. */
+
+.desk-frame {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.desk-bar {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  min-height: 56px;
+  padding: 10px 32px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.desk-bar__back {
+  color: var(--mute);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.desk-bar__back::after {
+  content: "/";
+  margin-left: 10px;
+  color: var(--line-strong);
+}
+
+.desk-bar__title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.desk-bar__status {
+  margin-left: auto;
+  color: var(--mute);
+  font-size: 13px;
+}
+
+.desk-bar__mode {
+  flex: none;
+}
+
+.desk-bar__note {
+  color: var(--mute);
+  font-size: 13px;
+}
+
+.desk-bar__path {
+  max-width: 34ch;
+  overflow: hidden;
+  color: var(--mute);
+  font: 400 12px/1.4 var(--font-call);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl;
+}
+
+.desk-note {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 32px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--mute);
+  font-size: 13px;
+}
+
+.desk-note--problem {
+  color: var(--ink);
+}
+
+.desk-note__icon {
+  width: 16px;
+  height: 16px;
+  color: var(--rubric);
+  stroke-width: 1.8;
+}
+
+.desk-note__icon--done {
+  color: var(--verdigris);
+}
+
+/* Settings of the piece open under its chip, like a slip pulled from the leaf. */
+.piece-settings {
+  position: relative;
+}
+
+.piece-settings__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  color: var(--lapis);
+  font-size: 13px;
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+  transition: background-color 160ms var(--ease-out);
+}
+
+.piece-settings__chip::-webkit-details-marker {
+  display: none;
+}
+
+.piece-settings__chip:hover,
+.piece-settings[open] > .piece-settings__chip {
+  background: var(--tint);
+}
+
+.piece-settings__chip:focus-visible {
+  outline: 2px solid var(--lapis);
+  outline-offset: 2px;
+}
+
+.piece-settings__icon {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1.8;
+}
+
+.piece-settings__panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: min(420px, calc(100vw - 32px));
+  padding: 16px 18px 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+
+.piece-settings__group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.piece-settings__legend {
+  margin-bottom: 8px;
+  padding: 0;
+  color: var(--mute);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.piece-settings__choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.piece-settings__choice:has(input:checked) {
+  border-color: var(--lapis);
+  background: var(--tint);
+}
+
+.piece-settings__choice input {
+  margin-top: 3px;
+}
+
+.piece-settings__choice-title {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.piece-settings__choice-text {
+  display: block;
+  color: var(--mute);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.piece-settings .segmented {
+  flex-wrap: wrap;
+}
+
+.piece-settings__sample {
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--ground);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.piece-settings__sample sup,
+.piece-settings__link {
+  color: var(--lapis);
+  font-weight: 600;
+}
+
+.piece-settings__sample-note {
+  display: block;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+  color: var(--mute);
+}
+
+.writing-desk {
+  display: grid;
+  flex: 1;
+  grid-template-columns:
+    minmax(16px, 1fr) minmax(180px, 250px) minmax(0, 680px) minmax(200px, 290px)
+    minmax(16px, 1fr);
+  align-items: start;
+  padding: 32px 0 0;
+}
+
+.writing-desk__margin {
+  position: relative;
+  min-width: 0;
+}
+
+.writing-desk__margin--left {
+  grid-column: 2;
+  padding-right: 22px;
+}
+
+.writing-desk__margin--right {
+  grid-column: 4;
+  padding-left: 22px;
+}
+
+.writing-desk[data-mode="write"] .writing-desk__margin > [data-pos] {
+  position: absolute;
+  right: 22px;
+  left: 0;
+}
+
+.writing-desk[data-mode="write"] .writing-desk__margin--right > [data-pos] {
+  right: 0;
+  left: 22px;
+}
+
+.leaf {
+  grid-column: 3;
+  min-width: 0;
+  min-height: calc(100vh - 180px);
+  padding: 44px 56px 64px;
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: var(--paper);
+}
+
+.leaf__title-input {
+  width: 100%;
+  padding: 0 0 10px;
+  border: 0;
+  border-bottom: 1px solid var(--line-strong);
+  background: none;
+  color: var(--ink);
+  font: 700 30px/1.2 var(--font-ui);
+  letter-spacing: -0.015em;
+  transition: border-color 160ms var(--ease-out);
+}
+
+.leaf__title-input:focus-visible {
+  outline: none;
+  border-bottom-color: var(--lapis);
+}
+
+.leaf__title-input[aria-invalid="true"] {
+  border-bottom-color: var(--rubric);
+}
+
+.leaf__error {
+  margin-top: 8px;
+}
+
+.leaf__meta {
+  margin: 10px 0 26px;
+  color: var(--mute);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The prose: CodeMirror, set as the Free text is, with no editor chrome. */
+.prose-editor .cm-editor {
+  background: none;
+  color: var(--ink);
+  font: 400 16px/1.65 var(--font-ui);
+}
+
+.prose-editor .cm-editor.cm-focused {
+  outline: none;
+}
+
+.prose-editor .cm-scroller {
+  overflow: visible;
+  font: inherit;
+  line-height: inherit;
+}
+
+.prose-editor .cm-content {
+  min-height: 320px;
+  padding: 0;
+  caret-color: var(--lapis);
+}
+
+.prose-editor .cm-line {
+  padding: 0;
+}
+
+.prose-editor .cm-placeholder {
+  color: var(--mute);
+}
+
+.prose-editor .cm-cursor {
+  border-left: 2px solid var(--lapis);
+}
+
+.prose-editor .cm-selectionBackground,
+.prose-editor .cm-focused .cm-selectionBackground,
+.prose-editor .cm-content ::selection {
+  background: var(--gold-wash);
+}
+
+.prose-editor__ref {
+  margin: 0 1px 0 2px;
+  color: var(--lapis);
+  font: 700 12px/1 var(--font-call);
+  font-variant-numeric: tabular-nums;
+  cursor: text;
+}
+
+.prose-editor__ref--flagged {
+  color: var(--rubric);
+}
+
+/* A Reference the cursor is in shows as its token, a typed label in the text. */
+.prose-editor__token {
+  padding: 1px 0;
+  border-radius: 2px;
+  background: var(--tint);
+  color: var(--lapis);
+  font: 400 14px/1 var(--font-call);
+}
+
+.prose-editor__token--flagged {
+  background: var(--rubric-wash);
+  color: var(--rubric);
+}
+
+/* Right margin: each Reference's Citation, on the line it glosses. */
+.gloss {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.gloss__cite {
+  color: var(--ink);
+}
+
+.gloss__number {
+  margin-right: 6px;
+  color: var(--lapis);
+  font: 700 12px/1 var(--font-call);
+}
+
+.gloss--flagged .gloss__number {
+  color: var(--rubric);
+}
+
+.gloss__note {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* Left margin: what a check or the AI found, beside its line, words before color. */
+.flag {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: right;
+}
+
+.flag__title {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--rubric);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.flag__icon {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1.8;
+}
+
+.flag__text {
+  color: var(--mute);
+}
+
+.flag .link-button {
+  font-weight: 600;
+  text-align: right;
+}
+
+/* A Note the AI suggests wears the AI mark: the rubric rule and the ¶ gloss. */
+.flag--ai {
+  padding-right: 10px;
+  border-right: 2px solid var(--rubric);
+}
+
+.flag__gloss {
+  color: var(--rubric);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.flag__gloss::before {
+  content: "¶ ";
+}
+
+.flag__note {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.margin-heading {
+  margin-bottom: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  color: var(--mute);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.checks__line {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.checks__icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  stroke-width: 1.8;
+}
+
+.checks__line--ok .checks__icon {
+  color: var(--verdigris);
+}
+
+.checks__line--problem .checks__icon,
+.checks__line--problem strong {
+  color: var(--rubric);
+}
+
+.checks__line strong {
+  font-weight: 600;
+}
+
+.checks__hint {
+  display: block;
+  color: var(--mute);
+  font-size: 13px;
+}
+
+.checks .link-button,
+.questions .link-button {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.questions__empty {
+  margin-bottom: 12px;
+  color: var(--mute);
+  font-size: 14px;
+}
+
+.question {
+  margin-bottom: 16px;
+  padding-left: 12px;
+  border-left: 1px solid var(--line-strong);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.question__about {
+  margin-bottom: 4px;
+  color: var(--mute);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Proof: the post as readers will see it. */
+.proof__title {
+  margin-bottom: 8px;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+.proof__body {
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.proof__body p,
+.proof__body ul,
+.proof__body ol,
+.proof__body blockquote {
+  margin: 0 0 20px;
+}
+
+.proof__body h2,
+.proof__body h3 {
+  margin: 32px 0 12px;
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.proof__body h3 {
+  font-size: 16px;
+}
+
+.proof__body blockquote {
+  padding-left: 18px;
+  border-left: 1px solid var(--line-strong);
+  color: var(--mute);
+}
+
+.proof__ref {
+  margin-left: 1px;
+  color: var(--lapis);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.proof__ref--flagged,
+.proof__cite--flagged {
+  color: var(--rubric);
+}
+
+.proof__side-notes {
+  margin: -8px 0 20px;
+  padding-left: 18px;
+  color: var(--mute);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.proof__side-notes sup {
+  color: var(--lapis);
+  font-weight: 700;
+}
+
+.proof__notes,
+.proof__sources ul {
+  margin: 28px 0 0;
+  padding: 14px 0 0 20px;
+  border-top: 1px solid var(--line);
+  color: var(--mute);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.proof__sources h2 {
+  margin-top: 32px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.proof__sources ul {
+  margin-top: 10px;
+  list-style: none;
+  padding-left: 0;
+}
+
+.proof__note--flagged {
+  color: var(--rubric);
+}
+
+.proof__problem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  font-weight: 600;
+}
+
+/* Cite a Note: the matches as choice rows, each with its call number. */
+.cite-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 300px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.cite-list__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.cite-list__row:hover {
+  border-color: var(--mute);
+}
+
+.cite-list__row:has(input:checked) {
+  border-color: var(--lapis);
+  background: var(--tint);
+}
+
+.cite-list__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cite-list__title {
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.cite-list__kind {
+  color: var(--mute);
+  font-size: 12px;
+}
+
+.cite-page .input {
+  max-width: 160px;
+}
+
+/* Below a wide window the margins fold under the leaf, in reading order. */
+@media (max-width: 1199px) {
+  .writing-desk {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    padding: 24px 24px 40px;
+  }
+
+  .writing-desk__margin--left,
+  .writing-desk__margin--right,
+  .leaf {
+    grid-column: 1;
+    padding: 0;
+  }
+
+  .leaf {
+    order: 1;
+    padding: 32px 32px 40px;
+    border-bottom: 1px solid var(--line);
+    border-radius: var(--radius);
+    min-height: 0;
+  }
+
+  .writing-desk__margin--left {
+    order: 2;
+  }
+
+  .writing-desk__margin--right {
+    order: 3;
+  }
+
+  .writing-desk__margin {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .writing-desk[data-mode="write"] .writing-desk__margin > [data-pos] {
+    position: static;
+  }
+
+  .flag {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .flag .link-button {
+    text-align: left;
+  }
+
+  .flag--ai {
+    padding: 0 0 0 10px;
+    border-right: 0;
+    border-left: 2px solid var(--rubric);
+  }
+}
+
+@media (max-width: 720px) {
+  .desk-bar,
+  .desk-note {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .writing-desk {
+    padding: 16px 16px 32px;
+  }
+
+  .leaf {
+    padding: 24px 20px 32px;
+  }
+}
+
+/* In a sheet the find field is one row of a column, not a growing tool in a band. */
+.sheet .register-tools__find {
+  flex: none;
+  max-width: none;
+}
+
+.proof__notes {
+  list-style: decimal;
+}
+
+.proof__body ul {
+  padding-left: 22px;
+  list-style: disc;
+}
+
+.proof__body ol {
+  padding-left: 22px;
+  list-style: decimal;
+}
+
+.piece-settings .select {
+  align-self: flex-start;
+}

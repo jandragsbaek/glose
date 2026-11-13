@@ -31,6 +31,7 @@ import * as Setup from "./settings/Setup.ts";
 import * as GitHub from "./github/GitHub.ts";
 import * as Git from "./versions/Git.ts";
 import * as Versions from "./versions/Versions.ts";
+import * as Writing from "./writing/Writing.ts";
 
 /** Newline-delimited JSON, so a streamed reply reaches the client as it happens. */
 const layerRpcRoute = RpcServer.layerHttp({
@@ -66,7 +67,7 @@ const layerChatGpt = ChatGpt.layer.pipe(Layer.provide([ChatGpt.layerCrypto, Cred
  * The app's services over the files on disk, ChatGPT and the Catalog. They still need ServerConfig, an
  * HttpClient, OpenAI's signing keys and the platform; a test supplies fakes for OpenAI.
  */
-export const layerApp = Sessions.layer.pipe(
+export const layerApp = Layer.mergeAll(Sessions.layer, Writing.layer).pipe(
   Layer.provideMerge(CardChecks.layer),
   Layer.provideMerge(
     Layer.mergeAll(

@@ -14,10 +14,11 @@ import { Route as GraphRouteImport } from './routes/graph'
 import { Route as RecallRouteImport } from './routes/recall'
 import { Route as ReviewRouteImport } from './routes/review'
 import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as WritingRouteImport } from './routes/writing'
 import { Route as SourcesIndexRouteImport } from './routes/sources.index'
 import { Route as SourcesSourceIdRouteImport } from './routes/sources.$sourceId'
 import { Route as SourcesNewRouteImport } from './routes/sources.new'
+import { Route as WritingIndexRouteImport } from './routes/writing.index'
+import { Route as WritingProjectIdRouteImport } from './routes/writing.$projectId'
 import { Route as NotesNoteIdCardsRouteImport } from './routes/notes.$noteId.cards'
 
 const IndexRoute = IndexRouteImport.update({
@@ -45,11 +46,6 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
-const WritingRoute = WritingRouteImport.update({
-  id: '/writing',
-  path: '/writing',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SourcesIndexRoute = SourcesIndexRouteImport.update({
   id: '/sources/',
   path: '/sources/',
@@ -65,6 +61,16 @@ const SourcesNewRoute = SourcesNewRouteImport.update({
   path: '/sources/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WritingIndexRoute = WritingIndexRouteImport.update({
+  id: '/writing/',
+  path: '/writing/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WritingProjectIdRoute = WritingProjectIdRouteImport.update({
+  id: '/writing/$projectId',
+  path: '/writing/$projectId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NotesNoteIdCardsRoute = NotesNoteIdCardsRouteImport.update({
   id: '/notes/$noteId/cards',
   path: '/notes/$noteId/cards',
@@ -77,10 +83,11 @@ export interface FileRoutesByFullPath {
   '/recall': typeof RecallRoute
   '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
-  '/writing': typeof WritingRoute
   '/sources/$sourceId': typeof SourcesSourceIdRoute
   '/sources/new': typeof SourcesNewRoute
+  '/writing/$projectId': typeof WritingProjectIdRoute
   '/sources/': typeof SourcesIndexRoute
+  '/writing/': typeof WritingIndexRoute
   '/notes/$noteId/cards': typeof NotesNoteIdCardsRoute
 }
 export interface FileRoutesByTo {
@@ -89,10 +96,11 @@ export interface FileRoutesByTo {
   '/recall': typeof RecallRoute
   '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
-  '/writing': typeof WritingRoute
   '/sources/$sourceId': typeof SourcesSourceIdRoute
   '/sources/new': typeof SourcesNewRoute
+  '/writing/$projectId': typeof WritingProjectIdRoute
   '/sources': typeof SourcesIndexRoute
+  '/writing': typeof WritingIndexRoute
   '/notes/$noteId/cards': typeof NotesNoteIdCardsRoute
 }
 export interface FileRoutesById {
@@ -102,10 +110,11 @@ export interface FileRoutesById {
   '/recall': typeof RecallRoute
   '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
-  '/writing': typeof WritingRoute
   '/sources/$sourceId': typeof SourcesSourceIdRoute
   '/sources/new': typeof SourcesNewRoute
+  '/writing/$projectId': typeof WritingProjectIdRoute
   '/sources/': typeof SourcesIndexRoute
+  '/writing/': typeof WritingIndexRoute
   '/notes/$noteId/cards': typeof NotesNoteIdCardsRoute
 }
 export interface FileRouteTypes {
@@ -116,10 +125,11 @@ export interface FileRouteTypes {
     | '/recall'
     | '/review'
     | '/settings'
-    | '/writing'
     | '/sources/$sourceId'
     | '/sources/new'
+    | '/writing/$projectId'
     | '/sources/'
+    | '/writing/'
     | '/notes/$noteId/cards'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -128,10 +138,11 @@ export interface FileRouteTypes {
     | '/recall'
     | '/review'
     | '/settings'
-    | '/writing'
     | '/sources/$sourceId'
     | '/sources/new'
+    | '/writing/$projectId'
     | '/sources'
+    | '/writing'
     | '/notes/$noteId/cards'
   id:
     | '__root__'
@@ -140,10 +151,11 @@ export interface FileRouteTypes {
     | '/recall'
     | '/review'
     | '/settings'
-    | '/writing'
     | '/sources/$sourceId'
     | '/sources/new'
+    | '/writing/$projectId'
     | '/sources/'
+    | '/writing/'
     | '/notes/$noteId/cards'
   fileRoutesById: FileRoutesById
 }
@@ -153,10 +165,11 @@ export interface RootRouteChildren {
   RecallRoute: typeof RecallRoute
   ReviewRoute: typeof ReviewRoute
   SettingsRoute: typeof SettingsRoute
-  WritingRoute: typeof WritingRoute
   SourcesSourceIdRoute: typeof SourcesSourceIdRoute
   SourcesNewRoute: typeof SourcesNewRoute
+  WritingProjectIdRoute: typeof WritingProjectIdRoute
   SourcesIndexRoute: typeof SourcesIndexRoute
+  WritingIndexRoute: typeof WritingIndexRoute
   NotesNoteIdCardsRoute: typeof NotesNoteIdCardsRoute
 }
 
@@ -197,13 +210,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/writing': {
-      id: '/writing'
-      path: '/writing'
-      fullPath: '/writing'
-      preLoaderRoute: typeof WritingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/sources/': {
       id: '/sources/'
       path: '/sources'
@@ -225,6 +231,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SourcesNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/writing/': {
+      id: '/writing/'
+      path: '/writing'
+      fullPath: '/writing/'
+      preLoaderRoute: typeof WritingIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/writing/$projectId': {
+      id: '/writing/$projectId'
+      path: '/writing/$projectId'
+      fullPath: '/writing/$projectId'
+      preLoaderRoute: typeof WritingProjectIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/notes/$noteId/cards': {
       id: '/notes/$noteId/cards'
       path: '/notes/$noteId/cards'
@@ -241,10 +261,11 @@ const rootRouteChildren: RootRouteChildren = {
   RecallRoute: RecallRoute,
   ReviewRoute: ReviewRoute,
   SettingsRoute: SettingsRoute,
-  WritingRoute: WritingRoute,
   SourcesSourceIdRoute: SourcesSourceIdRoute,
   SourcesNewRoute: SourcesNewRoute,
+  WritingProjectIdRoute: WritingProjectIdRoute,
   SourcesIndexRoute: SourcesIndexRoute,
+  WritingIndexRoute: WritingIndexRoute,
   NotesNoteIdCardsRoute: NotesNoteIdCardsRoute,
 }
 export const routeTree = rootRouteImport
