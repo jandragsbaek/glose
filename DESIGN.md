@@ -511,7 +511,24 @@ and the Backup panel.
 
 The running foot of the window, as the foot of a printed page carries the folio: Paper, a
 Hairline above, 28px tall (32px left and 12px right padding), Mute 13px with tabular numerals.
-The left end is free for later status. At the right end sits the Versions item: a 16px Lucide
+The left end is free for later status. At the right end sit the Updates button and then the
+Versions item.
+
+The Updates button is always the next step for the app's own updates, and exists only in the
+desktop app where it can replace itself. At rest it is a 16px refresh icon alone (named "Check
+for updates"); "Checking…" spins it (it stands still under reduced motion). A found release turns it Lapis
+600 with a download icon and "Update" ("Opdater"); a download shows a Lapis progress ring
+(Strong Hairline track) and the percent; a downloaded release fills it Lapis with a white
+rotate icon and "Restart to update" ("Genstart for at opdatere"), the bar's only fill, because
+restarting is the step forward. A failed step the user asked for shows a Rubric triangle and
+words ("Not downloaded"), and a click tries again; a failed hourly check shows nothing. Its
+tooltip is an Ink leaf above the item's right end (280px at most, 8px 10px, 4px corners): a
+Paper 600 line on what is true ("Nightly 13 Nov (42) is ready to download.") and a softer line
+with the running version and the last check, or what the restart does. It shows after 400ms of
+hover, at once on keyboard focus, and Esc hides it. Versions read as "Nightly 13 Nov (42)"
+("Natversion 13. nov. (42)").
+
+The Versions item: a 16px Lucide
 git-commit icon (1.6 stroke) and "Saved 14:32" ("Gemt 14.12"), or "Saving…" and "Syncing…" while
 Glose works. A 6px Ink dot follows while changes are not saved yet (named for screen readers).
 On a problem, a Rubric triangle and words ("Not synced") follow, in 600. The item is a 22px

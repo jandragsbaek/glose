@@ -10,6 +10,7 @@ import type {
   ProposalState,
   ReadingStep,
   RemoteRefusedReason,
+  UpdatesProblem,
   SessionProblem,
   SessionTool,
   Verdict,
@@ -18,6 +19,7 @@ import type {
 } from "@glose/contracts";
 import { ANSWER_WORDS, QUESTION_WORDS } from "@glose/contracts";
 
+import { nightlyOf } from "../domain/appVersion.ts";
 import { formatInterval } from "../domain/interval.ts";
 
 const numbers = new Intl.NumberFormat("en");
@@ -658,6 +660,42 @@ export const en = {
         tip: "The answer must be in the Note, with no added facts.",
       },
     } satisfies Record<CheckId, { readonly name: string; readonly tip: string }>,
+  },
+  updates: {
+    /** A nightly as "Nightly 13 Nov (42)"; any other version as it is. */
+    version: (version: string) => {
+      const nightly = nightlyOf(version);
+      return nightly === null
+        ? version
+        : `Nightly ${shortDate.format(nightly.built)} (${numbers.format(nightly.run)})`;
+    },
+    check: "Check for updates",
+    checking: "Checking…",
+    upToDate: "Glose is up to date.",
+    notChecked: "Not checked yet.",
+    checkingLong: "Checking for updates…",
+    update: "Update",
+    restart: "Restart to update",
+    percent: (percent: number) => `${numbers.format(percent)}%`,
+    downloading: (version: string, percent: number) =>
+      `Downloading ${version}: ${numbers.format(percent)}%`,
+    available: (version: string) => `${version} is ready to download.`,
+    downloaded: (version: string) => `${version} is downloaded.`,
+    restartHint: "Glose closes and opens again with the new version.",
+    running: (version: string) => `You have ${version}.`,
+    checked: (at: Date, today: boolean) =>
+      `Checked ${today ? clockTime.format(at) : shortDate.format(at)}.`,
+    everyHour: "Glose checks every hour.",
+    problemsShort: {
+      "check-failed": "Not checked",
+      "download-failed": "Not downloaded",
+      "install-failed": "Not installed",
+    } satisfies Record<UpdatesProblem, string>,
+    problems: {
+      "check-failed": "Glose could not reach GitHub. Click to try again.",
+      "download-failed": "The download stopped. Click to try again.",
+      "install-failed": "The update did not install. Click to try again.",
+    } satisfies Record<UpdatesProblem, string>,
   },
   versions: {
     title: "Versions of your Graph",
