@@ -174,11 +174,14 @@ export function WritingDesk({
   const update = (change: Partial<WritingProjectFields>) =>
     setFields((current) => ({ ...current, ...change }));
 
-  /** Saves what is on the desk, one save after another, so a rename never races a save. */
-  const save = (next: WritingProjectFields) => {
+  /**
+   * Saves what is on the desk, one save after another, so a rename never races a save. True when
+   * the file holds this text.
+   */
+  const save = (next: WritingProjectFields): Promise<boolean> => {
     const snapshot = JSON.stringify(next);
-    saving.current = saving.current.then(async () => {
-      if (snapshot === lastSaved.current) return;
+    const run = saving.current.then(async () => {
+      if (snapshot === lastSaved.current) return true;
       setSaveState("saving");
       const exit = await saveWriting({
         payload: { id: savedId.current, ...next },
@@ -192,13 +195,16 @@ export function WritingDesk({
           savedId.current = exit.value.id;
           onRenamed(exit.value.id);
         }
-        return;
+        return true;
       }
       const error = Cause.findErrorOption(exit.cause);
       setSaveState(
         Option.isSome(error) && error.value._tag === "WritingProjectNameTaken" ? "taken" : "failed",
       );
+      return false;
     });
+    saving.current = run.then(() => undefined);
+    return run;
   };
 
   const pending = JSON.stringify(fields) !== savedSnapshot;
@@ -210,11 +216,11 @@ export function WritingDesk({
   // oxlint-disable-next-line glose/no-unreasoned-state-sync -- a timer, not state: the text is written to its file when the writer pauses.
   useEffect(() => {
     if (!pending) return;
-    const timer = window.setTimeout(() => latest.current.save(fields), SAVE_AFTER_MS);
+    const timer = window.setTimeout(() => void latest.current.save(fields), SAVE_AFTER_MS);
     return () => window.clearTimeout(timer);
   }, [fields, pending]);
   // oxlint-disable-next-line glose/no-unreasoned-state-sync -- a save, not state: what the writer typed in the last moment is kept when the desk closes.
-  useEffect(() => () => latest.current.save(latest.current.fields), []);
+  useEffect(() => () => void latest.current.save(latest.current.fields), []);
 
   /** Lines each margin note up with its place in the prose, and keeps notes from overlapping. */
   const placeMargins = () => {
@@ -258,8 +264,11 @@ export function WritingDesk({
 
   const runReview = async () => {
     setReviewState("running");
-    save(fields);
-    await saving.current;
+    // The AI reads the file; a text that could not be saved is not what the writer sees.
+    if (!(await save(fields))) {
+      setReviewState("failed");
+      return;
+    }
     const exit = await reviewWriting({ payload: { id: savedId.current } });
     if (Exit.isSuccess(exit)) {
       setReview(exit.value);
@@ -280,8 +289,11 @@ export function WritingDesk({
   const runPublish = async (replace: boolean) => {
     setSheet(null);
     setPublish({ kind: "writing" });
-    save(fields);
-    await saving.current;
+    // The post is written from the file; never publish an older text than the desk shows.
+    if (!(await save(fields))) {
+      setPublish({ kind: "failed" });
+      return;
+    }
     const exit = await publishWriting({
       payload: { id: savedId.current, replace },
       reactivityKeys: WRITING_KEYS.list,
@@ -579,7 +591,7 @@ export function WritingDesk({
               <div ref={editorBox}>
                 <ProseEditor
                   ref={editor}
-                  initial={project.body}
+                  initial={fields.body}
                   flagged={flagged}
                   label={t.writing.bodyLabel}
                   placeholder={t.writing.placeholder(shortcut)}

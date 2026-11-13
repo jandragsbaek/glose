@@ -171,6 +171,7 @@ export const citationParts = (
 export const insertionAfter = (body: string, excerpt: string): number | null => {
   const at = body.indexOf(excerpt);
   if (at < 0) return null;
+  if (/[.!?]$/.test(excerpt)) return at + excerpt.length;
   const rest = body.slice(at + excerpt.length);
   const sentence = /^[^.!?\n]*[.!?]?/.exec(rest)?.[0] ?? "";
   return at + excerpt.length + sentence.length;

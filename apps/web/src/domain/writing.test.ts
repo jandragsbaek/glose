@@ -62,6 +62,7 @@ describe("insertionAfter", () => {
   it("places a Reference at the end of the sentence that holds the passage", () => {
     const body = "Most people check email every six minutes. I do too.";
     assert.strictEqual(insertionAfter(body, "every six"), body.indexOf(" I do"));
+    assert.strictEqual(insertionAfter(body, "every six minutes."), body.indexOf(" I do"));
     assert.strictEqual(insertionAfter(body, "missing"), null);
   });
 });
