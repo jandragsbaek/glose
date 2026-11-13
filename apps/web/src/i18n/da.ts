@@ -185,7 +185,6 @@ export const da: Messages = {
     words: (n: number) => count(n, "ord", "ord"),
     noFreeText: "sprunget over",
     withChatGpt: "med ChatGPT",
-    later: "kommer senere",
   },
   source: {
     firstPublished: (year: number) => `først udgivet ${year}`,
@@ -357,6 +356,8 @@ export const da: Messages = {
     finish: "Afslut fri tekst",
     skip: "Spring fri tekst over",
     finished: "Fri tekst er afsluttet. Du kan stadig ændre den.",
+    anytime:
+      "Skriv frit om bogen med dine egne ord, når du vil. Den står ved siden af sonderingen og udtrækket.",
     nextStep: "Næste trin",
   },
   start: {
@@ -372,7 +373,6 @@ export const da: Messages = {
       probe: "AI'en spørger; du svarer med din begrundelse.",
       "catch-up": "AI'en spørger og forklarer de dele, du mangler.",
     },
-    probeLater: "Sonderingen kommer i en senere version af Glose.",
     follows: "Det, der følger",
     chooseFirst: "Vælg et svar for at se de trin, der følger.",
     stepNotes: {
@@ -437,6 +437,8 @@ export const da: Messages = {
       "read-note": "AI'en læste en note.",
       "list-cards": "AI'en så på de kort, noten allerede har.",
       "search-graph": "AI'en søgte i din graf.",
+      "list-notes": "AI'en så på de noter, du har lavet fra denne kilde.",
+      "read-probe": "AI'en læste din sondering.",
     },
     trail: {
       readSource: "Læste kilden og din frie tekst",
@@ -444,10 +446,14 @@ export const da: Messages = {
       readNote: "Læste",
       listCards: "Så på notens kort",
       searchGraph: (query: string) => `Søgte i din graf efter »${query}«`,
+      listNotes: "Så på dine noter fra denne kilde",
+      readProbe: "Læste din sondering",
     },
     trailSummary: (read) => {
       const things = [
         ...(read.freeText ? ["din frie tekst"] : []),
+        ...(read.probe ? ["din sondering"] : []),
+        ...(read.sourceNotes ? ["dine noter fra denne kilde"] : []),
         ...(read.notes > 0 ? [count(read.notes, "note", "noter")] : []),
         ...(read.sources ? ["dine kilder"] : []),
         ...(read.cards ? ["notens kort"] : []),
@@ -475,6 +481,10 @@ export const da: Messages = {
           return "Ser på notens kort";
         case "search-graph":
           return detail === undefined ? "Søger i din graf" : `Søger i din graf efter »${detail}«`;
+        case "list-notes":
+          return "Ser på dine noter fra denne kilde";
+        case "read-probe":
+          return "Læser din sondering";
         case null:
           return "Tænker";
       }
@@ -536,6 +546,7 @@ export const da: Messages = {
     written: "Skrevet",
     dropped: "Droppet",
     fromFreeText: "Fra din frie tekst:",
+    fromProbe: "Fra dine ord i sonderingen:",
     notInFreeText: "Ikke i din frie tekst. Tjek det i dit eget eksemplar.",
     ownWords: "Dit eget punkt",
     repeats: "Du har denne note:",
@@ -582,6 +593,102 @@ export const da: Messages = {
       `Din graf har allerede en fil med navnet »${name}«. Ret titlen, eller åbn den note.`,
     saveFailed: "Glose kunne ikke gemme noten. Prøv igen.",
     actionFailed: "Glose kunne ikke gemme det. Prøv igen.",
+    next: {
+      probe: "Fortsæt til sonderingen",
+      done: "Markér kilden som læst",
+    },
+    nextHint: {
+      probe: "Nu spørger sonderingen dig om bogen. Dine punkter og noter bliver her.",
+      done: "Når punkterne er skrevet, forlader kilden skrivebordet. Noterne bliver i din graf.",
+    },
+    nextFailed: "Glose kunne ikke gå videre til næste trin. Prøv igen.",
+  },
+  probe: {
+    title: "Sondering",
+    stepNote: (questions: number) =>
+      questions === 0 ? "med ChatGPT" : count(questions, "spørgsmål", "spørgsmål"),
+    tally: (tally) =>
+      [
+        `${numbers.format(tally.known)} kendt`,
+        tally.afterTeaching === 0
+          ? null
+          : `${numbers.format(tally.afterTeaching)} kendt efter undervisning`,
+        tally.taught === 0
+          ? null
+          : `${numbers.format(tally.taught)} undervist, ikke bekræftet endnu`,
+        tally.open === 0 ? null : `${numbers.format(tally.open)} stadig åben`,
+      ]
+        .filter((part) => part !== null)
+        .join(" · "),
+    startLead: {
+      write: "Bliv spurgt om bogen",
+      probe: "Bliv spurgt om bogen",
+      "catch-up": "Kom ajour med bogen, og bliv så spurgt",
+    },
+    startBody: {
+      write:
+        "AI'en spørger om bogens hovedidéer, ét spørgsmål ad gangen, og afprøver de noter, du har lavet. Svar med dit ræsonnement, hvordan du kom frem til det, og så dit svar. Hvor et svar viser et hul, underviser AI'en i netop den del og spørger igen.",
+      probe:
+        "AI'en spørger om bogens hovedidéer, ét spørgsmål ad gangen. Svar med dit ræsonnement, hvordan du kom frem til det, og så dit svar. Hvor et svar viser et hul, underviser AI'en i netop den del og spørger igen. Bagefter laver udtrækket noter af det, sonderingen fandt.",
+      "catch-up":
+        "AI'en forklarer kort hver af bogens hovedidéer og spørger så om den. Svar med dit ræsonnement, hvordan du kom frem til det, og så dit svar. Hvor et svar viser et hul, underviser AI'en i netop den del og spørger igen. Bagefter laver udtrækket noter af det, sonderingen fandt.",
+    },
+    start: "Start sonderingen",
+    needsChatGpt: "Sonderingen kræver ChatGPT",
+    showFreeText: "Fri tekst",
+    hideFreeText: "Skjul fri tekst",
+    finish: "Afslut sonderingen",
+    finishFailed: "Glose kunne ikke afslutte sonderingen. Prøv igen.",
+    question: (n: number) => `S${numbers.format(n)}`,
+    questionLabel: (n: number) => `Spørgsmål ${numbers.format(n)}`,
+    again: (n: number) => `S${numbers.format(n)} igen`,
+    reasoning: "Dit ræsonnement",
+    answer: "Dit svar",
+    teachMeAsked: "Du bad om at blive undervist.",
+    judged: "Vurderet",
+    reasoningVerdicts: {
+      sound: "Ræsonnement: holdbart",
+      "partly-sound": "Ræsonnement: delvis holdbart",
+      flawed: "Ræsonnement: fejlbehæftet",
+      none: "Intet ræsonnement givet",
+    },
+    resultVerdicts: {
+      right: "Resultat: rigtigt",
+      "partly-right": "Resultat: delvis rigtigt",
+      wrong: "Resultat: forkert",
+    },
+    taught: (question: number | null) =>
+      question === null ? "Undervist" : `Undervist · hullet i S${numbers.format(question)}`,
+    intro: "Før spørgsmålet",
+    checkCopy: "Fra AI'ens viden om bogen, ikke dit eksemplar. Tjek det dér.",
+    waiting: "AI'en læser. Dens første spørgsmål kommer her.",
+    covered:
+      "AI'en har været omkring bogens hovedidéer. Afslut sonderingen, når du er klar, eller svar videre.",
+    found: "Hvad sonderingen fandt",
+    states: {
+      asking: "Spurgt, intet svar endnu",
+      known: "Kendt",
+      "known-after-teaching": "Kendt efter undervisning",
+      taught: "Undervist, ikke bekræftet endnu",
+      gap: "Stadig åben",
+    },
+    foundEmpty: "Sonderingen sluttede før noget svar.",
+    keptIn: (file: string) => `Sonderingen er gemt i ${file} i din grafmappe.`,
+    continueExtraction: "Fortsæt til udtræk",
+    continueHint: "Udtrækket laver noter af det, sonderingen fandt, med dine egne ord.",
+    doneRead: (title: string) => `Færdig: ${title} er læst`,
+    doneHint: "Kilden forlader skrivebordet. Dens noter, frie tekst og sondering bliver.",
+    reasoningPlaceholder: "Tænk højt: hvordan kommer du frem til det?",
+    dictate: {
+      mac: "Vil du hellere tale, så start din Macs diktering: tryk to gange på Fn eller på mikrofontasten.",
+      windows: "Vil du hellere tale, så tryk Windows + H for Windows' stemmeindtastning.",
+      other: "Skriv dit ræsonnement. Din computers diktering skriver også i feltet.",
+    },
+    answerPlaceholder: "I en eller to sætninger",
+    send: "Send",
+    teachMe: "Jeg ved det ikke, lær mig det",
+    askNext: "Bed om næste spørgsmål",
+    sendFailed: "Glose kunne ikke sende dit svar. Prøv igen.",
   },
   graph: {
     title: "Graf",

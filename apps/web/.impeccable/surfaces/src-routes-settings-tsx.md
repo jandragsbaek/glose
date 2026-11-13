@@ -1,8 +1,8 @@
 ---
 version: 1
-slug: "apps-web-src-routes-settings-tsx"
-primary_target: "apps/web/src/routes/settings.tsx"
-related_targets: ["apps/web/src/components/Backup.tsx", "apps/web/src/components/StatusBar.tsx"]
+slug: "src-routes-settings-tsx"
+primary_target: "src/routes/settings.tsx"
+related_targets: ["src/components/Backup.tsx", "src/components/StatusBar.tsx"]
 ---
 
 # Settings and the Backup sheet

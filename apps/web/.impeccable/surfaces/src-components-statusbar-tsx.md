@@ -1,8 +1,8 @@
 ---
 version: 1
-slug: "apps-web-src-components-statusbar-tsx"
-primary_target: "apps/web/src/components/StatusBar.tsx"
-related_targets: ["apps/web/src/state/updates.ts"]
+slug: "src-components-statusbar-tsx"
+primary_target: "src/components/StatusBar.tsx"
+related_targets: ["src/state/updates.ts"]
 ---
 
 # The status bar's Updates button

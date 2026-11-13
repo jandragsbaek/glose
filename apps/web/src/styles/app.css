@@ -4040,3 +4040,383 @@ a.written__title:hover {
     gap: 10px;
   }
 }
+
+/* The way on from Extraction: a hint over the next step's button. */
+.points__next {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+/*
+ * Probe: the conversation is the page, a Paper leaf at reading width. Each answer has the AI's
+ * judgment beside it as a gloss in the margin, the Reasoning and the result apart; teaching sits
+ * in the column as AI text. The answer box stays at the foot.
+ */
+
+.steps[data-steps="2"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.probe {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.probe__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px 24px;
+  padding: 16px 32px;
+  border-bottom: 1px solid var(--line);
+}
+
+.probe__top .steps {
+  flex: 0 1 520px;
+  background: var(--paper);
+}
+
+.probe__tally {
+  margin-left: auto;
+  color: var(--mute);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.probe__scroll {
+  flex: 1;
+  min-height: 0;
+  padding: 24px 32px 40px;
+  overflow-y: auto;
+  background: var(--paper);
+}
+
+.probe__sheet,
+.probe__box-in {
+  display: grid;
+  grid-template-columns: minmax(0, 680px) minmax(240px, 300px);
+  justify-content: center;
+  column-gap: 36px;
+}
+
+.probe__sheet {
+  row-gap: 22px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.probe__source,
+.probe__notice,
+.probe__found,
+.probe__start,
+.probe__empty {
+  max-width: 1016px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.probe__source {
+  margin-bottom: 24px;
+}
+
+.probe__notice:not(:empty) {
+  margin-top: 16px;
+}
+
+.probe__row {
+  display: grid;
+  grid-column: 1 / -1;
+  scroll-margin-bottom: 24px;
+  grid-template-columns: subgrid;
+  align-items: start;
+}
+
+.probe__main {
+  grid-column: 1;
+  min-width: 0;
+}
+
+.probe__who {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  margin-bottom: 4px;
+  color: var(--mute);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.probe__qn {
+  color: var(--lapis);
+  font: 700 12px/18px var(--font-call);
+  font-variant-numeric: tabular-nums;
+}
+
+.probe__topic {
+  font-weight: 400;
+}
+
+.probe__ask {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.probe__answer {
+  padding: 12px 16px 14px;
+}
+
+.probe__part {
+  margin-bottom: 2px;
+  color: var(--mute);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.probe__answer .you__text {
+  line-height: 1.65;
+}
+
+.probe__result {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.probe__answer > :first-child.probe__result {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.probe__result-text {
+  font-weight: 600;
+}
+
+.probe__teach-me {
+  color: var(--mute);
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* The words of the Reasoning the judgment points at; the gloss beside says why in words. */
+.probe__quote {
+  background: linear-gradient(transparent 60%, rgb(179 38 30 / 16%) 60%);
+  color: inherit;
+}
+
+.probe__gloss {
+  grid-column: 2;
+  padding: 2px 0 2px 16px;
+  border-left: 1px solid var(--line-strong);
+}
+
+.probe__gloss-head {
+  margin-bottom: 8px;
+  color: var(--lapis);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.verdict {
+  display: flex;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.verdict + .verdict {
+  margin-top: 10px;
+}
+
+.verdict__icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+}
+
+.verdict__name {
+  font-weight: 600;
+}
+
+.verdict__why {
+  margin: 2px 0 0;
+  color: var(--mute);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.verdict[data-tone="good"] .verdict__icon {
+  color: var(--verdigris);
+}
+
+.verdict[data-tone="gap"] .verdict__icon,
+.verdict[data-tone="gap"] .verdict__name {
+  color: var(--rubric);
+}
+
+.verdict[data-tone="none"] .verdict__icon {
+  color: var(--mute);
+}
+
+.probe__taught .say {
+  margin-top: 4px;
+}
+
+.probe__taught-topic {
+  letter-spacing: 0.06em;
+}
+
+.probe__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 8px;
+  color: var(--mute);
+  font-size: 13px;
+}
+
+.probe__icon {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  margin-top: 2px;
+}
+
+.probe__say .say {
+  color: var(--ink);
+}
+
+.probe__covered {
+  font-weight: 600;
+}
+
+.probe__empty {
+  margin-bottom: 16px;
+}
+
+.probe__start {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 680px;
+}
+
+.probe__found {
+  scroll-margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 40px;
+}
+
+/* The found heading is a panel heading on the leaf: the initial over the flourish rule. */
+.probe__found .panel__head {
+  padding: 0;
+}
+
+.probe__found .panel__rule {
+  margin: 0 0 4px;
+}
+
+.probe__found-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.probe__found-list dd {
+  margin-left: 0;
+}
+
+.probe__box {
+  padding: 14px 32px 16px;
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.probe__box-in {
+  row-gap: 12px;
+}
+
+.probe__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.probe__label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.probe__for {
+  color: var(--mute);
+  font-weight: 400;
+}
+
+.probe__reasoning {
+  min-height: 84px;
+}
+
+.probe__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.probe__plan {
+  color: var(--mute);
+  font-size: 12px;
+}
+
+@media (max-width: 1080px) {
+  /* The answer box stays at the foot at every width; the transcript scrolls above it. */
+  .page-body--fill:has(> .probe) {
+    flex: 1;
+  }
+
+  .probe__sheet {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* The box keeps two columns, so the transcript keeps its height. */
+  .probe__box-in {
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 270px);
+    column-gap: 20px;
+  }
+
+  .probe__reasoning {
+    min-height: 64px;
+  }
+
+  .probe__gloss {
+    grid-column: 1;
+    margin-top: 12px;
+  }
+}
+
+@media (max-width: 720px) {
+  .probe__top,
+  .probe__scroll,
+  .probe__box {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+}

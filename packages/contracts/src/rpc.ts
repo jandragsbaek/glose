@@ -19,6 +19,7 @@ import { RecordReview, ReviewQueue } from "./recall.ts";
 import { ServerInfo } from "./server.ts";
 import {
   AddPoint,
+  AnswerProbe,
   DropProposal,
   FindSession,
   KeepPoint,
@@ -26,6 +27,7 @@ import {
   PointNotFound,
   PointRef,
   ProposalNotOpen,
+  QuestionNotOpen,
   SendMessage,
   SendPassage,
   Session,
@@ -47,6 +49,7 @@ import {
 } from "./settings.ts";
 import {
   ChooseReadingStart,
+  AdvanceReading,
   SaveFreeText,
   Source,
   SourceDetails,
@@ -67,6 +70,7 @@ export const RPC_METHODS = {
   sourcesCreate: "sources.create",
   sourcesSaveFreeText: "sources.saveFreeText",
   sourcesChooseStart: "sources.chooseStart",
+  sourcesAdvance: "sources.advance",
   graphRead: "graph.read",
   notesSave: "notes.save",
   catalogSearch: "catalog.search",
@@ -94,6 +98,8 @@ export const RPC_METHODS = {
   sessionsRestorePoint: "sessions.restorePoint",
   sessionsAddPoint: "sessions.addPoint",
   sessionsWritePoint: "sessions.writePoint",
+  sessionsAnswerProbe: "sessions.answerProbe",
+  sessionsFinishProbe: "sessions.finishProbe",
   cardsList: "cards.list",
   cardsJudge: "cards.judge",
   cardsCreate: "cards.create",
@@ -150,6 +156,12 @@ export const GloseRpcGroup = RpcGroup.make(
   /** Records the answer to "Where are you with this book?", which sets the first step. */
   Rpc.make(RPC_METHODS.sourcesChooseStart, {
     payload: ChooseReadingStart,
+    success: Source,
+    error: Schema.Union([SourceNotFound, GraphFolderNotSet, StorageError]),
+  }),
+  /** Moves a Source to its next Reading step, if it is still at `from`. */
+  Rpc.make(RPC_METHODS.sourcesAdvance, {
+    payload: AdvanceReading,
     success: Source,
     error: Schema.Union([SourceNotFound, GraphFolderNotSet, StorageError]),
   }),
@@ -263,6 +275,22 @@ export const GloseRpcGroup = RpcGroup.make(
       GraphFolderNotSet,
       StorageError,
     ]),
+  }),
+  /** The user's answer to the open question of a Probe; the AI judges it in its turn. */
+  Rpc.make(RPC_METHODS.sessionsAnswerProbe, {
+    payload: AnswerProbe,
+    error: Schema.Union([
+      SessionNotFound,
+      SessionBusy,
+      QuestionNotOpen,
+      GraphFolderNotSet,
+      StorageError,
+    ]),
+  }),
+  /** Ends a Probe; its record in `Probes/` keeps what it found. The step stays until the user moves on. */
+  Rpc.make(RPC_METHODS.sessionsFinishProbe, {
+    payload: SessionRef,
+    error: Schema.Union([SessionNotFound, SessionBusy, GraphFolderNotSet, StorageError]),
   }),
   /** Every Card in the Graph folder, in file name order, with its Checks. */
   Rpc.make(RPC_METHODS.cardsList, { success: Schema.Array(ScoredCard), error: GraphErrors }),

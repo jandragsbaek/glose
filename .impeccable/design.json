@@ -517,7 +517,7 @@
       "name": "Step Bar",
       "kind": "custom",
       "refersTo": "step-current",
-      "description": "The three Reading steps; current has tint and a gilt underline, done a verdigris underline and check.",
+      "description": "The Reading steps in the order the Source's start gives them (two or three); current has tint and a gilt underline, done a verdigris underline and check.",
       "html": "<ol class=\"ds-steps\"><li class=\"ds-step ds-done\"><span class=\"ds-sname\"><svg class=\"ds-check\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M20 6 9 17l-5-5\"/></svg><span class=\"ds-num\">1</span>Free text</span><span class=\"ds-note\">412 words</span></li><li class=\"ds-step\" aria-current=\"step\"><span class=\"ds-sname\"><span class=\"ds-num\">2</span>Extraction</span><span class=\"ds-note\">needs ChatGPT</span></li><li class=\"ds-step\"><span class=\"ds-sname\"><span class=\"ds-num\">3</span>Probe</span><span class=\"ds-note\">needs ChatGPT</span></li></ol>",
       "css": ".ds-steps { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); margin:0; padding:0; list-style:none; border:1px solid var(--line,#dedde3); border-radius:4px; overflow:hidden; font-family:'Public Sans',system-ui,sans-serif; color:var(--ink,#141414); } .ds-step { padding:10px 14px 9px; border-right:1px solid var(--line,#dedde3); border-bottom:3px solid transparent; } .ds-step:last-child { border-right:0; } .ds-sname { display:flex; align-items:center; gap:6px; font-size:14px; font-weight:600; } .ds-num { font-family:'Courier Prime',ui-monospace,monospace; font-weight:700; } .ds-note { display:block; font-size:13px; color:var(--mute,#5c5f6a); font-variant-numeric:tabular-nums; } .ds-done { border-bottom-color:var(--verdigris,#3e7c5a); } .ds-check { width:15px; height:15px; color:var(--verdigris,#3e7c5a); } .ds-step[aria-current=step] { background:var(--tint,#eef0f8); border-bottom-color:var(--gold,#c8a040); }"
     },
@@ -596,7 +596,7 @@
       "name": "Reading Marks",
       "kind": "custom",
       "refersTo": "reading-mark",
-      "description": "Three marks for the Reading steps: verdigris filled done, lapis ring with a gilt underline current, hollow strong-hairline later. One image named by the state.",
+      "description": "One mark per Reading step of the Source's start (two or three): verdigris filled done, lapis ring with a gilt underline current, hollow strong-hairline later. One image named by the state.",
       "html": "<span class=\"ds-marks\" role=\"img\" aria-label=\"In Extraction\"><span class=\"ds-dot\" data-state=\"done\"></span><span class=\"ds-dot\" data-state=\"current\"></span><span class=\"ds-dot\"></span></span>",
       "css": ".ds-marks { display:inline-flex; align-items:center; gap:5px; vertical-align:middle; } .ds-dot { position:relative; width:9px; height:9px; border:1.5px solid var(--line-strong,#c9c8d1); border-radius:50%; background:var(--paper,#fff); box-sizing:border-box; } .ds-dot[data-state=done] { border-color:var(--verdigris,#3e7c5a); background:var(--verdigris,#3e7c5a); } .ds-dot[data-state=current] { border-color:var(--lapis,#1e2f7a); } .ds-dot[data-state=current]::after { content:\"\"; position:absolute; left:-1.5px; right:-1.5px; bottom:-5.5px; height:2px; background:var(--gold,#c8a040); }"
     },

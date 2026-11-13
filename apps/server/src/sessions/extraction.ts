@@ -1,4 +1,11 @@
-import { type Language, linkKey, type Point, type PointLink, type Source } from "@glose/contracts";
+import {
+  type Language,
+  linkKey,
+  type Point,
+  type PointLink,
+  type SessionEntry,
+  type Source,
+} from "@glose/contracts";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
@@ -29,9 +36,9 @@ export const INSTRUCTIONS = `You are the AI in Glose, a desktop app where a pers
 Goal: help the user pull out the core points of the Source. Each Point becomes a small Note in the user's Graph: one idea, its title a full sentence that states the claim (such as "Spaced practice beats massed practice"), its text, linked to the Notes it relates to. The goal is that the user rewrites all of its text in their own words.
 
 How to work:
-- Start with read_source: the Source's bibliographic data and the user's Free text, what they wrote freely about it. Then use search_graph a few times, with different words for the Source's main ideas, and read_note on the Notes that matter, so you know what the user's Graph already holds. Call list_sources when other Sources may matter.
+- Start with read_source: the Source's bibliographic data and the user's Free text, what they wrote freely about it. When its readingStart is "probe" or "catch-up", the user began with a Probe: call read_probe, which gives every question, the user's Reasoning and answers, how each was judged, and what the Probe found per topic. Propose Points first on what the Probe found: the topics the user knows, and the gaps it taught. Then use search_graph a few times, with different words for the Source's main ideas, and read_note on the Notes that matter, so you know what the user's Graph already holds. Call list_sources when other Sources may matter.
 - Propose Points only through propose_points, a few at a time (at most ${MAX_POINTS}), the ones that matter most first. list_points shows the Points already in the Session; do not propose one again.
-- Say where each Point comes from. Origin "free-text" when the user's Free text holds it: give the quote, the exact words of the Free text, copied character for character. Origin "ai" when it comes from your knowledge of the Source and not from the Free text. Never present your knowledge as something the user wrote. If you are unsure what the Source says, say so.
+- Say where each Point comes from. Origin "free-text" when the user's Free text holds it: give the quote, the exact words of the Free text, copied character for character. Origin "probe" when the user's own Reasoning or answers in the Probe hold it: give the quote, their exact words, copied character for character. Origin "ai" when it comes from your knowledge of the Source and not from the Free text. Never present your knowledge as something the user wrote. If you are unsure what the Source says, say so.
 - Use the Graph. When a Note already says the Point, name it in repeats. When a Note disagrees with the Point or pulls against it, name it in pulls_against_note and say how. Propose links to the Notes the Point's Note should link to, each with a short reason. Name only Notes that search_graph or read_note showed you, by their exact names.
 - Give each Point a draft of its Note: one to three short paragraphs that state the claim, explain it and stay true to the Source. The user's form starts with it. Glose marks it as AI text, edited or not, until the user says they rewrote it in their own words.
 - Write Points and drafts in the language of the Free text.
@@ -73,6 +80,7 @@ const describe = (source: Source) => ({
   publisher: source.publisher,
   translator: source.translator,
   readingStep: source.readingStep,
+  readingStart: source.readingStart,
 });
 
 /** A Point as the AI proposes it, before Glose checks its quote and the Notes it names. */
@@ -83,7 +91,7 @@ const ProposeArguments = Schema.Struct({
   points: Schema.Array(
     Schema.Struct({
       title: Schema.String,
-      origin: Schema.Literals(["free-text", "ai"]),
+      origin: Schema.Literals(["free-text", "probe", "ai"]),
       quote: NullableString,
       repeats: NullableString,
       pulls_against_note: NullableString,
@@ -148,6 +156,11 @@ export interface Context {
   readonly addLinks: (point: number, links: ReadonlyArray<PointLink>) => Effect.Effect<boolean>;
   /** Gives a Point the AI's draft of its Note text; false when there is no such Point. */
   readonly setDraft: (point: number, text: string) => Effect.Effect<boolean>;
+  /** The entries of the Source's Probe, or null when it has none. */
+  readonly probe: Effect.Effect<ReadonlyArray<SessionEntry> | null>;
+  /** What the Probe found, for the model; and the user's own words in it, to check quotes. */
+  readonly probeSummary: (entries: ReadonlyArray<SessionEntry>) => unknown;
+  readonly probeWords: (entries: ReadonlyArray<SessionEntry>) => string;
 }
 
 export const tools = ({
@@ -158,6 +171,9 @@ export const tools = ({
   propose,
   addLinks,
   setDraft,
+  probe,
+  probeSummary,
+  probeWords,
 }: Context): AgentTool[] => {
   /** The Graph's name for a Note the AI named, or null when there is no such file. */
   const resolver = graph.read.pipe(
@@ -213,6 +229,19 @@ export const tools = ({
     searchGraphTool(graph),
     readNoteTool(graph),
     {
+      name: "read_probe",
+      entry: "read-probe",
+      description:
+        "Read the Probe of this Source: each question, the user's Reasoning and answer, how each was judged, and what the Probe found per topic.",
+      parameters: NO_ARGUMENTS,
+      run: () =>
+        probe.pipe(
+          Effect.map((entries) =>
+            entries === null ? { error: "This Source has no Probe yet." } : probeSummary(entries),
+          ),
+        ),
+    },
+    {
       name: "list_points",
       entry: null,
       description:
@@ -248,8 +277,10 @@ export const tools = ({
                   type: "string",
                   description: "The claim, as a full sentence: the Note's title.",
                 },
-                origin: { type: "string", enum: ["free-text", "ai"] },
-                quote: nullable("The exact words of the Free text the Point comes from."),
+                origin: { type: "string", enum: ["free-text", "probe", "ai"] },
+                quote: nullable(
+                  "The user's exact words the Point comes from: in the Free text, or in their Reasoning or answers in the Probe.",
+                ),
                 repeats: nullable("A Note that already says this Point."),
                 pulls_against_note: nullable("A Note that disagrees with this Point."),
                 pulls_against_why: nullable("How that Note and this Point disagree."),
@@ -284,6 +315,8 @@ export const tools = ({
           Effect.map((found) => found.freeText),
           Effect.orElseSucceed(() => ""),
         );
+        const probeEntries = yield* probe;
+        const probeText = probeEntries === null ? "" : probeWords(probeEntries);
         const existing = new Set((yield* points).map((point) => linkKey(point.title)));
         const proposed: Array<ProposedPoint> = [];
         /** Points whose quote is not in the Free text, by their place in `proposed`. */
@@ -293,7 +326,10 @@ export const tools = ({
           if (title === "" || existing.has(linkKey(title))) continue;
           existing.add(linkKey(title));
           const against = resolve(point.pulls_against_note);
-          const quote = point.quote === null ? null : findQuote(freeText, point.quote);
+          const quote =
+            point.quote === null
+              ? null
+              : findQuote(point.origin === "probe" ? probeText : freeText, point.quote);
           unquoted.push(point.quote !== null && quote === null);
           proposed.push({
             title,
@@ -315,7 +351,9 @@ export const tools = ({
         const numbers = yield* propose(shown);
         const dropped = shown.flatMap((_, index) =>
           unquoted[index] === true
-            ? [`The quote for point ${numbers[index]} is not in the Free text, so it is not shown.`]
+            ? [
+                `The quote for point ${numbers[index]} is not in the user's words, so it is not shown.`,
+              ]
             : [],
         );
         return {

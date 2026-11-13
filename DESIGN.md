@@ -343,7 +343,8 @@ three small pigments (gold, rubric red, verdigris) each with one job.
 - **Lapis** (lapis): the rail, the Source spine, the primary button, links and link buttons, focus outlines on
   paper, the caret and native accent color. The one large field of color on any screen. In the
   Sources register it is also the Links toggle, the ring of the current Reading mark, the checked
-  segment's label, and the 3px edge on rows that share Links with the chosen Source.
+  segment's label, and the 3px edge on rows that share Links with the chosen Source. In the Probe
+  it is the question number and the head of each judgment gloss.
 - **Raised Lapis** (lapis-raised): rail item hover and current state; primary button hover.
 - **Lapis Rule** (lapis-line): hairlines and outlines on the lapis field (rail divider, the
   language switch border).
@@ -362,16 +363,19 @@ three small pigments (gold, rubric red, verdigris) each with one job.
 
 - **Rubric** (rubric): decorated initials, the pen flourish, AI text (the AI Text component), and
   signals of missing data or error, always paired with an icon and words (on a Recall slip, the
-  triangle and words of a Check that fails).
+  triangle and words of a Check that fails). In the Probe, at 16% (`rgb(179 38 30 / 16%)`), it
+  is the faint highlight under the words of the user's Reasoning a judgment points at.
 - **Rubric Wash** (rubric-wash): the background of a stand-alone warning notice.
 - **Rubric Line** (rubric-line): the border of a stand-alone warning notice.
 - **Verdigris** (verdigris): done. The check icon and 3px underline of a finished step, the
   check of a finished sheet and the "Copied" check, a filled (done) Reading mark, and the check
-  and "Ready" of a Source ready to cite.
+  and "Ready" of a Source ready to cite. In the Probe, the check of a sound Reasoning, a right
+  result and a known topic.
 
 ### Neutral
 
-- **Ground** (ground): the page behind panels and the setup body; the group rows of the register.
+- **Ground** (ground): the page behind panels and the setup body; the group rows of the register;
+  the band over the Probe and the user's turns in a transcript.
 - **Paper** (paper): panels, the page header, inputs, buttons, call-number labels.
 - **Ink** (ink): text, secondary button border, call-number and typed-code border; at 32%
   (`rgb(20 20 20 / 32%)`) the veil behind a sheet.
@@ -380,7 +384,7 @@ three small pigments (gold, rubric red, verdigris) each with one job.
 - **Hairline** (line): panel borders, header rule, row and step dividers, the flourish rule.
 - **Strong Hairline** (line-strong): input and choice borders, the segmented control's border and
   dividers, key-cap borders, the ring of a Reading mark not reached yet, the border of a leaf over
-  the page (the Versions panel, a sheet), scrollbar thumb.
+  the page (the Versions panel, a sheet), the left rule of a Probe judgment gloss, scrollbar thumb.
 - **Lapis Tint** (tint): secondary button hover, the current step, a selected choice, a hovered or
   checked segment, the register row whose Links are shown.
 - **Tray** (tray): a warm well a step darker than Ground, behind the Recall Trays only, so the
@@ -390,7 +394,8 @@ three small pigments (gold, rubric red, verdigris) each with one job.
 
 **The Rubric Rule.** Rubric red marks the decorated initials, the pen flourish and AI text.
 When red marks an error or missing data, it always comes with a warning icon and words; red
-alone never carries a meaning.
+alone never carries a meaning. The Probe's faint highlight under the user's words follows the
+same rule: the gloss beside it gives the triangle and the words.
 
 **The Gilt Marker Rule.** Gold says "here": the current Section, the current step (in the Step
 Bar and under a Reading mark), a spine's bands, focus on lapis. It has one more job: the triangle
@@ -434,11 +439,12 @@ heading like an illuminated initial.
 - **Review answer** (400, 21px, 1.5, max 40ch; 18px on phones): the answer on the Review leaf.
 - **Review count** (700, 24px, 1.2, -0.01em, balanced wrap): the one headline on Recall's Review
   leaf ("12 Cards to review today"; no full stop).
+- **Probe question** (600, 16px, 1.6, pretty wrap): the AI's question in the Probe transcript.
 - **Label** (600, 14px): buttons, field labels, step names, row titles.
 - **Meta** (400, 13px, tabular numerals): hints, step notes, panel meta, status lines.
 - **Rail label** (500, 12px, 1.25): Section names under rail icons; they wrap and hyphenate.
-- **Call** (Courier Prime 700, 12px/18px, tabular): call numbers and step numbers; the Location
-  part of a call number is 400 in Mute.
+- **Call** (Courier Prime 700, 12px/18px, tabular): call numbers, step numbers and the Probe's
+  question numbers (in Lapis); the Location part of a call number is 400 in Mute.
 - **Code** (Courier Prime 700, 28px/36px, 0.14em tracking, tabular): a code the user types
   elsewhere, today the GitHub sign-in code in the Backup sheet; see Typed Code.
 
@@ -448,7 +454,8 @@ heading like an illuminated initial.
 the setup title or the Review bar title, through `::first-letter`, so the heading text stays
 whole for screen readers. Never on data, buttons or body.
 
-**The Typed Label Rule.** Courier Prime is for call numbers, step numbers, repository names in the
+**The Typed Label Rule.** Courier Prime is for call numbers, step numbers, the Probe's question
+numbers ("Q6"), repository names in the
 Repository Rows (a repository is the Graph's shelf mark on GitHub) and a code the user types
 elsewhere (the GitHub sign-in code) only.
 
@@ -494,6 +501,19 @@ column (24px 32px 48px padding, content up to 960px, its own scroll) and a 360 t
 column for the Session on Paper, divided by a full-height Hairline. The margin's transcript
 scrolls; its message box stays at the foot (16px 24px 18px, a Hairline above). Below 1080px the
 margin moves under the points and the page scrolls as one; below 720px the work column pads 16px.
+
+The Probe (the Reading step that questions the user on a Source) also fills the window under the
+header, as one column of three bands. The page head carries the actions on the right: Free text
+(quiet; it opens the Free text and the Source's details above the transcript) and, once a question
+is asked and until the Probe is finished, Finish the Probe (secondary). Under the head, a Ground
+band (16px 32px, a Hairline below) holds the Step Bar on Paper (up to 520px) on the left and the
+tally on the right; it wraps, so the tally drops under the step bar when narrow. Then the
+transcript: a Paper leaf with its own scroll (24px 32px 40px), set as a 680px column and a 240 to
+300px gloss margin, 36px apart, centred as a pair. The answer box stays at the foot (14px 32px
+16px, a Hairline above, Paper) on the same two columns. Below 1080px the gloss goes under its turn
+in the one column, the answer box keeps two columns (the answer side 220 to 270px, 20px apart) so
+the transcript keeps its height, and the Probe keeps its own scroll. Below 720px the three bands
+pad 16px at the sides.
 
 A focus screen (today only Review, at `/review`) fills the window without the rail and the page
 header. A 64px bar (12px 32px padding) holds the title left, a centred progress line and the way
@@ -552,11 +572,11 @@ is the Reading mark (9px, 1.5px ring). The register's lapis edge is a straight 3
 Firm and plain, ink-outlined.
 
 - **Shape:** gently squared (4px), 36px minimum height, 16px side padding, 8px gap to an icon.
-- **Primary:** Lapis fill and border, white label, for the next step forward (Add Source, Continue, Start, Skip, Start Review, Show answer, Recalled, Back to Recall, Back up to GitHub, Connect GitHub, Choose on GitHub, Use this repository).
+- **Primary:** Lapis fill and border, white label, for the next step forward (Add Source, Continue, Start, Skip, Start Review, Show answer, Recalled, Back to Recall, Back up to GitHub, Connect GitHub, Choose on GitHub, Use this repository, Start the Probe, Send, Continue to the Probe, Continue to Extraction, Mark the Source as read).
 - **Hover / Focus:** primary moves to Raised Lapis with the lapis lift; secondary fills with
   Lapis Tint. 160ms on the shared ease-out. Focus is the 2px lapis outline.
 - **Secondary:** Paper with a 1px Ink border and Ink label (Open, Cancel, Save, Retry, Copy
-  code, Open GitHub again, Show the good Cards).
+  code, Open GitHub again, Show the good Cards, Finish the Probe, Stop).
 - **Icon:** a 16px Lucide icon (1.8 stroke) before the label, as on Copy code and Open GitHub
   again.
 - **Disabled:** 55% opacity, no shadow, not-allowed cursor.
@@ -564,8 +584,9 @@ Firm and plain, ink-outlined.
   it Ink and underlines it (3px offset). For a way out of a slip, set apart from the choices
   (Review's Back), for Discuss, Drop and Undo beside a choice, for the second path beside a
   primary (Use another git remote), for Cancel in a sheet foot and Close in the Card sheet, for
-  an action that undoes a setting (Stop backing up), and for Fold in the Good Tray's head (26px
-  tall there).
+  an action that undoes a setting (Stop backing up), for Fold in the Good Tray's head (26px
+  tall there), for a page-head toggle (the Probe's Free text) and for the Probe's "I don't know,
+  teach me".
 - **Small:** 30px tall, 12px side padding, 13px, for choices repeated down a list (Keep, Add).
 - **Link button:** a button that reads as a link inside running text: no box, Lapis, inherits the
   text's font, a 1px underline at 3px offset that thickens to 2px on hover. For an action that
@@ -776,8 +797,7 @@ and the Source's details (lapis Initial) in the side column.
 
 - **Answers:** a Mute 13px hint, then three stacked Choice rows (640px max, 10px gaps, 12px 16px
   padding): the radio at the first line, a 600 label over a Mute 13px hint. Hover darkens the
-  border to Mute; checked turns it Lapis on Lapis Tint. An answer that cannot be chosen yet is
-  Mute with a not-allowed cursor, and its hint says why.
+  border to Mute; checked turns it Lapis on Lapis Tint.
 - **What follows:** under a Hairline, a Mute 600 13px uppercase label (no Initial), then the
   checked answer's steps as a Step Bar strip (220px a step; one column under 520px). The first
   step wears the current step's Lapis Tint and Gilt underline. Before an answer, a Mute line says
@@ -787,13 +807,16 @@ and the Source's details (lapis Initial) in the side column.
 
 ### Step Bar
 
-The three Reading steps in one bordered strip, divided by Hairlines. Each step: a Courier step
-number, a Label name, a Meta note. Current: Lapis Tint with a 3px Gilt underline and
+The Reading steps in the order the Source's start gives them, in one bordered strip of equal
+columns divided by Hairlines: three for a Source started by writing (Free text, Extraction,
+Probe), two for one started with the Probe or a catch-up (Probe, Extraction). Each step: a Courier
+step number, a Label name, a Meta note ("203 words", "0 of 1 point written", "6 questions", or
+"with ChatGPT" before a step starts). Current: Lapis Tint with a 3px Gilt underline and
 `aria-current`. Done: a 3px Verdigris underline and a Verdigris check.
 
 ### Reading Marks
 
-Three small marks for the three Reading steps, read left to right: a filled Verdigris dot for a
+One small mark per Reading step of the Source's start (three or two), read left to right: a filled Verdigris dot for a
 step done, a Lapis ring with a 2px Gilt underline (5.5px below) for the current step, and a
 hollow Strong Hairline ring for a step not reached. Each is 9px with a 1.5px ring on Paper, 5px
 apart. In the register they are one image named by the state ("In Extraction", "Read"); on the
@@ -942,6 +965,77 @@ The message box: the Point it is about as a Mute line with the title in Ink 600 
 clear it; the textarea; then Send (primary, with its key cap) and Stop, and the plan line pushed
 right.
 
+### Extraction's Next Step
+
+The way on from Extraction, as the last group of the Core Points panel while the Source is in
+Extraction: a Meta hint over a primary button, 10px apart, the button described by the hint. For
+a Source started by writing it reads "Continue to the Probe" ("Next, the Probe questions you on the
+book. Your points and Notes stay here."); otherwise "Mark the Source as read". A failed step shows
+an error notice between the two. Extraction does not end by itself.
+
+### Probe Transcript (signature)
+
+The conversation is the page, read like a marked script: the user's words in the column, the
+AI's judgment in the margin beside them. No chat bubbles, no quiz card. The transcript is a list
+of turns 22px apart, the newest scrolling into view as it lands (at once under reduced motion).
+
+- **Question:** "AI" in Mute 600 13px, the question number as a Lapis Call ("Q6"), the topic in
+  Mute 400 and, for a second try, "· Q5 again"; under it the Probe question (600 16px/1.6).
+- **Answer:** a Ground box (4px, 12px 16px 14px padding, no border). "Your Reasoning" and "Your
+  answer" name the two parts in Mute 600 12px, 0.04em tracking, uppercase. The Reasoning is
+  15px/1.65; the answer follows under a Hairline (10px either side) in 600. A turn where the user
+  asked to be taught opens with a Mute 13px italic line ("You asked to be taught.").
+- **Taught:** the AI Text mark for a whole Part (3px Rubric rule, § gloss: "Taught · the gap in
+  Q5 · Attention residue"), the teaching in Ink, then a Mute 13px line with a 15px book icon:
+  "From the AI's knowledge of the book, not your copy. Check it there."
+- **Other turns:** the Session's tool-use fold, reasoning and AI messages; the user's own messages
+  as a Ground box; a 600 line when the AI has covered the main ideas; while the AI works, the live
+  line with the moving Lapis tick.
+
+### Judgment Gloss (signature)
+
+The AI's judgment of one answer, in the margin beside it: the Reasoning and the result judged
+apart. A note with a 1px Strong Hairline on its left (16px padding), headed "Judged" in Lapis 600
+12px, 0.06em tracking, uppercase, then two verdicts 10px apart. Each verdict is a 16px icon and a
+600 14px/1.45 name ("Reasoning: sound", "Result: partly right") over the reason in Mute 13px.
+Sound and right take a Verdigris check; partly sound, flawed, partly right and wrong take a
+Rubric triangle and a Rubric name; no Reasoning takes a Mute dash. The words of the Reasoning the
+judgment points at carry the faint Rubric highlight (the lower 40% of the line, Ink text), so the
+reader sees where the thinking went wrong. Below 1080px the gloss sits under its answer, 12px
+below, with the same rule.
+
+### Answer Box
+
+The Probe's foot, in the transcript's two columns.
+
+- **Left, Reasoning:** the label "Your Reasoning · Q6" (600 14px, the number in Mute 400), a Meta
+  hint on the computer's own dictation ("To speak instead, start your Mac's dictation: press Fn
+  twice, or the microphone key."), then the textarea (84px tall, 64px below 1080px) with the
+  placeholder "Think out loud: how do you get there?".
+- **Right, answer:** the label "Your answer", the Text Field ("In one or two sentences"), then a
+  wrapping row (10px gaps) of Send (primary, with its key cap, ⌘↵ or Ctrl+Enter, which also sends
+  from either field) and the quiet "I don't know, teach me", which becomes a secondary Stop while
+  the AI works. Under it the plan line in Mute 12px with a Manage usage link. Send stays off until
+  there is an answer and an open question.
+- A send that fails shows an error notice under the answer field. The box goes when the Probe is
+  finished.
+
+### What the Probe Found
+
+The close of the transcript, 40px below the last turn, on the same leaf (up to 1016px, centred).
+The heading is a panel heading with a rubric Initial over the flourish rule. Then the topics by
+state, each in the verdict set: Known and Known after teaching with a Verdigris check; Taught, not
+confirmed yet and Still open with a Rubric triangle; Asked, no answer yet with a Mute dash. The
+topics follow in Mute 13px, joined by " · ". A Meta line says where the record is kept ("The
+Probe is kept in Probes/<Source>.md in your Graph folder."), then the way on: a primary button
+("Continue to Extraction", or "Done: <title> is read") with a Mute status beside it. An empty
+Probe says "The Probe ended before any answer."
+
+The tally in the band above says the same in one Mute 13px line with tabular numerals ("2 known ·
+1 known after teaching · 1 taught, not confirmed yet"), with `role="status"`. Before the first
+question, the leaf holds a 680px start: the empty-state lead line, a Mute body that follows the
+Source's start, and Start the Probe.
+
 ### Key Cap
 
 A small hairline box that names the key doing the same as the button it sits in: Paper, 1px
@@ -1073,7 +1167,7 @@ Skeleton bars (14px, 2px corners) shimmer Tint to Ground over 1.4s inside a pane
 - **Don't** use red alone to mean anything; color never carries a message by itself.
 - **Don't** add resting shadows or new fields of color beyond the lapis rail, spine and primary.
 - **Don't** use Cinzel Decorative beyond a single heading initial, or Courier Prime beyond call
-  numbers, step numbers, repository names and a code the user types elsewhere.
+  numbers, step numbers, question numbers, repository names and a code the user types elsewhere.
 - **Don't** fix widths to English text, truncate labels, or block wrapping.
 - **Don't** build a file-tree-plus-editor arrangement in neutral grey, a busy dashboard, or
   gamification.

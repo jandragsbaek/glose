@@ -25,6 +25,15 @@ export const cardExtractionSessionAtom = Atom.family((noteId: string) =>
   ),
 );
 
+/** The latest Probe of a Source, or null; it refetches when one starts. */
+export const probeSessionAtom = Atom.family((sourceId: string) =>
+  GloseClient.query(
+    RPC_METHODS.sessionsFind,
+    { kind: "probe", subject: sourceId },
+    { reactivityKeys: SESSION_KEYS.sessions },
+  ),
+);
+
 /** A Session as it changes, including the AI's answer as it arrives. */
 export const sessionAtom = Atom.family((id: string) =>
   GloseClient.runtime.atom(
@@ -46,3 +55,5 @@ export const dropPointAtom = GloseClient.mutation(RPC_METHODS.sessionsDropPoint)
 export const restorePointAtom = GloseClient.mutation(RPC_METHODS.sessionsRestorePoint);
 export const addPointAtom = GloseClient.mutation(RPC_METHODS.sessionsAddPoint);
 export const writePointAtom = GloseClient.mutation(RPC_METHODS.sessionsWritePoint);
+export const answerProbeAtom = GloseClient.mutation(RPC_METHODS.sessionsAnswerProbe);
+export const finishProbeAtom = GloseClient.mutation(RPC_METHODS.sessionsFinishProbe);

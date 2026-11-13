@@ -6,6 +6,7 @@ import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useId, useState } from "react";
 
 import { Extraction } from "../components/Extraction.tsx";
+import { Probe } from "../components/Probe.tsx";
 import { ReadingStart } from "../components/ReadingStart.tsx";
 import { StepBar } from "../components/StepBar.tsx";
 import {
@@ -66,19 +67,21 @@ function SourceView({ source }: { readonly source: Source }) {
       <CallNumber source={source} />
     </span>
   );
+  const sourcePanels = (
+    <div className="columns">
+      <FreeText source={source} />
+      <Details source={source} />
+    </div>
+  );
+  // The Probe is its own page: the conversation at reading width, judged in the margin.
+  if (source.readingStep === "probe") {
+    return <Probe source={source} sub={sub} sourcePanels={sourcePanels} />;
+  }
   // Past the Free text, Extraction is the page: the points beside the Session in the margin.
   if (source.readingStep !== "free-text") {
     return (
       <Page title={source.title} sub={sub} fill flush>
-        <Extraction
-          source={source}
-          sourcePanels={
-            <div className="columns">
-              <FreeText source={source} />
-              <Details source={source} />
-            </div>
-          }
-        />
+        <Extraction source={source} sourcePanels={sourcePanels} />
       </Page>
     );
   }
@@ -139,7 +142,11 @@ function FreeText({ source }: { readonly source: Source }) {
     <Panel title={t.reading.freeText} initial="rubric" meta={t.steps.words(wordCount(text))}>
       <div className="panel__body field">
         <p className="field__hint" id={hintId}>
-          {inFreeText ? t.reading.freeTextHint : t.reading.finished}
+          {inFreeText
+            ? t.reading.freeTextHint
+            : source.readingStart === "probe" || source.readingStart === "catch-up"
+              ? t.reading.anytime
+              : t.reading.finished}
         </p>
         <label className="sr-only" htmlFor={textId}>
           {t.reading.freeTextLabel}

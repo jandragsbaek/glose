@@ -12,6 +12,26 @@ export type ReadingStep = typeof ReadingStep.Type;
 export const ReadingStart = Schema.Literals(["write", "probe", "catch-up"]);
 export type ReadingStart = typeof ReadingStart.Type;
 
+/** A step of the Reading Stage that has a page of its own. */
+export type WorkStep = Exclude<ReadingStep, "done">;
+
+/**
+ * The steps of a Source in the order its start gives them. A Source with no start (the user has
+ * not answered, or it is from before the question) follows `write`.
+ */
+export const readingStepsOf = (start: ReadingStart | null): ReadonlyArray<WorkStep> =>
+  start === "probe" || start === "catch-up"
+    ? ["probe", "extraction"]
+    : ["free-text", "extraction", "probe"];
+
+/** The step after this one for a Source with this start; `done` after the last. */
+export const nextReadingStep = (start: ReadingStart | null, step: ReadingStep): ReadingStep => {
+  const steps = readingStepsOf(start);
+  if (step === "done") return "done";
+  const index = steps.indexOf(step);
+  return index === -1 ? (steps[0] ?? "done") : (steps[index + 1] ?? "done");
+};
+
 const Text = Schema.Trim.pipe(Schema.check(Schema.isNonEmpty()));
 const OptionalText = Schema.NullOr(Text);
 const Year = Schema.NullOr(
@@ -62,6 +82,9 @@ export const ChooseReadingStart = Schema.Struct({
   id: Schema.String,
   start: ReadingStart,
 });
+
+/** Moves a Source on from this step; nothing happens when it is at another step already. */
+export const AdvanceReading = Schema.Struct({ id: Schema.String, from: ReadingStep });
 
 export class SourceNotFound extends Schema.TaggedError<SourceNotFound>()("SourceNotFound", {
   id: Schema.String,
