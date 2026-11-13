@@ -1,12 +1,25 @@
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import type { VersionsStatus } from "@glose/contracts";
+import {
+  type UpdatesProblem,
+  type UpdatesStatus,
+  updatesNextStep,
+  type VersionsStatus,
+} from "@glose/contracts";
 import * as Exit from "effect/Exit";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
-import { Check, GitCommitHorizontal, TriangleAlert } from "lucide-react";
-import { type FormEvent, useId, useState, useSyncExternalStore } from "react";
+import {
+  Check,
+  Download,
+  GitCommitHorizontal,
+  RefreshCw,
+  RotateCw,
+  TriangleAlert,
+} from "lucide-react";
+import { type FormEvent, type ReactNode, useId, useState, useSyncExternalStore } from "react";
 
 import type { Messages } from "../i18n/en.ts";
 import { useT } from "../i18n/I18n.tsx";
+import { desktopUpdates, updatesStatusAtom } from "../state/updates.ts";
 import { endDayAtom, versionsStatusAtom } from "../state/versions.ts";
 import { remotePlace, useOpenBackup } from "./Backup.tsx";
 import { Notice, Panel } from "./ui.tsx";
@@ -28,16 +41,207 @@ function useToday() {
 
 /**
  * The running foot of the window, like the foot of a printed page: quiet status along the
- * bottom of the main column. Versions sit at its right end.
+ * bottom of the main column. Updates and Versions sit at its right end.
  */
 export function StatusBar() {
   return (
     <footer className="status-bar">
       <div className="status-bar__start" />
       <div className="status-bar__end">
+        <UpdatesItem />
         <VersionsItem />
       </div>
     </footer>
+  );
+}
+
+type UpdatesOn = Extract<UpdatesStatus, { _tag: "On" }>;
+
+/** The step a problem stopped; the bar shows the problem while that step is still next. */
+const PROBLEM_STEP: Record<UpdatesProblem, ReturnType<typeof updatesNextStep>> = {
+  "check-failed": "check",
+  "download-failed": "download",
+  "install-failed": "install",
+};
+
+/**
+ * The app's own updates as one button that is always the next step: check, download,
+ * restart. The tooltip says which version runs and when Glose last checked. Only the
+ * desktop app has it, and only where it can replace itself.
+ */
+function UpdatesItem() {
+  const t = useT();
+  const tipId = useId();
+  const status = AsyncResult.getOrElse(useAtomValue(updatesStatusAtom), () => null);
+  const today = useToday();
+  const [tipDismissed, setTipDismissed] = useState(false);
+  if (status === null || status._tag === "Off") return null;
+
+  const step = updatesNextStep(status);
+  const problem =
+    status.problem !== null && PROBLEM_STEP[status.problem] === step ? status.problem : null;
+  const running = t.updates.running(t.updates.version(status.currentVersion));
+  const checked =
+    status.checkedAt === null
+      ? t.updates.everyHour
+      : t.updates.checked(new Date(status.checkedAt), dayOf(new Date(status.checkedAt)) === today);
+
+  const act = () => {
+    const updates = desktopUpdates();
+    if (updates === undefined || step === "wait") return;
+    // Each step reports its outcome through the status, so a failed call needs nothing here.
+    const run = { check: updates.check, download: updates.download, install: updates.install }[
+      step
+    ];
+    run().catch(() => undefined);
+  };
+
+  const { look, content, tip, detail } = updatesView(t, status, step, problem);
+  return (
+    <span
+      className="status-tipped"
+      onMouseLeave={() => setTipDismissed(false)}
+      onBlur={() => setTipDismissed(false)}
+    >
+      <button
+        type="button"
+        className={`status-bar__item status-bar__item--${look}`}
+        aria-describedby={tipId}
+        aria-disabled={step === "wait" ? true : undefined}
+        aria-label={look === "rest" ? t.updates.check : undefined}
+        onClick={act}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") setTipDismissed(true);
+        }}
+      >
+        {content}
+      </button>
+      {/* Screen readers hear a step the user can take, not every percent of a download. */}
+      <span className="sr-only" role="status">
+        {look === "next" || look === "go" || look === "problem" ? tip : null}
+      </span>
+      <span
+        id={tipId}
+        role="tooltip"
+        className={tipDismissed ? "status-tip status-tip--dismissed" : "status-tip"}
+      >
+        <strong className="status-tip__title">{tip}</strong>
+        <span>
+          {detail === "restart" ? t.updates.restartHint : null}
+          {detail === "running" ? running : null}
+          {detail === "checked" ? `${running} ${checked}` : null}
+        </span>
+      </span>
+    </span>
+  );
+}
+
+type UpdatesView = {
+  readonly look: "rest" | "busy" | "next" | "go" | "problem";
+  readonly content: ReactNode;
+  /** The tooltip's first line: what is true now. */
+  readonly tip: string;
+  /** The tooltip's second line: the restart, the running version, or that and the last check. */
+  readonly detail: "restart" | "running" | "checked";
+};
+
+function updatesView(
+  t: Messages,
+  status: UpdatesOn,
+  step: ReturnType<typeof updatesNextStep>,
+  problem: UpdatesProblem | null,
+): UpdatesView {
+  const next = status.availableVersion ?? status.downloadedVersion;
+  const nextLabel = next === null ? "" : t.updates.version(next);
+  if (status.activity === "checking") {
+    return {
+      look: "busy",
+      tip: t.updates.checkingLong,
+      detail: "running",
+      content: (
+        <>
+          <RefreshCw className="status-bar__icon status-bar__icon--spin" aria-hidden="true" />
+          <span>{t.updates.checking}</span>
+        </>
+      ),
+    };
+  }
+  if (status.activity === "downloading") {
+    const percent = Math.floor(status.downloadPercent ?? 0);
+    return {
+      look: "busy",
+      tip: t.updates.downloading(nextLabel, percent),
+      detail: "running",
+      content: (
+        <>
+          <ProgressRing percent={percent} />
+          <span>{t.updates.percent(percent)}</span>
+        </>
+      ),
+    };
+  }
+  if (problem !== null) {
+    return {
+      look: "problem",
+      tip: t.updates.problems[problem],
+      detail: "checked",
+      content: (
+        <span className="status-bar__problem">
+          <TriangleAlert className="status-bar__icon" aria-hidden="true" />
+          {t.updates.problemsShort[problem]}
+        </span>
+      ),
+    };
+  }
+  if (step === "download") {
+    return {
+      look: "next",
+      tip: t.updates.available(nextLabel),
+      detail: "checked",
+      content: (
+        <>
+          <Download className="status-bar__icon" aria-hidden="true" />
+          <span>{t.updates.update}</span>
+        </>
+      ),
+    };
+  }
+  if (step === "install") {
+    return {
+      look: "go",
+      tip: t.updates.downloaded(nextLabel),
+      detail: "restart",
+      content: (
+        <>
+          <RotateCw className="status-bar__icon" aria-hidden="true" />
+          <span>{t.updates.restart}</span>
+        </>
+      ),
+    };
+  }
+  return {
+    look: "rest",
+    tip: status.checkedAt === null ? t.updates.notChecked : t.updates.upToDate,
+    detail: "checked",
+    content: <RefreshCw className="status-bar__icon" aria-hidden="true" />,
+  };
+}
+
+/** The download's progress as a ring that fills clockwise from the top. */
+function ProgressRing({ percent }: { readonly percent: number }) {
+  const circumference = 2 * Math.PI * 6;
+  return (
+    <svg className="status-bar__icon status-ring" viewBox="0 0 16 16" aria-hidden="true">
+      <circle className="status-ring__track" cx="8" cy="8" r="6" />
+      <circle
+        className="status-ring__fill"
+        cx="8"
+        cy="8"
+        r="6"
+        strokeDasharray={circumference}
+        strokeDashoffset={circumference * (1 - percent / 100)}
+      />
+    </svg>
   );
 }
 

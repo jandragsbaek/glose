@@ -541,6 +541,11 @@ Taken from learnharness: the user thinks out loud, by typing or by dictation, an
   nightly update channel. A stable channel can come later.
 - Each nightly has a Linux AppImage, for Jan's Omarchy laptop, and a Windows installer. macOS
   joins when the app can be signed.
+- Updating works as in T3 Code: Glose looks for a newer nightly every hour and when the user
+  asks, the user downloads it, then restarts Glose to install it (a downloaded update also
+  installs at quit). One button in the status bar is always the next step; a failed hourly check
+  stays silent. Where Glose cannot replace itself (a browser, unsigned macOS, Linux outside the
+  AppImage) the button does not show.
 - The Markdown files stay the truth. A database, if there is one, is only an index that can be rebuilt.
 - Release platforms: macOS, Windows and Linux. One user is on macOS, and Jan uses glose on Windows and on an Omarchy (Arch) Linux laptop.
 - One design language on both platforms. Details that belong to the OS (window controls, menu

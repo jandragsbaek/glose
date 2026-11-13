@@ -1,5 +1,6 @@
 import * as Effect from "effect/Effect";
 import * as Electron from "electron";
+import * as NodePath from "node:path";
 
 const isWebUrl = (url: string) => url.startsWith("https://") || url.startsWith("http://");
 
@@ -39,6 +40,8 @@ const create = (url: string) => {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      // Built next to main.cjs (see vite.config.ts).
+      preload: NodePath.join(__dirname, "preload.cjs"),
     },
   });
 

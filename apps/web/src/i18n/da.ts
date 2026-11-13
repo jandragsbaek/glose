@@ -1,5 +1,6 @@
-import { ANSWER_WORDS, QUESTION_WORDS } from "@glose/contracts";
+import { ANSWER_WORDS, QUESTION_WORDS, type UpdatesProblem } from "@glose/contracts";
 
+import { nightlyOf } from "../domain/appVersion.ts";
 import { formatInterval } from "../domain/interval.ts";
 import type { Messages } from "./en.ts";
 
@@ -624,6 +625,41 @@ export const da: Messages = {
         tip: "Svaret skal stå i noten, uden tilføjede fakta.",
       },
     },
+  },
+  updates: {
+    version: (version: string) => {
+      const nightly = nightlyOf(version);
+      return nightly === null
+        ? version
+        : `Natversion ${shortDate.format(nightly.built)} (${numbers.format(nightly.run)})`;
+    },
+    check: "Søg efter opdateringer",
+    checking: "Søger…",
+    upToDate: "Glose er opdateret.",
+    notChecked: "Ikke søgt endnu.",
+    checkingLong: "Søger efter opdateringer…",
+    update: "Opdater",
+    restart: "Genstart for at opdatere",
+    percent: (percent: number) => `${numbers.format(percent)} %`,
+    downloading: (version: string, percent: number) =>
+      `Henter ${version}: ${numbers.format(percent)} %`,
+    available: (version: string) => `${version} er klar til at blive hentet.`,
+    downloaded: (version: string) => `${version} er hentet.`,
+    restartHint: "Glose lukker og åbner igen med den nye version.",
+    running: (version: string) => `Du har ${version}.`,
+    checked: (at: Date, today: boolean) =>
+      `Søgt ${today ? `kl. ${clockTime.format(at)}` : shortDate.format(at)}.`,
+    everyHour: "Glose søger hver time.",
+    problemsShort: {
+      "check-failed": "Ikke søgt",
+      "download-failed": "Ikke hentet",
+      "install-failed": "Ikke installeret",
+    } satisfies Record<UpdatesProblem, string>,
+    problems: {
+      "check-failed": "Glose kunne ikke nå GitHub. Klik for at prøve igen.",
+      "download-failed": "Hentningen stoppede. Klik for at prøve igen.",
+      "install-failed": "Opdateringen blev ikke installeret. Klik for at prøve igen.",
+    } satisfies Record<UpdatesProblem, string>,
   },
   versions: {
     title: "Versioner af din graf",

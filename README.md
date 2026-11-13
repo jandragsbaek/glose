@@ -101,7 +101,9 @@ commits, and on request (`gh workflow run release.yml`, or Actions > Release > R
 A nightly is a GitHub prerelease tagged `v<version>-nightly.<yyyymmdd>.<run>`, for example
 `v0.1.0-nightly.20261113.42`, where `<version>` is `apps/desktop/package.json`'s. It holds the
 Linux AppImage, the Windows installer and their `nightly*.yml` update files. An installed nightly
-updates to the newest release whose tag says `nightly`. macOS waits for signing.
+updates to the newest release whose tag says `nightly`: it checks every hour and from the
+Updates button in the status bar, which then downloads the release and restarts Glose to install
+it. macOS waits for signing.
 
 On Linux, keep the AppImage under a name without a version, such as
 `~/Applications/Glose.AppImage`: an update then replaces that file, and a launcher that points

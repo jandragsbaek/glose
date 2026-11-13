@@ -329,6 +329,122 @@ a:hover {
   font-weight: 600;
 }
 
+/* Updates: one button that is always the next step. Lapis marks a step the user can take; the
+   ready state is the bar's only fill, because restarting is the step forward. */
+.status-bar__item[aria-disabled="true"] {
+  cursor: default;
+}
+
+.status-bar__item--rest {
+  justify-content: center;
+  min-width: 22px;
+  padding: 0 3px;
+}
+
+.status-bar__item--next,
+.status-bar__item--next:hover {
+  color: var(--lapis);
+  font-weight: 600;
+}
+
+.status-bar__item--go {
+  background: var(--lapis);
+  color: var(--on-lapis);
+  font-weight: 600;
+}
+
+.status-bar__item--go:hover {
+  background: var(--lapis-raised);
+  color: var(--on-lapis);
+}
+
+.status-bar__item--problem .status-bar__problem {
+  margin-left: 0;
+}
+
+.status-bar__icon--spin {
+  animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.status-ring {
+  transform: rotate(-90deg);
+}
+
+.status-ring circle {
+  fill: none;
+  stroke-width: 2;
+}
+
+.status-ring__track {
+  stroke: var(--line-strong);
+}
+
+.status-ring__fill {
+  stroke: var(--lapis);
+  transition: stroke-dashoffset 160ms var(--ease-out);
+}
+
+/* A tooltip above an item's right end: an Ink leaf, shown on hover (after a moment) and focus. */
+.status-tipped {
+  position: relative;
+  display: inline-flex;
+}
+
+.status-tip {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: max-content;
+  max-width: 280px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: var(--ink);
+  color: rgb(255 255 255 / 0.78);
+  font-size: 13px;
+  line-height: 1.4;
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity 160ms var(--ease-out),
+    transform 160ms var(--ease-out),
+    visibility 0s linear 160ms;
+}
+
+.status-tip__title {
+  color: var(--paper);
+  font-weight: 600;
+}
+
+.status-tipped:hover .status-tip,
+.status-tipped:has(:focus-visible) .status-tip {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+  transition-delay: 0s;
+}
+
+.status-tipped:hover .status-tip {
+  transition-delay: 400ms;
+}
+
+/* Esc hides the tooltip until the pointer or focus leaves the item. */
+.status-tipped .status-tip--dismissed {
+  visibility: hidden;
+  opacity: 0;
+}
+
 /* Facts as a two-column list: Mute labels, Ink values (the Versions panel, Backup). */
 .facts {
   display: grid;
@@ -2502,6 +2618,11 @@ a.written__title:hover {
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+
+  /* An endless spin at 0.01ms would jump to random angles; the icon stands still instead. */
+  .status-bar__icon--spin {
+    animation: none;
   }
 }
 

@@ -11,8 +11,8 @@ const devServerUrl = process.env.GLOSE_DEV_SERVER_URL?.trim();
 const program = Effect.gen(function* () {
   yield* Effect.promise(() => Electron.app.whenReady());
   const backend = yield* Backend.Backend;
+  yield* Updates.start(new URL(backend.url).origin);
   yield* MainWindow.open(backend.url);
-  yield* Updates.start;
   // Electron ends the process on quit; until then the server and the update checks stay up.
   yield* Effect.never;
 }).pipe(
