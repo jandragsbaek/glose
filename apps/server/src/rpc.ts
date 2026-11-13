@@ -12,6 +12,7 @@ import * as ServerInfo from "./info/ServerInfo.ts";
 import * as Recall from "./recall/Recall.ts";
 import * as Sessions from "./sessions/Sessions.ts";
 import * as Settings from "./settings/Settings.ts";
+import * as Setup from "./settings/Setup.ts";
 import * as Versions from "./versions/Versions.ts";
 
 /** Thin transport: RpcServer decodes the payload, the handler calls one service method. */
@@ -19,6 +20,7 @@ export const layer = GloseRpcGroup.toLayer(
   Effect.gen(function* () {
     const info = yield* ServerInfo.ServerInfo;
     const settings = yield* Settings.Settings;
+    const setup = yield* Setup.Setup;
     const sources = yield* Sources.Sources;
     const graph = yield* Graph.Graph;
     const catalog = yield* Catalog.Catalog;
@@ -33,7 +35,8 @@ export const layer = GloseRpcGroup.toLayer(
       [RPC_METHODS.serverInfo]: () => info.get,
       [RPC_METHODS.settingsGet]: () => settings.get,
       [RPC_METHODS.settingsSetLanguage]: ({ language }) => settings.setLanguage(language),
-      [RPC_METHODS.setupComplete]: (input) => settings.completeSetup(input),
+      [RPC_METHODS.setupComplete]: (input) => setup.complete(input),
+      [RPC_METHODS.setupCheckRemote]: ({ url }) => setup.checkRemote(url),
       [RPC_METHODS.sourcesList]: () => sources.list,
       [RPC_METHODS.sourcesGet]: ({ id }) => sources.get(id),
       [RPC_METHODS.sourcesCreate]: (details) => sources.create(details),
@@ -49,6 +52,7 @@ export const layer = GloseRpcGroup.toLayer(
       [RPC_METHODS.githubConnect]: () => github.connect,
       [RPC_METHODS.githubCancel]: () => github.cancel,
       [RPC_METHODS.githubDisconnect]: () => github.disconnect,
+      [RPC_METHODS.githubRepositories]: () => github.repositories,
       [RPC_METHODS.sessionsFind]: (input) => sessions.find(input),
       [RPC_METHODS.sessionsStart]: (input) => sessions.start(input),
       [RPC_METHODS.sessionsWatch]: ({ id }) => sessions.watch(id),

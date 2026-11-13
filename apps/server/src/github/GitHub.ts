@@ -1,5 +1,6 @@
 import {
   type GitHubProblem,
+  type GitHubRepository,
   type GitHubStatus,
   RemoteRefused,
   StorageError,
@@ -41,6 +42,11 @@ export class GitHub extends Context.Service<
      * A public repository of the name is refused.
      */
     readonly repository: (name: string) => Effect.Effect<string, RemoteRefused>;
+    /**
+     * The private repositories the account owns or that are shared with it, Graphs first, then
+     * the latest pushed. Public ones are left out: Glose never keeps a Graph where all can read it.
+     */
+    readonly repositories: Effect.Effect<ReadonlyArray<GitHubRepository>, RemoteRefused>;
     /** Git config that signs git in to GitHub over HTTPS as the connected account, or none. */
     readonly gitConfig: Effect.Effect<Readonly<Record<string, string>>>;
   }
@@ -74,6 +80,13 @@ const decodePollAnswer = Schema.decodeUnknownEffect(PollAnswer);
 
 const User = Schema.Struct({ login: Schema.String });
 const Repository = Schema.Struct({ private: Schema.Boolean, clone_url: Schema.String });
+const ListedRepository = Schema.Struct({
+  full_name: Schema.String,
+  private: Schema.Boolean,
+  clone_url: Schema.String,
+  owner: Schema.Struct({ login: Schema.String }),
+  pushed_at: Schema.NullOr(Schema.String),
+});
 
 /** A sign-in attempt that ended without a connection. */
 class ConnectFailed extends Data.TaggedError("ConnectFailed")<{
@@ -93,6 +106,8 @@ const MIN_INTERVAL = 5;
 /** `slow_down` without a new interval adds this many seconds. */
 const SLOW_DOWN = 5;
 const REQUEST_TIMEOUT = "30 seconds";
+/** GitHub's largest page of repositories; the list reads every page. */
+const PAGE = 100;
 
 export const make = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -175,6 +190,7 @@ export const make = Effect.gen(function* () {
 
   const decodeUser = Schema.decodeUnknownEffect(User);
   const decodeRepository = Schema.decodeUnknownEffect(Repository);
+  const decodeListed = Schema.decodeUnknownEffect(Schema.Array(ListedRepository));
 
   /**
    * GitHub's device flow: Glose shows a code, the user enters it on github.com, and Glose asks
@@ -246,14 +262,30 @@ export const make = Effect.gen(function* () {
   /** GitHub no longer accepts the token: forget it, and ask the user to connect again. */
   const expired = write(null).pipe(Effect.ignore, Effect.andThen(publish("expired")));
 
+  /** The sign-in, or a refusal that says GitHub is not connected. */
+  const signedIn = read.pipe(
+    Effect.orElseSucceed(() => null),
+    Effect.flatMap((saved) =>
+      saved === null ? Effect.fail(refused("github-not-connected")) : Effect.succeed(saved),
+    ),
+  );
+
+  const call = (saved: Saved, request: HttpClientRequest.HttpClientRequest) =>
+    apiRequest(saved.token, request).pipe(
+      Effect.tapError((error) => Effect.logWarning("GitHub did not answer", error)),
+      Effect.mapError(() => refused("github-failed")),
+    );
+
+  /** A 401 means the token was revoked: Glose forgets it, and the user connects again. */
+  const unexpected = (response: HttpClientResponse.HttpClientResponse) =>
+    response.status === 401
+      ? expired.pipe(Effect.andThen(Effect.fail(refused("github-not-connected"))))
+      : Effect.logWarning(`GitHub answered ${response.status}`).pipe(
+          Effect.andThen(Effect.fail(refused("github-failed"))),
+        );
+
   const repository = Effect.fn("GitHub.repository")(function* (name: string) {
-    const saved = yield* read.pipe(Effect.orElseSucceed(() => null));
-    if (saved === null) return yield* refused("github-not-connected");
-    const call = (request: HttpClientRequest.HttpClientRequest) =>
-      apiRequest(saved.token, request).pipe(
-        Effect.tapError((error) => Effect.logWarning("GitHub did not answer", error)),
-        Effect.mapError(() => refused("github-failed")),
-      );
+    const saved = yield* signedIn;
     const usable = (response: HttpClientResponse.HttpClientResponse) =>
       response.json.pipe(
         Effect.flatMap(decodeRepository),
@@ -262,14 +294,9 @@ export const make = Effect.gen(function* () {
           repo.private ? Effect.succeed(repo.clone_url) : Effect.fail(refused("public-repository")),
         ),
       );
-    const unexpected = (response: HttpClientResponse.HttpClientResponse) =>
-      response.status === 401
-        ? expired.pipe(Effect.andThen(Effect.fail(refused("github-not-connected"))))
-        : Effect.logWarning(`GitHub answered ${response.status}`).pipe(
-            Effect.andThen(Effect.fail(refused("github-failed"))),
-          );
 
     const found = yield* call(
+      saved,
       HttpClientRequest.get(
         `${api.apiUrl}/repos/${encodeURIComponent(saved.login)}/${encodeURIComponent(name)}`,
       ),
@@ -278,6 +305,7 @@ export const make = Effect.gen(function* () {
     if (found.status !== 404) return yield* unexpected(found);
 
     const made = yield* call(
+      saved,
       HttpClientRequest.post(`${api.apiUrl}/user/repos`).pipe(
         HttpClientRequest.bodyJsonUnsafe({
           name,
@@ -291,6 +319,61 @@ export const make = Effect.gen(function* () {
     );
     return made.status === 201 ? yield* usable(made) : yield* unexpected(made);
   });
+
+  const repositories = Effect.gen(function* () {
+    const saved = yield* signedIn;
+    // Every page, so an old Graph is found among many newer repositories.
+    const all: Array<typeof ListedRepository.Type> = [];
+    for (let page = 1; ; page++) {
+      const listed = yield* call(
+        saved,
+        HttpClientRequest.get(`${api.apiUrl}/user/repos`).pipe(
+          HttpClientRequest.setUrlParams({
+            affiliation: "owner,collaborator,organization_member",
+            sort: "pushed",
+            per_page: String(PAGE),
+            page: String(page),
+          }),
+        ),
+      );
+      if (listed.status !== 200) return yield* unexpected(listed);
+      const repos = yield* listed.json.pipe(
+        Effect.flatMap(decodeListed),
+        Effect.mapError(() => refused("github-failed")),
+      );
+      all.push(...repos);
+      if (repos.length < PAGE) break;
+    }
+    const own = all.filter((repo) => repo.private);
+    // A Graph is a repository with Glose's settings file; a failed look counts as no Graph.
+    const graphs = yield* Effect.forEach(
+      own,
+      (repo) =>
+        call(
+          saved,
+          HttpClientRequest.get(
+            `${api.apiUrl}/repos/${repo.full_name
+              .split("/")
+              .map(encodeURIComponent)
+              .join("/")}/contents/.glose/settings.json`,
+          ),
+        ).pipe(
+          Effect.map((response) => response.status === 200),
+          Effect.orElseSucceed(() => false),
+        ),
+      { concurrency: 8 },
+    );
+    const found = own.map((repo, index): GitHubRepository => ({
+      fullName: repo.full_name,
+      owner: repo.owner.login,
+      url: repo.clone_url,
+      shared: repo.owner.login.toLowerCase() !== saved.login.toLowerCase(),
+      graph: graphs[index] ?? false,
+      pushedAt: repo.pushed_at === null ? null : Date.parse(repo.pushed_at) || null,
+    }));
+    // GitHub sends the latest pushed first; a stable sort keeps that order within each group.
+    return found.toSorted((a, b) => Number(b.graph) - Number(a.graph));
+  }).pipe(Effect.withSpan("GitHub.repositories"));
 
   return GitHub.of({
     status: SubscriptionRef.changes(status),
@@ -309,6 +392,7 @@ export const make = Effect.gen(function* () {
       yield* publish(null);
     }),
     repository,
+    repositories,
     gitConfig: read.pipe(
       Effect.map((saved): Readonly<Record<string, string>> =>
         saved === null

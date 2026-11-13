@@ -32,7 +32,8 @@ export class Settings extends Context.Service<
     readonly completeSetup: (input: {
       readonly language: Language;
       readonly graphFolder: string;
-      readonly action: GraphFolderAction;
+      /** A Graph copied from a remote is cloned first (see Setup), then opened. */
+      readonly action: Exclude<GraphFolderAction, "clone">;
     }) => Effect.Effect<SettingsView, GraphFolderUnavailable | StorageError>;
   }
 >()("glose/Settings") {}

@@ -1,22 +1,39 @@
 import { useAtomSet } from "@effect/atom-react";
-import type { GraphFolderAction, Language, SettingsView } from "@glose/contracts";
+import type {
+  GraphFolderAction,
+  GraphRemoteUnavailableReason,
+  Language,
+  SettingsView,
+} from "@glose/contracts";
 import * as Cause from "effect/Cause";
 import * as Exit from "effect/Exit";
 import * as Option from "effect/Option";
 import { CircleAlert } from "lucide-react";
-import { type FormEvent, useId, useState } from "react";
+import { type FormEvent, useId, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 
 import { I18nProvider, LANGUAGES, useT } from "../i18n/I18n.tsx";
 import type { Messages } from "../i18n/en.ts";
 import { completeSetupAtom, KEYS } from "../state/graph.ts";
+import { remotePlace } from "./Backup.tsx";
 import { ChatGptConnection } from "./ChatGptConnection.tsx";
+import {
+  type ChosenRemote,
+  RemoteGraphSheet,
+  remoteFailureOf,
+  type RemoteSheetMode,
+} from "./RemoteGraphSheet.tsx";
 import { Notice, Panel } from "./ui.tsx";
 
 type FolderError = keyof Messages["setup"]["folderErrors"] | "storage";
+type RemoteError = GraphRemoteUnavailableReason | "missing";
 
-const FOLDER_ACTIONS: ReadonlyArray<GraphFolderAction> = ["create", "open"];
+const FOLDER_ACTIONS: ReadonlyArray<GraphFolderAction> = ["create", "open", "clone"];
 
-/** The first start: language, Graph folder, and an optional ChatGPT connection. */
+/**
+ * The first start: language, Graph folder, and an optional ChatGPT connection. The Graph is a
+ * new one, a folder on this computer, or a copy of one kept on GitHub or another git remote.
+ */
 export function Setup({
   view,
   initialLanguage,
@@ -44,21 +61,45 @@ function SetupForm({
   const t = useT();
   const folderId = useId();
   const errorId = useId();
+  const remoteErrorId = useId();
   const [action, setAction] = useState<GraphFolderAction>("create");
   const [folder, setFolder] = useState(view.suggestedGraphFolder);
   const [error, setError] = useState<FolderError | null>(null);
+  const [remote, setRemote] = useState<ChosenRemote | null>(null);
+  const [remoteError, setRemoteError] = useState<RemoteError | null>(null);
+  const [sheet, setSheet] = useState<RemoteSheetMode | null>(null);
+  // The button that opened the sheet gets focus back when it closes.
+  const opener = useRef<HTMLButtonElement | null>(null);
+  const openSheet = (mode: RemoteSheetMode, from: HTMLButtonElement) => {
+    opener.current = from;
+    setSheet(mode);
+  };
+  const closeSheet = () => {
+    // The sheet leaves the page first: while a modal is open, nothing outside it takes focus.
+    flushSync(() => setSheet(null));
+    opener.current?.focus();
+  };
   const [busy, setBusy] = useState(false);
   const completeSetup = useAtomSet(completeSetupAtom, { mode: "promiseExit" });
+  const cloning = action === "clone";
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
+    if (cloning && remote === null) return setRemoteError("missing");
     setBusy(true);
     const exit = await completeSetup({
-      payload: { language, graphFolder: folder, action },
+      payload: {
+        language,
+        graphFolder: folder,
+        action,
+        ...(cloning && remote !== null ? { remote: remote.url } : {}),
+      },
       reactivityKeys: KEYS.settings,
     });
     setBusy(false);
     if (Exit.isSuccess(exit)) return;
+    const remoteFailure = remoteFailureOf(exit);
+    if (remoteFailure !== null) return setRemoteError(remoteFailure);
     const failure = Cause.findErrorOption(exit.cause);
     setError(
       Option.isSome(failure) && failure.value._tag === "GraphFolderUnavailable"
@@ -117,6 +158,7 @@ function SetupForm({
                         onChange={() => {
                           setAction(option);
                           setError(null);
+                          setRemoteError(null);
                         }}
                       />
                       <span>{t.setup.folderActions[option]}</span>
@@ -124,6 +166,14 @@ function SetupForm({
                   ))}
                 </div>
               </fieldset>
+              {cloning ? (
+                <RemoteLedger
+                  remote={remote}
+                  error={remoteError}
+                  errorId={remoteErrorId}
+                  onOpen={openSheet}
+                />
+              ) : null}
               <label className="field__label" htmlFor={folderId}>
                 {t.setup.folderLabel}
               </label>
@@ -167,11 +217,99 @@ function SetupForm({
 
           <div className="button-row">
             <button type="submit" className="button button--primary" disabled={busy}>
-              {t.setup.submit}
+              {busy && cloning ? t.setup.copying : t.setup.submit}
             </button>
+            {busy && cloning ? (
+              <span className="live setup__copying" role="status">
+                {t.setup.remote.copyingNote}
+              </span>
+            ) : null}
           </div>
         </form>
       </main>
+      {sheet === null ? null : (
+        <RemoteGraphSheet
+          mode={sheet}
+          onMode={setSheet}
+          onClose={closeSheet}
+          onChoose={(chosen) => {
+            setRemote(chosen);
+            setRemoteError(null);
+            closeSheet();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Where the copy comes from, as a short ledger; choosing happens in the sheet. Before a choice the
+ * way to GitHub is the next step, so it is the primary button.
+ */
+function RemoteLedger({
+  remote,
+  error,
+  errorId,
+  onOpen,
+}: {
+  readonly remote: ChosenRemote | null;
+  readonly error: RemoteError | null;
+  readonly errorId: string;
+  readonly onOpen: (mode: RemoteSheetMode, from: HTMLButtonElement) => void;
+}) {
+  const t = useT();
+  const repository = remote?.repository ?? null;
+  return (
+    <div className="setup__remote">
+      <dl className="facts">
+        <dt>{t.setup.remote.from}</dt>
+        <dd>
+          {remote === null ? (
+            <span className="setup__unset">{t.setup.remote.notChosen}</span>
+          ) : (
+            <>
+              <span className="backup__place">{remotePlace(remote.url).label}</span>
+              {repository === null ? null : " "}
+              {repository === null ? null : (
+                <span className="setup__owner">
+                  {repository.shared
+                    ? t.setup.remote.sharedBy(repository.owner)
+                    : t.setup.remote.yours}
+                </span>
+              )}
+            </>
+          )}
+        </dd>
+      </dl>
+      {remote === null ? null : <p className="field__hint">{t.setup.remote.backupNote}</p>}
+      {error === null ? null : (
+        <p className="field__error" id={errorId} role="alert">
+          <CircleAlert className="call__icon" aria-hidden="true" />
+          {error === "missing"
+            ? t.setup.remote.missing
+            : error === "unreachable" && repository !== null
+              ? t.setup.remote.gitHubFailed
+              : t.setup.remote.errors[error]}
+        </p>
+      )}
+      <div className="button-row backup__actions setup__remote-actions">
+        <button
+          type="button"
+          className={remote === null ? "button button--primary" : "button"}
+          aria-describedby={error === null ? undefined : errorId}
+          onClick={(event) => onOpen("github", event.currentTarget)}
+        >
+          {remote === null ? t.setup.remote.choose : t.setup.remote.chooseAgain}
+        </button>
+        <button
+          type="button"
+          className="button button--quiet"
+          onClick={(event) => onOpen("remote", event.currentTarget)}
+        >
+          {t.setup.remote.useRemote}
+        </button>
+      </div>
     </div>
   );
 }

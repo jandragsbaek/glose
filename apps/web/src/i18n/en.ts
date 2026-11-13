@@ -1,4 +1,5 @@
 import type {
+  GraphRemoteUnavailableReason,
   ChatGptProblem,
   GitHubProblem,
   GraphFolderAction,
@@ -80,7 +81,7 @@ export const en = {
   setup: {
     title: "Welcome to Glose",
     intro:
-      "Three choices, then Glose opens on Today. Nothing leaves your computer except what you send to ChatGPT later.",
+      "Three choices, then Glose opens on Today. Nothing leaves your computer except what you keep on GitHub or send to ChatGPT.",
     languageStep: "Language",
     languageHint:
       "The language of the interface. Notes and Writing projects can be in any language. You can change this later in Settings.",
@@ -90,16 +91,57 @@ export const en = {
     folderActions: {
       create: "Start a new Graph",
       open: "Open an existing folder",
+      clone: "Get it from GitHub",
     } satisfies Record<GraphFolderAction, string>,
     folderActionHints: {
       create: "Glose creates an empty folder at this path.",
       open: "A Graph that you moved or that someone shares with you, or a folder of Markdown files.",
+      clone:
+        "Glose copies the Graph into a new folder at this path. The folder must be missing or empty.",
     } satisfies Record<GraphFolderAction, string>,
     folderLabel: "Folder path",
     chatgptStep: "ChatGPT",
     chatgptHint:
       "Optional. You can also connect later in Settings. Without ChatGPT you can still add Sources and write Free text.",
     submit: "Start using Glose",
+    copying: "Copying your Graph…",
+    remote: {
+      from: "From",
+      notChosen: "Not chosen yet",
+      yours: "Yours",
+      sharedBy: (owner: string) => `Shared by ${owner}`,
+      choose: "Choose on GitHub",
+      chooseAgain: "Choose another",
+      useRemote: "Use another git remote",
+      backupNote: "Glose keeps the Graph backed up there after each save.",
+      missing: "Choose where to get your Graph from.",
+      title: "Get your Graph from GitHub",
+      intro:
+        "Glose copies your Graph from a private repository on GitHub, and keeps it backed up there after each save. Connect GitHub to see your repositories.",
+      codeIntro: "Type this code on GitHub's page. It lets Glose read your private repositories.",
+      chooseGraph: "Choose the Graph",
+      listHint: "Private repositories you own or that are shared with you.",
+      graph: "Graph",
+      updated: (at: Date) => `Updated ${shortDate.format(at)}`,
+      others: (count: number) => `Other repositories (${count})`,
+      othersHint:
+        "No Graph in them yet. If you choose one, Glose makes a Graph of its files as they are.",
+      none: "Glose found no private repositories on GitHub. Back the Graph up to GitHub from Settings on the other computer first, or use another account.",
+      listFailed: "GitHub did not answer. Try again in a moment.",
+      useThis: "Use this repository",
+      notEmpty:
+        "This folder already holds files. Glose copies a Graph only into a folder that is missing or empty.",
+      gitHubFailed:
+        "Glose could not copy the repository from GitHub. Check the internet connection and try again, or choose the repository again.",
+      copyingNote: "A large Graph can take a few minutes.",
+      remoteIntro:
+        "Glose copies the Graph from a git remote you already have, with your own git sign-in: an SSH key or a credential helper.",
+      errors: {
+        "no-git": "Glose needs git to copy a Graph. Install git, then try again.",
+        unreachable:
+          "Git could not reach that remote, or could not sign in to it. Check the address, and that git on this computer can read it.",
+      } satisfies Record<GraphRemoteUnavailableReason, string>,
+    },
     folderErrors: {
       "not-absolute": "Write the full path of the folder, starting from the top of the disk.",
       "not-a-folder": "This path is a file, not a folder. Choose a folder.",

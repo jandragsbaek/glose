@@ -42,7 +42,25 @@ export const make = (fs: FileSystem.FileSystem, path: Path.Path) => {
     (effect, folder) => Effect.mapError(effect, () => unavailable(folder, "not-writable")),
   );
 
+  /**
+   * Makes a missing folder, and refuses one that holds files, so a new Graph mixes with nothing.
+   * True when it made the folder.
+   */
+  const prepareEmpty = Effect.fn("GraphFolder.prepareEmpty")(function* (folder: string) {
+    if ((yield* inspect(folder)) === "folder") {
+      const entries = yield* fs.readDirectory(folder).pipe(Effect.mapError(storageError));
+      if (entries.length > 0) return yield* unavailable(folder, "not-empty");
+      return false;
+    }
+    yield* fs
+      .makeDirectory(folder, { recursive: true })
+      .pipe(Effect.mapError(() => unavailable(folder, "not-writable")));
+    return true;
+  });
+
   return {
+    prepareEmpty,
+
     /** The Graph's settings now; a Graph without the file has every default. */
     settings: Effect.fn("GraphFolder.settings")(function* (folder: string) {
       const file = settingsFile(folder);
@@ -54,14 +72,7 @@ export const make = (fs: FileSystem.FileSystem, path: Path.Path) => {
 
     /** Makes a new Graph in a folder that is missing or empty, so no existing files get mixed in. */
     create: Effect.fn("GraphFolder.create")(function* (folder: string) {
-      if ((yield* inspect(folder)) === "folder") {
-        const entries = yield* fs.readDirectory(folder).pipe(Effect.mapError(storageError));
-        if (entries.length > 0) return yield* unavailable(folder, "not-empty");
-      } else {
-        yield* fs
-          .makeDirectory(folder, { recursive: true })
-          .pipe(Effect.mapError(() => unavailable(folder, "not-writable")));
-      }
+      yield* prepareEmpty(folder);
       return yield* writeSettings(folder, EMPTY);
     }),
 

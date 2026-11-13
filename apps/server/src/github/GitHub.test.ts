@@ -237,6 +237,94 @@ it.layer(NodeServices.layer)("GitHub", (it) => {
     ),
   );
 
+  it.effect("lists the private repositories the user can read, Graphs first", () =>
+    withGitHub(({ service, answer, signedIn }) =>
+      Effect.gen(function* () {
+        yield* signedIn("jan", "gho_token");
+        const repo = (fullName: string, priv: boolean, pushedAt: string | null) => ({
+          full_name: fullName,
+          private: priv,
+          clone_url: `https://github.test/${fullName}.git`,
+          owner: { login: fullName.split("/")[0] },
+          pushed_at: pushedAt,
+        });
+        // GitHub sends the latest pushed first.
+        answer("GET", `${FAKE.apiUrl}/user/repos`, [
+          repo("jan/dotfiles", true, "2026-11-13T08:00:00Z"),
+          repo("jan/website", false, "2026-11-12T22:00:00Z"),
+          repo("Jan/glose-graph", true, "2026-11-12T21:40:00Z"),
+          repo("sample-reader/speciale-graf", true, "2026-11-09T16:05:00Z"),
+          repo("jan/empty", true, null),
+        ]);
+        answer("GET", `${FAKE.apiUrl}/repos/Jan/glose-graph/contents/.glose/settings.json`, {});
+        answer(
+          "GET",
+          `${FAKE.apiUrl}/repos/sample-reader/speciale-graf/contents/.glose/settings.json`,
+          {},
+        );
+
+        const listed = yield* service.repositories;
+
+        assert.deepStrictEqual(
+          listed.map(({ fullName, shared, graph }) => ({ fullName, shared, graph })),
+          [
+            { fullName: "Jan/glose-graph", shared: false, graph: true },
+            { fullName: "sample-reader/speciale-graf", shared: true, graph: true },
+            { fullName: "jan/dotfiles", shared: false, graph: false },
+            { fullName: "jan/empty", shared: false, graph: false },
+          ],
+          "no public repository; the owner's name matches without regard to case",
+        );
+        assert.deepStrictEqual(listed[0], {
+          fullName: "Jan/glose-graph",
+          owner: "Jan",
+          url: "https://github.test/Jan/glose-graph.git",
+          shared: false,
+          graph: true,
+          pushedAt: Date.parse("2026-11-12T21:40:00Z"),
+        });
+        assert.isNull(listed[3]?.pushedAt);
+      }),
+    ),
+  );
+
+  it.effect("finds an old Graph on a later page of repositories", () =>
+    withGitHub(({ service, answer, signedIn }) =>
+      Effect.gen(function* () {
+        yield* signedIn("jan", "gho_token");
+        const repo = (name: string) => ({
+          full_name: `jan/${name}`,
+          private: true,
+          clone_url: `https://github.test/jan/${name}.git`,
+          owner: { login: "jan" },
+          pushed_at: "2026-11-01T00:00:00Z",
+        });
+        answer(
+          "GET",
+          `${FAKE.apiUrl}/user/repos`,
+          Array.from({ length: 100 }, (_, i) => repo(`project-${i}`)),
+          [repo("glose-graph")],
+        );
+        answer("GET", `${FAKE.apiUrl}/repos/jan/glose-graph/contents/.glose/settings.json`, {});
+
+        const listed = yield* service.repositories;
+
+        assert.lengthOf(listed, 101);
+        assert.deepInclude(listed[0], { fullName: "jan/glose-graph", graph: true });
+      }),
+    ),
+  );
+
+  it.effect("lists nothing without a GitHub sign-in", () =>
+    withGitHub(({ service, requests }) =>
+      Effect.gen(function* () {
+        const refused = yield* service.repositories.pipe(Effect.flip);
+        assert.deepStrictEqual(refused, new RemoteRefused({ reason: "github-not-connected" }));
+        assert.lengthOf(requests, 0);
+      }),
+    ),
+  );
+
   it.effect("forgets a sign-in that GitHub no longer accepts", () =>
     withGitHub(({ service, answer, savedFile, signedIn, status }) =>
       Effect.gen(function* () {

@@ -59,6 +59,7 @@ const withGraph = <A, E>(
       cancel: Effect.void,
       disconnect: Effect.void,
       repository: () => Effect.succeed(remote),
+      repositories: Effect.succeed([]),
       gitConfig: Effect.succeed({}),
     });
     const deps = Layer.mergeAll(

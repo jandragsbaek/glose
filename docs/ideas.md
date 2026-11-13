@@ -46,6 +46,8 @@ Working notes from early conversations. Nothing here is final.
   path of the open Graph folder and the interface language. The language is per computer so that
   two people who share one Graph each read the interface in their own language.
   `GLOSE_DATA_DIR` overrides the folder.
+- The setup can also copy a Graph from GitHub or another git remote; see "Decided, a Graph from
+  GitHub at first start".
 - Not built yet: noticing a Graph folder that moved or went missing, a native folder picker, and
   switching between Graphs.
 
@@ -362,8 +364,34 @@ Decided, Backup (November 2026):
 - Glose's OAuth app on GitHub is registered under Jan's account (Device Flow on; the callback URL
   is the unused `http://127.0.0.1/`). Its public client ID is in
   `apps/server/src/github/GitHubApi.ts`; `GLOSE_GITHUB_CLIENT_ID` replaces it.
-- Not yet: opening an existing backup on a second computer (cloning a Graph from GitHub at first
-  start).
+- Opening a backup on a second computer: see "Decided, a Graph from GitHub at first start".
+
+Decided, a Graph from GitHub at first start (November 2026):
+
+- The Graph folder step of the first start has a third way in, "Get it from GitHub", beside
+  starting a new Graph and opening a folder. It copies (clones) a Graph the user keeps on GitHub or
+  on another git remote: their own backup on a second computer, or a Graph another person shares
+  with them on GitHub.
+- The setup page stays one column. The step shows a short ledger, "From", and the choosing happens
+  in a sheet, the Backup sheet run the other way. Jan chose this ("Ledger and sheet") with
+  impeccable over a two-column page that lists the Graphs found and over a setup in steps under the
+  step bar.
+- GitHub: step 1 connects with the device code, as Backup does. Step 2 lists the private
+  repositories the account owns or that are shared with it, Graphs first (a repository holding
+  `.glose/settings.json`), the latest pushed Graph chosen. Each row names the repository as a typed
+  label, when it was last updated, and "Yours" or "Shared by <owner>". The rest fold under "Other
+  repositories"; one of them becomes a Graph as it is. Public repositories are not listed. Glose
+  reads every page of the list and looks into each private repository, one request each.
+- Another git remote: the user types its address; Glose checks with `git ls-remote` that the user's
+  own git can read it before the sheet closes.
+- The folder stays in the panel: the copy goes into a new folder that must be missing or empty
+  (suggested `Glose` in the home folder). "Start using Glose" copies it ("Copying your Graph…") with
+  the user's git, signed in to GitHub through the environment as for Backup, then opens it. A
+  failed copy keeps nothing, and the error stands under "From".
+- The remote stays the Graph's `origin`, so Versions sync with it from the first start: the backup
+  is set up already.
+- Not yet: a progress count while a large Graph copies, and choosing the folder with a native
+  picker.
 
 ## Graph view
 

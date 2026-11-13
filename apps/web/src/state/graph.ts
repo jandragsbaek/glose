@@ -28,6 +28,7 @@ export const sourceAtom = Atom.family((id: string) =>
 
 export const setLanguageAtom = GloseClient.mutation(RPC_METHODS.settingsSetLanguage);
 export const completeSetupAtom = GloseClient.mutation(RPC_METHODS.setupComplete);
+export const checkRemoteAtom = GloseClient.mutation(RPC_METHODS.setupCheckRemote);
 export const createSourceAtom = GloseClient.mutation(RPC_METHODS.sourcesCreate);
 export const saveFreeTextAtom = GloseClient.mutation(RPC_METHODS.sourcesSaveFreeText);
 

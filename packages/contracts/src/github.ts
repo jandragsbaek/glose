@@ -30,6 +30,25 @@ export const GitHubStatus = Schema.Union([
 ]);
 export type GitHubStatus = typeof GitHubStatus.Type;
 
+/**
+ * A private repository the connected account can read, offered at first start to copy a Graph
+ * from. Glose lists the user's own and those other accounts share with them.
+ */
+export const GitHubRepository = Schema.Struct({
+  /** `owner/name`, as GitHub shows it. */
+  fullName: Schema.String,
+  owner: Schema.String,
+  /** The address git copies it from, over HTTPS. */
+  url: Schema.String,
+  /** Another account owns it and shares it with the user. */
+  shared: Schema.Boolean,
+  /** It holds a Graph: Glose's `.glose/settings.json` is in it. */
+  graph: Schema.Boolean,
+  /** When something was last pushed to it (ms since epoch), or null when GitHub does not say. */
+  pushedAt: Schema.NullOr(Schema.Number),
+});
+export type GitHubRepository = typeof GitHubRepository.Type;
+
 /** GitHub's page where the user sees and revokes the apps that may use their account. */
 export const GITHUB_APPS_URL = "https://github.com/settings/applications";
 

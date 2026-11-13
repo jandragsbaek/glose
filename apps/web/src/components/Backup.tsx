@@ -240,15 +240,19 @@ function BackedUp({ status, remoteUrl }: { readonly status: On; readonly remoteU
  */
 export function BackupSheet() {
   const [mode, setMode] = useAtom(backupSheetAtom);
-  return mode === null ? null : <Sheet mode={mode} onClose={() => setMode(null)} />;
+  return mode === null ? null : (
+    <Sheet mode={mode} onClose={() => setMode(null)} onMode={setMode} />
+  );
 }
 
 function Sheet({
   mode,
   onClose,
+  onMode: setSheet,
 }: {
   readonly mode: BackupSheetMode;
   readonly onClose: () => void;
+  readonly onMode: (mode: BackupSheetMode) => void;
 }) {
   const t = useT();
   const titleId = useId();
@@ -306,7 +310,13 @@ function Sheet({
           ) : github._tag === "Connected" ? (
             <RepositoryForm login={github.login} onDone={() => setDone(true)} onCancel={close} />
           ) : (
-            <ConnectStep status={github} onCancel={close} />
+            <ConnectStep
+              status={github}
+              intro={t.backup.intro}
+              codeIntro={t.backup.codeIntro}
+              onUseRemote={() => setSheet("remote")}
+              onCancel={close}
+            />
           )}
         </div>
       </div>
@@ -314,32 +324,37 @@ function Sheet({
   );
 }
 
-function SheetFoot({ children }: { readonly children: ReactNode }) {
+export function SheetFoot({ children }: { readonly children: ReactNode }) {
   return <div className="button-row sheet__foot">{children}</div>;
 }
 
-function ConnectStep({
+/**
+ * Step 1 of a GitHub sheet: connect with a code the user types on GitHub. The Backup sheet and
+ * the first start's sheet share it; each says in its own words what the connection is for.
+ */
+export function ConnectStep({
   status,
+  intro,
+  codeIntro,
+  onUseRemote,
   onCancel,
 }: {
   readonly status: Exclude<GitHubStatus, { _tag: "Connected" }>;
+  readonly intro: string;
+  readonly codeIntro: string;
+  /** This build cannot connect to GitHub: the user goes another way. */
+  readonly onUseRemote: () => void;
   readonly onCancel: () => void;
 }) {
   const t = useT();
   const connect = useAtomSet(connectGitHubAtom);
-  const setSheet = useAtomSet(backupSheetAtom);
 
   if (status._tag === "Unavailable") {
     return (
       <>
         <p>{t.backup.unavailable}</p>
         <SheetFoot>
-          <button
-            type="button"
-            className="button button--primary"
-            autoFocus
-            onClick={() => setSheet("remote")}
-          >
+          <button type="button" className="button button--primary" autoFocus onClick={onUseRemote}>
             {t.backup.useRemote}
           </button>
           <button type="button" className="button button--quiet" onClick={onCancel}>
@@ -353,7 +368,7 @@ function ConnectStep({
   if (status._tag === "Connecting") {
     return (
       <>
-        <p>{t.backup.codeIntro}</p>
+        <p>{codeIntro}</p>
         <CodeRow code={status.userCode} />
         <p className="live backup__waiting" role="status">
           {t.backup.waiting}
@@ -373,7 +388,7 @@ function ConnectStep({
 
   return (
     <>
-      <p>{t.backup.intro}</p>
+      <p>{intro}</p>
       {status.problem === null ? null : (
         <Notice tone="warning">
           <p>{t.backup.problems[status.problem]}</p>

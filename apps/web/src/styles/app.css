@@ -3108,6 +3108,11 @@ a.written__title:hover {
   border-color: var(--line-strong);
 }
 
+/* The leaf takes focus when no control in it asks for it; the focus ring belongs to controls. */
+.sheet:focus {
+  outline: none;
+}
+
 .sheet::backdrop {
   background: rgb(20 20 20 / 32%);
   transition:
@@ -3219,4 +3224,164 @@ a.written__title:hover {
 
 .backup__done-place {
   padding-left: 28px;
+}
+
+/*
+ * First start from a remote: the Graph panel keeps a short ledger of where the copy comes from;
+ * choosing it happens in the sheet, as Backup does it the other way.
+ */
+.setup__remote {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.setup__unset {
+  color: var(--mute);
+}
+
+.setup__owner {
+  margin-left: 4px;
+  color: var(--mute);
+  font-size: 13px;
+}
+
+.setup__remote-actions {
+  margin-top: 10px;
+}
+
+.setup__copying {
+  color: var(--mute);
+}
+
+/* The account's repositories as radio rows, Graphs first; a row's states sit at its right end. */
+.repo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.repo-list legend {
+  float: left;
+  width: 100%;
+  padding: 0;
+}
+
+.repo-list legend + * {
+  clear: both;
+}
+
+.repo-list__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.repo {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--paper);
+  cursor: pointer;
+  transition:
+    border-color 160ms var(--ease-out),
+    background-color 160ms var(--ease-out);
+}
+
+.repo:hover {
+  border-color: var(--mute);
+}
+
+.repo:has(input:checked) {
+  border-color: var(--lapis);
+  background: var(--tint);
+}
+
+.repo input {
+  margin: 0;
+}
+
+.repo__main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* A long name wraps inside its label rather than widening the sheet. */
+.repo__name {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.repo__meta,
+.repo__owner {
+  color: var(--mute);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.repo__side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  text-align: right;
+}
+
+.repo__graph {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--lapis);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.repo__graph-icon {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1.8;
+}
+
+.repo-others > * + * {
+  margin-top: 8px;
+}
+
+.repo-others__summary {
+  width: fit-content;
+  color: var(--mute);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.repo-others__summary:hover {
+  color: var(--ink);
+}
+
+@media (max-width: 520px) {
+  .repo {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .repo__side {
+    grid-column: 2;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
 }
