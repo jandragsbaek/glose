@@ -799,6 +799,44 @@ Note headings in the side panel: 700 15px, 18px above when they follow other tex
 - **A title:** "¶ AI-written title" ("AI-skrevet titel") with the lighter 2px rule, above a
   Note's title in the Graph panel and above the title field of a Point the AI proposed.
 
+### Rewrite Desk (signature)
+
+A Note opened over the Graph's canvas to edit, with the AI's words beside the user's, like a gloss
+in the margin of a page. The side panel stays beside it and keeps reading other nodes; for the Note
+on the desk it shows only the title, the Source and the Links.
+
+- **Way in:** in the Note panel's button row, "Rewrite in your words" (primary) while the Note
+  holds AI text, else "Edit" (secondary), before Make Cards.
+- **Desk:** fills the canvas cell on Ground (24px 28px 28px padding, a Hairline border, its own
+  scroll), the canvas inert under it. It fades in and rises 4px in 160ms on the shared ease-out.
+  One panel leaf, up to 1120px, with a Strong Hairline border: "Rewrite the Note" ("Omskriv noten")
+  or, without AI text, "Edit the Note", with a lapis Initial; the call number with page and the
+  Source's title as Meta.
+- **Rows:** two equal columns divided by Hairlines (cells 18px 28px 22px). Mute 600 13px heads,
+  "What the AI wrote" and "In your words". The title row first (the AI Text title mark on the
+  left, the borderless title field 700 18px with a Strong Hairline under it on the right, then a
+  Meta hint on the rename and a Page field), then one row per run of the Note's text. AI text sits
+  on the left under its mark with a quiet small "Correct the AI text" at the end of the gloss; the
+  right holds an empty field (16px/1.65, at least 168px, growing with its text) whose Mute
+  placeholder says that empty keeps the AI text. A Part's row has a heading field above it,
+  showing the AI's heading as its placeholder. The user's own Markdown has an empty left cell and
+  its field on the right.
+- **States:** words in a right field pale the AI mark's rule beside them to Rubric Line (the text
+  stays Ink, to read beside the user's) and add a Mute 13px line with a 15px Verdigris check:
+  "Yours. It replaces the AI text when you save." Correcting turns the AI
+  text into a field under its mark, its gloss ending "· stays marked" and the action "Undo".
+- **Foot:** sticky at the leaf's foot, so Save stays in reach: Save (primary, "Saving…"), Cancel
+  (quiet), and a Mute tabular count pushed right ("1 of 2 in your words"). Cancel with changes becomes an inline confirm: "Discard what you wrote?" in
+  600, Discard (secondary) and Keep writing (quiet, focused); Esc keeps writing and focus returns to
+  Cancel. The same question comes when the user opens another Note on the desk or leaves the Graph
+  with unsaved words.
+- **Focus:** the desk opens on the first field where the AI's words are (the title when the AI
+  wrote it, else the first run of AI text); closing it returns focus to the button that opened it. A title another file has gets the
+  field error line under the title; a failed save, an error line in the foot.
+- **Without AI text:** one column at 72ch, labels shown, no heads and no count.
+- **Narrow:** below 1080px the desk takes the canvas's place in the page's flow; below 720px each
+  row stacks, the AI text above the user's field.
+
 ### Core Points (Extraction)
 
 One panel, its groups divided by Hairlines (22px 28px 26px padding), in this order:

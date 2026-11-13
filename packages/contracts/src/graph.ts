@@ -73,6 +73,46 @@ export const hasAiCallout = (markdown: string): boolean =>
     .split(/\r?\n/)
     .some((line) => AI_CALLOUT.test(line));
 
+/** Paragraphs of plain text, split on blank lines, each trimmed; empty ones go. */
+export const textParagraphs = (text: string): ReadonlyArray<string> =>
+  text
+    .replace(/\r\n?/g, "\n")
+    .split(/\n[ \t]*\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter((paragraph) => paragraph !== "");
+
+/**
+ * The AI mark on paragraphs, or with `part` on all the text of a Part: one callout that runs to
+ * the next blank line, its paragraphs divided by `>` lines, so Obsidian shows one marked box and
+ * any other editor a quote.
+ */
+export const aiCallout = (text: string, part = false): string =>
+  [
+    part ? "> [!ai-part]" : "> [!ai]",
+    ...textParagraphs(text).flatMap((paragraph, index) => [
+      ...(index === 0 ? [] : [">"]),
+      ...paragraph.split("\n").map((line) => `> ${line}`),
+    ]),
+  ].join("\n");
+
+/**
+ * A Note the user edited in the Graph: its title (the file name), its Location and its text.
+ * The text keeps its AI marks where the AI's words stay; `aiNote` says the whole text is the
+ * AI's, the mark that has no callout (`ai: true` alone).
+ */
+export const SaveNote = Schema.Struct({
+  /** The Note's file name now. */
+  id: Schema.String,
+  title: Schema.String,
+  /** The title is still the AI's, corrected or not. */
+  aiTitle: Schema.Boolean,
+  page: Schema.NullOr(Schema.String),
+  /** The Markdown after the frontmatter. */
+  body: Schema.String,
+  aiNote: Schema.Boolean,
+});
+export type SaveNote = typeof SaveNote.Type;
+
 /** No Markdown file in the Graph folder has this name. */
 export class NoteNotFound extends Schema.TaggedError<NoteNotFound>()("NoteNotFound", {
   id: Schema.String,

@@ -614,6 +614,50 @@ export const da: Messages = {
     missingLink: (name: string) => `Ingen fil hedder ${name} endnu.`,
     makeCards: "Lav kort",
     cardCount: (n: number) => (n === 0 ? "Ingen kort endnu" : count(n, "kort", "kort")),
+    rewrite: "Omskriv med dine ord",
+    edit: "Redigér",
+  },
+  rewrite: {
+    titleAi: "Omskriv noten",
+    titleOwn: "Redigér noten",
+    aiColumn: "Det skrev AI'en",
+    yourColumn: "Med dine ord",
+    titleLabel: "Titel",
+    titleYours: "Titlen med dine ord",
+    titlePlaceholder: "Påstanden med dine ord, som en hel sætning",
+    textLabel: "Tekst",
+    yoursLabel: "Dine ord i stedet for denne AI-tekst",
+    yoursPlaceholder:
+      "Sig det igen, som du forstår det. Lad feltet stå tomt for at beholde AI-teksten, markeret.",
+    headingLabel: "Delens overskrift med dine ord",
+    headingPlaceholder: "Overskrift",
+    correct: "Ret AI-teksten",
+    undoCorrect: "Fortryd",
+    stillMarked: "forbliver markeret",
+    replaces: "Dine ord. De erstatter AI-teksten, når du gemmer.",
+    page: "Side",
+    renames: (notes: number, sources: number, cards: number) => {
+      const linking = [
+        notes > 0 ? count(notes, "note", "noter") : null,
+        sources > 0 ? count(sources, "kilde", "kilder") : null,
+        cards > 0 ? count(cards, "kort", "kort") : null,
+      ].filter((part) => part !== null);
+      return linking.length === 0
+        ? "En ny titel omdøber notens fil."
+        : `En ny titel omdøber notens fil. Links i ${list.format(linking)} følger med.`;
+    },
+    noTitle: "En note skal have en titel.",
+    nameTaken: (name: string) =>
+      `Din graf har allerede en fil med navnet »${name}«. Vælg en anden titel.`,
+    progress: (done: number, total: number) =>
+      `${numbers.format(done)} af ${numbers.format(total)} med dine ord`,
+    save: "Gem",
+    saving: "Gemmer…",
+    cancel: "Annullér",
+    discardQuestion: "Kassér det, du har skrevet?",
+    discard: "Kassér",
+    keepWriting: "Skriv videre",
+    saveFailed: "Glose kunne ikke gemme noten. Prøv igen.",
   },
   writing: {
     title: "Skriveprojekter",

@@ -3,9 +3,11 @@ import { type GraphNode, type GraphView, linkKey, type Source } from "@glose/con
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { Maximize, Minus, Plus, Search, X } from "lucide-react";
-import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+import { type ReactNode, type Ref, useEffect, useId, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 
-import { AiText, MissingLink, NoteText } from "../components/NoteText.tsx";
+import { AiText, MissingLink, NoteText, type WikilinkPart } from "../components/NoteText.tsx";
+import { type Linking, RewriteNote } from "../components/RewriteNote.tsx";
 import { CallNumber, Page, Panel, SkeletonPanel, StorageProblem } from "../components/ui.tsx";
 import { callNumber } from "../domain/source.ts";
 import { GraphCanvas, type GraphCanvasEvents, type NodeLabel } from "../graph/GraphCanvas.ts";
@@ -128,11 +130,20 @@ function GraphPage({
   const { node: selectedId } = Route.useSearch();
   const [canvas, setCanvas] = useState<GraphCanvas | null>(null);
   const [query, setQuery] = useState("");
+  /** The Note open on the desk to rewrite; the side panel stays free to read other nodes. */
+  const [rewriting, setRewriting] = useState<string | null>(null);
+  /** The desk holds unsaved words, so opening another Note there asks first. */
+  const [unsaved, setUnsaved] = useState(false);
+  /** Another Note the user asked to open on the desk while it holds unsaved words. */
+  const [requested, setRequested] = useState<string | null>(null);
+  /** The button that opened the desk; focus returns to it when the desk closes. */
+  const opener = useRef<HTMLButtonElement>(null);
   const findId = useId();
 
   const index = indexGraph(view, sources);
   const labels = new Map(view.nodes.map((node) => [node.id, labelOf(node, index)]));
   const selected = selectedId === undefined ? undefined : index.byId.get(selectedId);
+  const rewritten = rewriting === null ? undefined : index.byId.get(rewriting);
 
   const needle = query.trim().toLocaleLowerCase();
   const found =
@@ -147,6 +158,26 @@ function GraphPage({
 
   const select = (id: string | null) =>
     navigate({ to: "/graph", search: id === null ? {} : { node: id } });
+  const openDesk = (id: string) => {
+    setRequested(null);
+    setUnsaved(false);
+    setRewriting(id);
+  };
+  const rewrite = (id: string) => {
+    if (rewriting !== null && rewriting !== id && unsaved) setRequested(id);
+    else openDesk(id);
+  };
+  const closeDesk = () => {
+    if (requested !== null) {
+      openDesk(requested);
+      return;
+    }
+    flushSync(() => {
+      setRewriting(null);
+      setUnsaved(false);
+    });
+    opener.current?.focus();
+  };
   /** A node chosen outside the canvas (side panel, search) is brought into view. */
   const show = (id: string) => canvas?.centerOn(id);
   const events: GraphCanvasEvents = {
@@ -195,15 +226,40 @@ function GraphPage({
       }
     >
       <div className="graph">
-        <GraphStage
-          view={view}
-          labels={labels}
-          selectedId={selected?.id ?? null}
-          matches={matches}
-          events={events}
-          canvas={canvas}
-          onCanvas={setCanvas}
-        />
+        <div className="graph__work">
+          <GraphStage
+            view={view}
+            labels={labels}
+            selectedId={selected?.id ?? null}
+            matches={matches}
+            events={events}
+            canvas={canvas}
+            onCanvas={setCanvas}
+            covered={rewritten !== undefined}
+          />
+          {rewritten === undefined ? null : (
+            <div className="graph__desk">
+              <RewriteNote
+                key={rewritten.id}
+                node={rewritten}
+                source={index.sources.get(rewritten.sourceId ?? "")}
+                linking={linkingOf(rewritten, view, index)}
+                renderLink={wikilinks(index, show)}
+                leaving={requested !== null}
+                onStay={() => setRequested(null)}
+                onChanged={setUnsaved}
+                onClose={closeDesk}
+                onSaved={async (id) => {
+                  setRewriting(null);
+                  setUnsaved(false);
+                  await select(id);
+                  // A new title remounts the panel; its button takes focus once it is there.
+                  requestAnimationFrame(() => opener.current?.focus());
+                }}
+              />
+            </div>
+          )}
+        </div>
         <aside className="graph__side">
           {selected === undefined ? (
             <SourceList index={index} view={view} onShow={show} />
@@ -212,7 +268,10 @@ function GraphPage({
               key={selected.id}
               node={selected}
               index={index}
+              rewriting={selected.id === rewritten?.id}
               onShow={show}
+              opener={opener}
+              onRewrite={() => rewrite(selected.id)}
               onClose={() => void select(null)}
             />
           )}
@@ -230,6 +289,7 @@ function GraphStage({
   events,
   canvas,
   onCanvas,
+  covered,
 }: {
   readonly view: GraphView;
   readonly labels: ReadonlyMap<string, NodeLabel>;
@@ -239,6 +299,8 @@ function GraphStage({
   /** The page steers the canvas too, from the side panel and the search. */
   readonly canvas: GraphCanvas | null;
   readonly onCanvas: (canvas: GraphCanvas | null) => void;
+  /** A Note is open on the desk over the canvas, which then takes no input. */
+  readonly covered: boolean;
 }) {
   const t = useT();
   const element = useRef<HTMLCanvasElement>(null);
@@ -269,7 +331,7 @@ function GraphStage({
   }, [canvas, events, view, labels, selectedId, matches]);
 
   return (
-    <div className="graph__stage">
+    <div className="graph__stage" inert={covered}>
       <canvas
         ref={element}
         className="graph__canvas"
@@ -348,12 +410,19 @@ function SourceList({
 function NodePanel({
   node,
   index,
+  rewriting,
+  opener,
   onShow,
+  onRewrite,
   onClose,
 }: {
   readonly node: GraphNode;
   readonly index: GraphIndex;
+  /** The Note is open on the desk; its text and actions are there. */
+  readonly rewriting: boolean;
+  readonly opener: Ref<HTMLButtonElement>;
   readonly onShow: (id: string) => void;
+  readonly onRewrite: () => void;
   readonly onClose: () => void;
 }) {
   const t = useT();
@@ -403,29 +472,22 @@ function NodePanel({
             </NodeLink>
           </p>
         )}
-        <NoteText
-          markdown={node.body}
-          // A Note marked only for its AI title holds no AI text in its body.
-          aiText={node.aiText && !node.aiTitle}
-          renderLink={(part) => {
-            const target = index.byKey.get(linkKey(part.target));
-            return target === undefined ? (
-              <MissingLink key={part.at} name={part.target} label={part.label} />
-            ) : (
-              <NodeLink key={part.at} id={target.id} className="graph__wikilink" onShow={onShow}>
-                {part.label}
-              </NodeLink>
-            );
-          }}
-        />
-        {isSource ? (
+        {rewriting ? null : (
+          <NoteText
+            markdown={node.body}
+            // A Note marked only for its AI title holds no AI text in its body.
+            aiText={node.aiText && !node.aiTitle}
+            renderLink={wikilinks(index, onShow)}
+          />
+        )}
+        {rewriting ? null : isSource ? (
           <p>
             <Link to="/sources/$sourceId" params={{ sourceId: node.id }} className="button">
               {t.graph.openSource}
             </Link>
           </p>
         ) : (
-          <NoteCards noteId={node.id} />
+          <NoteCards noteId={node.id} aiText={node.aiText} opener={opener} onRewrite={onRewrite} />
         )}
       </div>
       {isSource && fromSource.length > 0 ? (
@@ -466,8 +528,21 @@ function NodeList({
   );
 }
 
-/** How many Cards a Note has, and the way to make more. */
-function NoteCards({ noteId }: { readonly noteId: string }) {
+/**
+ * The ways on from a Note: rewriting it is the next step while it holds AI text, then making
+ * Cards; how many Cards it has.
+ */
+function NoteCards({
+  noteId,
+  aiText,
+  opener,
+  onRewrite,
+}: {
+  readonly noteId: string;
+  readonly aiText: boolean;
+  readonly opener: Ref<HTMLButtonElement>;
+  readonly onRewrite: () => void;
+}) {
   const t = useT();
   const cards = useAtomValue(cardsAtom);
   const count = AsyncResult.getOrElse(
@@ -480,12 +555,45 @@ function NoteCards({ noteId }: { readonly noteId: string }) {
   );
   return (
     <p className="button-row">
+      <button
+        ref={opener}
+        type="button"
+        className={aiText ? "button button--primary" : "button"}
+        onClick={onRewrite}
+      >
+        {aiText ? t.graph.rewrite : t.graph.edit}
+      </button>
       <Link to="/notes/$noteId/cards" params={{ noteId }} className="button">
         {t.graph.makeCards}
       </Link>
       {count === null ? null : <span className="status">{t.graph.cardCount(count)}</span>}
     </p>
   );
+}
+
+/** Wikilinks in a Note's text lead to the node they name, or say the file is missing. */
+const wikilinks =
+  (index: GraphIndex, onShow: (id: string) => void) =>
+  (part: WikilinkPart): ReactNode => {
+    const target = index.byKey.get(linkKey(part.target));
+    return target === undefined ? (
+      <MissingLink key={part.at} name={part.target} label={part.label} />
+    ) : (
+      <NodeLink key={part.at} id={target.id} className="graph__wikilink" onShow={onShow}>
+        {part.label}
+      </NodeLink>
+    );
+  };
+
+/** The Notes, Sources and Cards whose wikilinks follow a Note's new title. */
+function linkingOf(node: GraphNode, view: GraphView, index: GraphIndex): Linking {
+  const from = view.links
+    .filter((link) => link.to === node.id && link.from !== node.id)
+    .map((link) => index.byId.get(link.from));
+  return {
+    notes: from.filter((other) => other?.kind === "note").length,
+    sources: from.filter((other) => other?.kind === "source").length,
+  };
 }
 
 /** A link to a node in the Graph: it selects the node, and Back returns to the one before. */

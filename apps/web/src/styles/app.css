@@ -2168,6 +2168,243 @@ a.written__title:hover {
   padding: 0;
 }
 
+/*
+ * The rewrite desk: a Note opened over the canvas, the AI's words on the left as the model and
+ * the user's words beside them, like a gloss written in the margin of a page.
+ */
+.graph__work {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+}
+
+.graph__work > .graph__stage {
+  grid-area: 1 / 1;
+}
+
+.graph__desk {
+  position: absolute;
+  inset: 0;
+  padding: 24px 28px 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--ground);
+  overflow-y: auto;
+  animation: desk-in 160ms var(--ease-out);
+}
+
+.graph__desk > .panel {
+  max-width: 1120px;
+  margin: 0 auto;
+  border-color: var(--line-strong);
+}
+
+@keyframes desk-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.rewrite__source {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  color: var(--mute);
+  font-size: 14px;
+}
+
+.rewrite {
+  margin-top: 4px;
+}
+
+.rewrite__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.rewrite__row + .rewrite__row {
+  border-top: 1px solid var(--line);
+}
+
+.rewrite__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 18px 28px 22px;
+}
+
+.rewrite__cell + .rewrite__cell {
+  border-left: 1px solid var(--line);
+}
+
+/* The AI's words, once the user's replace them on save: the mark's rule pales, the text stays
+   readable beside the user's own. */
+.rewrite__cell--ai > .ai-text {
+  transition: border-color 160ms var(--ease-out);
+}
+
+.rewrite__cell--ai[data-replaced] > .ai-text {
+  border-left-color: var(--rubric-line);
+}
+
+.rewrite__heads .rewrite__head {
+  padding: 12px 28px 10px;
+  color: var(--mute);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.rewrite__heads .rewrite__head + .rewrite__head {
+  border-left: 1px solid var(--line);
+}
+
+.rewrite__title {
+  resize: none;
+  field-sizing: content;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.rewrite__title::placeholder,
+.rewrite__heading::placeholder {
+  color: var(--mute);
+  font-weight: 400;
+}
+
+.rewrite__heading {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.rewrite__text {
+  min-height: 168px;
+  field-sizing: content;
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.rewrite__text::placeholder {
+  color: var(--mute);
+}
+
+.rewrite__cell--ai .rewrite__text {
+  min-height: 120px;
+}
+
+.rewrite__cell--ai .graph__text {
+  margin-bottom: 0;
+}
+
+.rewrite__page {
+  align-self: flex-start;
+}
+
+.rewrite__yours {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--mute);
+  font-size: 13px;
+}
+
+.rewrite__yours-icon {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  color: var(--verdigris);
+}
+
+/* Save stays in reach however long the Note is, flush with the desk's lower edge. */
+.rewrite__foot {
+  position: sticky;
+  bottom: -28px;
+  z-index: 1;
+  border-radius: 0 0 var(--radius) var(--radius);
+  background: var(--paper);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 28px 20px;
+  border-top: 1px solid var(--line);
+}
+
+.rewrite__progress {
+  margin-left: auto;
+  color: var(--mute);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.rewrite__discard {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+}
+
+.rewrite__discard > p {
+  font-weight: 600;
+}
+
+.rewrite__failed {
+  flex-basis: 100%;
+}
+
+/* A Note without AI text is edited in one column at reading width. */
+.rewrite--own .rewrite__row {
+  grid-template-columns: minmax(0, 72ch);
+  justify-content: center;
+}
+
+@media (max-width: 1080px) {
+  .graph__desk {
+    position: static;
+    grid-area: 1 / 1;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  .graph__work:has(.graph__desk) > .graph__stage {
+    display: none;
+  }
+
+  /* The page scrolls here, not the desk. */
+  .rewrite__foot {
+    bottom: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .rewrite__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rewrite__cell + .rewrite__cell {
+    border-left: 0;
+    padding-top: 0;
+  }
+
+  .rewrite__cell--ai:empty,
+  .rewrite__heads .rewrite__head + .rewrite__head {
+    display: none;
+  }
+
+  .rewrite__cell,
+  .rewrite__foot,
+  .rewrite__heads .rewrite__head {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
 .graph__side {
   min-height: 0;
   overflow-y: auto;
@@ -2257,7 +2494,8 @@ a.written__title:hover {
 
 .ai-text[data-scope="paragraphs"] > .ai-text__gloss::before,
 .ai-text[data-scope="paragraphs"] > .ai-text__head > .ai-text__gloss::before,
-.ai-text[data-scope="title"] > .ai-text__gloss::before {
+.ai-text[data-scope="title"] > .ai-text__gloss::before,
+.ai-text[data-scope="title"] > .ai-text__head > .ai-text__gloss::before {
   content: "¶";
 }
 
