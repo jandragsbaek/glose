@@ -162,15 +162,21 @@ Decided, Card Extraction (November 2026):
   what was kept, changed and dropped.
 - The AI must make every Card answerable from the Note or the passage, and may not add facts.
 - The user can also write a Card in their own words on the same page; it has no AI mark.
-- Recall lists every Card (50 at a time, with search and an AI-text filter) to read, edit, clear
-  the AI mark, or delete.
+- Recall is a desk (decided with Jan, 13 November 2026): today's Review on top, then every Card
+  sorted into three trays by the work it needs. To fix holds the Cards with a Check that fails
+  or warns (Needs work first); AI text to rewrite holds good Cards with an AI mark; Good holds
+  the rest and stays folded until asked for. A Card with both a fault and an AI mark goes to To
+  fix, since fixing it rewrites it. Each Card shows its question, answer, and its first fault in
+  words; "I rewrote it" sits on the slips in the AI tray. A Card opens in a sheet to read its
+  Checks, edit, clear the AI mark, or delete. One search reaches every tray (and opens Good);
+  each tray shows 50 Cards at a time. The trays replace the Grade and AI-text filters.
 
 Decided, Card Checks (November 2026):
 
 - Every Card and every open Proposed Card is checked automatically against what research says a
   good Card is. Each Check passes, warns or fails; the Grade is poor with a failed Check, fix
   with a warning, else good. Glose only shows them: the user fixes the Card, and the AI never
-  changes it on its own. Recall filters by Grade.
+  changes it on its own. Recall sorts Cards into trays by Grade (see "Recall is a desk").
 - Rule Checks run in code, at once and offline, also while the user writes a Card:
   - `has-answer`: the Card has an answer.
   - `recall`: no yes/no, true/false or either/or question, and no yes/no answer. Recall beats

@@ -17,10 +17,13 @@ type Mode = "read" | "edit" | "delete";
 export function CardItem({
   card,
   showFrom = true,
+  close,
 }: {
   readonly card: ScoredCard;
   /** The Note it comes from; a page about that Note leaves it out. */
   readonly showFrom?: boolean;
+  /** The way out of the sheet the Card is open in, at the end of its buttons. */
+  readonly close?: ReactNode;
 }) {
   const t = useT();
   const [mode, setMode] = useState<Mode>("read");
@@ -104,6 +107,7 @@ export function CardItem({
           <button type="button" className="button" onClick={() => setMode("delete")}>
             {t.cards.delete}
           </button>
+          {close}
         </div>
       ) : null}
       {mode === "delete" ? (
