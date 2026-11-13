@@ -143,6 +143,7 @@ export function ProseEditor({
   onCite,
 }: {
   readonly ref: Ref<ProseHandle>;
+  /** The text the editor starts with, read when it mounts; it then owns the text. */
   readonly initial: string;
   /** Keys (see referenceKey) of the References a check flags, joined by a line break. */
   readonly flagged: string;
@@ -160,6 +161,9 @@ export function ProseEditor({
   const view = useRef<EditorView | null>(null);
   // The latest callbacks, read by the editor's listeners, which are made once.
   const latest = useRef({ onChange, onLayout, onCite });
+  // What the editor is made with, read once when it mounts: a ref keeps `attach` the same
+  // function, so React never detaches the editor (and its cursor and undo) while the writer types.
+  const mount = useRef({ initial, label, placeholder, referenceLabel });
   // oxlint-disable-next-line glose/no-unreasoned-state-sync -- a ref, not state: CodeMirror's listeners, made once, call the desk's newest callbacks.
   useLayoutEffect(() => {
     latest.current = { onChange, onLayout, onCite };
@@ -176,7 +180,7 @@ export function ProseEditor({
     view.current = new EditorView({
       parent: node,
       state: EditorState.create({
-        doc: initial,
+        doc: mount.current.initial,
         extensions: [
           history(),
           keymap.of([
@@ -191,10 +195,13 @@ export function ProseEditor({
             ...historyKeymap,
           ]),
           EditorView.lineWrapping,
-          EditorView.contentAttributes.of({ "aria-label": label, "aria-multiline": "true" }),
-          placeholderText(placeholder),
+          EditorView.contentAttributes.of({
+            "aria-label": mount.current.label,
+            "aria-multiline": "true",
+          }),
+          placeholderText(mount.current.placeholder),
           flaggedField,
-          referenceMarks(referenceLabel),
+          referenceMarks(mount.current.referenceLabel),
           EditorView.inputHandler.of((editor, from, to, text) => {
             if (text !== "[" || editor.state.sliceDoc(from - 1, from) !== "[") return false;
             // `[[` opens the Note picker; the brackets are not kept.
