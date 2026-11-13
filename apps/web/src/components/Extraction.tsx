@@ -108,7 +108,7 @@ function Desk({
             counted.filter((point) => point.state === "written").length,
             counted.length,
           )}
-          probeNote={asked === 0 ? undefined : t.probe.stepNote(asked)}
+          {...(asked === 0 ? {} : { probeNote: t.probe.stepNote(asked) })}
           freeTextAction={
             <button
               type="button"
