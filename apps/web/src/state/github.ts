@@ -17,3 +17,13 @@ export const gitHubStatusAtom = GloseClient.runtime
 export const connectGitHubAtom = GloseClient.mutation(RPC_METHODS.githubConnect);
 export const cancelGitHubAtom = GloseClient.mutation(RPC_METHODS.githubCancel);
 export const disconnectGitHubAtom = GloseClient.mutation(RPC_METHODS.githubDisconnect);
+
+/**
+ * The account's private repositories, Graphs first, per signed-in login: another account lists
+ * its own. The first start's sheet reads it while it is open.
+ */
+export const gitHubRepositoriesAtom = Atom.family((login: string) =>
+  GloseClient.query(RPC_METHODS.githubRepositories, undefined, {
+    reactivityKeys: ["github-repositories", login],
+  }),
+);

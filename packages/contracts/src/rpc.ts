@@ -13,7 +13,7 @@ import {
 } from "./card.ts";
 import { CatalogRecord, CatalogSearch, CatalogUnavailable } from "./catalog.ts";
 import { ChatGptStatus, ConnectChatGpt, DisconnectResult } from "./chatgpt.ts";
-import { GitHubStatus } from "./github.ts";
+import { GitHubRepository, GitHubStatus } from "./github.ts";
 import { GraphView, NoteNameTaken, NoteNotFound } from "./graph.ts";
 import { RecordReview, ReviewQueue } from "./recall.ts";
 import { ServerInfo } from "./server.ts";
@@ -36,9 +36,11 @@ import {
   WritePoint,
 } from "./session.ts";
 import {
+  CheckRemote,
   CompleteSetup,
   GraphFolderNotSet,
   GraphFolderUnavailable,
+  GraphRemoteUnavailable,
   Language,
   SettingsView,
   StorageError,
@@ -58,6 +60,7 @@ export const RPC_METHODS = {
   settingsGet: "settings.get",
   settingsSetLanguage: "settings.setLanguage",
   setupComplete: "setup.complete",
+  setupCheckRemote: "setup.checkRemote",
   sourcesList: "sources.list",
   sourcesGet: "sources.get",
   sourcesCreate: "sources.create",
@@ -73,6 +76,7 @@ export const RPC_METHODS = {
   githubConnect: "github.connect",
   githubCancel: "github.cancel",
   githubDisconnect: "github.disconnect",
+  githubRepositories: "github.repositories",
   sessionsFind: "sessions.find",
   sessionsStart: "sessions.start",
   sessionsWatch: "sessions.watch",
@@ -120,8 +124,10 @@ export const GloseRpcGroup = RpcGroup.make(
   Rpc.make(RPC_METHODS.setupComplete, {
     payload: CompleteSetup,
     success: SettingsView,
-    error: Schema.Union([GraphFolderUnavailable, StorageError]),
+    error: Schema.Union([GraphFolderUnavailable, GraphRemoteUnavailable, StorageError]),
   }),
+  /** Checks that git on this computer can read a remote, before setup copies a Graph from it. */
+  Rpc.make(RPC_METHODS.setupCheckRemote, { payload: CheckRemote, error: GraphRemoteUnavailable }),
   Rpc.make(RPC_METHODS.sourcesList, { success: Schema.Array(Source), error: GraphErrors }),
   Rpc.make(RPC_METHODS.sourcesGet, {
     payload: SourceRef,
@@ -159,6 +165,11 @@ export const GloseRpcGroup = RpcGroup.make(
   Rpc.make(RPC_METHODS.githubCancel),
   /** Forgets this computer's GitHub sign-in. The repository and its Versions stay on GitHub. */
   Rpc.make(RPC_METHODS.githubDisconnect, { error: StorageError }),
+  /** The connected account's private repositories, Graphs first, to copy a Graph from. */
+  Rpc.make(RPC_METHODS.githubRepositories, {
+    success: Schema.Array(GitHubRepository),
+    error: RemoteRefused,
+  }),
   /** The latest Session of a kind for a Graph file, or null when there is none. */
   Rpc.make(RPC_METHODS.sessionsFind, {
     payload: FindSession,

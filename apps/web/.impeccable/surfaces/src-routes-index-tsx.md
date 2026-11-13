@@ -2,7 +2,8 @@
 version: 1
 slug: "src-routes-index-tsx"
 primary_target: "src/routes/index.tsx"
-related_targets: ["src/routes/__root.tsx"]
+related_targets:
+  ["src/routes/__root.tsx", "src/components/Setup.tsx", "src/components/RemoteGraphSheet.tsx"]
 ---
 
 # App frame, Today and Reading Stage
@@ -73,3 +74,23 @@ sight (Save Note, Send); written Points one line each; what the AI read and thou
 one quiet line each. AI text is always marked, a Point's title included. Below 1080px the margin
 moves under the points (Claude's call, delegated by Jan). Anti-goals: a chat page with a list
 beside it, cards in cards, a red rule per row.
+
+## First start from a remote (November 2026)
+
+Confirmed with Jan on the decision page ("Ledger and sheet", position 2 of 7 on Claude's list, dealt
+by the roll; seed:a4e2028568ad63a2; sketch `.impeccable/mocks/decision/sheet.html`, not in git) over
+"The Graphs found" (a two-column Graph step) and "Setup in steps" (a step-bar wizard). Asked first:
+GitHub and any git remote; pick from a list; own and shared Graphs.
+
+- THESIS: the Backup sheet run the other way. The setup page stays one calm column; the Graph step
+  keeps a short ledger of where the copy comes from, and choosing happens once, in a sheet.
+- FIRST VIEWPORT: the Graph folder panel with three choices; "Get it from GitHub" shows a Hairline,
+  "From: Not chosen yet", primary Choose on GitHub and quiet Use another git remote, then the folder
+  field. The sheet: step 2 of 2 lists repositories as Choice rows, typed name label, Graph mark and
+  Yours or Shared by at the row's right end, others folded.
+- Built with two sheet steps (connect, choose), not three: the folder stays in the panel, where the
+  other two choices already ask for it (Claude's call).
+- Unverified live: the list against real GitHub (checked against a local fake of its API) and
+  Electron.
+
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance

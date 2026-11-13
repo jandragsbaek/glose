@@ -35,15 +35,41 @@ export const GraphSettings = Schema.Struct({
 });
 export type GraphSettings = typeof GraphSettings.Type;
 
-/** `create` starts an empty Graph; `open` uses a folder that exists, such as a moved Graph. */
-export const GraphFolderAction = Schema.Literals(["create", "open"]);
+/**
+ * `create` starts an empty Graph; `open` uses a folder that exists, such as a moved Graph; `clone`
+ * copies a Graph from a git remote, such as its backup on GitHub, into a new folder.
+ */
+export const GraphFolderAction = Schema.Literals(["create", "open", "clone"]);
 export type GraphFolderAction = typeof GraphFolderAction.Type;
 
 export const CompleteSetup = Schema.Struct({
   language: Language,
   graphFolder: Schema.String,
   action: GraphFolderAction,
+  /** With `clone`: the git address to copy the Graph from. */
+  remote: Schema.optionalKey(Schema.String),
 });
+export type CompleteSetup = typeof CompleteSetup.Type;
+
+/** Checks, before setup, that git can read a remote the user typed. */
+export const CheckRemote = Schema.Struct({
+  url: Schema.Trim.pipe(Schema.check(Schema.isNonEmpty())),
+});
+export type CheckRemote = typeof CheckRemote.Type;
+
+/** Why Glose could not copy a Graph from a git remote. Nothing was kept. */
+export const GraphRemoteUnavailableReason = Schema.Literals([
+  /** No `git` program on this computer. */
+  "no-git",
+  /** Git could not reach the remote, or could not sign in to it. */
+  "unreachable",
+]);
+export type GraphRemoteUnavailableReason = typeof GraphRemoteUnavailableReason.Type;
+
+export class GraphRemoteUnavailable extends Schema.TaggedError<GraphRemoteUnavailable>()(
+  "GraphRemoteUnavailable",
+  { reason: GraphRemoteUnavailableReason },
+) {}
 
 export class GraphFolderUnavailable extends Schema.TaggedError<GraphFolderUnavailable>()(
   "GraphFolderUnavailable",

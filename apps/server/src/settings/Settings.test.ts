@@ -1,4 +1,3 @@
-import type { CompleteSetup } from "@glose/contracts";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -12,7 +11,7 @@ import * as Settings from "./Settings.ts";
 const onComputer = (dirs: { readonly dataDir: string; readonly homeDir: string }) =>
   Effect.provide(layerServices(dirs));
 
-const completeSetup = (input: typeof CompleteSetup.Type) =>
+const completeSetup = (input: Parameters<Settings.Settings["Service"]["completeSetup"]>[0]) =>
   Settings.Settings.pipe(Effect.flatMap((settings) => settings.completeSetup(input)));
 
 const readJson = (file: string) =>

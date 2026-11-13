@@ -408,8 +408,9 @@ heading like an illuminated initial.
 the setup title or the Review bar title, through `::first-letter`, so the heading text stays
 whole for screen readers. Never on data, buttons or body.
 
-**The Typed Label Rule.** Courier Prime is for call numbers, step numbers and a code the user
-types elsewhere (the GitHub sign-in code) only.
+**The Typed Label Rule.** Courier Prime is for call numbers, step numbers, repository names in the
+Repository Rows (a repository is the Graph's shelf mark on GitHub) and a code the user types
+elsewhere (the GitHub sign-in code) only.
 
 ## Layout
 
@@ -495,7 +496,7 @@ is the Reading mark (9px, 1.5px ring). The register's lapis edge is a straight 3
 Firm and plain, ink-outlined.
 
 - **Shape:** gently squared (4px), 36px minimum height, 16px side padding, 8px gap to an icon.
-- **Primary:** Lapis fill and border, white label, for the next step forward (Add Source, Continue, Start, Skip, Start Review, Show answer, Recalled, Back to Recall, Back up to GitHub, Connect GitHub).
+- **Primary:** Lapis fill and border, white label, for the next step forward (Add Source, Continue, Start, Skip, Start Review, Show answer, Recalled, Back to Recall, Back up to GitHub, Connect GitHub, Choose on GitHub, Use this repository).
 - **Hover / Focus:** primary moves to Raised Lapis with the lapis lift; secondary fills with
   Lapis Tint. 160ms on the shared ease-out. Focus is the 2px lapis outline.
 - **Secondary:** Paper with a 1px Ink border and Ink label (Open, Cancel, Save, Retry, Copy
@@ -632,6 +633,43 @@ Initial.
   under it, and Done (primary).
 - **Another git remote:** the same sheet without steps: a sentence, the Remote address field,
   Use this remote (primary) and Cancel.
+
+**Remote Graph sheet.** The Backup sheet run the other way, opened from the first start's Graph
+folder step. Titled "Get your Graph from GitHub" ("Hent din graf fra GitHub") with a rubric Initial;
+it only chooses, and the setup page copies.
+
+- **Step 1, connect:** the Backup sheet's connect step and code, in this sheet's own words (what
+  GitHub's code lets Glose read).
+- **Step 2, choose:** "Signed in to GitHub as <login>." with "Use another account", then the
+  Repository Rows under the field label "Choose the Graph" and a Meta hint, the latest pushed
+  Graph chosen and focused; Use this repository (primary, off while no row is chosen) and Cancel. Loading is the live line; a failed list is an
+  in-sheet warning notice with Try again; no repositories is the Mute empty sentence.
+- **Another git remote:** the same sheet without steps: a sentence, the Remote address field,
+  Use this remote (primary, "Checking…" while git looks) and Cancel; a remote git cannot read
+  gets the field error line.
+
+### Repository Rows
+
+The account's private repositories as radio rows in the Choice style: Strong Hairline, 4px, 10px
+12px padding, 12px gaps; checked turns Lapis with Lapis Tint, hover darkens the border to Mute.
+Each row: the radio, the repository as a typed call-number label (`jandragsbaek/glose-graph`; a long
+name wraps inside its label) over a Mute 13px "Updated 12 Nov", and at the right end its states in
+fixed places: a Lapis 600 13px "Graph" with a 14px Lucide waypoints icon (the Graph Section's icon)
+over a Mute "Yours" or "Shared by <owner>". Graphs come first; the rest fold under a Mute 600 13px
+disclosure, "Other repositories (7)", with a hint that one becomes a Graph as it is. Below 520px the
+states drop under the name.
+
+### Setup Remote Ledger
+
+In the first start's Graph folder panel, "Get it from GitHub" is the third choice. Under the choices,
+a Hairline, then the Facts ("From": "Not chosen yet" in Mute, or the place, such as
+`github.com/jandragsbaek/glose-graph`, with "Yours" or "Shared by <owner>" in Mute 13px), a Meta line
+that Glose keeps the backup there, an error line when the copy failed, and the buttons: Choose on
+GitHub (primary until a remote is chosen, then the secondary Choose another) and a quiet Use another
+git remote. The folder field follows, 14px below. While Glose copies, the start button reads
+"Copying your Graph…" with the live tick and "A large Graph can take a few minutes." beside it. A
+copy from GitHub that fails says so in its own words (check the connection, or choose again); the
+sheet hands focus back to the button that opened it.
 
 ### Typed Code
 
@@ -857,7 +895,7 @@ Skeleton bars (14px, 2px corners) shimmer Tint to Ground over 1.4s inside a pane
 - **Don't** use red alone to mean anything; color never carries a message by itself.
 - **Don't** add resting shadows or new fields of color beyond the lapis rail, spine and primary.
 - **Don't** use Cinzel Decorative beyond a single heading initial, or Courier Prime beyond call
-  numbers, step numbers and a code the user types elsewhere.
+  numbers, step numbers, repository names and a code the user types elsewhere.
 - **Don't** fix widths to English text, truncate labels, or block wrapping.
 - **Don't** build a file-tree-plus-editor arrangement in neutral grey, a busy dashboard, or
   gamification.
