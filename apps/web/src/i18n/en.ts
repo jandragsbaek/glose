@@ -718,7 +718,7 @@ export const en = {
     answerPlaceholder: "In one or two sentences",
     send: "Send",
     teachMe: "I don't know, teach me",
-    wait: "Wait for the AI's next question.",
+    askNext: "Ask for the next question",
     sendFailed: "Glose could not send your answer. Try again.",
   },
   graph: {

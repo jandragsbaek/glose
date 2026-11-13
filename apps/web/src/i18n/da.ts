@@ -687,7 +687,7 @@ export const da: Messages = {
     answerPlaceholder: "I en eller to sætninger",
     send: "Send",
     teachMe: "Jeg ved det ikke, lær mig det",
-    wait: "Vent på AI'ens næste spørgsmål.",
+    askNext: "Bed om næste spørgsmål",
     sendFailed: "Glose kunne ikke sende dit svar. Prøv igen.",
   },
   graph: {

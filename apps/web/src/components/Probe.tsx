@@ -21,6 +21,7 @@ import { advanceReadingAtom, KEYS } from "../state/graph.ts";
 import {
   answerProbeAtom,
   finishProbeAtom,
+  retrySessionAtom,
   probeSessionAtom,
   SESSION_KEYS,
   sessionAtom,
@@ -541,6 +542,7 @@ function AnswerBox({ session }: { readonly session: Session }) {
   const [failed, setFailed] = useState(false);
   const send = useAtomSet(answerProbeAtom, { mode: "promiseExit" });
   const stop = useAtomSet(stopSessionAtom);
+  const retry = useAtomSet(retrySessionAtom);
   const open = openQuestion(session.entries);
   const ready = open !== null && !session.working;
   const canSend = ready && answer.trim() !== "";
@@ -631,6 +633,15 @@ function AnswerBox({ session }: { readonly session: Session }) {
               >
                 {t.session.stop}
               </button>
+            ) : open === null ? (
+              // A stopped turn, or one that ended without a question, must not leave the Probe stuck.
+              <button
+                type="button"
+                className="button"
+                onClick={() => retry({ payload: { id: session.id } })}
+              >
+                {t.probe.askNext}
+              </button>
             ) : (
               <button
                 type="button"
@@ -643,7 +654,6 @@ function AnswerBox({ session }: { readonly session: Session }) {
             )}
           </div>
           <p className="probe__plan">
-            {open === null && !session.working ? `${t.probe.wait} ` : null}
             {t.chatgpt.usingPlan}. <ManageUsageLink />
           </p>
         </div>
