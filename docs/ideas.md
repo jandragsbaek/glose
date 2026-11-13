@@ -536,8 +536,13 @@ Taken from learnharness: the user thinks out loud, by typing or by dictation, an
 - It uses mostly the same mechanisms as [T3 Code](https://github.com/pingdotgg/t3code) (MIT), in the way the Chalk project already does: shared Effect Schema contracts, an Effect server with typed RPC, and a React client that reads server data through Effect atoms.
 - New compared to Chalk: the Electron shell. T3 Code's `apps/desktop` is the model for it.
 - The app updates itself, so a new version reaches both users without manual installs. T3 Code does this with `electron-builder` and `electron-updater`.
+- Releases are nightlies for now: a GitHub prerelease each night when `main` has new commits, or
+  on request. The tag `v<version>-nightly.<yyyymmdd>.<run>` puts every installed nightly on the
+  nightly update channel. A stable channel can come later.
+- Each nightly has a Linux AppImage, for Jan's Omarchy laptop, and a Windows installer. macOS
+  joins when the app can be signed.
 - The Markdown files stay the truth. A database, if there is one, is only an index that can be rebuilt.
-- Release platforms: macOS and Windows. One user is on macOS, and Jan uses glose on Windows.
+- Release platforms: macOS, Windows and Linux. One user is on macOS, and Jan uses glose on Windows and on an Omarchy (Arch) Linux laptop.
 - One design language on both platforms. Details that belong to the OS (window controls, menu
   bar, keyboard shortcuts) follow each OS.
 - No menu bar in the window on Windows and Linux. macOS keeps only the standard app, Edit and
