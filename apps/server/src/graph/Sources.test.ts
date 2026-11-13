@@ -3,7 +3,9 @@ import { assert, it } from "@effect/vitest";
 import type { SourceDetails } from "@glose/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Option from "effect/Option";
 import * as Path from "effect/Path";
+import * as TestClock from "effect/testing/TestClock";
 
 import * as Settings from "../settings/Settings.ts";
 import { layerServices, makeDirs } from "../testkit/graph.ts";
@@ -47,6 +49,7 @@ it.layer(NodeServices.layer)("Sources", (it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
+        yield* TestClock.setTime(new Date(2026, 10, 13, 9, 30).getTime());
         const created = yield* sources.create(ARENDT);
         const markdown = yield* fs.readFileString(path.join(folder, `${created.id}.md`));
 
@@ -64,10 +67,12 @@ it.layer(NodeServices.layer)("Sources", (it) => {
             "edition-year: 1998",
             "publisher: University of Chicago Press",
             "reading-step: free-text",
+            "added: 2026-11-13",
             "---",
             "",
           ].join("\n"),
         );
+        assert.strictEqual(created.added, new Date(2026, 10, 13).getTime());
       }),
     ),
   );
@@ -79,7 +84,7 @@ it.layer(NodeServices.layer)("Sources", (it) => {
         const path = yield* Path.Path;
         yield* fs.writeFileString(
           path.join(folder, "Kierkegaard 1843 Frygt og Bæven.md"),
-          "---\nglose: source\nauthor-family: Kierkegaard\ntitle: Frygt og Bæven\nfirst-published: 1843\nreading-step: probe\n---\n\nAbraham tier.\n",
+          "---\nglose: source\nauthor-family: Kierkegaard\ntitle: Frygt og Bæven\nfirst-published: 1843\nreading-step: probe\nadded: 2026-09-14\n---\n\nAbraham tier.\n",
         );
         yield* fs.writeFileString(
           path.join(folder, "The leap of faith.md"),
@@ -108,9 +113,32 @@ it.layer(NodeServices.layer)("Sources", (it) => {
               translator: null,
               readingStep: "probe",
               freeText: "Abraham tier.",
+              added: new Date(2026, 8, 14).getTime(),
             },
           ],
         );
+      }),
+    ),
+  );
+
+  it.effect("counts a Source without an added date from its file", () =>
+    withGraph(({ folder, sources }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const file = path.join(folder, "Arendt 1958 The Human Condition.md");
+        yield* fs.writeFileString(
+          file,
+          "---\nglose: source\nauthor-family: Arendt\ntitle: The Human Condition\nadded: someday\n---\n",
+        );
+        const info = yield* fs.stat(file);
+        const fileTimes = [info.birthtime, info.mtime].flatMap((time) =>
+          Option.toArray(time).map((date) => date.getTime()),
+        );
+
+        const source = yield* sources.get("Arendt 1958 The Human Condition");
+
+        assert.include(fileTimes, source.added);
       }),
     ),
   );

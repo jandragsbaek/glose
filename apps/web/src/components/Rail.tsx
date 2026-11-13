@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import {
   CalendarDays,
   Layers,
+  Library,
   type LucideIcon,
   NotebookPen,
   Settings2,
@@ -18,7 +19,7 @@ function RailLink({
   icon: Icon,
   label,
 }: {
-  readonly to: "/" | "/graph" | "/writing" | "/recall" | "/settings";
+  readonly to: "/" | "/sources" | "/graph" | "/writing" | "/recall" | "/settings";
   readonly icon: LucideIcon;
   readonly label: string;
 }) {
@@ -60,7 +61,7 @@ export function LanguageSwitch({
   );
 }
 
-/** The Sections, as large icons with their names under them. */
+/** Today and Sources, then the Sections, as large icons with their names under them. */
 export function Rail({ language }: { readonly language: Language }) {
   const t = useT();
   const setLanguage = useAtomSet(setLanguageAtom);
@@ -70,6 +71,7 @@ export function Rail({ language }: { readonly language: Language }) {
         {t.app.mark}
       </span>
       <RailLink to="/" icon={CalendarDays} label={t.nav.today} />
+      <RailLink to="/sources" icon={Library} label={t.nav.sources} />
       <span className="rail__rule" aria-hidden="true" />
       <RailLink to="/graph" icon={Waypoints} label={t.nav.graph} />
       <RailLink to="/writing" icon={NotebookPen} label={t.nav.writingProjects} />

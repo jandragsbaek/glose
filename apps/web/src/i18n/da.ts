@@ -1,7 +1,13 @@
-import { ANSWER_WORDS, QUESTION_WORDS, type UpdatesProblem } from "@glose/contracts";
+import {
+  ANSWER_WORDS,
+  QUESTION_WORDS,
+  type ReadingStep,
+  type UpdatesProblem,
+} from "@glose/contracts";
 
 import { nightlyOf } from "../domain/appVersion.ts";
 import { formatInterval } from "../domain/interval.ts";
+import type { MissingDetail } from "../domain/source.ts";
 import type { Messages } from "./en.ts";
 
 const numbers = new Intl.NumberFormat("da");
@@ -11,6 +17,9 @@ const count = (n: number, one: string, other: string) =>
 const list = new Intl.ListFormat("da", { type: "conjunction" });
 const clockTime = new Intl.DateTimeFormat("da-DK", { timeStyle: "short" });
 const shortDate = new Intl.DateTimeFormat("da-DK", { day: "numeric", month: "short" });
+const monthYear = new Intl.DateTimeFormat("da-DK", { month: "long", year: "numeric" });
+/** Danish month names are lower case; a label that starts with one takes a capital. */
+const capitalised = (text: string) => text.charAt(0).toLocaleUpperCase("da") + text.slice(1);
 const longDate = new Intl.DateTimeFormat("da-DK", {
   weekday: "long",
   day: "numeric",
@@ -26,6 +35,7 @@ export const da: Messages = {
   nav: {
     label: "Afsnit",
     today: "I dag",
+    sources: "Kilder",
     graph: "Graf",
     writingProjects: "Skrive\u00ADprojekter",
     recall: "Genkaldelse",
@@ -166,6 +176,87 @@ export const da: Messages = {
       file: "Fil",
     },
     fileName: (id: string) => `${id}.md`,
+  },
+  sources: {
+    title: "Kilder",
+    counts: (all: number, inProgress: number) =>
+      inProgress === 0
+        ? count(all, "kilde", "kilder")
+        : `${count(all, "kilde", "kilder")} · ${numbers.format(inProgress)} i gang`,
+    desk: "På skrivebordet",
+    deskCount: (n: number) => `${numbers.format(n)} i gang`,
+    deskEmpty:
+      "Intet på skrivebordet: alle kilder er læst. Tilføj den næste, når du begynder på den.",
+    state: (step: Exclude<ReadingStep, "done">, words: number, notes: number) =>
+      ({
+        "free-text": `Fri tekst · ${count(words, "ord", "ord")}`,
+        extraction: `Udtræk · ${count(notes, "note", "noter")} skrevet`,
+        probe: `Sondering · ${count(notes, "note", "noter")}`,
+      })[step],
+    register: "Registret",
+    find: "Find en kilde",
+    findPlaceholder: "Titel, forfatter, signatur",
+    order: "Rækkefølge",
+    orders: {
+      added: "Tilføjet",
+      call: "Opstillingssignatur",
+      author: "Forfatter",
+    },
+    reading: "Læsning",
+    readingFilters: {
+      all: "Alle læsetrin",
+      "in-progress": "I gang",
+      done: "Læst",
+    },
+    citation: "Kildehenvisning",
+    citationFilters: {
+      all: "Alle kildedata",
+      ready: "Klar til kildehenvisning",
+      missing: "Mangler data",
+    },
+    hint: "Vælg et antal under links for at fremhæve kilderne.",
+    hintSelected: (title: string, n: number) =>
+      n === 0
+        ? `${title} deler ingen links med andre kilder.`
+        : `${count(n, "kilde deler", "kilder deler")} links med ${title}.`,
+    clearSelection: "Ryd",
+    columns: {
+      call: "Opstillingssignatur",
+      title: "Titel",
+      reading: "Læsning",
+      notes: "Noter",
+      located: "Med placering",
+      links: "Links til andre kilder",
+      citation: "Kildehenvisning",
+    },
+    monthGroup: (year: number, month: number, n: number) =>
+      `${capitalised(monthYear.format(new Date(year, month)))} · ${numbers.format(n)} tilføjet`,
+    letterGroup: (letter: string, n: number) => `${letter} · ${count(n, "kilde", "kilder")}`,
+    steps: {
+      "free-text": "I fri tekst",
+      extraction: "I udtræk",
+      probe: "I sondering",
+      done: "Læst",
+    },
+    located: (located: number, notes: number) =>
+      `${numbers.format(located)} af ${numbers.format(notes)}`,
+    noNotes: "Ingen noter",
+    linkedSources: (n: number) => count(n, "kilde", "kilder"),
+    standsAlone: "Står alene",
+    shared: (n: number) => `${numbers.format(n)} fælles`,
+    sharedWith: (n: number, title: string) => `${count(n, "link", "links")} fælles med ${title}`,
+    showLinks: (title: string) => `forbundet med ${title}`,
+    ready: "Klar",
+    missing: (missing: ReadonlyArray<MissingDetail>) =>
+      missing.length > 1
+        ? "Intet år eller forlag"
+        : missing[0] === "firstPublished"
+          ? "Intet år"
+          : "Intet forlag",
+    matching: (shown: number, total: number) =>
+      `${numbers.format(shown)} af ${count(total, "kilde", "kilder")}`,
+    nothingFound: "Ingen kilde passer.",
+    clearFilters: "Ryd søgning og filtre",
   },
   addSource: {
     title: "Tilføj kilde",

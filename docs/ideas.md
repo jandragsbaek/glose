@@ -29,7 +29,7 @@ Working notes from early conversations. Nothing here is final.
   AI-tekst (AI text), Kildehenvisning (Citation), Kortudtræk (Card Extraction), Foreslået kort
   (Proposed Card), Tjek (Check), Vurdering (Grade), Gennemgang (Review), Glemt / Husket
   (Forgot / Recalled), Med besvær, Normalt, Med det samme (With effort, Normal, At once), and
-  Punkt, Kernepunkter (Point, Core points).
+  Punkt, Kernepunkter (Point, Core points), and Placering (Location).
 
 ## First start
 
@@ -71,6 +71,27 @@ The core loop depends on the stage the user is in. Stages known so far:
 - Most sources are books. YouTube videos and other kinds of sources also count.
 - A writing project can read from the graph and use notes as references. The link is one-way: the graph does not contain the writing project.
 - Because every note has a source, a reference from a writing project can be followed back to the original source.
+
+Decided, the Sources page (November 2026):
+
+- The rail has a Sources item under Today and above the rule: a place like Today, not a fourth
+  Section. `/sources` lists every Source; a Source's own pages (`/sources/new`,
+  `/sources/<Source>`) keep it current in the rail.
+- Jan chose "The Accession Register" with impeccable over a faceted catalogue and a shelf with a
+  record beside it. "On the desk" shows the Sources in progress, with Continue. "The register"
+  lists all Sources in one table: call number, title and author, the Reading steps as marks,
+  Notes, Notes with a Location, Links to other Sources, and whether a Citation has its data. It
+  searches title, author, call number, publisher and translator; it sorts by when a Source was
+  added (grouped by month, newest first), by call number or by author (grouped by first letter,
+  in the interface language's alphabet); it filters by Reading step and by Citation data.
+- Two Sources share Links when a Link runs between a Note of one (or its Source file) and a Note
+  of the other, either way. Choosing a Source's count of linked Sources marks every row it shares
+  Links with and says how many Links; the chosen Source is in the address (`/sources?source=…`).
+- A Source file holds `added` (a date, `2026-11-13`), written when Glose creates the Source. A
+  Source without it counts from the file's creation time, else its last change; Glose writes that
+  date into the file the next time it saves the Source.
+- Not yet: a Kind (book, video, article) column and filter, which wait for video Sources to be
+  designed.
 
 ## Writing projects
 

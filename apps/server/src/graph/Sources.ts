@@ -6,6 +6,7 @@ import {
   SourceNotFound,
   StorageError,
 } from "@glose/contracts";
+import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -57,11 +58,15 @@ export const make = Effect.gen(function* () {
     const file = fileOf(folder, id);
     const markdown = yield* fs.readFileString(file);
     const info = yield* fs.stat(file);
+    const modified = Option.getOrElse(info.mtime, () => new Date(0)).getTime();
+    // Some file systems report no creation time, or the start of 1970 for it.
+    const created = Option.getOrNull(info.birthtime)?.getTime() ?? 0;
     return parseSourceFile(markdown).pipe(
       Option.map((content): Source => ({
         id,
         ...content,
-        modified: Option.getOrElse(info.mtime, () => new Date(0)).getTime(),
+        modified,
+        added: content.added ?? (created > 0 ? created : modified),
       })),
     );
   });
@@ -129,6 +134,7 @@ export const make = Effect.gen(function* () {
         ...details,
         readingStep: "free-text",
         freeText: "",
+        added: yield* Clock.currentTimeMillis,
       }).pipe(Effect.mapError(storageError));
     }),
 

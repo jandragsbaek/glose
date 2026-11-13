@@ -6,6 +6,7 @@ title: Atomic Habits
 first-published: 2018
 publisher: Avery
 reading-step: done
+added: 2026-10-27
 ---
 
 I expected a self-help book with a lot of padding, and parts of it are exactly that. But the core idea stuck with me more than I wanted it to: small changes do not look like anything for a long time, and then they do. [[Habits are the compound interest of self-improvement]] is the note I keep coming back to, together with [[The plateau of latent potential hides early progress]].

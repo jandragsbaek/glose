@@ -23,6 +23,8 @@ const SourceFrontmatter = Schema.Struct({
   publisher: MaybeText,
   translator: MaybeText,
   "reading-step": Schema.optionalKey(ReadingStep),
+  /** Read leniently: a date Glose cannot read is left out, and the file stays a Source. */
+  added: Schema.optionalKey(Schema.Unknown),
 });
 const decodeFrontmatter = Schema.decodeUnknownOption(SourceFrontmatter);
 const decodeDetails = Schema.decodeUnknownOption(SourceDetails);
@@ -32,7 +34,29 @@ const text = (value: string | number | null | undefined) =>
     ? null
     : String(value).trim();
 
-export type SourceFileContent = Omit<Source, "id" | "modified">;
+const LOCAL_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** `added: 2026-11-13` is a day on this computer's calendar; a full time is read as written. */
+const addedTime = (value: unknown): number | null => {
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value.getTime();
+  if (typeof value !== "string") return null;
+  const date = LOCAL_DATE.exec(value.trim());
+  if (date) return new Date(Number(date[1]), Number(date[2]) - 1, Number(date[3])).getTime();
+  const time = Date.parse(value);
+  return Number.isNaN(time) ? null : time;
+};
+
+const twoDigits = (value: number) => String(value).padStart(2, "0");
+
+const localDate = (time: number): string => {
+  const date = new Date(time);
+  return `${date.getFullYear()}-${twoDigits(date.getMonth() + 1)}-${twoDigits(date.getDate())}`;
+};
+
+/** What the file holds; `added` is null when its frontmatter gives no date Glose can read. */
+export type SourceFileContent = Omit<Source, "id" | "modified" | "added"> & {
+  readonly added: number | null;
+};
 
 /** A user may break the YAML in another editor; that file then reads as not a Source. */
 export const parseYaml = (yaml: string): unknown => {
@@ -63,6 +87,7 @@ export const parseSourceFile = (markdown: string): Option.Option<SourceFileConte
         Option.map((details) => ({
           ...details,
           readingStep: data["reading-step"] ?? "free-text",
+          added: addedTime(data.added),
           freeText: (match[2] ?? "").replace(/^\r?\n/, "").trimEnd(),
         })),
       ),
@@ -85,6 +110,7 @@ export const renderSourceFile = (source: SourceFileContent): string => {
       publisher: details.publisher,
       translator: details.translator,
       "reading-step": source.readingStep,
+      added: source.added === null ? null : localDate(source.added),
     }).filter(([, value]) => value !== null),
   );
   const body = source.freeText.trimEnd();

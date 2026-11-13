@@ -2612,6 +2612,403 @@ a.written__title:hover {
   }
 }
 
+/*
+ * Sources: the Sources in progress stand on the desk; every Source has a row in the register.
+ * State is a mark in a fixed cell, and rank comes from weight, never from bigger type.
+ */
+
+.desk {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+  gap: 24px;
+}
+
+.desk__item {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.desk__title {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.desk__title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.desk__title a:hover {
+  text-decoration: underline;
+}
+
+.desk__author {
+  margin-top: 2px;
+  color: var(--mute);
+  font-size: 14px;
+}
+
+.desk__state {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.desk__missing {
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+.desk__missing .notice__icon {
+  width: 16px;
+  height: 16px;
+}
+
+.desk__action {
+  margin-top: 14px;
+}
+
+/* A long Danish step name wraps inside a narrow desk instead of leaving the panel. */
+.desk__action .button {
+  white-space: normal;
+  text-align: center;
+}
+
+/* Three Reading steps: filled when done, hollow when not yet, a gilt underline at the current one. */
+.marks {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 5px;
+  vertical-align: middle;
+}
+
+.marks__dot {
+  position: relative;
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--paper);
+}
+
+.marks__dot[data-state="done"] {
+  border-color: var(--verdigris);
+  background: var(--verdigris);
+}
+
+.marks__dot[data-state="current"] {
+  border-color: var(--lapis);
+}
+
+.marks__dot[data-state="current"]::after {
+  content: "";
+  position: absolute;
+  left: -1.5px;
+  right: -1.5px;
+  bottom: -5.5px;
+  height: 2px;
+  background: var(--gold);
+}
+
+.register-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 8px;
+  padding: 16px 20px 14px;
+}
+
+.register-tools__find {
+  position: relative;
+  flex: 1 1 200px;
+  max-width: 420px;
+}
+
+.register-tools__find .input {
+  padding-left: 36px;
+}
+
+.register-tools__icon {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  width: 16px;
+  height: 16px;
+  color: var(--mute);
+  stroke-width: 1.8;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.register-tools__filters {
+  display: flex;
+  flex: none;
+  gap: 8px;
+}
+
+/* A select in the same set as the segmented control beside it, with a drawn chevron. */
+.select {
+  position: relative;
+  display: inline-flex;
+}
+
+.select .input {
+  width: auto;
+  padding-top: 9px;
+  padding-right: 34px;
+  padding-bottom: 9px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  appearance: none;
+  cursor: pointer;
+}
+
+.select__icon {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  width: 16px;
+  height: 16px;
+  color: var(--mute);
+  stroke-width: 1.8;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.register-tools__hint {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  max-width: 56ch;
+  margin-left: auto;
+  color: var(--mute);
+  font-size: 13px;
+  text-wrap: balance;
+}
+
+/* The same lapis edge the rows it names wear. */
+.register-tools__edge {
+  flex: none;
+  width: 3px;
+  height: 16px;
+  background: var(--lapis);
+}
+
+.segmented {
+  display: inline-flex;
+  flex: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.segmented label {
+  position: relative;
+  display: flex;
+}
+
+.segmented label + label {
+  border-left: 1px solid var(--line-strong);
+}
+
+.segmented input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.segmented span {
+  padding: 9px 12px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  transition:
+    background-color 160ms var(--ease-out),
+    color 160ms var(--ease-out);
+}
+
+.segmented label:hover span,
+.segmented label:has(input:checked) span {
+  background: var(--tint);
+}
+
+.segmented label:has(input:checked) span {
+  color: var(--lapis);
+}
+
+.segmented label:has(input:focus-visible) {
+  outline: 2px solid var(--lapis);
+  outline-offset: -2px;
+}
+
+/* A narrow window has room for neither group on one line. */
+@media (max-width: 720px) {
+  .segmented,
+  .register-tools__filters {
+    flex: 0 1 auto;
+    flex-wrap: wrap;
+  }
+}
+
+.register-scroll {
+  overflow-x: auto;
+  border-top: 1px solid var(--line);
+}
+
+.register {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.register :is(th, td) {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.register :is(th, td):first-child {
+  padding-left: 20px;
+}
+
+.register :is(th, td):last-child {
+  padding-right: 20px;
+}
+
+.register thead th {
+  padding-top: 10px;
+  padding-bottom: 8px;
+  color: var(--mute);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: normal;
+}
+
+.register .register__num {
+  text-align: right;
+}
+
+.register tbody:last-child tr:last-child > * {
+  border-bottom: 0;
+}
+
+.register .register__group th {
+  padding-top: 6px;
+  padding-bottom: 6px;
+  background: var(--ground);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.register .register__title {
+  min-width: 18em;
+  font-weight: 400;
+  white-space: normal;
+}
+
+.register__title a {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.register__title a:hover {
+  text-decoration: underline;
+}
+
+.register__author {
+  color: var(--mute);
+}
+
+.register__row > * {
+  transition:
+    background-color 160ms var(--ease-out),
+    box-shadow 160ms var(--ease-out);
+}
+
+.register__row[data-selected] > * {
+  background: var(--tint);
+}
+
+/* A row that shares Links with the chosen Source wears a lapis edge, like a ribbon marker. */
+.register__row[data-linked] > :first-child {
+  box-shadow: inset 3px 0 0 var(--lapis);
+}
+
+.register__links {
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: var(--lapis);
+  font: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.register__links:hover {
+  text-decoration-thickness: 2px;
+}
+
+.register__links[aria-pressed="true"],
+.register__row[data-linked] .register__links {
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.register__links[aria-pressed="true"]:hover,
+.register__row[data-linked] .register__links:hover {
+  text-decoration: underline;
+}
+
+.register__none {
+  color: var(--mute);
+}
+
+.register__ready,
+.register__missing {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.register__ready {
+  color: var(--verdigris);
+}
+
+.register__missing {
+  color: var(--rubric);
+  font-weight: 600;
+}
+
+.register__cite-icon {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  stroke-width: 2;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

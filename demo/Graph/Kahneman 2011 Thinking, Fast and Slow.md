@@ -6,6 +6,7 @@ title: Thinking, Fast and Slow
 first-published: 2011
 publisher: Farrar, Straus and Giroux
 reading-step: done
+added: 2026-10-03
 ---
 
 I expected a book about other people's mistakes and got a long, patient tour of my own. The frame is simple: a quick, automatic mind that jumps to answers and a slow, effortful one that should check them but mostly does not ([[System 1 is fast and System 2 is slow]]). After that, every chapter felt like catching myself in the act. I anchor on whatever number I saw last, I trust what comes to mind easily, and I build confident stories from the little I happen to know ([[What you see is all there is]]).

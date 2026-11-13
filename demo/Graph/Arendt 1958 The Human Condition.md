@@ -8,6 +8,7 @@ edition: 2nd
 edition-year: 1998
 publisher: University of Chicago Press
 reading-step: done
+added: 2026-08-30
 ---
 
 I came to this book expecting political theory and found something closer to a map of my own days. Arendt splits the active life into labor, work and action, and once I had the words I kept sorting my calendar by them. Most of what fills a week is labor in her sense: it keeps things going and then disappears. [[Labor, work and action are the three activities of the vita activa]] became the hub of my notes.

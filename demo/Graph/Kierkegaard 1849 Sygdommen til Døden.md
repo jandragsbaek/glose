@@ -5,6 +5,7 @@ author-given: Søren
 title: Sygdommen til Døden
 first-published: 1849
 reading-step: done
+added: 2026-08-21
 ---
 
 Den her bog har jeg prøvet at læse to gange før og givet op begge gange. Første side er berømt for at være næsten umulig, og det er den også. Men denne gang tog jeg den langsomt og skrev noter undervejs, og så åbnede den sig. [[Selvet er et forhold, der forholder sig til sig selv]] lyder som et ordspil, men det er faktisk en ret præcis beskrivelse af noget, jeg kender: at man ikke bare er, men hele tiden skal tage stilling til den, man er.

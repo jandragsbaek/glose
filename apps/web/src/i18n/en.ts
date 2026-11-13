@@ -21,6 +21,7 @@ import { ANSWER_WORDS, QUESTION_WORDS } from "@glose/contracts";
 
 import { nightlyOf } from "../domain/appVersion.ts";
 import { formatInterval } from "../domain/interval.ts";
+import type { MissingDetail } from "../domain/source.ts";
 
 const numbers = new Intl.NumberFormat("en");
 const plurals = new Intl.PluralRules("en");
@@ -29,6 +30,7 @@ const count = (n: number, one: string, other: string) =>
 const list = new Intl.ListFormat("en", { type: "conjunction" });
 const clockTime = new Intl.DateTimeFormat("en-GB", { timeStyle: "short" });
 const shortDate = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" });
+const monthYear = new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric" });
 const longDate = new Intl.DateTimeFormat("en-GB", {
   weekday: "long",
   day: "numeric",
@@ -44,6 +46,7 @@ export const en = {
   nav: {
     label: "Sections",
     today: "Today",
+    sources: "Sources",
     graph: "Graph",
     writingProjects: "Writing projects",
     recall: "Recall",
@@ -185,6 +188,86 @@ export const en = {
       file: "File",
     },
     fileName: (id: string) => `${id}.md`,
+  },
+  sources: {
+    title: "Sources",
+    counts: (all: number, inProgress: number) =>
+      inProgress === 0
+        ? count(all, "Source", "Sources")
+        : `${count(all, "Source", "Sources")} · ${numbers.format(inProgress)} in progress`,
+    desk: "On the desk",
+    deskCount: (n: number) => `${numbers.format(n)} in progress`,
+    deskEmpty: "Nothing on the desk: every Source is read. Add the next one when you start it.",
+    state: (step: Exclude<ReadingStep, "done">, words: number, notes: number) =>
+      ({
+        "free-text": `Free text · ${count(words, "word", "words")}`,
+        extraction: `Extraction · ${count(notes, "Note", "Notes")} written`,
+        probe: `Probe · ${count(notes, "Note", "Notes")}`,
+      })[step],
+    register: "The register",
+    find: "Find a Source",
+    findPlaceholder: "Title, author or call number",
+    order: "Order",
+    orders: {
+      added: "Added",
+      call: "Call number",
+      author: "Author",
+    },
+    reading: "Reading",
+    readingFilters: {
+      all: "Any Reading step",
+      "in-progress": "In progress",
+      done: "Read",
+    },
+    citation: "Citation",
+    citationFilters: {
+      all: "Any Citation data",
+      ready: "Ready to cite",
+      missing: "Missing data",
+    },
+    hint: "Choose a count under Links to light up those Sources.",
+    hintSelected: (title: string, n: number) =>
+      n === 0
+        ? `${title} shares no Links with other Sources.`
+        : `${count(n, "Source shares", "Sources share")} Links with ${title}.`,
+    clearSelection: "Clear",
+    columns: {
+      call: "Call number",
+      title: "Title",
+      reading: "Reading",
+      notes: "Notes",
+      located: "With a Location",
+      links: "Links to other Sources",
+      citation: "Citation",
+    },
+    monthGroup: (year: number, month: number, n: number) =>
+      `${monthYear.format(new Date(year, month))} · ${numbers.format(n)} added`,
+    letterGroup: (letter: string, n: number) => `${letter} · ${count(n, "Source", "Sources")}`,
+    steps: {
+      "free-text": "In Free text",
+      extraction: "In Extraction",
+      probe: "In Probe",
+      done: "Read",
+    } satisfies Record<ReadingStep, string>,
+    located: (located: number, notes: number) =>
+      `${numbers.format(located)} of ${numbers.format(notes)}`,
+    noNotes: "No Notes",
+    linkedSources: (n: number) => count(n, "Source", "Sources"),
+    standsAlone: "Stands alone",
+    shared: (n: number) => `${numbers.format(n)} shared`,
+    sharedWith: (n: number, title: string) => `${count(n, "Link", "Links")} shared with ${title}`,
+    showLinks: (title: string) => `linked to ${title}`,
+    ready: "Ready",
+    missing: (missing: ReadonlyArray<MissingDetail>): string =>
+      missing.length > 1
+        ? "No year or publisher"
+        : missing[0] === "firstPublished"
+          ? "No year"
+          : "No publisher",
+    matching: (shown: number, total: number) =>
+      `${numbers.format(shown)} of ${count(total, "Source", "Sources")}`,
+    nothingFound: "No Source matches.",
+    clearFilters: "Clear search and filters",
   },
   addSource: {
     title: "Add Source",

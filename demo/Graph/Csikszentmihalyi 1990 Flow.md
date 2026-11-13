@@ -6,6 +6,7 @@ title: Flow
 first-published: 1990
 publisher: Harper & Row
 reading-step: done
+added: 2026-09-06
 ---
 
 I picked this up because everyone uses the word flow and I wanted to know what the man who named it actually claimed. It is less a productivity book than I thought, and more a book about how to live. The central picture is easy to remember: you are in flow when the task asks just about as much as you can give ([[Flow happens when challenge meets skill]]). Too much and you get anxious, too little and you get bored.
