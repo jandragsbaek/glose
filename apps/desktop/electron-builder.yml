@@ -18,6 +18,9 @@ extraResources:
       - bin.mjs
   - from: ../web/dist
     to: web/dist
+# No spaces: GitHub renames them in release assets, and the update files would then name a
+# file that is not there.
+artifactName: ${productName}-${version}-${arch}.${ext}
 mac:
   # The zip is what the updater downloads; the dmg is the first install.
   target:
@@ -25,12 +28,16 @@ mac:
     - zip
 win:
   target:
-    - nsis
+    - target: nsis
+      arch: x64
 linux:
+  category: Education
   target:
-    - AppImage
-# The app reads its updates from the releases of this repository.
+    - target: AppImage
+      arch: x64
+# The app reads its updates from the releases of this repository. A nightly build sets
+# channel to nightly (see .github/workflows/release.yml), so it writes nightly*.yml.
 publish:
-  - provider: github
-    owner: jandragsbaek
-    repo: glose
+  provider: github
+  owner: jandragsbaek
+  repo: glose

@@ -91,8 +91,21 @@ apps/desktop                        Electron main process
 - **Self-contained bundles.** `vp pack` puts every dependency into `main.cjs` and `bin.mjs`, so
   the installer carries no `node_modules`.
 - **Updates.** An installed app checks the GitHub releases at start and every four hours,
-  downloads a new version in the background, and installs it on quit. Publishing releases
-  (and signing them for macOS) is not set up yet.
+  downloads a new version in the background, and installs it on quit. Releases are nightlies
+  (below); signing for macOS is not set up yet.
+
+## Releases
+
+`.github/workflows/release.yml` publishes a nightly every night at 02:17 UTC when `main` has new
+commits, and on request (`gh workflow run release.yml`, or Actions > Release > Run workflow).
+A nightly is a GitHub prerelease tagged `v<version>-nightly.<yyyymmdd>.<run>`, for example
+`v0.1.0-nightly.20261113.42`, where `<version>` is `apps/desktop/package.json`'s. It holds the
+Linux AppImage, the Windows installer and their `nightly*.yml` update files. An installed nightly
+updates to the newest release whose tag says `nightly`. macOS waits for signing.
+
+On Linux, keep the AppImage under a name without a version, such as
+`~/Applications/Glose.AppImage`: an update then replaces that file, and a launcher that points
+to it keeps working. The AppImage needs FUSE 2 (`libfuse.so.2`, the `fuse2` package on Arch).
 
 The lint setup and the rules in `oxlint-plugin-glose/` are adapted from T3 Code under its MIT
 license (`oxlint-plugin-glose/LICENSE`).

@@ -1,0 +1,145 @@
+name: Release
+
+# A nightly is a GitHub prerelease tagged v<version>-nightly.<yyyymmdd>.<run>, for example
+# v0.1.0-nightly.20261113.42. <version> is apps/desktop/package.json's. An installed nightly
+# finds the newest release whose tag has the same "nightly" prerelease word, and reads the
+# nightly*.yml in it. See "Releases" in README.md.
+on:
+  schedule:
+    # 02:17 UTC. Not minute zero, when GitHub's scheduled jobs are busiest.
+    - cron: "17 2 * * *"
+  # A nightly on request: Actions > Release > Run workflow, or `gh workflow run release.yml`.
+  workflow_dispatch:
+  # A change to the release itself builds the installers, but publishes nothing.
+  pull_request:
+    paths:
+      - .github/workflows/release.yml
+      - apps/desktop/electron-builder.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.event_name == 'pull_request' && github.ref || 'nightly' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  version:
+    name: Version
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      previous_tag: ${{ steps.version.outputs.previous_tag }}
+      publish: ${{ steps.version.outputs.publish }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - id: version
+        run: |
+          base="$(node -p "require('./apps/desktop/package.json').version")"
+          version="${base}-nightly.$(date -u +%Y%m%d).${GITHUB_RUN_NUMBER}"
+          previous_tag="$(git tag --list 'v*-nightly.*' --sort=-v:refname | head -n 1)"
+
+          publish=true
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" || "$GITHUB_REF" != "refs/heads/main" ]]; then
+            publish=false
+          elif [[ "$GITHUB_EVENT_NAME" == "schedule" && -n "$previous_tag" &&
+            "$(git rev-parse "$previous_tag^{commit}")" == "$GITHUB_SHA" ]]; then
+            # Nothing new on main since the last nightly. A run on request builds anyway.
+            echo "::notice::$previous_tag already has $GITHUB_SHA. No nightly tonight."
+            publish=false
+          fi
+
+          {
+            echo "version=$version"
+            echo "tag=v$version"
+            echo "previous_tag=$previous_tag"
+            echo "publish=$publish"
+          } >> "$GITHUB_OUTPUT"
+          echo "Version $version, previous nightly ${previous_tag:-none}, publish $publish."
+
+  build:
+    name: Build (${{ matrix.name }})
+    needs: version
+    # A scheduled run with nothing new builds nothing.
+    if: needs.version.outputs.publish == 'true' || github.event_name != 'schedule'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux
+            runner: ubuntu-latest
+            platform: --linux
+          - name: Windows
+            runner: windows-latest
+            platform: --win
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - uses: pnpm/action-setup@v4
+        with:
+          cache: true
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:desktop
+      # The version goes into the packaged package.json, so app.getVersion() returns it. The
+      # nightly channel names the update files nightly*.yml, which the nightly updater reads.
+      - name: Package
+        working-directory: apps/desktop
+        run: >
+          pnpm exec electron-builder --config electron-builder.yml ${{ matrix.platform }}
+          --publish never
+          -c.extraMetadata.version=${{ needs.version.outputs.version }}
+          -c.publish.channel=nightly
+      - uses: actions/upload-artifact@v7
+        with:
+          name: glose-${{ matrix.name }}
+          if-no-files-found: error
+          path: |
+            apps/desktop/release/*.AppImage
+            apps/desktop/release/*.exe
+            apps/desktop/release/*.blockmap
+            apps/desktop/release/nightly*.yml
+
+  release:
+    name: Release
+    needs: [version, build]
+    if: needs.version.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: assets
+          merge-multiple: true
+      # A draft first: an installed app sees the release only once it is published, and by then
+      # every installer and update file is attached.
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ needs.version.outputs.tag }}
+          VERSION: ${{ needs.version.outputs.version }}
+          PREVIOUS_TAG: ${{ needs.version.outputs.previous_tag }}
+        run: |
+          ls -l assets
+          notes_from=()
+          if [[ -n "$PREVIOUS_TAG" ]]; then notes_from=(--notes-start-tag "$PREVIOUS_TAG"); fi
+          gh release create "$TAG" assets/* \
+            --target "$GITHUB_SHA" \
+            --title "Glose Nightly $VERSION" \
+            --generate-notes "${notes_from[@]}" \
+            --prerelease \
+            --draft
+          gh release edit "$TAG" --draft=false
