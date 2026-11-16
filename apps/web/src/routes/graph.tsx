@@ -307,7 +307,7 @@ function GraphStage({
   const opened = useRef(false);
   const notes = view.nodes.length;
 
-  // oxlint-disable-next-line glose/no-unreasoned-state-sync -- the canvas is an imperative renderer that owns DOM listeners and an animation loop; it lives exactly as long as this element.
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- the canvas is an imperative renderer that owns DOM listeners and an animation loop; it lives exactly as long as this element.
   useEffect(() => {
     if (element.current === null) return;
     const instance = new GraphCanvas(element.current);
@@ -318,7 +318,7 @@ function GraphStage({
     };
   }, [onCanvas]);
 
-  // oxlint-disable-next-line glose/no-unreasoned-state-sync -- pushes React's data into the imperative canvas; it keeps node positions across updates.
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- pushes React's data into the imperative canvas; it keeps node positions across updates.
   useEffect(() => {
     if (canvas === null) return;
     canvas.setEvents(events);

@@ -22,7 +22,7 @@ export function I18nProvider({
   readonly language: Language;
   readonly children: ReactNode;
 }) {
-  // oxlint-disable-next-line glose/no-unreasoned-state-sync -- keeps <html lang> in step with the interface language; screen readers and hyphenation read it there.
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- keeps <html lang> in step with the interface language; screen readers and hyphenation read it there.
   useEffect(() => {
     document.documentElement.lang = language;
   }, [language]);

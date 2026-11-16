@@ -157,7 +157,7 @@ export function useJudgeShown(cards: ReadonlyArray<ScoredCard>) {
       .map((card) => [card.file, card.question, card.answer])
       .slice(0, JUDGE_AT_ONCE),
   );
-  // oxlint-disable-next-line glose/no-unreasoned-state-sync -- starts work on the server (the AI Checks) for what is on screen; no React state depends on it.
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- starts work on the server (the AI Checks) for what is on screen; no React state depends on it.
   useEffect(() => {
     const fresh = (JSON.parse(waiting) as Array<[string, string, string]>)
       .map((wording) => ({ file: wording[0], key: JSON.stringify(wording) }))

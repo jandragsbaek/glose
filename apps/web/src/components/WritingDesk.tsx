@@ -209,17 +209,17 @@ export function WritingDesk({
 
   const pending = JSON.stringify(fields) !== savedSnapshot;
   const latest = useRef({ fields, save });
-  // oxlint-disable-next-line glose/no-unreasoned-state-sync -- a ref, not state: the save timer and the closing desk use the newest text and save.
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- a ref, not state: the save timer and the closing desk use the newest text and save.
   useLayoutEffect(() => {
     latest.current = { fields, save };
   });
-  // oxlint-disable-next-line glose/no-unreasoned-state-sync -- a timer, not state: the text is written to its file when the writer pauses.
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- a timer, not state: the text is written to its file when the writer pauses.
   useEffect(() => {
     if (!pending) return;
     const timer = window.setTimeout(() => void latest.current.save(fields), SAVE_AFTER_MS);
     return () => window.clearTimeout(timer);
   }, [fields, pending]);
-  // oxlint-disable-next-line glose/no-unreasoned-state-sync -- a save, not state: what the writer typed in the last moment is kept when the desk closes.
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- a save, not state: what the writer typed in the last moment is kept when the desk closes.
   useEffect(() => () => void latest.current.save(latest.current.fields), []);
 
   /** Lines each margin note up with its place in the prose, and keeps notes from overlapping. */
@@ -250,12 +250,12 @@ export function WritingDesk({
     }
   };
   const latestPlace = useRef(placeMargins);
-  // oxlint-disable-next-line glose/no-unreasoned-state-sync -- layout, not state: the margins are placed beside the lines they gloss after every render.
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- layout, not state: the margins are placed beside the lines they gloss after every render.
   useLayoutEffect(() => {
     latestPlace.current = placeMargins;
     placeMargins();
   });
-  // oxlint-disable-next-line glose/no-unreasoned-state-sync -- a resize listener, not state: the lines move when the window changes width.
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- a resize listener, not state: the lines move when the window changes width.
   useEffect(() => {
     const place = () => latestPlace.current();
     window.addEventListener("resize", place);
@@ -755,7 +755,7 @@ function PieceSettings({
   };
   const source = sample.source;
   const slip = useRef<HTMLDetailsElement | null>(null);
-  // oxlint-disable-next-line glose/no-unreasoned-state-sync -- listeners, not state: the open slip closes on a click outside it or on Esc, as a menu does.
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- listeners, not state: the open slip closes on a click outside it or on Esc, as a menu does.
   useEffect(() => {
     const close = (event: Event) => {
       const node = slip.current;

@@ -20,6 +20,7 @@
     "check": "vp fmt --check && vp lint --report-unused-disable-directives && vp run -r --cache typecheck && vp run -r test"
   },
   "devDependencies": {
+    "@jandragsbaek/oxlint-plugin": "catalog:",
     "typescript": "catalog:",
     "vite-plus": "catalog:",
     "yaml": "catalog:"

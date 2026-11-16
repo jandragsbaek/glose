@@ -1,3 +1,12 @@
+import {
+  effect,
+  productCopy,
+  react,
+  reactCompiler,
+  recommended,
+  tests,
+  uiText,
+} from "@jandragsbaek/oxlint-plugin/presets";
 import "vite-plus/test/config";
 import { defineConfig } from "vite-plus";
 
@@ -9,11 +18,6 @@ const GENERATED_AND_BUILD_OUTPUT = [
   "pnpm-lock.yaml",
   "*.tsbuildinfo",
   "**/routeTree.gen.ts",
-];
-
-const TEST_FILES = [
-  "**/*.{test,spec,testkit}.{ts,tsx}",
-  "**/{test,tests,testkit,testing,fixtures,integration}/**",
 ];
 
 /** React SPA, compiled by the React Compiler. */
@@ -61,125 +65,21 @@ export default defineConfig({
     sortPackageJson: {},
   },
   lint: {
-    ignorePatterns: GENERATED_AND_BUILD_OUTPUT,
-    plugins: ["eslint", "oxc", "react", "unicorn", "typescript"],
-    jsPlugins: ["./oxlint-plugin-glose/index.ts"],
-    categories: {
-      correctness: "warn",
-      suspicious: "warn",
-      perf: "warn",
-    },
-    rules: {
-      "oxc/no-accumulating-spread": "error",
-      "eslint/no-control-regex": "off",
-      "typescript/no-this-alias": "off",
-      "unicorn/prefer-add-event-listener": "off",
-      "unicorn/prefer-string-starts-ends-with": "off",
-      "unicorn/prefer-set-has": "off",
-      "unicorn/prefer-array-find": "off",
-      "unicorn/no-new-array": "off",
-      "unicorn/no-array-reverse": "off",
-      "react/no-object-type-as-default-prop": "off",
-      "react/jsx-no-constructed-context-values": "off",
-      "react/memo-dependencies": "error",
-      "react/purity": "error",
-      "react/refs": "error",
-      "react/exhaustive-effect-dependencies": "error",
-      "react/set-state-in-effect": "error",
-      "react/immutability": "error",
-      "react/no-array-index-key": "error",
-      "react/no-unstable-nested-components": "error",
-      "react/static-components": "error",
-      "react/capitalized-calls": "error",
-      "typescript/no-extraneous-class": "error",
-      "eslint/no-empty-pattern": "error",
-      "eslint/no-new": "error",
-      "unicorn/no-useless-spread": "error",
-      "eslint/no-unused-vars": [
-        "error",
-        { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" },
-      ],
-      "eslint/no-unsafe-optional-chaining": "error",
-      "eslint/no-unneeded-ternary": "error",
-      "unicorn/no-useless-fallback-in-spread": "error",
-      "unicorn/require-module-specifiers": "error",
-      "unicorn/no-array-sort": "off",
-      "unicorn/consistent-function-scoping": "off",
-      "oxc/no-map-spread": "off",
-      "react-in-jsx-scope": "off",
-      "react-hooks/exhaustive-deps": "off",
-      "eslint/no-shadow": "off",
-      "eslint/no-await-in-loop": "off",
-      "eslint/no-underscore-dangle": "off",
-      "glose/no-inline-schema-compile": "error",
-      "glose/no-low-value-comments": "error",
-      "glose/no-manual-effect-runtime-in-tests": "error",
-      // Test files only (the rule checks the filename).
-      "glose/no-polling-loop-in-tests": "error",
-      "glose/no-real-time-wait-in-tests": "error",
-      "glose/no-test-in-loop": "error",
-      "glose/no-test-timeout-or-unreasoned-skip": "error",
-      "glose/no-unscoped-has": "error",
-      "glose/no-wall-clock-in-tests": "error",
-      "glose/namespace-node-imports": "error",
-      "glose/prefer-catch-tags": "error",
-      "glose/prefer-effect-fn": "error",
-      "glose/require-suppression-reason": "error",
-    },
-    overrides: [
-      {
-        files: TEST_FILES,
-        rules: { "glose/prefer-effect-fn": "off" },
-      },
-      {
-        files: ["apps/**/src/**", "packages/**/src/**"],
-        rules: { "glose/no-dom-test-environment": "error" },
-      },
-      {
-        files: ["apps/*/src/**", "packages/*/src/**"],
-        excludeFiles: ["**/*.{test,spec}.{ts,tsx,js,jsx,mts,cts,mjs,cjs}", "**/testkit/**"],
-        rules: { "glose/no-em-dash-copy": "error" },
-      },
-      {
-        // Interface text lives in the EN/DA catalogs (apps/web/src/i18n), never inline.
-        files: ["apps/web/src/**"],
-        excludeFiles: ["**/*.{test,spec}.{ts,tsx}"],
-        rules: { "glose/no-untranslated-ui-text": "error" },
-      },
-      {
-        // React Compiler owns memoization; upstream rules do not ban redundant useMemo/useCallback.
-        files: tsx(REACT_SOURCES),
-        rules: {
-          "react/exhaustive-effect-dependencies": "error",
-          "react/globals": "error",
-          "react/hooks": "error",
-          "react/immutability": "error",
-          // The compiler memoizes context values; this rule would ask for useMemo.
-          "react/jsx-no-constructed-context-values": "off",
-          "react/memo-dependencies": "error",
-          "react/preserve-manual-memoization": "error",
-          "react/purity": "error",
-          "react/refs": "error",
-          "react/set-state-in-effect": "error",
-          "react/set-state-in-render": "error",
-          "react/static-components": "error",
-          "react/unsupported-syntax": "error",
-          "glose/no-manual-memo": "error",
-        },
-      },
-      {
-        files: [...REACT_SOURCES, "packages/*/src/**"],
-        rules: { "glose/no-unreasoned-state-sync": "error" },
-      },
-      {
-        // React Compiler caches use* functions only if they call a hook.
-        files: tsx(REACT_SOURCES),
-        excludeFiles: ["**/*.test.ts", "**/*.test.tsx"],
-        rules: { "glose/no-hookless-use-function": "error" },
-      },
+    extends: [
+      recommended,
+      tests,
+      effect,
+      react,
+      reactCompiler({ files: tsx(REACT_SOURCES) }),
+      productCopy({ files: ["apps/*/src/**", "packages/*/src/**"] }),
+      uiText({
+        files: REACT_SOURCES,
+        message:
+          "Every user-facing string goes through the EN/DA message catalogs. Move this text to apps/web/src/i18n and read it with useT().",
+      }),
     ],
+    ignorePatterns: GENERATED_AND_BUILD_OUTPUT,
     options: {
-      reportUnusedDisableDirectives: "error",
       typeAware: false,
       typeCheck: false,
     },

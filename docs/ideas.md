@@ -20,7 +20,7 @@ Working notes from early conversations. Nothing here is final.
 - Every user-facing string is translated, from the first feature on. No string is hard-coded.
 - Notes, Cards and Writing projects can be in any language, independent of the interface
   language.
-- The lint rule `glose/no-untranslated-ui-text` rejects JSX text and user-facing attributes
+- The lint rule `jandragsbaek/no-untranslated-ui-text` rejects JSX text and user-facing attributes
   (`aria-label`, `title`, `placeholder`, `alt`, `label`) that bypass the catalogs in
   `apps/web/src/i18n`.
 - Danish interface terms, first version (to be reviewed by a Danish user): Kilde (Source), Note,

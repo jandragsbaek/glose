@@ -109,5 +109,7 @@ On Linux, keep the AppImage under a name without a version, such as
 `~/Applications/Glose.AppImage`: an update then replaces that file, and a launcher that points
 to it keeps working. The AppImage needs FUSE 2 (`libfuse.so.2`, the `fuse2` package on Arch).
 
-The lint setup and the rules in `oxlint-plugin-glose/` are adapted from T3 Code under its MIT
-license (`oxlint-plugin-glose/LICENSE`).
+The lint rules and presets come from
+[`@jandragsbaek/oxlint-plugin`](https://github.com/jandragsbaek/oxlint-plugin), which is adapted
+from T3 Code under its MIT license. A rule learned here goes into that package, so other
+projects get it too.
