@@ -32,6 +32,7 @@ import {
 } from "../state/sessions.ts";
 import { CardProposals } from "./CardProposals.tsx";
 import { ManageUsageLink } from "./ChatGptConnection.tsx";
+import { OpenSettingsButton } from "./SettingsWindow.tsx";
 import { Notice, Panel, SkeletonPanel, StorageProblem } from "./ui.tsx";
 
 export function useChatGptReady(): boolean {
@@ -48,9 +49,9 @@ export function NeedsChatGpt({ title, body }: { readonly title: string; readonly
     <Notice tone="info" title={title}>
       <p>{body}</p>
       <p style={{ marginTop: 10 }}>
-        <Link to="/settings" className="button">
+        <OpenSettingsButton section="chatgpt" className="button">
           {t.session.openSettings}
-        </Link>
+        </OpenSettingsButton>
       </p>
     </Notice>
   );
@@ -500,9 +501,9 @@ export function SessionProblem({ session }: { readonly session: Session }) {
           </a>
         ) : null}
         {session.problem === "not-connected" || session.problem === "plan-not-allowed" ? (
-          <Link to="/settings" className="button">
+          <OpenSettingsButton section="chatgpt" className="button">
             {t.session.openSettings}
-          </Link>
+          </OpenSettingsButton>
         ) : null}
         <button
           type="button"

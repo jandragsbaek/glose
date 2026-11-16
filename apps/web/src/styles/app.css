@@ -173,17 +173,29 @@ a:hover {
 }
 
 .rail__link:hover {
+  background: color-mix(in srgb, var(--lapis) 50%, var(--lapis-raised));
+  color: var(--on-lapis);
+}
+
+.rail__link[aria-current="page"],
+.rail__link[data-current] {
   background: var(--lapis-raised);
   color: var(--on-lapis);
 }
 
-.rail__link[aria-current="page"] {
-  background: var(--lapis-raised);
-  color: var(--on-lapis);
-}
-
-.rail__link[aria-current="page"] .rail__icon {
+.rail__link[aria-current="page"] .rail__icon,
+.rail__link[data-current] .rail__icon {
   color: var(--gold);
+}
+
+/* While the Settings window is open, only Settings is lit: the page under the veil is not "here". */
+.rail:has(.rail__link[data-current]) .rail__link[aria-current="page"] {
+  background: none;
+  color: inherit;
+}
+
+.rail:has(.rail__link[data-current]) .rail__link[aria-current="page"] .rail__icon {
+  color: inherit;
 }
 
 .rail__icon {
@@ -204,6 +216,13 @@ a:hover {
 
 .rail__foot .rail__link {
   width: 100%;
+}
+
+button.rail__link {
+  border: 0;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
 }
 
 .lang-switch {
@@ -3814,6 +3833,279 @@ a.written__title:hover {
 .sheet .field__error .call__icon {
   flex: 0 0 auto;
   margin-top: 3px;
+}
+
+/*
+ * The Settings window: a small bound volume laid over the page. A lapis spine with gilt bands
+ * holds the sections in the rail's own vocabulary; one Paper-headed leaf scrolls every panel.
+ */
+.settings-window {
+  width: min(1040px, calc(100vw - 64px));
+  height: min(720px, calc(100vh - 64px));
+  max-width: none;
+  max-height: none;
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--lapis);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  overflow: hidden;
+  transition:
+    opacity 160ms var(--ease-out),
+    scale 160ms var(--ease-out),
+    display 160ms allow-discrete,
+    overlay 160ms allow-discrete;
+}
+
+.settings-window[open] {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+}
+
+.settings-window::backdrop {
+  background: rgb(20 20 20 / 32%);
+  transition:
+    background-color 160ms var(--ease-out),
+    display 160ms allow-discrete,
+    overlay 160ms allow-discrete;
+}
+
+@starting-style {
+  .settings-window[open] {
+    opacity: 0;
+    scale: 0.985;
+  }
+
+  .settings-window[open]::backdrop {
+    background: rgb(20 20 20 / 0%);
+  }
+}
+
+.settings-window[data-closing] {
+  animation: settings-window-out 140ms var(--ease-out) forwards;
+}
+
+.settings-window[data-closing]::backdrop {
+  animation: settings-veil-out 140ms var(--ease-out) forwards;
+}
+
+@keyframes settings-window-out {
+  to {
+    opacity: 0;
+    scale: 0.985;
+  }
+}
+
+@keyframes settings-veil-out {
+  to {
+    background: rgb(20 20 20 / 0%);
+  }
+}
+
+/* Two gilt bands close the spine top and foot, as on a Source's spine. */
+.settings-window__spine {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 76px 10px 26px;
+  overflow-y: auto;
+  background: var(--lapis);
+  color: var(--on-lapis-mute);
+  background-image:
+    linear-gradient(var(--gold), var(--gold)), linear-gradient(var(--gold), var(--gold)),
+    linear-gradient(var(--gold), var(--gold)), linear-gradient(var(--gold), var(--gold));
+  background-repeat: no-repeat;
+  background-size: 100% 2px;
+  background-position:
+    0 8px,
+    0 14px,
+    0 calc(100% - 14px),
+    0 calc(100% - 8px);
+}
+
+.settings-window__spine :focus-visible {
+  outline-color: var(--gold);
+}
+
+.settings-window__spine ul {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.settings-window__section-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: inherit;
+  font: 500 14px/1.3 var(--font-ui);
+  text-align: left;
+  hyphens: auto;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  transition:
+    background-color 160ms var(--ease-out),
+    color 160ms var(--ease-out);
+}
+
+.settings-window__section-link:hover {
+  background: color-mix(in srgb, var(--lapis) 50%, var(--lapis-raised));
+  color: var(--on-lapis);
+}
+
+.settings-window__section-link[aria-current="true"] {
+  background: var(--lapis-raised);
+  color: var(--on-lapis);
+}
+
+.settings-window__icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.6;
+  transition: color 160ms var(--ease-out);
+}
+
+.settings-window__section-link[aria-current="true"] .settings-window__icon {
+  color: var(--gold);
+}
+
+.settings-window__leaf {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.settings-window__head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 16px 8px 32px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.settings-window__head h2 {
+  margin-right: auto;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.settings-window__close {
+  gap: 10px;
+  padding: 0 10px;
+  color: var(--ink);
+}
+
+.settings-window__close:hover {
+  background: var(--tint);
+  text-decoration: none;
+}
+
+.settings-window__close-icon {
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.8;
+}
+
+.settings-window__body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  padding: 20px 32px 40px;
+  overflow-y: auto;
+  background: var(--ground);
+  overscroll-behavior: contain;
+  overflow-anchor: none;
+  container-type: size;
+}
+
+.settings-window__body:focus {
+  outline: none;
+}
+
+.settings-window__column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 760px;
+}
+
+/* The last section reaches the top of the leaf too, so a jump to any section lands on it. */
+.settings-window__column > :last-child {
+  min-height: 100cqh;
+}
+
+.settings-window__column > [data-section]:focus {
+  outline: none;
+}
+
+.settings-window__fieldset {
+  display: block;
+}
+
+.settings-window__path {
+  align-self: flex-start;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* Narrow windows: the window fills the screen and the spine lies across its top as a band. */
+@media (max-width: 720px) {
+  .settings-window {
+    width: 100vw;
+    height: 100vh;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .settings-window[open] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .settings-window__spine {
+    padding: 22px 12px 12px;
+    background-size: 100% 2px;
+    background-position:
+      0 6px,
+      0 12px,
+      0 100%,
+      0 100%;
+  }
+
+  .settings-window__spine ul {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .settings-window__section-link {
+    width: auto;
+    min-height: 36px;
+    padding: 6px 10px;
+  }
+
+  .settings-window__head {
+    padding-left: 16px;
+  }
+
+  .settings-window__body {
+    padding: 16px 16px 32px;
+  }
 }
 
 /* The code the user types on GitHub, typed like a call-number label at reading size. */

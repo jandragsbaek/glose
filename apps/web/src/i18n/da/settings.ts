@@ -159,6 +159,9 @@ export const settingsMessages: Pick<Messages, "updates" | "versions" | "backup" 
     graphFolderHint: "Skift af mappe kommer i en senere version.",
     site: "Dit websted",
     siteNotChosen: "Ikke valgt endnu.",
+    sections: "Dele af Indstillinger",
+    close: "Luk Indstillinger",
+    closeKey: "Esc",
     siteHint: "Glose skriver blogindlæg i src/_posts i denne mappe.",
   },
 };

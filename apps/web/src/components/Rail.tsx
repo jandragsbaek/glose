@@ -13,13 +13,14 @@ import {
 
 import { LANGUAGES, useT } from "../i18n/I18n.tsx";
 import { KEYS, setLanguageAtom } from "../state/graph.ts";
+import { useOpenSettings, useSettingsOpen } from "./SettingsWindow.tsx";
 
 function RailLink({
   to,
   icon: Icon,
   label,
 }: {
-  readonly to: "/" | "/sources" | "/graph" | "/writing" | "/recall" | "/settings";
+  readonly to: "/" | "/sources" | "/graph" | "/writing" | "/recall";
   readonly icon: LucideIcon;
   readonly label: string;
 }) {
@@ -28,6 +29,24 @@ function RailLink({
       <Icon className="rail__icon" aria-hidden="true" />
       {label}
     </Link>
+  );
+}
+
+function SettingsRailButton({ label }: { readonly label: string }) {
+  const open = useOpenSettings();
+  const isOpen = useSettingsOpen();
+  return (
+    <button
+      type="button"
+      className="rail__link"
+      aria-haspopup="dialog"
+      aria-expanded={isOpen}
+      data-current={isOpen ? "" : undefined}
+      onClick={() => open("language")}
+    >
+      <Settings2 className="rail__icon" aria-hidden="true" />
+      {label}
+    </button>
   );
 }
 
@@ -83,7 +102,7 @@ export function Rail({ language }: { readonly language: Language }) {
             setLanguage({ payload: { language: next }, reactivityKeys: KEYS.settings })
           }
         />
-        <RailLink to="/settings" icon={Settings2} label={t.nav.settings} />
+        <SettingsRailButton label={t.nav.settings} />
       </div>
     </nav>
   );

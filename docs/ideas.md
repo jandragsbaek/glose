@@ -67,6 +67,19 @@ The core loop depends on the stage the user is in. Stages known so far:
 2. **Writing** (writing projects) — to be described.
 3. More stages to come (recall).
 
+## Decided, Settings as a window (November 2026)
+
+- Settings is a window over the page the user is on, not a page of its own, after the settings
+  window in T3 Code. The rail's Settings item opens it, and so does every "Open Settings" where
+  the AI needs ChatGPT. Esc, the close button or a click beside the window puts the user back on
+  the same page.
+- The window holds all settings in one scrolling column (Interface language, Graph folder,
+  Backup, ChatGPT, Your website). A list of the sections at its side marks the one in view and
+  jumps to a section on a click. Chosen by Jan from three designs on the Impeccable decision page.
+- The address keeps the window: `?settings=<section>` on any page with the rail (not the Review
+  focus screen) opens it at that section (`language`, `graph-folder`, `backup`, `chatgpt`,
+  `site`). There is no `/settings` page.
+
 ## Sources
 
 - Every note in the graph must have a source.

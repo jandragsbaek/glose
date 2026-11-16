@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Check, TriangleAlert } from "lucide-react";
 
 import { useT } from "../i18n/I18n.tsx";
+import { OpenSettingsButton } from "./SettingsWindow.tsx";
 import { PieceSettings } from "./WritingPieceSettings.tsx";
 import type { SaveState } from "./WritingSave.ts";
 
@@ -168,7 +169,10 @@ export function DeskNote({
       ) : reviewState === "off" ? (
         <>
           <TriangleAlert className="desk-note__icon" aria-hidden="true" />
-          {t.writing.reviewOff} <Link to="/settings">{t.settings.title}</Link>
+          {t.writing.reviewOff}{" "}
+          <OpenSettingsButton section="chatgpt" className="link-button">
+            {t.settings.title}
+          </OpenSettingsButton>
         </>
       ) : (
         <>
