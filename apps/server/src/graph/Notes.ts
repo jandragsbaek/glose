@@ -24,18 +24,9 @@ import { parseSourceFile } from "./sourceFile.ts";
 export class Notes extends Context.Service<
   Notes,
   {
-    /**
-     * Writes a new Note file named for its title, made file-safe. A name another file has, in
-     * any case, is refused: two Notes with one title would be one idea twice.
-     */
     readonly create: (
       input: NoteFileContent & { readonly title: string },
     ) => Effect.Effect<string, NoteNameTaken | GraphFolderNotSet | StorageError>;
-    /**
-     * Saves a Note the user edited and returns its file name. A new title renames the file, and
-     * every wikilink to it, in the Graph folder and in the Cards, names the new file, as Obsidian
-     * does on a rename.
-     */
     readonly save: (
       input: SaveNote,
     ) => Effect.Effect<string, NoteNotFound | NoteNameTaken | GraphFolderNotSet | StorageError>;
@@ -52,7 +43,6 @@ export const make = Effect.gen(function* () {
   const settings = yield* Settings.Settings;
   const writing = yield* Semaphore.make(1);
 
-  /** Every Markdown file in a folder that links to `from` links to `to` instead. */
   const relinkFolder = Effect.fn("Notes.relinkFolder")(function* (
     folder: string,
     from: string,
@@ -104,7 +94,6 @@ export const make = Effect.gen(function* () {
           return yield* new NoteNotFound({ id });
         }
         const markdown = yield* fs.readFileString(file).pipe(Effect.mapError(storageError));
-        // A Source is edited on its own page, not as a Note.
         if (Option.isSome(parseSourceFile(markdown))) return yield* new NoteNotFound({ id });
 
         const name = toFileName(title);

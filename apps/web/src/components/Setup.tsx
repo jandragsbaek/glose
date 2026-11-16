@@ -30,10 +30,6 @@ type RemoteError = GraphRemoteUnavailableReason | "missing";
 
 const FOLDER_ACTIONS: ReadonlyArray<GraphFolderAction> = ["create", "open", "clone"];
 
-/**
- * The first start: language, Graph folder, and an optional ChatGPT connection. The Graph is a
- * new one, a folder on this computer, or a copy of one kept on GitHub or another git remote.
- */
 export function Setup({
   view,
   initialLanguage,
@@ -68,14 +64,12 @@ function SetupForm({
   const [remote, setRemote] = useState<ChosenRemote | null>(null);
   const [remoteError, setRemoteError] = useState<RemoteError | null>(null);
   const [sheet, setSheet] = useState<RemoteSheetMode | null>(null);
-  // The button that opened the sheet gets focus back when it closes.
   const opener = useRef<HTMLButtonElement | null>(null);
   const openSheet = (mode: RemoteSheetMode, from: HTMLButtonElement) => {
     opener.current = from;
     setSheet(mode);
   };
   const closeSheet = () => {
-    // The sheet leaves the page first: while a modal is open, nothing outside it takes focus.
     flushSync(() => setSheet(null));
     opener.current?.focus();
   };
@@ -243,10 +237,6 @@ function SetupForm({
   );
 }
 
-/**
- * Where the copy comes from, as a short ledger; choosing happens in the sheet. Before a choice the
- * way to GitHub is the next step, so it is the primary button.
- */
 function RemoteLedger({
   remote,
   error,

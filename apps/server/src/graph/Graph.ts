@@ -11,7 +11,6 @@ import { buildGraphView } from "./graphView.ts";
 export class Graph extends Context.Service<
   Graph,
   {
-    /** Every Markdown file in the Graph folder and the Links between them, read afresh. */
     readonly read: Effect.Effect<GraphView, GraphFolderNotSet | StorageError>;
   }
 >()("glose/Graph") {}
@@ -30,7 +29,6 @@ export const make = Effect.gen(function* () {
       const { graphFolder } = (yield* settings.get).settings;
       if (graphFolder === null) return yield* new GraphFolderNotSet();
       const entries = yield* fs.readDirectory(graphFolder).pipe(Effect.mapError(storageError));
-      // The folder is flat, as the Sources are; subfolders are not read yet.
       const names = entries.filter((entry) => entry.endsWith(MARKDOWN) && !entry.startsWith("."));
       const files = yield* Effect.forEach(
         names,

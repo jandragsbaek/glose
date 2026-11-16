@@ -84,15 +84,12 @@ const storageError = (cause: unknown) => new StorageError({ detail: String(cause
 
 const twoDigits = (value: number) => String(value).padStart(2, "0");
 
-/** Today on this computer's calendar, `2026-11-13`. */
 const localDay = (time: number) => {
   const date = new Date(time);
   return `${date.getFullYear()}-${twoDigits(date.getMonth() + 1)}-${twoDigits(date.getDate())}`;
 };
 
-/** A Note longer than this reaches the AI cut, so a Rich note cannot fill the context. */
 const NOTE_CHARS = 600;
-/** At most this many Notes go to the AI, the ones whose Sources the prose cites first. */
 const MAX_NOTES = 250;
 
 export const REVIEW_INSTRUCTIONS = `You help a person who writes a blog post in their own words, using the Notes in their Graph (a personal knowledge base of Notes made from books they read). Every Note has a Source.
@@ -195,7 +192,6 @@ export const make = Effect.gen(function* () {
     });
   });
 
-  /** A file name for the title that no other file in the folder has, whatever its case. */
   const freeName = Effect.fn("Writing.freeName")(function* (
     folder: string,
     title: string,
@@ -213,7 +209,6 @@ export const make = Effect.gen(function* () {
     return id;
   });
 
-  /** The References of the prose with what they point to in the Graph now. */
   const resolve = Effect.fn("Writing.resolve")(function* (body: string) {
     const view = yield* graph.read;
     const all = yield* sources.list;
@@ -248,7 +243,6 @@ export const make = Effect.gen(function* () {
       const project = yield* get(id);
       const folder = yield* writingFolder;
       const wanted = toFileName(fields.title);
-      // A title that only changes case keeps its file: on macOS and Windows it is the same name.
       const next =
         wanted === "" || sameFileName(wanted, id) ? id : yield* freeName(folder, fields.title, id);
       const saved = yield* write(folder, next, { ...fields, published: project.published }).pipe(
@@ -277,7 +271,6 @@ export const make = Effect.gen(function* () {
           reason: found ? "not-bridgetown" : "not-found",
         });
       }
-      // A post keeps the day it was first published, so publishing again replaces the same file.
       const date = project.published?.date ?? localDay(yield* Clock.currentTimeMillis);
       const posts = path.join(siteFolder, ...POSTS_FOLDER);
       const file = path.join(posts, postFileName(date, project.title));
@@ -364,7 +357,6 @@ export const make = Effect.gen(function* () {
         Effect.mapError(failed),
       );
 
-      // Only what the app can show: excerpts found in the prose, and Notes the Graph has.
       const noteIds = new Map(notes.map((node) => [linkKey(node.id), node.id]));
       const found = (excerpt: string) => excerpt.trim() !== "" && project.body.includes(excerpt);
       return {

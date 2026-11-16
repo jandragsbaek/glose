@@ -24,7 +24,6 @@ const HUMAN_CONDITION = {
 
 describe("fillFromCatalog", () => {
   it("never replaces what the user typed, even when an earlier record matched it", () => {
-    // The user typed the family name and a translator before choosing; the record agrees on the name.
     const typed = { ...EMPTY_FORM, familyName: "Ditlevsen", translator: "Tiina Nunnally" };
     const first = fillFromCatalog(typed, [], BARNDOM);
     const second = fillFromCatalog(first.values, first.filled, HUMAN_CONDITION);

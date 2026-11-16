@@ -12,7 +12,6 @@ import { setSiteFolderAtom } from "../state/writing.ts";
 import { SheetFoot } from "./Backup.tsx";
 import { CallNumber, Flourish } from "./ui.tsx";
 
-/** A Glose sheet: a modal leaf for one task, closed by Esc as by Cancel. */
 function Sheet({
   title,
   onClose,
@@ -30,7 +29,6 @@ function Sheet({
       ref={(node) => {
         if (node === null || node.open) return;
         node.showModal();
-        // The task's own control takes the focus, not simply the first one in the leaf.
         node.querySelector<HTMLElement>("[data-autofocus]")?.focus();
       }}
       onCancel={(event) => {
@@ -53,10 +51,8 @@ function Sheet({
   );
 }
 
-/** At most this many matches show; typing narrows them. */
 const MAX_MATCHES = 40;
 
-/** Chooses a Note or a Source to cite, and the page, for a Reference at the cursor. */
 export function CiteSheet({
   nodes,
   sources,
@@ -188,7 +184,6 @@ export function CiteSheet({
   );
 }
 
-/** Asks for the folder of the user's Bridgetown site, on first publishing or when it moved. */
 export function SiteFolderSheet({
   initial,
   onDone,
@@ -281,7 +276,6 @@ export function SiteFolderSheet({
   );
 }
 
-/** The site already has the post's file: replace it only when the writer says so. */
 export function ReplaceSheet({
   file,
   onReplace,

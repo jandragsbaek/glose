@@ -8,14 +8,11 @@ import {
   ReasoningVerdict,
   ResultVerdict,
   type SessionEntry,
-  type Source,
   TaughtKind,
-  type TopicState,
 } from "@glose/contracts";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import * as Yaml from "yaml";
 
 import type * as Graph from "../graph/Graph.ts";
 import type * as Sources from "../graph/Sources.ts";
@@ -32,10 +29,6 @@ const NO_ARGUMENTS = {
 
 const LANGUAGE_NAMES: Record<Language, string> = { en: "English", da: "Danish" };
 
-/** The folder of the Probe records, beside the Graph's files: Glose reads only the top as the Graph. */
-export const PROBES_FOLDER = "Probes";
-
-/** The rules of a Probe. They follow docs/ideas.md: the user does the thinking; Reasoning counts. */
 export const INSTRUCTIONS = `You are the AI in Glose, a desktop app where a person learns from what they read. You run the Probe of the Reading Stage for one Source (usually a book): one adaptive conversation that finds what the user knows about it, what they do not know, and what they still must learn.
 
 The loop:
@@ -63,14 +56,12 @@ const START_NOTES: Record<ReadingStart, string> = {
     'The user read the Source a while ago, or only in part, and chose to be questioned first. Before the first question on each topic, explain the topic briefly with teach (kind "intro"), then ask. What you find feeds Extraction, which makes the Notes after the Probe.',
 };
 
-/** The hidden first message that starts the Probe. */
 export const kickoff = (language: Language, start: ReadingStart): InputItem => ({
   type: "message",
   role: "developer",
   content: `Start the Probe now. The user's interface language is ${LANGUAGE_NAMES[language]}. ${START_NOTES[start]}`,
 });
 
-/** The user's answer to a question, as the model reads it. */
 export const answerMessage = (answer: Extract<SessionEntry, { _tag: "ProbeAnswer" }>): string =>
   answer.teachMe
     ? `(Answer to question ${answer.question}) I do not know. Please teach me.${answer.reasoning === "" ? "" : `\n\nWhat I thought:\n${answer.reasoning}`}`
@@ -120,9 +111,7 @@ const decodeTeach = Schema.decodeUnknownOption(TeachArguments);
 export interface Context {
   readonly sources: Sources.Sources["Service"];
   readonly graph: Graph.Graph["Service"];
-  /** The Source the Probe questions the user on. */
   readonly source: string;
-  /** Changes the Session's entries in one step and answers with what the change says. */
   readonly update: <A>(
     change: (entries: ReadonlyArray<SessionEntry>) => readonly [A, ReadonlyArray<SessionEntry>],
   ) => Effect.Effect<A>;
@@ -272,7 +261,6 @@ export const tools = ({ sources, graph, source, update }: Context): AgentTool[] 
         if (isJudged(entries, asked.question)) {
           return [{ error: `Question ${asked.question} is judged already.` }, entries];
         }
-        // Only the user's own words may be marked as theirs; a paraphrase is dropped.
         const quote = asked.quote === null ? null : findQuote(answer.reasoning, asked.quote);
         const judgment: Extract<SessionEntry, { _tag: "ProbeJudgment" }> = {
           _tag: "ProbeJudgment",
@@ -351,14 +339,12 @@ export const tools = ({ sources, graph, source, update }: Context): AgentTool[] 
   },
 ];
 
-/** The Probe's answers in the user's own words: where an Extraction Point may quote from. */
 export const userWords = (entries: ReadonlyArray<SessionEntry>): string =>
   entries
     .flatMap((entry) => (entry._tag === "ProbeAnswer" ? [entry.reasoning, entry.answer] : []))
     .filter((text) => text !== "")
     .join("\n\n");
 
-/** What the Probe asked and found, for the Extraction that follows it. */
 export const forExtraction = (entries: ReadonlyArray<SessionEntry>) => ({
   findings: probeFindings(entries).map(({ topic, state }) => ({ topic, state })),
   questions: questionsOf(entries).map((question) => {
@@ -380,145 +366,3 @@ export const forExtraction = (entries: ReadonlyArray<SessionEntry>) => ({
     };
   }),
 });
-
-const LABELS = {
-  en: {
-    title: (title: string) => `Probe: ${title}`,
-    question: "Q",
-    again: (number: number) => `Q${number} again`,
-    reasoning: "Your Reasoning",
-    answer: "Your answer",
-    teachMe: "You asked to be taught.",
-    judged: "Judged",
-    reasoningVerdicts: {
-      sound: "Reasoning sound",
-      "partly-sound": "Reasoning partly sound",
-      flawed: "Reasoning flawed",
-      none: "No Reasoning given",
-    } satisfies Record<ReasoningVerdict, string>,
-    resultVerdicts: {
-      right: "Result right",
-      "partly-right": "Result partly right",
-      wrong: "Result wrong",
-    } satisfies Record<ResultVerdict, string>,
-    taught: "Taught",
-    intro: "Before the question",
-    checkCopy: "From the AI's knowledge of the book, not your copy. Check it there.",
-    found: "What the Probe found",
-    states: {
-      asking: "Asked",
-      known: "Known",
-      "known-after-teaching": "Known after teaching",
-      taught: "Taught, not confirmed yet",
-      gap: "Still open",
-    } satisfies Record<TopicState, string>,
-  },
-  da: {
-    title: (title: string) => `Sondering: ${title}`,
-    question: "S",
-    again: (number: number) => `S${number} igen`,
-    reasoning: "Dit ræsonnement",
-    answer: "Dit svar",
-    teachMe: "Du bad om at blive undervist.",
-    judged: "Vurderet",
-    reasoningVerdicts: {
-      sound: "Ræsonnement holdbart",
-      "partly-sound": "Ræsonnement delvis holdbart",
-      flawed: "Ræsonnement fejlbehæftet",
-      none: "Intet ræsonnement givet",
-    },
-    resultVerdicts: {
-      right: "Resultat rigtigt",
-      "partly-right": "Resultat delvis rigtigt",
-      wrong: "Resultat forkert",
-    },
-    taught: "Undervist",
-    intro: "Før spørgsmålet",
-    checkCopy: "Fra AI'ens viden om bogen, ikke dit eksemplar. Tjek det dér.",
-    found: "Hvad sonderingen fandt",
-    states: {
-      asking: "Spurgt",
-      known: "Kendt",
-      "known-after-teaching": "Kendt efter undervisning",
-      taught: "Undervist, ikke bekræftet endnu",
-      gap: "Stadig åben",
-    },
-  },
-} satisfies Record<Language, unknown>;
-
-const twoDigits = (value: number) => String(value).padStart(2, "0");
-const localDate = (time: number) => {
-  const date = new Date(time);
-  return `${date.getFullYear()}-${twoDigits(date.getMonth() + 1)}-${twoDigits(date.getDate())}`;
-};
-
-/** Text as a callout's lines: every line behind `> `, paragraphs kept apart by `>`. */
-const callout = (head: string, text: string) =>
-  [head, ...text.split(/\r?\n/).map((line) => (line.trim() === "" ? ">" : `> ${line}`))].join("\n");
-
-/**
- * The Probe as Markdown that any editor reads: each question with the user's Reasoning and
- * answer, the judgment, and the teaching as AI text, then what the Probe found.
- */
-export const renderRecord = (input: {
-  readonly source: Pick<Source, "id" | "title">;
-  readonly entries: ReadonlyArray<SessionEntry>;
-  readonly created: number;
-  readonly language: Language;
-}): string => {
-  const labels = LABELS[input.language];
-  const finished = input.entries.find((entry) => entry._tag === "ProbeFinished");
-  const frontmatter = {
-    glose: "probe",
-    source: `[[${input.source.id}]]`,
-    started: localDate(input.created),
-    ...(finished?._tag === "ProbeFinished" ? { finished: localDate(finished.at) } : {}),
-    ai: true,
-  };
-  const blocks: Array<string> = [`# ${labels.title(input.source.title)}`];
-  for (const entry of input.entries) {
-    switch (entry._tag) {
-      case "ProbeQuestion":
-        blocks.push(
-          `## ${labels.question}${entry.number} · ${entry.topic}${entry.again === null ? "" : ` (${labels.again(entry.again)})`}`,
-          entry.text,
-        );
-        break;
-      case "ProbeAnswer":
-        if (entry.teachMe) blocks.push(`*${labels.teachMe}*`);
-        if (entry.reasoning !== "") blocks.push(`**${labels.reasoning}:** ${entry.reasoning}`);
-        if (entry.answer !== "") blocks.push(`**${labels.answer}:** ${entry.answer}`);
-        break;
-      case "ProbeJudgment":
-        blocks.push(
-          callout(
-            `> [!ai] ${labels.judged}`,
-            [
-              `${labels.reasoningVerdicts[entry.reasoning]}. ${entry.reasoningWhy}`,
-              "",
-              `${labels.resultVerdicts[entry.result]}. ${entry.resultWhy}`,
-            ].join("\n"),
-          ),
-        );
-        break;
-      case "ProbeTaught":
-        blocks.push(
-          callout(
-            `> [!ai] ${entry.kind === "gap" ? labels.taught : labels.intro} · ${entry.topic}`,
-            `${entry.text}\n\n*${labels.checkCopy}*`,
-          ),
-        );
-        break;
-      default:
-        break;
-    }
-  }
-  const findings = probeFindings(input.entries);
-  if (findings.length > 0) {
-    blocks.push(
-      `## ${labels.found}`,
-      findings.map((finding) => `- ${finding.topic}: ${labels.states[finding.state]}`).join("\n"),
-    );
-  }
-  return `---\n${Yaml.stringify(frontmatter)}---\n\n${blocks.join("\n\n")}\n`;
-};

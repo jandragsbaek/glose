@@ -9,7 +9,6 @@ import { Notice, Panel } from "./ui.tsx";
 
 const STARTS = ["write", "probe", "catch-up"] as const satisfies ReadonlyArray<Start>;
 
-/** "Where are you with this book?": the first page of a Source, whose answer sets the first step. */
 export function ReadingStart({ source }: { readonly source: Source }) {
   const t = useT();
   const hintId = useId();
@@ -25,7 +24,6 @@ export function ReadingStart({ source }: { readonly source: Source }) {
       payload: { id: source.id, start },
       reactivityKeys: KEYS.sources,
     });
-    // On success the Source reads afresh and its page moves on to the first step.
     setState(Exit.isSuccess(exit) ? "idle" : "failed");
   };
 

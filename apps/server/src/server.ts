@@ -33,17 +33,14 @@ import * as Git from "./versions/Git.ts";
 import * as Versions from "./versions/Versions.ts";
 import * as Writing from "./writing/Writing.ts";
 
-/** Newline-delimited JSON, so a streamed reply reaches the client as it happens. */
 const layerRpcRoute = RpcServer.layerHttp({
   group: GloseRpcGroup,
   path: RPC_PATH,
   protocol: "http",
 }).pipe(Layer.provide(Rpc.layer), Layer.provide(RpcSerialization.layerNdjson));
 
-/** The desktop app polls this before it opens a window. */
 const layerHealthRoute = HttpRouter.add("GET", HEALTH_PATH, HttpServerResponse.text("ok"));
 
-/** In production the server also serves the built SPA, so one origin hosts everything. */
 const layerSpaRoute = Layer.unwrap(
   Effect.gen(function* () {
     const { webDistDir } = yield* ServerConfig.ServerConfig;
@@ -63,10 +60,6 @@ const layerHttpServer = Layer.unwrap(
 
 const layerChatGpt = ChatGpt.layer.pipe(Layer.provide([ChatGpt.layerCrypto, Credentials.layer]));
 
-/**
- * The app's services over the files on disk, ChatGPT and the Catalog. They still need ServerConfig, an
- * HttpClient, OpenAI's signing keys and the platform; a test supplies fakes for OpenAI.
- */
 export const layerApp = Layer.mergeAll(Sessions.layer, Writing.layer).pipe(
   Layer.provideMerge(CardChecks.layer),
   Layer.provideMerge(
@@ -85,12 +78,10 @@ export const layerApp = Layer.mergeAll(Sessions.layer, Writing.layer).pipe(
   Layer.provideMerge(Settings.layer),
 );
 
-/** OpenAI's signing keys come only from the configured URL, never from a redirect. */
 const layerFetchNoRedirects = FetchHttpClient.layer.pipe(
   Layer.provide(Layer.succeed(FetchHttpClient.RequestInit, { redirect: "manual" })),
 );
 
-/** The app's services against the real OpenAI; they need ServerConfig. */
 export const layerServices = layerApp.pipe(
   Layer.provide([
     ChatGpt.layerJwks.pipe(Layer.provide(layerFetchNoRedirects)),
@@ -99,13 +90,8 @@ export const layerServices = layerApp.pipe(
   ]),
 );
 
-/** Every route, still waiting for an HTTP server; the test serves these on a random port. */
 export const layerRoutes = Layer.mergeAll(layerRpcRoute, layerHealthRoute, layerSpaRoute);
 
-/**
- * The services are built before the port opens, and the Versions runner starts with them. A request that reached the port first would
- * find no handler yet and hang, and the desktop app's first health check could be that request.
- */
 export const layer = HttpRouter.serve(layerRoutes).pipe(
   Layer.merge(Versions.layerRunner),
   Layer.provide(ServerInfo.layer),

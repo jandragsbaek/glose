@@ -16,9 +16,7 @@ export function Page({
   readonly title: string;
   readonly sub?: ReactNode;
   readonly actions?: ReactNode;
-  /** The body takes the rest of the window's height instead of scrolling (the Graph). */
   readonly fill?: boolean;
-  /** The filled body has no padding: its columns pad themselves and reach the edges. */
   readonly flush?: boolean;
   readonly children: ReactNode;
 }) {
@@ -40,7 +38,6 @@ export function Page({
   );
 }
 
-/** A pen flourish under a panel heading, drawn once in rubric red. */
 export function Flourish() {
   return (
     <svg className="flourish" viewBox="0 0 64 10" aria-hidden="true" focusable="false">
@@ -56,10 +53,6 @@ export function Flourish() {
   );
 }
 
-/**
- * Panel headings open with a decorated initial, alternating rubric and lapis down a page.
- * The initial is CSS (::first-letter), so the heading text stays whole for screen readers.
- */
 export function Panel({
   title,
   initial,
@@ -93,7 +86,6 @@ export function CallNumber({
   page = null,
 }: {
   readonly source: Pick<Source, "familyName" | "firstPublished">;
-  /** The Location in the Source, typed after the call number. */
   readonly page?: string | null;
 }) {
   const t = useT();
@@ -113,7 +105,6 @@ export function CallNumber({
   );
 }
 
-/** A Source's spine: lapis with gilt bands, the call number set vertically. */
 export function Spine({
   source,
 }: {
@@ -137,10 +128,6 @@ export function Notice({
 }: {
   readonly tone: keyof typeof NOTICE_ICONS;
   readonly title?: ReactNode;
-  /**
-   * A callout about one thing on the page, such as a Card's Check: it keeps its box inside a
-   * panel, and an error in it is not announced at once, since a list may hold many.
-   */
   readonly callout?: boolean;
   readonly children?: ReactNode;
 }) {
@@ -173,7 +160,6 @@ export function SkeletonPanel() {
   );
 }
 
-/** A file the server could not read or write, with a way to try again. */
 export function StorageProblem({ onRetry }: { readonly onRetry: () => void }) {
   const t = useT();
   return (

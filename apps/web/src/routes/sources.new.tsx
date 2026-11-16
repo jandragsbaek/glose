@@ -33,7 +33,6 @@ const year = (values: FormValues, name: FieldName) => {
   return value === null ? null : Number(value);
 };
 
-/** The last Catalog fill: which record, the fields it still holds, and the form before it, for Undo. */
 interface Fill {
   readonly record: CatalogRecord;
   readonly filled: ReadonlyArray<FieldName>;
@@ -130,7 +129,6 @@ function AddSource() {
       fromCatalog={fill?.filled.includes(name) ?? false}
       onChange={(value) => {
         setValues((current) => ({ ...current, [name]: value }));
-        // An edited field is the user's now: no marker, and the next fill leaves it alone.
         setFill((current) =>
           current === null
             ? null
@@ -212,7 +210,6 @@ function AddSource() {
   );
 }
 
-/** Searches the Catalog; choosing a record fills the form, which stays editable. */
 function FindBook({
   chosen,
   onChoose,
@@ -234,7 +231,6 @@ function FindBook({
     const request = ++latest.current;
     setSearch({ _tag: "Searching" });
     const exit = await searchCatalog({ payload: { query } });
-    // An answer to an older search must not replace the newer one.
     if (request !== latest.current) return;
     setSearch(
       Exit.isSuccess(exit) ? { _tag: "Found", records: exit.value } : { _tag: "Unavailable" },
@@ -313,7 +309,6 @@ function CatalogChoice({
   const t = useT();
   const author = [details.givenName, details.familyName].filter(Boolean).join(" ");
   const edition = t.addSource.resultEdition(details.publisher, details.editionYear);
-  // Each part ends a phrase for screen readers, which otherwise read the row as one run-on name.
   const parts = [
     author,
     details.firstPublished === null ? null : t.source.firstPublished(details.firstPublished),

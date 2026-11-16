@@ -25,33 +25,27 @@ type GraphError = GraphFolderNotSet | StorageError;
 export class Cards extends Context.Service<
   Cards,
   {
-    /** Every Card in the Cards folder, by file name. Only files that changed are read again. */
     readonly list: Effect.Effect<ReadonlyArray<Card>, GraphError>;
     readonly create: (
       input: CardText & { readonly from: string | null; readonly ai: boolean },
     ) => Effect.Effect<Card, GraphError>;
-    /** New words; the AI mark stays, since an edit alone does not make AI text the user's. */
     readonly update: (
       input: CardText & { readonly file: string },
     ) => Effect.Effect<Card, CardNotFound | GraphError>;
     readonly clearAiMark: (file: string) => Effect.Effect<Card, CardNotFound | GraphError>;
-    /** The Card with an id: one written by hand without one gets it now, before a Review. */
     readonly ensureId: (file: string) => Effect.Effect<Card, CardNotFound | GraphError>;
     readonly remove: (file: string) => Effect.Effect<void, CardNotFound | GraphError>;
   }
 >()("glose/cards/Cards") {}
 
 const MARKDOWN = ".md";
-/** Room for " 999" after a name that `toFileName` already cut to its longest. */
 const NAME_ROOM = 112;
 
 const storageError = (cause: unknown) => new StorageError({ detail: String(cause) });
 
-/** A random id; a few thousand Cards almost never meet a taken one, and Glose checks anyway. */
 const newId = () => `c-${NodeCrypto.randomBytes(4).toString("hex")}`;
 
 interface Indexed {
-  /** The file's modification time and size when it was read. */
   readonly stamp: string;
   readonly card: Card | null;
 }
@@ -63,10 +57,6 @@ export const make = Effect.gen(function* () {
   const path = yield* Path.Path;
   const settings = yield* Settings.Settings;
 
-  /**
-   * What the Cards folder held at the last read. The files stay the truth: a file whose stamp
-   * changed (an edit in Obsidian, a sync) is read again, and a lost index is rebuilt.
-   */
   let index: { folder: string; files: Map<string, Indexed> } = { folder: "", files: new Map() };
   const reading = yield* Semaphore.make(1);
   const writing = yield* Semaphore.make(1);
@@ -124,7 +114,6 @@ export const make = Effect.gen(function* () {
     Effect.withSpan("Cards.list"),
   );
 
-  /** A file name from the question, made safe and unique without regard to case. */
   const freeName = (question: string, id: string, taken: ReadonlyArray<string>) => {
     const base = toFileName(question).slice(0, NAME_ROOM).trimEnd() || id;
     const free = (name: string) =>
@@ -140,7 +129,6 @@ export const make = Effect.gen(function* () {
     return card;
   });
 
-  /** The Card file as it is on disk now, which may differ from what the user saw. */
   const existing = Effect.fn("Cards.existing")(function* (file: string) {
     const folder = yield* cardsFolder;
     const notFound = new CardNotFound({ file });
@@ -156,7 +144,6 @@ export const make = Effect.gen(function* () {
       const { folder, markdown, notFound } = yield* existing(file);
       const card = Option.getOrNull(parseCardFile(markdown));
       if (card === null) return yield* notFound;
-      // A Card written by hand without an id gets one now, so its Reviews can be kept.
       const ids = card.id === null ? new Set((yield* list).map((other) => other.id)) : null;
       let id = card.id ?? newId();
       while (ids?.has(id)) id = newId();

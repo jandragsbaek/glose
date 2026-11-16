@@ -20,7 +20,6 @@ it.effect("puts due Cards past learning before new ones, oldest first, up to the
   Effect.gen(function* () {
     const settings = { ...DEFAULT_RECALL_SETTINGS, maximumReviewsPerDay: 1 };
     const scheduler = yield* Effect.promise(() => makeScheduler(settings));
-    // Easy on a new Card gives it days at once; these two have been due for a while.
     const replay = replayReviews(scheduler, [
       { card: "late", at: NOON - 60 * DAY, rating: "easy", answerMs: 1 },
       { card: "later", at: NOON - 90 * DAY, rating: "easy", answerMs: 1 },

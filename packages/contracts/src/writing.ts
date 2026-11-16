@@ -3,50 +3,36 @@ import * as Schema from "effect/Schema";
 import { type GraphNode, linkKey, MARKDOWN_CODE } from "./graph.ts";
 import type { Source } from "./source.ts";
 
-/**
- * What a Writing project becomes. A Blog post ends as a Markdown file for the user's site; a
- * University assignment ends as a PDF with a bibliography (not built yet).
- */
 export const WritingProjectType = Schema.Literals(["blog-post", "assignment"]);
 export type WritingProjectType = typeof WritingProjectType.Type;
 
-/** How the References of a Blog post appear to its readers. */
 export const ReferenceForm = Schema.Literals(["footnotes", "links", "side-notes"]);
 export type ReferenceForm = typeof ReferenceForm.Type;
 
-/** The citation style of a University assignment. */
 export const CitationStyle = Schema.Literals(["chicago", "apa", "harvard"]);
 export type CitationStyle = typeof CitationStyle.Type;
 
-/** Where and when a Writing project was last published. */
 export const PublicationRecord = Schema.Struct({
-  /** The day in the post's file name and frontmatter, `2026-11-13`. */
   date: Schema.String,
-  /** Absolute path of the file Glose wrote. */
   file: Schema.String,
 });
 export type PublicationRecord = typeof PublicationRecord.Type;
 
 const Title = Schema.Trim.pipe(Schema.check(Schema.isNonEmpty()));
 
-/** What the user sets and writes; the type, title and form may change until publishing. */
 export const WritingProjectFields = Schema.Struct({
   title: Title,
   type: WritingProjectType,
-  /** The language of the prose (a BCP 47 tag such as `en` or `da`), not of the interface. */
   language: Schema.String,
   referenceForm: ReferenceForm,
   citationStyle: CitationStyle,
-  /** The prose, as Markdown with References (`[[Note]]{p. 64}`). */
   body: Schema.String,
 });
 export type WritingProjectFields = typeof WritingProjectFields.Type;
 
 export const WritingProject = Schema.Struct({
-  /** The Markdown file's name in the `Writing` folder, without `.md`. */
   id: Schema.String,
   ...WritingProjectFields.fields,
-  /** Last change of the file, in epoch milliseconds. */
   modified: Schema.Number,
   published: Schema.NullOr(PublicationRecord),
 });
@@ -62,21 +48,16 @@ export type SaveWritingProject = typeof SaveWritingProject.Type;
 
 export const PublishWritingProject = Schema.Struct({
   id: Schema.String,
-  /** Replace a post file with the same name in the site. */
   replace: Schema.Boolean,
 });
 
 export const SetSiteFolder = Schema.Struct({ siteFolder: Schema.String });
 
-/** The AI's review of a Blog post: flags, Notes to cite, and questions. It writes no prose. */
 export const WritingReview = Schema.Struct({
-  /** Sentences that state a fact from a Source but cite nothing. */
   claims: Schema.Array(Schema.Struct({ excerpt: Schema.String, reason: Schema.String })),
-  /** Notes in the Graph that support or argue against a passage. */
   suggestions: Schema.Array(
     Schema.Struct({ excerpt: Schema.String, noteId: Schema.String, reason: Schema.String }),
   ),
-  /** Questions about the argument, to ask before publishing. */
   questions: Schema.Array(
     Schema.Struct({ excerpt: Schema.NullOr(Schema.String), question: Schema.String }),
   ),
@@ -88,13 +69,11 @@ export class WritingProjectNotFound extends Schema.TaggedError<WritingProjectNot
   { id: Schema.String },
 ) {}
 
-/** Another Writing project already has this file name, compared without regard to case. */
 export class WritingProjectNameTaken extends Schema.TaggedError<WritingProjectNameTaken>()(
   "WritingProjectNameTaken",
   { fileName: Schema.String },
 ) {}
 
-/** No site folder is chosen on this computer yet. */
 export class SiteFolderNotSet extends Schema.TaggedError<SiteFolderNotSet>()(
   "SiteFolderNotSet",
   {},
@@ -108,57 +87,42 @@ export class SiteFolderUnavailable extends Schema.TaggedError<SiteFolderUnavaila
   },
 ) {}
 
-/** The site already has a post file with this name; nothing was written. */
 export class PublicationExists extends Schema.TaggedError<PublicationExists>()(
   "PublicationExists",
   { file: Schema.String },
 ) {}
 
-/** This type of Writing project cannot be published yet (the PDF of an assignment). */
 export class PublicationNotReady extends Schema.TaggedError<PublicationNotReady>()(
   "PublicationNotReady",
   { type: WritingProjectType },
 ) {}
 
-/** The AI could not review: ChatGPT is not connected (`off`), or the call failed. */
 export class WritingReviewUnavailable extends Schema.TaggedError<WritingReviewUnavailable>()(
   "WritingReviewUnavailable",
   { reason: Schema.Literals(["off", "failed"]) },
 ) {}
 
-/** The folder in the Graph folder that holds Writing projects; the Graph does not read it. */
 export const WRITING_FOLDER = "Writing";
 
-/**
- * A Reference in the prose: a wikilink to a Note or a Source, then its Location in braces,
- * `[[Busyness is a proxy for productivity]]{p. 64}`. Obsidian still opens the Note; without
- * braces the Reference takes the Note's own page.
- */
 export const REFERENCE = /\[\[([^[\]\n]+?)\]\](?:\{([^{}\n]*)\})?/g;
 
 export interface ReferenceToken {
-  /** Offsets of the whole token in the prose. */
   readonly start: number;
   readonly end: number;
-  /** The file it names, without heading or alias. */
   readonly target: string;
-  /** The Location written in braces, such as "64"; null when the token has none. */
   readonly location: string | null;
 }
 
 const LOCATION_PREFIX = /^(?:pp?|s|ss|side|sider|page|pages)\.?\s*/i;
 
-/** "p. 64", "s. 64" and "64" all mean page 64; an empty Location is none. */
 export const parseLocation = (raw: string | undefined): string | null => {
   const text = (raw ?? "").trim().replace(LOCATION_PREFIX, "").trim();
   return text === "" ? null : text;
 };
 
-/** The token for a Reference, as Glose writes it into the prose. */
 export const referenceToken = (target: string, location: string | null): string =>
   location === null ? `[[${target}]]` : `[[${target}]]{p. ${location}}`;
 
-/** Every Reference in the prose, in order; one inside code stays code. */
 export const findReferences = (body: string): ReadonlyArray<ReferenceToken> => {
   const code = Array.from(body.matchAll(MARKDOWN_CODE), (match) => ({
     start: match.index,
@@ -188,7 +152,6 @@ export const findReferences = (body: string): ReadonlyArray<ReferenceToken> => {
   return out;
 };
 
-/** What a Citation needs from a Source. */
 export type CitedSource = Pick<
   Source,
   | "id"
@@ -202,7 +165,6 @@ export type CitedSource = Pick<
   | "translator"
 >;
 
-/** Why a Reference cannot be made correct yet; each is a warning, never a block. */
 export type ReferenceProblem =
   | "not-found"
   | "no-source"
@@ -212,21 +174,16 @@ export type ReferenceProblem =
   | "quote-mismatch";
 
 export interface ResolvedReference extends ReferenceToken {
-  /** 1 for the first Reference in the prose, and on. */
   readonly number: number;
-  /** The Note it points to; null for a Reference to a Source, or to a missing file. */
   readonly noteId: string | null;
   readonly source: CitedSource | null;
-  /** The written Location, else the Note's own page. */
   readonly page: string | null;
-  /** The quote right before the Reference, if the prose quotes. */
   readonly quote: string | null;
   readonly problems: ReadonlyArray<ReferenceProblem>;
 }
 
 const QUOTE = /(?:"([^"\n]+)"|“([^”\n]+)”|„([^“”\n]+)[“”]|«([^»\n]+)»)[\s.,;:!?)]*$/u;
 
-/** Spacing and quote marks differ between editors; the words must not. */
 const normalizeQuote = (text: string) =>
   text
     .normalize("NFC")
@@ -235,7 +192,6 @@ const normalizeQuote = (text: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
-/** The quoted words that end right before a Reference, in the same paragraph. */
 export const quoteBefore = (body: string, start: number): string | null => {
   const paragraphStart = body.lastIndexOf("\n\n", start);
   const before = body.slice(paragraphStart < 0 ? 0 : paragraphStart, start);
@@ -244,11 +200,6 @@ export const quoteBefore = (body: string, start: number): string | null => {
   return match[1] ?? match[2] ?? match[3] ?? match[4] ?? null;
 };
 
-/**
- * Each Reference with what it points to and what keeps it from a correct Citation: a missing
- * file, a Note without a Source, no Location, missing Source data, or a quote the Note does not
- * hold word for word.
- */
 export const resolveReferences = (
   body: string,
   nodes: ReadonlyArray<Pick<GraphNode, "id" | "kind" | "sourceId" | "body" | "page">>,
@@ -290,7 +241,6 @@ export const resolveReferences = (
   });
 };
 
-/** The year a Citation gives: the edition's, else the first publication's. */
 export const citedYear = (source: CitedSource): number | null =>
   source.editionYear ?? source.firstPublished;
 
@@ -306,13 +256,8 @@ const initials = (given: string | null) =>
         .map((part) => `${Array.from(part)[0] ?? ""}.`)
         .join(" ");
 
-/** "n.d." when the Source gives no year; the warning says so before publishing. */
 const yearText = (source: CitedSource) => String(citedYear(source) ?? "n.d.");
 
-/**
- * A full note Citation (Chicago notes and bibliography), for footnotes and side notes:
- * `Cal Newport, *Deep Work* (Grand Central Publishing, 2016), 64.` Italic is Markdown.
- */
 export const noteCitation = (source: CitedSource, page: string | null): string => {
   const translated = source.translator === null ? "" : `, trans. ${source.translator}`;
   const edition = source.edition === null ? "" : `, ${source.edition} ed.`;
@@ -321,7 +266,6 @@ export const noteCitation = (source: CitedSource, page: string | null): string =
   return `${authorName(source)}, *${source.title}*${translated}${edition} (${facts})${location}.`;
 };
 
-/** The short Citation in the text, without brackets: "Newport 2016, 64". */
 export const shortCitation = (
   source: CitedSource,
   page: string | null,
@@ -337,7 +281,6 @@ export const shortCitation = (
   }
 };
 
-/** One entry of the list of Sources at the end. */
 export const bibliographyEntry = (source: CitedSource, style: CitationStyle): string => {
   const publisher = source.publisher === null ? "" : ` ${source.publisher}.`;
   switch (style) {
@@ -357,7 +300,6 @@ export const bibliographyEntry = (source: CitedSource, style: CitationStyle): st
   }
 };
 
-/** The Sources a text cites, once each, ordered by author as a bibliography is. */
 export const citedSources = (
   references: ReadonlyArray<ResolvedReference>,
 ): ReadonlyArray<CitedSource> => {
@@ -373,7 +315,6 @@ export const citedSources = (
 
 const TRANSLITERATIONS: Record<string, string> = { æ: "ae", ø: "oe", å: "aa", ß: "ss" };
 
-/** The URL part of a post's file name: "a-busy-day-is-not-a-productive-day". */
 export const postSlug = (title: string): string =>
   title
     .toLocaleLowerCase("und")
@@ -385,24 +326,16 @@ export const postSlug = (title: string): string =>
     .slice(0, 80)
     .replace(/-+$/, "") || "post";
 
-/** Where a Bridgetown site keeps its posts, from the site folder. */
 export const POSTS_FOLDER = ["src", "_posts"] as const;
 
-/** The post's file name in the site: `2026-11-13-a-busy-day-is-not-a-productive-day.md`. */
 export const postFileName = (date: string, title: string): string =>
   `${date}-${postSlug(title)}.md`;
 
 const SOURCES_HEADING: Record<string, string> = { da: "Kilder", en: "Sources" };
 
-/** The words for the list of Sources at the end, in the language of the prose. */
 export const sourcesHeading = (language: string): string =>
   SOURCES_HEADING[language.toLowerCase().split("-")[0] ?? "en"] ?? "Sources";
 
-/**
- * A Blog post as a Bridgetown post: YAML frontmatter (`layout`, `title`, `date`), the prose with
- * each Reference turned into a kramdown footnote (`[^1]`) or a short Citation linked to the list
- * of Sources at the end. Side notes are footnotes too; the site's theme sets them in the margin.
- */
 export const renderBlogPost = (
   project: Pick<WritingProject, "title" | "body" | "referenceForm" | "language">,
   references: ReadonlyArray<ResolvedReference>,

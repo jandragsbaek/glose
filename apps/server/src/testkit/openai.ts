@@ -13,7 +13,6 @@ import * as Signature from "effect/crypto/Signature";
 import { layerCrypto } from "../chatgpt/ChatGpt.ts";
 import { OpenAi } from "../chatgpt/OpenAi.ts";
 
-/** The fake's addresses. Nothing listens there: the fake HttpClient answers instead. */
 export const FAKE_OPENAI = {
   ...OpenAi.defaultValue(),
   issuer: "https://auth.test",
@@ -21,20 +20,16 @@ export const FAKE_OPENAI = {
   tokenUrl: "https://auth.test/token",
   revokeUrl: "https://auth.test/revoke",
   apiUrl: "https://api.test/v1",
-  // A free port: the test must not depend on 1455 being free on the machine.
   registrationPort: 0,
 };
 
 export interface Answer {
   readonly status: number;
-  /** JSON body, or SSE events for a streamed response. */
   readonly body: unknown;
   readonly sse?: boolean;
-  /** Keep the stream open after the events, as a long answer still on its way. */
   readonly open?: boolean;
 }
 
-/** An SSE body that sends `text`, then stays open until the reader cancels it. */
 const openStream = (text: string) =>
   new ReadableStream<Uint8Array>({
     start: (controller) => controller.enqueue(new TextEncoder().encode(text)),
@@ -55,17 +50,12 @@ const IdClaims = Schema.Struct({
   exp: Schema.Number,
 });
 
-/** SSE text of a streamed Responses API answer. */
 export const sse = (events: ReadonlyArray<unknown>) =>
   events.map((event) => `data: ${JSON.stringify(event)}\n\n`).join("");
 
 const bodyText = (request: HttpClientRequest.HttpClientRequest) =>
   request.body._tag === "Uint8Array" ? new TextDecoder().decode(request.body.body) : "";
 
-/**
- * A scripted OpenAI: answers queued per URL, every request recorded, and a signing key whose
- * public half is the only key Glose trusts.
- */
 export const makeFakeOpenAi = Effect.gen(function* () {
   const { publicKey, privateKey } = yield* Jwk.generateKeyPair({
     algorithm: "RS256",
@@ -74,7 +64,6 @@ export const makeFakeOpenAi = Effect.gen(function* () {
   const signingKey = yield* Jwk.importPrivate(privateKey, "RS256");
   const signature = yield* Signature.Signature;
   const queues = new Map<string, Array<Answer>>();
-  /** Requests whose body matches take answers from their own queue, never the URL's. */
   const lanes: Array<{
     readonly url: string;
     readonly match: (body: string) => boolean;
@@ -115,14 +104,9 @@ export const makeFakeOpenAi = Effect.gen(function* () {
       Layer.succeed(OpenAi, FAKE_OPENAI),
     ),
     requests,
-    /** Queues answers for a URL; each request takes the next one. */
     answer: (url: string, ...answers: ReadonlyArray<Answer>) => {
       queues.set(url, [...(queues.get(url) ?? []), ...answers]);
     },
-    /**
-     * Answers for the requests to a URL whose body matches, such as the Card Checks beside a
-     * Session's turn; with no answers queued, such requests get a 404.
-     */
     answerMatching: (
       url: string,
       match: (body: string) => boolean,
@@ -132,7 +116,6 @@ export const makeFakeOpenAi = Effect.gen(function* () {
       if (lane === undefined) lanes.push({ url, match, answers: [...answers] });
       else lane.answers.push(...answers);
     },
-    /** An ID token as OpenAI would sign it for this client. */
     idToken: (claims: {
       readonly clientId: string;
       readonly sub: string;

@@ -12,12 +12,10 @@ import * as Cards from "./Cards.ts";
 
 const NOTE = "Attention residue lowers performance after switching";
 
-/** A Graph folder after setup, with the real services over it. */
 const withGraph = <A, E>(
   test: (graph: {
     readonly folder: string;
     readonly cards: Cards.Cards["Service"];
-    /** Writes a file in the Cards folder, as another editor would. */
     readonly writeCard: (name: string, markdown: string) => Effect.Effect<void, unknown>;
     readonly readCard: (name: string) => Effect.Effect<string, unknown>;
   }) => Effect.Effect<A, E, FileSystem.FileSystem | Path.Path | Graph.Graph>,
@@ -95,7 +93,6 @@ it.layer(NodeServices.layer)("Cards", (it) => {
 
         assert.strictEqual(second.file, "What is flow 2");
         assert.strictEqual(third.file, "What is flow 3");
-        // A question with nothing a file name may hold is named by its id.
         assert.strictEqual(symbols.file, symbols.id);
       }),
     ),
@@ -156,7 +153,6 @@ it.layer(NodeServices.layer)("Cards", (it) => {
           },
         ]);
 
-        // A later edit in another editor shows on the next read.
         yield* writeCard("No answer.md", "---\nglose: card\nai: true\n---\n\nName four kinds.\n");
         const second = yield* cards.list;
         assert.deepInclude(second[2], { question: "Name four kinds.", ai: true });
@@ -192,9 +188,7 @@ it.layer(NodeServices.layer)("Cards", (it) => {
           question: "When does flow happen?",
           answer: "When challenge meets skill.",
         });
-        // An edit alone does not make AI text the user's own.
         assert.isTrue(edited.ai);
-        // A Card made by hand gets its id when Glose first writes it.
         assert.match(edited.id ?? "", ID);
 
         const cleared = yield* cards.clearAiMark("Flow");

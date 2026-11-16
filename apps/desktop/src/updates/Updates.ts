@@ -12,28 +12,18 @@ import { autoUpdater } from "electron-updater";
 
 import * as Status from "./updatesStatus.ts";
 
-/** The window has loaded by then, so the first check does not slow the start. */
 const FIRST_CHECK_DELAY = Duration.seconds(10);
 const CHECK_INTERVAL = Duration.hours(1);
 
 const offReason = (): UpdatesOffReason | null => {
-  // Only an installed app has a feed (app-update.yml) and something to replace.
   if (!Electron.app.isPackaged) return "not-installed";
   if (process.platform === "darwin") return "unsigned-mac";
   if (process.platform === "linux" && !process.env.APPIMAGE) return "not-appimage";
   return null;
 };
 
-/**
- * Looks for a newer nightly on GitHub after the start, every hour and when the user asks.
- * The user downloads it, then restarts Glose to install it; a downloaded release also
- * installs when Glose quits. The window follows each step through `window.gloseDesktop`.
- *
- * Call it before the window opens: the window asks for the status as soon as it loads.
- */
 export const start = Effect.fn("Updates.start")(function* (appOrigin: string) {
   let status = Status.initial(Electron.app.getVersion(), offReason());
-  /** True from the restart request until Glose quits or the installer fails. */
   let installing = false;
 
   const set = (next: UpdatesStatus) => {
@@ -47,7 +37,6 @@ export const start = Effect.fn("Updates.start")(function* (appOrigin: string) {
   };
   const nextStep = () => (status._tag === "On" ? updatesNextStep(status) : "wait");
 
-  /** `requested`: the user asked; only then does a failure show in the bar. */
   const check = (requested: boolean) =>
     Effect.suspend(() => {
       if (status._tag !== "On" || status.activity !== "idle") return Effect.void;
@@ -64,7 +53,6 @@ export const start = Effect.fn("Updates.start")(function* (appOrigin: string) {
             ),
           ),
         ),
-        // Offline, or no release yet: the next check tries again.
         Effect.catch((error) =>
           Effect.sync(() =>
             update(requested ? Status.checkFailed : Status.checkFailedQuietly),
@@ -90,8 +78,6 @@ export const start = Effect.fn("Updates.start")(function* (appOrigin: string) {
     );
   });
 
-  // The quit closes the window and stops the local server (see Backend), then the installer
-  // replaces the app and opens it again.
   const install = Effect.sync(() => {
     if (nextStep() !== "install") return;
     installing = true;
@@ -105,7 +91,6 @@ export const start = Effect.fn("Updates.start")(function* (appOrigin: string) {
     ),
   );
 
-  // The window's frame must show the app itself; nothing else may drive the updater.
   const fromApp = (event: Electron.IpcMainInvokeEvent) => {
     const url = event.senderFrame?.url;
     return url !== undefined && URL.canParse(url) && new URL(url).origin === appOrigin;
@@ -126,7 +111,6 @@ export const start = Effect.fn("Updates.start")(function* (appOrigin: string) {
   autoUpdater.on("download-progress", (progress) =>
     update((on) => Status.downloadProgressed(on, progress.percent)),
   );
-  // A failed installer start does not throw: the updater reports it here and Glose stays open.
   autoUpdater.on("error", (error) => {
     if (!installing) return;
     installing = false;

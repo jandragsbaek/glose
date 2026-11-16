@@ -5,10 +5,6 @@ import type { ReactNode } from "react";
 import { wordCount } from "../domain/source.ts";
 import { useT } from "../i18n/I18n.tsx";
 
-/**
- * The steps of the Reading Stage in the order the Source's start gives them, with the current
- * one marked for sight and for screen readers.
- */
 export function StepBar({
   source,
   extractionNote,
@@ -16,11 +12,8 @@ export function StepBar({
   freeTextAction,
 }: {
   readonly source: Source;
-  /** What Extraction has made so far, in place of the general note. */
   readonly extractionNote?: string;
-  /** What the Probe has asked so far, in place of the general note. */
   readonly probeNote?: string;
-  /** A way back to the Free text, beside its note. */
   readonly freeTextAction?: ReactNode;
 }) {
   const t = useT();

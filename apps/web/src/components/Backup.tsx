@@ -1,3 +1,4 @@
+/* oxlint-disable jandragsbaek/max-file-lines -- the Backup panel with its connect sheet and remote forms; move the sheet out next */
 import { useAtom, useAtomSet, useAtomValue } from "@effect/atom-react";
 import {
   DEFAULT_BACKUP_REPOSITORY,
@@ -36,10 +37,6 @@ type On = Extract<VersionsStatus, { _tag: "On" }>;
 const dayOf = (date: Date) => `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 const isToday = (date: Date) => dayOf(date) === dayOf(new Date());
 
-/**
- * Where a remote is, as the user would say it: `github.com/jan/glose-graph`, with a link to the
- * repository's page when it is on GitHub.
- */
 export const remotePlace = (url: string): { label: string; href: string | null } => {
   const github =
     /^https:\/\/github\.com\/([^/\s]+\/[^/\s]+?)(?:\.git)?\/?$/i.exec(url) ??
@@ -61,10 +58,8 @@ function Place({ url }: { readonly url: string }) {
   );
 }
 
-/** A GitHub remote over HTTPS: git signs in to it with the GitHub connection. */
 const usesGitHubSignIn = (url: string) => /^https:\/\/github\.com\//i.test(url);
 
-/** The refusal a mutation failed with, or null for any other failure. */
 const refusalOf = (exit: Exit.Exit<unknown, unknown>): RemoteRefusedReason | null => {
   if (Exit.isSuccess(exit)) return null;
   const error = Cause.findErrorOption(exit.cause);
@@ -86,16 +81,11 @@ function useGitHub() {
   return AsyncResult.getOrElse(useAtomValue(gitHubStatusAtom), () => null);
 }
 
-/** Opens the Backup sheet; Settings and the status bar's Versions panel both use it. */
 export function useOpenBackup() {
   const setSheet = useAtomSet(backupSheetAtom);
   return (mode: BackupSheetMode) => setSheet(mode);
 }
 
-/**
- * The Backup panel in Settings: a short ledger of where the Graph's Versions are. Setting a
- * backup up happens once, in the Backup sheet.
- */
 export function BackupPanel() {
   const t = useT();
   const status = useVersions();
@@ -234,10 +224,6 @@ function BackedUp({ status, remoteUrl }: { readonly status: On; readonly remoteU
   );
 }
 
-/**
- * The Backup sheet: a modal leaf over the page that sets a backup up, once. It lives beside the
- * status bar, so Settings and the Versions panel open the same sheet.
- */
 export function BackupSheet() {
   const [mode, setMode] = useAtom(backupSheetAtom);
   return mode === null ? null : (
@@ -260,8 +246,6 @@ function Sheet({
   const versions = useVersions();
   const cancel = useAtomSet(cancelGitHubAtom);
   const [chosenDone, setDone] = useState(false);
-  // Signing in again for a GitHub remote set before the sheet opened is all the sheet had to do.
-  // A remote the sheet itself adds counts only once its backup succeeds.
   const [hadGitHubRemote] = useState(
     () =>
       versions?._tag === "On" &&
@@ -328,10 +312,6 @@ export function SheetFoot({ children }: { readonly children: ReactNode }) {
   return <div className="button-row sheet__foot">{children}</div>;
 }
 
-/**
- * Step 1 of a GitHub sheet: connect with a code the user types on GitHub. The Backup sheet and
- * the first start's sheet share it; each says in its own words what the connection is for.
- */
 export function ConnectStep({
   status,
   intro,
@@ -342,7 +322,6 @@ export function ConnectStep({
   readonly status: Exclude<GitHubStatus, { _tag: "Connected" }>;
   readonly intro: string;
   readonly codeIntro: string;
-  /** This build cannot connect to GitHub: the user goes another way. */
   readonly onUseRemote: () => void;
   readonly onCancel: () => void;
 }) {
@@ -417,7 +396,6 @@ export function ConnectStep({
   );
 }
 
-/** The code the user types on GitHub, typed like a label, with a way to copy it. */
 function CodeRow({ code }: { readonly code: string }) {
   const t = useT();
   const [copied, setCopied] = useState(false);

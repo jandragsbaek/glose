@@ -5,7 +5,6 @@ import type * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Schema from "effect/Schema";
 import * as NodeCrypto from "node:crypto";
 
-/** A fresh secret per sign-in attempt: PKCE verifier and challenge, `state` and `nonce`. */
 export const makeAttemptSecrets = () => {
   const verifier = NodeCrypto.randomBytes(32).toString("base64url");
   return {
@@ -21,25 +20,21 @@ export const TokenResponse = Schema.Struct({
   refresh_token: Schema.optionalKey(Schema.String),
   id_token: Schema.optionalKey(Schema.String),
   expires_in: Schema.Number,
-  /** Space-separated granted scopes. */
   scope: Schema.optionalKey(Schema.String),
 });
 export type TokenResponse = typeof TokenResponse.Type;
 
 const OAuthErrorBody = Schema.Struct({ error: Schema.String });
 
-/** The token endpoint said no; `code` is the OAuth error, such as `invalid_grant`. */
 export class TokenRejected extends Schema.TaggedError<TokenRejected>()("TokenRejected", {
   status: Schema.Number,
   code: Schema.String,
 }) {}
 
-/** No usable answer: network failure, a 5xx, or a body Glose cannot read. */
 export class TokenUnavailable extends Schema.TaggedError<TokenUnavailable>()("TokenUnavailable", {
   detail: Schema.String,
 }) {}
 
-/** Refresh errors after which the refresh token can never work again. */
 export const UNUSABLE_REFRESH_CODES: ReadonlySet<string> = new Set([
   "invalid_grant",
   "invalid_refresh_token",
@@ -64,7 +59,6 @@ const readTokenResponse = Effect.fn("oauth.readTokenResponse")(function* (
   return yield* new TokenUnavailable({ detail: `token endpoint answered ${response.status}` });
 });
 
-/** POSTs a form to the token endpoint and reads the tokens. */
 export const requestTokens = Effect.fn("oauth.requestTokens")(
   function* (tokenUrl: string, form: Record<string, string>) {
     const client = yield* HttpClient.HttpClient;

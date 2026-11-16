@@ -1,7 +1,6 @@
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
-  // One self-contained file: the desktop app ships it without a node_modules tree.
   pack: {
     entry: ["src/bin.ts"],
     format: "esm",

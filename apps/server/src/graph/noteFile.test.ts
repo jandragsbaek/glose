@@ -44,9 +44,8 @@ describe("renderNoteFile", () => {
         "",
       ].join("\n"),
     );
-    // The Graph reads back what was written: the Source, the Location, both AI marks, the Links.
     const node = read(markdown);
-    assert.strictEqual(node?.sourceId, null); // the Source file is not in this one-file Graph
+    assert.strictEqual(node?.sourceId, null);
     assert.strictEqual(node?.page, "47");
     assert.isTrue(node?.aiText);
     assert.isTrue(node?.aiTitle);

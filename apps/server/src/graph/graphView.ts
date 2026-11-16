@@ -13,7 +13,6 @@ import * as Option from "effect/Option";
 import { FRONTMATTER, parseSourceFile, parseYaml } from "./sourceFile.ts";
 
 export interface GraphFile {
-  /** The file name without `.md`. */
   readonly name: string;
   readonly markdown: string;
 }
@@ -24,7 +23,6 @@ const linkTargets = (markdown: string): ReadonlyArray<string> =>
     (match) => parseWikilink(match[1] ?? "").target,
   ).filter((target) => target !== "");
 
-/** A Note names its Source as a wikilink: `source: "[[Arendt 1958 The Human Condition]]"`. */
 const sourceName = (frontmatter: unknown): string | null => {
   if (typeof frontmatter !== "object" || frontmatter === null || !("source" in frontmatter)) {
     return null;
@@ -36,11 +34,6 @@ const sourceName = (frontmatter: unknown): string | null => {
   return name === "" ? null : name;
 };
 
-/**
- * AI text carries an AI mark: the file as a whole (`ai: true`, so Obsidian search and other
- * tools find it), and its paragraphs or Parts (`[!ai]`, `[!ai-part]`). Either mark counts, so
- * a file whose two marks drift apart after a hand edit is never shown as free of AI text.
- */
 const hasAiText = (frontmatter: unknown, body: string): boolean =>
   (typeof frontmatter === "object" &&
     frontmatter !== null &&
@@ -53,7 +46,6 @@ const field = (frontmatter: unknown, key: string): unknown =>
     ? (frontmatter as Record<string, unknown>)[key]
     : undefined;
 
-/** A Note's Location: `page: 47` or `page: "47–49"`. */
 const pageOf = (frontmatter: unknown): string | null => {
   const value = field(frontmatter, "page");
   if (typeof value === "number") return String(value);
@@ -101,11 +93,6 @@ const parseFile = ({ name, markdown }: GraphFile): ParsedFile => {
   });
 };
 
-/**
- * The Graph as the files say it is: every Markdown file is a node, and every wikilink that
- * names another file in the folder is a Link, as in Obsidian. A wikilink to a missing file is
- * not a Link, and a file linking to itself, or twice to the same file, adds one Link at most.
- */
 export const buildGraphView = (files: ReadonlyArray<GraphFile>): GraphView => {
   const parsed = files.map(parseFile).sort((a, b) => a.node.id.localeCompare(b.node.id, "en"));
   const byKey = new Map(parsed.map((file) => [linkKey(file.node.id), file.node]));

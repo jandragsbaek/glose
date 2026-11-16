@@ -17,7 +17,6 @@ export const make = (version: string) =>
     get: Effect.succeed({ version }),
   });
 
-/** The desktop app passes its own version, so the window and the installer agree. */
 export const layer = Layer.succeed(
   ServerInfo,
   make(process.env.GLOSE_VERSION ?? packageJson.version),

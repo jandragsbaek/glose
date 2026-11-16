@@ -16,16 +16,11 @@ import {
 
 import type { Review } from "./reviewLog.ts";
 
-/**
- * FSRS-6, the model Anki uses (Anki 26.09). ts-fsrs defaults to FSRS-7, which Anki does not use
- * yet; the model is named here so that a ts-fsrs update cannot change it unasked.
- */
 const MODEL = "FSRS-6";
 
 export type Scheduler = DefaultScheduler<typeof MODEL>;
 type FsrsCard = DefaultSchedulerCard<typeof MODEL>;
 
-/** Anki's learn ahead limit: with nothing else due, a learning step this close is shown now. */
 const LEARN_AHEAD_MS = 20 * 60_000;
 
 const FSRS_RATINGS = {
@@ -39,12 +34,9 @@ export const makeScheduler = (settings: RecallSettings): Promise<Scheduler> =>
   DefaultScheduler({
     version: MODEL,
     desiredRetention: settings.desiredRetention,
-    // The settings schema admits only steps of this form.
     learningSteps: settings.learningSteps as ReadonlyArray<StepUnit>,
     relearningSteps: settings.relearningSteps as ReadonlyArray<StepUnit>,
     maximumInterval: settings.maximumInterval,
-    // Anki always fuzzes, so Cards made on one day do not all come back on one day. The fuzz is
-    // seeded by the Card id and its number of Reviews, so a replay gives the same dates.
     enableFuzz: true,
     ...(settings.weights === null ? {} : { weights: settings.weights }),
   });
@@ -61,20 +53,14 @@ const stateOf = (card: FsrsCard): ReviewState => {
   }
 };
 
-/** Each Card's FSRS state after every Review, and what each Review counted as on its day. */
 export interface Replay {
   readonly cards: Map<string, FsrsCard>;
-  /** The time of each Review and the state its Card was in before it, for the daily limits. */
   readonly reviews: Array<{ readonly at: number; readonly state: ReviewState }>;
 }
 
 const newCard = (scheduler: Scheduler, id: string, at: number) =>
   scheduler.newCard({ now: new Date(at), cardId: id });
 
-/**
- * Applies one Review after those already applied. False when it is older than the Card's last
- * Review (a Review from another computer arrived late), which needs a full replay instead.
- */
 export const applyReview = (scheduler: Scheduler, replay: Replay, review: Review): boolean => {
   const before = replay.cards.get(review.card) ?? newCard(scheduler, review.card, review.at);
   if (before.lastReviewAt !== null && review.at < before.lastReviewAt.getTime()) return false;
@@ -88,7 +74,6 @@ export const applyReview = (scheduler: Scheduler, replay: Replay, review: Review
   return true;
 };
 
-/** Every Card's state from the whole log, in time order across all computers. */
 export const replayReviews = (scheduler: Scheduler, reviews: ReadonlyArray<Review>): Replay => {
   const replay: Replay = { cards: new Map(), reviews: [] };
   for (const review of [...reviews].sort((a, b) => a.at - b.at)) {
@@ -97,7 +82,6 @@ export const replayReviews = (scheduler: Scheduler, reviews: ReadonlyArray<Revie
   return replay;
 };
 
-/** The start of the Review day that holds `now`, at the hour the settings name, local time. */
 export const dayStart = (now: number, hour: number): number => {
   const date = new Date(now);
   const start = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour);
@@ -105,7 +89,6 @@ export const dayStart = (now: number, hour: number): number => {
   return start.getTime();
 };
 
-/** The day after; a calendar day, not 24 hours, so a change of summer time keeps the hour. */
 const nextDayStart = (start: number): number => {
   const date = new Date(start);
   date.setDate(date.getDate() + 1);
@@ -125,16 +108,10 @@ const ratingDue = (scheduler: Scheduler, card: FsrsCard, now: number): RatingDue
   };
 };
 
-/**
- * What is due today, in Anki's order: learning steps that are due, then Cards past learning
- * (oldest due first, up to the daily limit), then new Cards (up to the daily limit). With nothing
- * due, a learning step within the learn ahead limit comes early.
- */
 export const buildQueue = (input: {
   readonly scheduler: Scheduler;
   readonly replay: Replay;
   readonly settings: RecallSettings;
-  /** Every Card, in the order new Cards are started. */
   readonly cards: ReadonlyArray<Card>;
   readonly now: number;
 }): ReviewQueue => {

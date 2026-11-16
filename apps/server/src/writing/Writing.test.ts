@@ -39,7 +39,6 @@ const POST: WritingProjectFields = {
   body: `Newport has a name for this.[[${NOTE}]]{p. 64}`,
 };
 
-/** This computer signed in to ChatGPT before Glose started. */
 const signIn = (dirs: { readonly dataDir: string }) =>
   writeCredentials(dirs, {
     hostId: "urn:uuid:host-1",
@@ -61,7 +60,6 @@ const signIn = (dirs: { readonly dataDir: string }) =>
     ],
   });
 
-/** A Graph with one Source and one Note from it, and the site of a Bridgetown blog. */
 const setUp = (signedIn = false) =>
   Effect.gen(function* () {
     const dirs = yield* makeDirs;
@@ -201,7 +199,6 @@ it.layer(NodeServices.layer)("Writing", (it) => {
         );
         assert.deepStrictEqual((yield* writing.get(post.id)).published, record);
 
-        // A day later the post keeps its date, so it names the same file.
         yield* TestClock.adjust("1 day");
         const exists = yield* writing.publish({ id: post.id, replace: false }).pipe(Effect.flip);
         assert.deepStrictEqual(

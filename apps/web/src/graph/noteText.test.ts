@@ -2,7 +2,6 @@ import { assert, describe, it } from "@effect/vitest";
 
 import { parseNoteText } from "./noteText.ts";
 
-/** Offsets only key the rendered parts; the test reads the structure without them. */
 const withoutOffsets = (value: unknown): unknown =>
   JSON.parse(JSON.stringify(value, (key, field: unknown) => (key === "at" ? undefined : field)));
 
@@ -198,7 +197,6 @@ describe("parseNoteText", () => {
 
   it("reads no AI mark or heading inside fenced code, and reads one after it", () => {
     const lines = ["Example:", "```", "> [!ai]", "# not a heading", "```", "> [!ai]", "> Real."];
-    // Windows line ends move every offset after them; the reading must not change.
     assert.deepStrictEqual(
       withoutOffsets(parseNoteText(lines.join("\r\n"))),
       withoutOffsets(parseNoteText(lines.join("\n"))),

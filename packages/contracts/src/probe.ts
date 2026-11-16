@@ -1,23 +1,15 @@
 import type { SessionEntry } from "./session.ts";
 
-/**
- * Where a topic of a Probe stands. `asking`: asked, not judged yet. `known`: answered right with
- * sound Reasoning. `known-after-teaching`: the same, after the AI taught a gap in it. `taught`:
- * a gap the AI taught, not asked again yet. `gap`: an answer showed a gap, not taught yet.
- */
 export type TopicState = "asking" | "known" | "known-after-teaching" | "taught" | "gap";
 
 export interface TopicFinding {
-  /** The topic as the AI first named it. */
   readonly topic: string;
   readonly state: TopicState;
-  /** The numbers of the questions on it, in order. */
   readonly questions: ReadonlyArray<number>;
 }
 
 type Judgment = Extract<SessionEntry, { _tag: "ProbeJudgment" }>;
 
-/** An answer shows no gap: the result is right and the Reasoning sound, or not given. */
 export const isKnown = (judgment: Pick<Judgment, "reasoning" | "result">): boolean =>
   judgment.result === "right" && (judgment.reasoning === "sound" || judgment.reasoning === "none");
 
@@ -26,15 +18,11 @@ const topicKey = (topic: string) => topic.trim().toLowerCase();
 interface Track {
   topic: string;
   questions: Array<number>;
-  /** The last judgment showed no gap; null before the first. */
   known: boolean | null;
-  /** The AI taught a gap since the last judgment. */
   taughtSince: boolean;
-  /** The AI taught a gap in this topic at some time. */
   everTaught: boolean;
 }
 
-/** What a Probe found, topic by topic, in the order the topics were first asked about. */
 export const probeFindings = (
   entries: ReadonlyArray<SessionEntry>,
 ): ReadonlyArray<TopicFinding> => {
@@ -114,10 +102,6 @@ export const probeFindings = (
     }));
 };
 
-/**
- * The topics of a Probe by state, as "What the Probe found" names them: each topic counts once,
- * so the counts add up to the topics asked about.
- */
 export const probeTally = (findings: ReadonlyArray<TopicFinding>) => {
   const count = (state: TopicState) => findings.filter((f) => f.state === state).length;
   return {
@@ -128,7 +112,6 @@ export const probeTally = (findings: ReadonlyArray<TopicFinding>) => {
   };
 };
 
-/** The question the user may answer now: the last one asked, while it has no answer. */
 export const openQuestion = (
   entries: ReadonlyArray<SessionEntry>,
 ): Extract<SessionEntry, { _tag: "ProbeQuestion" }> | null => {

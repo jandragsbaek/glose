@@ -20,7 +20,6 @@ const GENERATED_AND_BUILD_OUTPUT = [
   "**/routeTree.gen.ts",
 ];
 
-/** React SPA, compiled by the React Compiler. */
 const REACT_SOURCES = ["apps/web/src/**"];
 const tsx = (globs: ReadonlyArray<string>) => globs.map((glob) => `${glob}/*.{ts,tsx}`);
 
@@ -37,7 +36,6 @@ export default defineConfig({
     hookTimeout: 60_000,
     testTimeout: 60_000,
     allowOnly: !process.env.CI,
-    // Flaky tests are fixed, not retried.
     retry: 0,
     fakeTimers: {
       toFake: [
@@ -57,7 +55,6 @@ export default defineConfig({
     },
   },
   staged: {
-    // In order, so lint reads the formatted file.
     "*": ["vp fmt --no-error-on-unmatched-pattern", "vp lint --no-error-on-unmatched-pattern"],
   },
   fmt: {

@@ -12,9 +12,7 @@ export default defineConfig({
   ],
   server: {
     port: Number(process.env.PORT ?? 5183),
-    // The desktop app waits for exactly this address, so never drift to the next free port.
     strictPort: true,
-    // Single origin in dev, as in production: Vite forwards the app RPC.
     proxy: { [RPC_PATH]: server },
   },
 });

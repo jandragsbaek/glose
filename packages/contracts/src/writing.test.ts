@@ -40,7 +40,6 @@ const NODES = [
   { id: "An idea of my own", kind: "note" as const, sourceId: null, body: "", page: null },
 ];
 
-/** The problems of each Reference in the prose, in order. */
 const problems = (body: string) =>
   resolveReferences(body, NODES, [NEWPORT]).map((reference) => reference.problems.join(","));
 

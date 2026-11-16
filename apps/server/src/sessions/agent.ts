@@ -8,28 +8,19 @@ import * as Stream from "effect/Stream";
 
 import { type OutputItem, Responses, ResponsesError } from "../chatgpt/Responses.ts";
 
-/** A Responses API input item, as JSON. Output items go back in as input unchanged. */
 export type InputItem = Readonly<Record<string, unknown>>;
 
-/** A function the agent may call. What it may do is what the AI may do in that Section. */
 export interface AgentTool {
-  /** The name the model sees, such as `read_source`. */
   readonly name: string;
-  /** The name the user sees in the Session; null for a tool whose result shows by itself. */
   readonly entry: SessionTool | null;
   readonly description: string;
-  /** JSON Schema of the arguments, strict: every property required, nothing extra. */
   readonly parameters: Readonly<Record<string, unknown>>;
-  /** What the user sees the tool use: a Note's name, or the words searched for. */
   readonly detail?: (args: unknown) => string | undefined;
-  /** Answers with JSON for the model. A failure is also an answer, never a crash. */
   readonly run: (args: unknown) => Effect.Effect<unknown>;
 }
 
-/** Glose's tools reach the model in one namespace, as the ChatGPT plan route requires. */
 export const NAMESPACE = "glose";
 
-/** Model calls in one turn, so a confused model cannot loop for ever on the user's plan. */
 export const MAX_ROUNDS = 12;
 
 const FunctionCall = Schema.Struct({
@@ -52,7 +43,6 @@ const decodeAssistantMessage = Schema.decodeUnknownOption(AssistantMessage);
 
 const decodeArguments = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.Unknown));
 
-/** A reasoning item with the summary OpenAI writes of the model's reasoning. */
 const ReasoningItem = Schema.Struct({
   type: Schema.Literal("reasoning"),
   summary: Schema.optionalKey(
@@ -71,18 +61,10 @@ const summaryText = (item: OutputItem) =>
     return text === "" ? Option.none() : Option.some(text);
   });
 
-/**
- * The route refused the request for its reasoning summary: a model or account without
- * summaries. The turn goes on without them.
- */
 const refusesSummaries = (error: ResponsesError) =>
   (error.status === 400 || error.status === null) &&
   /reasoning/i.test(`${error.code ?? ""} ${error.detail}`);
 
-/**
- * Output items go back without their `id`: with `store: false` OpenAI keeps no items to look
- * up, and the encrypted reasoning travels in the item itself.
- */
 const toInput = ({ id: _id, ...item }: OutputItem): InputItem => item;
 
 const messageText = (item: OutputItem) =>
@@ -99,22 +81,13 @@ export interface Turn {
   readonly instructions: string;
   readonly tools: ReadonlyArray<AgentTool>;
   readonly items: ReadonlyArray<InputItem>;
-  /** The AI's text as it arrives. */
   readonly onDelta: (delta: string) => Effect.Effect<void>;
-  /** A visible step: an AI message or a tool use. */
   readonly onEntry: (entry: SessionEntry) => Effect.Effect<void>;
-  /** The whole input so far, after each model call and its tool calls, ready to keep. */
   readonly onItems: (items: ReadonlyArray<InputItem>) => Effect.Effect<void>;
-  /** Ask for a summary of the model's reasoning, shown as a Thinking entry. */
   readonly summaries: boolean;
-  /** The route refused reasoning summaries; later turns should not ask. */
   readonly onSummariesRefused: Effect.Effect<void>;
 }
 
-/**
- * One agent turn: call the model, run the tools it asks for, and call it again with the
- * results, until it answers without a tool call.
- */
 export const runTurn = Effect.fn("agent.runTurn")(function* (turn: Turn) {
   const responses = yield* Responses;
   const tools = new Map(turn.tools.map((tool) => [tool.name, tool]));

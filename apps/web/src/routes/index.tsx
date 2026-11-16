@@ -19,7 +19,6 @@ import { cardsAtom } from "../state/cards.ts";
 import { graphAtom, sourcesAtom } from "../state/graph.ts";
 import { writingListAtom } from "../state/writing.ts";
 
-/** The date is read when Today is opened, not on every render. */
 export const Route = createFileRoute("/")({
   component: Today,
   loader: () => ({ opened: new Date() }),
@@ -98,7 +97,6 @@ function SourcesInProgress() {
   });
 }
 
-/** The Cards there are; Review, and so the Cards due today, comes in a later version. */
 function RecallToday() {
   const t = useT();
   const cards = useAtomValue(cardsAtom);
@@ -128,10 +126,8 @@ function RecallToday() {
   });
 }
 
-/** Few enough to take in at a glance; the rest wait in the Graph. */
 const AI_TEXT_SHOWN = 8;
 
-/** Every Note that holds AI text, until the user rewrites it in their own words. */
 function NotesWithAiText() {
   const t = useT();
   const graph = useAtomValue(graphAtom);
@@ -245,7 +241,6 @@ function NoSource() {
   );
 }
 
-/** The piece written last, to go on with it. */
 function WritingToday() {
   const t = useT();
   const projects = AsyncResult.getOrElse(useAtomValue(writingListAtom), () => null);

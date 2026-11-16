@@ -13,16 +13,13 @@ import { Notice } from "./ui.tsx";
 
 type Mode = "read" | "edit" | "delete";
 
-/** A saved Card: read it, edit it, clear its AI mark once rewritten, or delete it. */
 export function CardItem({
   card,
   showFrom = true,
   close,
 }: {
   readonly card: ScoredCard;
-  /** The Note it comes from; a page about that Note leaves it out. */
   readonly showFrom?: boolean;
-  /** The way out of the sheet the Card is open in, at the end of its buttons. */
   readonly close?: ReactNode;
 }) {
   const t = useT();

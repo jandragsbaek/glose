@@ -6,7 +6,6 @@ import * as Schema from "effect/Schema";
 
 import { writeFileAtomic } from "../storage.ts";
 
-/** Hidden folder inside the Graph folder; it travels when the folder is moved or shared. */
 export const GLOSE_DIR = ".glose";
 
 const GraphSettingsJson = Schema.fromJsonString(GraphSettings);
@@ -17,14 +16,12 @@ const EMPTY: GraphSettings = {};
 
 const storageError = (cause: unknown) => new StorageError({ detail: String(cause) });
 
-/** Starts and opens Graph folders. Both take an absolute path and refuse anything else. */
 export const make = (fs: FileSystem.FileSystem, path: Path.Path) => {
   const settingsFile = (folder: string) => path.join(folder, GLOSE_DIR, "settings.json");
 
   const unavailable = (folder: string, reason: GraphFolderUnavailable["reason"]) =>
     new GraphFolderUnavailable({ path: folder, reason });
 
-  /** "missing", or whether the path is a folder; a path Glose cannot inspect is a storage error. */
   const inspect = Effect.fn("GraphFolder.inspect")(function* (folder: string) {
     if (!path.isAbsolute(folder)) return yield* unavailable(folder, "not-absolute");
     if (!(yield* fs.exists(folder).pipe(Effect.mapError(storageError)))) return "missing";
@@ -42,10 +39,6 @@ export const make = (fs: FileSystem.FileSystem, path: Path.Path) => {
     (effect, folder) => Effect.mapError(effect, () => unavailable(folder, "not-writable")),
   );
 
-  /**
-   * Makes a missing folder, and refuses one that holds files, so a new Graph mixes with nothing.
-   * True when it made the folder.
-   */
   const prepareEmpty = Effect.fn("GraphFolder.prepareEmpty")(function* (folder: string) {
     if ((yield* inspect(folder)) === "folder") {
       const entries = yield* fs.readDirectory(folder).pipe(Effect.mapError(storageError));
@@ -61,7 +54,6 @@ export const make = (fs: FileSystem.FileSystem, path: Path.Path) => {
   return {
     prepareEmpty,
 
-    /** The Graph's settings now; a Graph without the file has every default. */
     settings: Effect.fn("GraphFolder.settings")(function* (folder: string) {
       const file = settingsFile(folder);
       if (!(yield* fs.exists(file).pipe(Effect.mapError(storageError)))) return EMPTY;
@@ -70,16 +62,11 @@ export const make = (fs: FileSystem.FileSystem, path: Path.Path) => {
         .pipe(Effect.flatMap(decodeGraphSettings), Effect.mapError(storageError));
     }),
 
-    /** Makes a new Graph in a folder that is missing or empty, so no existing files get mixed in. */
     create: Effect.fn("GraphFolder.create")(function* (folder: string) {
       yield* prepareEmpty(folder);
       return yield* writeSettings(folder, EMPTY);
     }),
 
-    /**
-     * Opens a folder that exists. A Graph keeps its own settings; any other folder (Markdown from
-     * another editor, say) becomes a Graph as it is.
-     */
     open: Effect.fn("GraphFolder.open")(function* (folder: string) {
       if ((yield* inspect(folder)) === "missing") return yield* unavailable(folder, "not-found");
       const file = settingsFile(folder);

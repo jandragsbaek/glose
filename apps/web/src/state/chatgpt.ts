@@ -5,7 +5,6 @@ import * as Stream from "effect/Stream";
 
 import { GloseClient } from "../rpc/client.ts";
 
-/** The ChatGPT connection as the server sees it; the server pushes every change. */
 export const chatGptStatusAtom = GloseClient.runtime
   .atom(
     Stream.unwrap(

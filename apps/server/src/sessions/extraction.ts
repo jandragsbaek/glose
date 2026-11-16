@@ -24,13 +24,10 @@ const NO_ARGUMENTS = {
 
 const LANGUAGE_NAMES: Record<Language, string> = { en: "English", da: "Danish" };
 
-/** Points in one call; more at once is more than a user can judge with care. */
 export const MAX_POINTS = 8;
 
-/** Proposed Links of one Point. */
 export const MAX_LINKS = 5;
 
-/** The rules of an Extraction Session. They follow docs/ideas.md: the user does the thinking. */
 export const INSTRUCTIONS = `You are the AI in Glose, a desktop app where a person learns from what they read. You run the Extraction step of the Reading Stage for one Source (usually a book).
 
 Goal: help the user pull out the core points of the Source. Each Point becomes a small Note in the user's Graph: one idea, its title a full sentence that states the claim (such as "Spaced practice beats massed practice"), its text, linked to the Notes it relates to. The goal is that the user rewrites all of its text in their own words.
@@ -49,25 +46,21 @@ How to work:
 - When the user writes a Point as a Note, you hear what they wrote. Comment only when something is wrong, missing or worth linking; propose_links adds Links to a kept Point.
 - Write your messages in the language of the user's messages, or the interface language named in the first message. Write plain text, short enough to read in a narrow column.`;
 
-/** The hidden first message that starts the Session. */
 export const kickoff = (language: Language): InputItem => ({
   type: "message",
   role: "developer",
   content: `Start the Extraction now. The user's interface language is ${LANGUAGE_NAMES[language]}.`,
 });
 
-/** A user's message about one Point, as the model reads it. */
 export const aboutMessage = (point: Point, text: string): string =>
   `(About point ${numberOf(point)}: "${point.title}")\n\n${text}`;
 
-/** What the user did with Points since the AI last took a turn. */
 export const decisionsMessage = (decisions: ReadonlyArray<string>): InputItem => ({
   type: "message",
   role: "developer",
   content: `Since your last answer, the user decided on Points:\n${decisions.map((line) => `- ${line}`).join("\n")}`,
 });
 
-/** The number the user sees: `p3` is point 3. */
 export const numberOf = (point: Pick<Point, "id">): number => Number(point.id.slice(1));
 
 const describe = (source: Source) => ({
@@ -83,7 +76,6 @@ const describe = (source: Source) => ({
   readingStart: source.readingStart,
 });
 
-/** A Point as the AI proposes it, before Glose checks its quote and the Notes it names. */
 export type ProposedPoint = Omit<Point, "id" | "state" | "note" | "page">;
 
 const NullableString = Schema.NullOr(Schema.String);
@@ -112,11 +104,6 @@ const decodeDraft = Schema.decodeUnknownOption(DraftArguments);
 
 const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-/**
- * The quote as the Free text has it, found without regard to case, spacing or the quotation
- * marks around it; null when the Free text does not hold those words. A quote must match the
- * user's words exactly, so the AI's paraphrase never passes for them.
- */
 export const findQuote = (freeText: string, quote: string): string | null => {
   const words = quote
     .trim()
@@ -146,19 +133,12 @@ const nullable = (description: string) => ({ type: ["string", "null"], descripti
 export interface Context {
   readonly sources: Sources.Sources["Service"];
   readonly graph: Graph.Graph["Service"];
-  /** The Source the Session extracts from. */
   readonly source: string;
-  /** The Points in the Session now. */
   readonly points: Effect.Effect<ReadonlyArray<Point>>;
-  /** Shows Points to the user; answers with their numbers. */
   readonly propose: (points: ReadonlyArray<ProposedPoint>) => Effect.Effect<ReadonlyArray<number>>;
-  /** Adds proposed Links to a Point; false when it has none of that number to add to. */
   readonly addLinks: (point: number, links: ReadonlyArray<PointLink>) => Effect.Effect<boolean>;
-  /** Gives a Point the AI's draft of its Note text; false when there is no such Point. */
   readonly setDraft: (point: number, text: string) => Effect.Effect<boolean>;
-  /** The entries of the Source's Probe, or null when it has none. */
   readonly probe: Effect.Effect<ReadonlyArray<SessionEntry> | null>;
-  /** What the Probe found, for the model; and the user's own words in it, to check quotes. */
   readonly probeSummary: (entries: ReadonlyArray<SessionEntry>) => unknown;
   readonly probeWords: (entries: ReadonlyArray<SessionEntry>) => string;
 }
@@ -175,7 +155,6 @@ export const tools = ({
   probeSummary,
   probeWords,
 }: Context): AgentTool[] => {
-  /** The Graph's name for a Note the AI named, or null when there is no such file. */
   const resolver = graph.read.pipe(
     Effect.map((view) => {
       const byKey = new Map(view.nodes.map((node) => [linkKey(node.id), node.id]));
@@ -319,7 +298,6 @@ export const tools = ({
         const probeText = probeEntries === null ? "" : probeWords(probeEntries);
         const existing = new Set((yield* points).map((point) => linkKey(point.title)));
         const proposed: Array<ProposedPoint> = [];
-        /** Points whose quote is not in the Free text, by their place in `proposed`. */
         const unquoted: Array<boolean> = [];
         for (const point of asked) {
           const title = point.title.trim();

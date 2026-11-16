@@ -50,12 +50,10 @@ import {
   SCOPES,
 } from "./OpenAi.ts";
 
-/** Why the AI cannot use ChatGPT right now. */
 export class ChatGptUnavailable extends Data.TaggedError("ChatGptUnavailable")<{
   readonly reason: "not-connected" | "plan-not-allowed" | "unavailable";
 }> {}
 
-/** A sign-in attempt that ended without a connection. */
 class ConnectFailed extends Data.TaggedError("ConnectFailed")<{
   readonly problem: ChatGptProblem;
   readonly detail: string;
@@ -64,20 +62,15 @@ class ConnectFailed extends Data.TaggedError("ConnectFailed")<{
 export class ChatGpt extends Context.Service<
   ChatGpt,
   {
-    /** The status now, then every change. */
     readonly status: Stream.Stream<ChatGptStatus>;
-    /** Starts a sign-in in the browser and returns; `status` follows it. */
     readonly connect: (input: {
       readonly account: ChatGptAccountChoice;
       readonly consent: boolean;
     }) => Effect.Effect<void, StorageError>;
     readonly cancel: Effect.Effect<void>;
-    /** Stops what runs on the user's plan, then revokes and forgets the sign-in. */
     readonly disconnect: Effect.Effect<{ readonly revoked: boolean }, StorageError>;
-    /** Runs `stop` at each sign-out, before the tokens are revoked and forgotten. */
     readonly beforeSignOut: (stop: Effect.Effect<void>) => Effect.Effect<void>;
     readonly dismissPlanNotice: Effect.Effect<void, StorageError>;
-    /** An access token for the Responses API, refreshed when it is about to expire. */
     readonly accessToken: Effect.Effect<Redacted.Redacted<string>, ChatGptUnavailable>;
   }
 >()("glose/chatgpt/ChatGpt") {}
@@ -88,7 +81,6 @@ const IdTokenClaims = Schema.Struct({
   nonce: Schema.optionalKey(Schema.String),
 });
 
-/** Refresh this long before the access token expires (it lives one hour). */
 const REFRESH_MARGIN_MS = 5 * 60 * 1000;
 
 const SIGN_IN_TIME_LIMIT = "10 minutes";
@@ -167,7 +159,6 @@ export const make = Effect.gen(function* () {
       ),
     );
 
-  /** One sign-in: listener, browser, callback, code exchange, ID token check, saved tokens. */
   const signIn = Effect.fn("ChatGpt.signIn")(function* (
     choice: ChatGptAccountChoice,
     consent: boolean,
@@ -229,7 +220,6 @@ export const make = Effect.gen(function* () {
     const code = callback.get("code");
     if (code === null) return yield* failed("callback without code");
 
-    // A first sign-in learns its client ID here; a later one must keep its own.
     const returnedClientId = callback.get("client_id");
     const clientId = saved?.clientId ?? returnedClientId;
     if (clientId === null || clientId === REGISTRATION_CLIENT_ID) {
@@ -286,7 +276,6 @@ export const make = Effect.gen(function* () {
       Effect.onInterrupt(() => publish(null)),
     );
 
-  /** Forgets the active account's tokens but keeps its registration for a later sign-in. */
   const forgetTokens = credentials.update((data) => {
     const account = activeAccount(data);
     return account ? putAccount(data, { ...account, tokens: null }) : data;
@@ -347,7 +336,6 @@ export const make = Effect.gen(function* () {
     status: SubscriptionRef.changes(status),
 
     connect: ({ account, consent }) =>
-      // The old attempt finishes interrupting first, so its status cannot land after the new one.
       FiberHandle.clear(attempt).pipe(
         Effect.andThen(FiberHandle.run(attempt, runAttempt(account, consent))),
         Effect.asVoid,
@@ -399,7 +387,6 @@ export const make = Effect.gen(function* () {
   });
 });
 
-/** OpenAI's signing keys, fetched when the first ID token needs them. */
 export const layerJwks = Layer.unwrap(
   Effect.gen(function* () {
     const { jwksUrl } = yield* OpenAi;

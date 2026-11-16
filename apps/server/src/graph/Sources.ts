@@ -41,10 +41,6 @@ export class Sources extends Context.Service<
       readonly id: string;
       readonly start: ReadingStart;
     }) => Effect.Effect<Source, SourceNotFound | GraphError>;
-    /**
-     * Moves a Source to the step after `from` in its start's order. A Source at another step
-     * stays where it is, so a second click or a second window changes nothing.
-     */
     readonly advance: (input: {
       readonly id: string;
       readonly from: ReadingStep;
@@ -74,7 +70,6 @@ export const make = Effect.gen(function* () {
     const markdown = yield* fs.readFileString(file);
     const info = yield* fs.stat(file);
     const modified = Option.getOrElse(info.mtime, () => new Date(0)).getTime();
-    // Some file systems report no creation time, or the start of 1970 for it.
     const created = Option.getOrNull(info.birthtime)?.getTime() ?? 0;
     return parseSourceFile(markdown).pipe(
       Option.map((content): Source => ({
@@ -139,8 +134,6 @@ export const make = Effect.gen(function* () {
           .filter((part) => part !== null)
           .join(" "),
       );
-      // Every entry counts, whatever its case or extension case: on macOS and Windows
-      // "Name.MD" and "name.md" are the same file.
       const existing = yield* fs.readDirectory(folder).pipe(Effect.mapError(storageError));
       if (id === "" || existing.some((entry) => sameFileName(entry, `${id}${MARKDOWN}`))) {
         return yield* new SourceNameTaken({ fileName: `${id}${MARKDOWN}` });
@@ -169,7 +162,6 @@ export const make = Effect.gen(function* () {
     chooseStart: Effect.fn("Sources.chooseStart")(function* ({ id, start }) {
       const source = yield* get(id);
       const folder = yield* graphFolder;
-      // The answer sets the first step only while nothing has started; later it is just kept.
       const readingStep =
         start !== "write" && source.readingStep === "free-text" ? "probe" : source.readingStep;
       return yield* writeSource(folder, id, { ...source, readingStart: start, readingStep }).pipe(

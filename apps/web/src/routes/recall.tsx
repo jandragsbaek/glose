@@ -10,7 +10,6 @@ import { cardsAtom } from "../state/cards.ts";
 
 export const Route = createFileRoute("/recall")({ component: Section });
 
-/** Recall as a desk: today's Review on top, the Cards in trays by the work they need under it. */
 function Section() {
   const t = useT();
   const cards = useAtomValue(cardsAtom);

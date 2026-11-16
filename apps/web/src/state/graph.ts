@@ -3,7 +3,6 @@ import * as Atom from "effect/reactivity/Atom";
 
 import { GloseClient } from "../rpc/client.ts";
 
-/** Mutations name these keys, so every query that reads the same data refetches after a change. */
 export const KEYS = {
   settings: ["settings"],
   sources: ["sources"],
@@ -17,7 +16,6 @@ export const sourcesAtom = GloseClient.query(RPC_METHODS.sourcesList, undefined,
   reactivityKeys: KEYS.sources,
 });
 
-/** Every file in the Graph folder and its Links; it reads afresh when Sources change. */
 export const graphAtom = GloseClient.query(RPC_METHODS.graphRead, undefined, {
   reactivityKeys: KEYS.sources,
 });
@@ -35,5 +33,4 @@ export const chooseStartAtom = GloseClient.mutation(RPC_METHODS.sourcesChooseSta
 export const saveNoteAtom = GloseClient.mutation(RPC_METHODS.notesSave);
 export const advanceReadingAtom = GloseClient.mutation(RPC_METHODS.sourcesAdvance);
 
-/** Searches the Catalog on demand; nothing is cached, since each search is typed afresh. */
 export const searchCatalogAtom = GloseClient.mutation(RPC_METHODS.catalogSearch);

@@ -11,15 +11,12 @@ export class ServerConfig extends Context.Service<
   {
     readonly host: string;
     readonly port: number;
-    /** Built SPA to serve; unset in dev, where Vite serves it. */
     readonly webDistDir: Option.Option<string>;
-    /** Where app settings live. The Graph itself lives in the folder the user picks. */
     readonly dataDir: string;
     readonly homeDir: string;
   }
 >()("glose/ServerConfig") {}
 
-/** The usual per-user app data folder of each OS, as Electron's `userData` would pick it. */
 const defaultDataDir = (homeDir: string) => {
   switch (process.platform) {
     case "win32":

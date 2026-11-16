@@ -19,26 +19,19 @@ import {
 import { findReferences, linkKey } from "@glose/contracts";
 import { type Ref, useEffect, useImperativeHandle, useLayoutEffect, useRef } from "react";
 
-/** What the desk asks of the editor. */
 export interface ProseHandle {
-  /** Replaces a range of the prose (an insert when from equals to), then focuses the text. */
   readonly replace: (from: number, to: number, text: string) => void;
-  /** Selects a range, such as a Reference's token so the writer can change its page. */
   readonly select: (from: number, to: number) => void;
-  /** The cursor's place in the prose. */
   readonly cursor: () => number;
-  /** The top of a place in the prose, in pixels from the top of the editor. */
   readonly topOf: (pos: number) => number | null;
   readonly focus: () => void;
 }
 
-/** A Reference that a check flags is drawn in rubric; keys are `target|location`. */
 export const referenceKey = (target: string, location: string | null) =>
   `${linkKey(target)}|${location ?? ""}`;
 
 const setFlagged = StateEffect.define<ReadonlySet<string>>();
 
-/** The flagged keys as one string, so a prop that keeps its keys keeps its value. */
 export const flaggedKeys = (keys: Iterable<string>) => [...new Set(keys)].sort().join("\n");
 const flaggedField = StateField.define<ReadonlySet<string>>({
   create: () => new Set(),
@@ -77,10 +70,6 @@ class ReferenceMark extends WidgetType {
   }
 }
 
-/**
- * Each Reference shows as its number, raised, until the cursor enters it; then the writer sees
- * and edits the token itself (`[[Note]]{p. 64}`).
- */
 const referenceMarks = (label: (n: number) => string) =>
   ViewPlugin.fromClass(
     class {
@@ -130,7 +119,6 @@ const referenceMarks = (label: (n: number) => string) =>
     },
   );
 
-/** The prose of a Writing project: plain Markdown, its References drawn as numbers. */
 export function ProseEditor({
   ref,
   initial,
@@ -143,26 +131,18 @@ export function ProseEditor({
   onCite,
 }: {
   readonly ref: Ref<ProseHandle>;
-  /** The text the editor starts with, read when it mounts; it then owns the text. */
   readonly initial: string;
-  /** Keys (see referenceKey) of the References a check flags, joined by a line break. */
   readonly flagged: string;
-  /** The accessible name of the text. */
   readonly label: string;
   readonly placeholder: string;
   readonly referenceLabel: (n: number) => string;
   readonly onChange: (body: string) => void;
-  /** The text moved on the page: margins line up with it again. */
   readonly onLayout: () => void;
-  /** The writer typed `[[` or pressed the shortcut: choose a Note to cite at the cursor. */
   readonly onCite: (at: number) => void;
 }) {
   const host = useRef<HTMLDivElement | null>(null);
   const view = useRef<EditorView | null>(null);
-  // The latest callbacks, read by the editor's listeners, which are made once.
   const latest = useRef({ onChange, onLayout, onCite });
-  // What the editor is made with, read once when it mounts: a ref keeps `attach` the same
-  // function, so React never detaches the editor (and its cursor and undo) while the writer types.
   const mount = useRef({ initial, label, placeholder, referenceLabel });
   // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- a ref, not state: CodeMirror's listeners, made once, call the desk's newest callbacks.
   useLayoutEffect(() => {
@@ -204,7 +184,6 @@ export function ProseEditor({
           referenceMarks(mount.current.referenceLabel),
           EditorView.inputHandler.of((editor, from, to, text) => {
             if (text !== "[" || editor.state.sliceDoc(from - 1, from) !== "[") return false;
-            // `[[` opens the Note picker; the brackets are not kept.
             editor.dispatch({ changes: { from: from - 1, to, insert: "" } });
             latest.current.onCite(from - 1);
             return true;

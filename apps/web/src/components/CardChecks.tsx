@@ -15,7 +15,6 @@ import { Notice } from "./ui.tsx";
 
 const isAi = (check: Check) => (AI_CHECKS as ReadonlyArray<string>).includes(check.id);
 
-/** A Check that passes, as one line in the folded list. */
 function PassedCheck({ check }: { readonly check: Check }) {
   const t = useT();
   return (
@@ -36,12 +35,10 @@ function AiTag() {
   );
 }
 
-/** Every Check that warns or fails, each as its own callout with how to fix it. */
 function CheckCallouts({ checks }: { readonly checks: ReadonlyArray<Check> }) {
   const t = useT();
   const faults = checks
     .filter((check) => check.verdict !== "pass")
-    // Failures first: they make the Grade poor.
     .toSorted((a, b) => (a.verdict === b.verdict ? 0 : a.verdict === "fail" ? -1 : 1));
   if (faults.length === 0) return null;
   return (
@@ -66,10 +63,6 @@ function CheckCallouts({ checks }: { readonly checks: ReadonlyArray<Check> }) {
   );
 }
 
-/**
- * A Card's Checks: the Grade, a callout for every Check that warns or fails, and the Checks
- * that pass, folded away.
- */
 export function CardChecks({ score }: { readonly score: CardScore }) {
   const t = useT();
   const passed = score.checks.filter((check) => check.verdict === "pass");
@@ -82,7 +75,6 @@ export function CardChecks({ score }: { readonly score: CardScore }) {
     >
       <p>
         <strong>{t.score.grades[score.grade]}</strong>
-        {/* Without ChatGPT, the list says so once, above the Cards (AiChecksOff). */}
         {score.judge === "done" || score.judge === "off" ? null : (
           <>
             {" "}
@@ -110,7 +102,6 @@ export function CardChecks({ score }: { readonly score: CardScore }) {
   );
 }
 
-/** The rule Checks of words being written, as they change; the AI Checks follow the save. */
 export function TypingChecks({
   question,
   answer,
@@ -129,7 +120,6 @@ export function TypingChecks({
   );
 }
 
-/** Says once, above a list, that its Cards have no AI Checks without ChatGPT. */
 export function AiChecksOff({ scores }: { readonly scores: ReadonlyArray<CardScore | undefined> }) {
   const t = useT();
   if (!scores.some((score) => score?.judge === "off")) return null;
@@ -140,17 +130,11 @@ export function AiChecksOff({ scores }: { readonly scores: ReadonlyArray<CardSco
   );
 }
 
-/** At most this many Cards per request, as `cards.judge` takes them. */
 const JUDGE_AT_ONCE = 50;
 
-/**
- * Asks the server for the AI Checks of the shown Cards that wait for them, unless a request
- * for the same words is still running; the list reads again when they are done.
- */
 export function useJudgeShown(cards: ReadonlyArray<ScoredCard>) {
   const judge = useAtomSet(judgeCardsAtom, { mode: "promiseExit" });
   const running = useRef(new Set<string>());
-  // The Cards and their words, as one string, so the effect runs only when they change.
   const waiting = JSON.stringify(
     cards
       .filter((card) => card.score.judge === "pending")

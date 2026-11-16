@@ -7,7 +7,6 @@ import * as NodePath from "node:path";
 
 import * as ServerProcess from "./ServerProcess.ts";
 
-// The real server from source, started by plain Node the way the app starts it with Electron.
 const serverEntry = NodePath.join(import.meta.dirname, "../../../server/src/bin.ts");
 
 const isReachable = (url: string) =>

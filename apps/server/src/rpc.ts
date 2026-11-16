@@ -17,7 +17,6 @@ import * as Setup from "./settings/Setup.ts";
 import * as Versions from "./versions/Versions.ts";
 import * as Writing from "./writing/Writing.ts";
 
-/** Thin transport: RpcServer decodes the payload, the handler calls one service method. */
 export const layer = GloseRpcGroup.toLayer(
   Effect.gen(function* () {
     const info = yield* ServerInfo.ServerInfo;

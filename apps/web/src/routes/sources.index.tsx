@@ -27,7 +27,6 @@ import { wordCount } from "../domain/source.ts";
 import { useLanguage, useT } from "../i18n/I18n.tsx";
 import { graphAtom, sourcesAtom } from "../state/graph.ts";
 
-/** The Source whose Links light up the register is in the address, so Back returns to it. */
 export const Route = createFileRoute("/sources/")({
   component: SourcesPage,
   validateSearch: (search: Record<string, unknown>): { readonly source?: string } =>
@@ -74,7 +73,6 @@ function SourcesPage() {
     );
   }
   const records = sourceRecords(...result.value);
-  // Today's order: the Source worked on last comes first.
   const desk = records.filter((record) => record.source.readingStep !== "done");
   return (
     <Page
@@ -90,10 +88,6 @@ function SourcesPage() {
   );
 }
 
-/**
- * One mark per Reading step, in the order the Source's start gives them: filled when done,
- * gilt-underlined at the current one.
- */
 function ReadingMarks({
   step,
   start,

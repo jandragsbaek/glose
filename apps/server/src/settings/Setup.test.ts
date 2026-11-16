@@ -16,10 +16,6 @@ import * as Setup from "./Setup.ts";
 
 const AUTHOR = ["-c", "user.name=Other computer", "-c", "user.email=other@example.com"];
 
-/**
- * A computer at first start, and a bare repository that holds a Graph another computer pushed.
- * Git runs for real, with a global config of the test's own.
- */
 const withRemote = <A, E>(
   test: (computer: {
     readonly remote: string;
@@ -100,7 +96,6 @@ it.layer(NodeServices.layer)("Setup", (it) => {
           '{"recall":{"newCardsPerDay":10}}',
           "the Graph keeps its own settings",
         );
-        // The remote stays the Graph's origin, so its Versions sync there from now on.
         assert.strictEqual(yield* git(folder, "config", "--get", "remote.origin.url"), remote);
         assert.strictEqual(yield* git(folder, "status", "--porcelain"), "");
       }),

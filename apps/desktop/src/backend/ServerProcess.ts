@@ -26,7 +26,6 @@ const HEALTH_POLL_INTERVAL = Duration.millis(100);
 const HEALTH_TIMEOUT = Duration.seconds(30);
 const STOP_GRACE = Duration.seconds(5);
 
-/** A port the OS just handed out and released; the server binds it a moment later. */
 const findFreePort = Effect.callback<number, ServerStartError>((resume) => {
   const probe = NodeNet.createServer();
   probe.once("error", (cause) =>
@@ -44,7 +43,6 @@ const findFreePort = Effect.callback<number, ServerStartError>((resume) => {
   });
 });
 
-/** Polls until `origin` answers its health check, or fails after the timeout. */
 export const waitUntilHealthy = Effect.fn("ServerProcess.waitUntilHealthy")(function* (
   origin: string,
   healthPath: string = HEALTH_PATH,
@@ -68,23 +66,17 @@ export const waitUntilHealthy = Effect.fn("ServerProcess.waitUntilHealthy")(func
 });
 
 export interface ServerProcessOptions {
-  /** Node, or Electron running as Node. */
   readonly executablePath: string;
   readonly entryPath: string;
-  /** Added to the environment the server inherits. */
   readonly env: Readonly<Record<string, string>>;
-  /** Called when a server that was up exits although nobody stopped it. */
   readonly onUnexpectedExit: (code: number | null) => void;
 }
 
 export interface ServerProcess {
-  /** Origin the server answers on, e.g. `http://127.0.0.1:51234`. */
   readonly url: string;
-  /** Synchronous, so a quit handler that cannot wait still stops the server. */
   readonly stop: () => void;
 }
 
-/** Starts the server on a free loopback port, waits until it answers, stops it with the scope. */
 export const start: (
   options: ServerProcessOptions,
 ) => Effect.Effect<ServerProcess, ServerStartError, Scope.Scope> = Effect.fn("ServerProcess.start")(
@@ -107,7 +99,6 @@ export const start: (
       catch: (cause) => new ServerStartError({ reason: "spawn-failed", cause }),
     });
 
-    // Settles once the process is gone: it exited, or it never started.
     const gone = new Promise<{ readonly exitCode: number | null } | { readonly spawnError: Error }>(
       (resolve) => {
         child.once("exit", (exitCode) => resolve({ exitCode }));

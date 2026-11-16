@@ -4,12 +4,6 @@ import * as Yaml from "yaml";
 
 import { FRONTMATTER } from "../graph/sourceFile.ts";
 
-/**
- * A Card file is plain Markdown that any editor can read (docs/ideas.md shows one): frontmatter
- * with `glose: card`, `id`, `from` and `ai`, then the question, a line of three dashes, and the
- * answer. The first such line after the frontmatter divides the two; other editors show it as a
- * rule. The `from` field is a wikilink, so Obsidian links the Card to its Note.
- */
 export interface CardFileContent extends CardText {
   readonly id: string | null;
   readonly from: string | null;
@@ -19,7 +13,6 @@ export interface CardFileContent extends CardText {
 const SEPARATOR = /^[ \t]*---[ \t]*$/m;
 const WIKILINK_VALUE = /^\s*\[\[([^[\]\n]+)\]\]\s*$/;
 
-/** Formatting that keeps a hand-made frontmatter as close to its own style as `yaml` allows. */
 const YAML_OPTIONS = { flowCollectionPadding: false } as const;
 
 const record = (value: unknown): Readonly<Record<string, unknown>> | null =>
@@ -41,7 +34,6 @@ const parseDocument = (yaml: string) => {
   return document.errors.length > 0 ? null : document;
 };
 
-/** None when the file is not a Card: no `glose: card`, or frontmatter Glose cannot read. */
 export const parseCardFile = (markdown: string): Option.Option<CardFileContent> => {
   const match = FRONTMATTER.exec(markdown);
   if (!match) return Option.none();
@@ -57,7 +49,6 @@ export const parseCardFile = (markdown: string): Option.Option<CardFileContent> 
     ...text,
     id,
     from: from === "" ? null : from,
-    // Either mark counts, as in a Note: Glose never hides AI text because one is missing.
     ai: data.ai === true || hasAiCallout(body),
   });
 };
@@ -75,10 +66,6 @@ export const renderCardFile = (card: CardFileContent): string => {
   return `---\n${frontmatter.toString(YAML_OPTIONS)}---\n${renderBody(card)}`;
 };
 
-/**
- * Changes a Card file the user may also edit by hand: the frontmatter keeps every other field
- * and comment, and only the fields asked for change. None when the file is no longer a Card.
- */
 export const editCardFile = (
   markdown: string,
   change: {

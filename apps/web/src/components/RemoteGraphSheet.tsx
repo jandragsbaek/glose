@@ -18,16 +18,13 @@ import { checkRemoteAtom } from "../state/graph.ts";
 import { ConnectStep, SheetFoot } from "./Backup.tsx";
 import { Flourish, Notice } from "./ui.tsx";
 
-/** Where the first start copies the Graph from: a GitHub repository, or any git remote. */
 export interface ChosenRemote {
   readonly url: string;
-  /** The GitHub repository, when the user picked one from the list. */
   readonly repository: GitHubRepository | null;
 }
 
 export type RemoteSheetMode = "github" | "remote";
 
-/** The reason a setup call failed with GraphRemoteUnavailable, or null for any other failure. */
 export const remoteFailureOf = (
   exit: Exit.Exit<unknown, unknown>,
 ): GraphRemoteUnavailableReason | null => {
@@ -43,11 +40,6 @@ export const remoteFailureOf = (
     : null;
 };
 
-/**
- * The first start's sheet: the Backup sheet run the other way. It connects GitHub and lets the
- * user pick the repository that holds their Graph, or takes the address of another git remote.
- * It only chooses; the setup page copies the Graph when the user starts.
- */
 export function RemoteGraphSheet({
   mode,
   onMode,
@@ -115,7 +107,6 @@ export function RemoteGraphSheet({
   );
 }
 
-/** Step 2: the account's private repositories, Graphs first, one of them to copy. */
 function RepositoryStep({
   login,
   onChoose,
@@ -132,7 +123,6 @@ function RepositoryStep({
   const [chosen, setChosen] = useState<string | null>(null);
 
   const repositories = AsyncResult.getOrElse(listing, () => []);
-  // Until the user picks, the latest pushed Graph is chosen: it is the likeliest one.
   const current = chosen ?? repositories.find((repository) => repository.graph)?.url ?? null;
   const picked = repositories.find((repository) => repository.url === current) ?? null;
 
@@ -197,7 +187,6 @@ function RepositoryList({
   const hintId = useId();
   const graphs = repositories.filter((repository) => repository.graph);
   const others = repositories.filter((repository) => !repository.graph);
-  // A repository the user picked stays in sight when they fold the others away.
   const otherChosen = others.some((repository) => repository.url === chosen);
 
   const row = (repository: GitHubRepository) => (
@@ -207,7 +196,6 @@ function RepositoryList({
         name={name}
         value={repository.url}
         checked={repository.url === chosen}
-        // The task's first control takes focus, as in every sheet: the chosen row.
         autoFocus={repository.url === chosen}
         onChange={() => onChange(repository.url)}
       />
@@ -251,7 +239,6 @@ function RepositoryList({
   );
 }
 
-/** Another git remote: Glose checks that git can read it before the sheet closes. */
 function RemoteForm({
   onChoose,
   onCancel,

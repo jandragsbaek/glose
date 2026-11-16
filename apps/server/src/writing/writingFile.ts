@@ -11,10 +11,6 @@ import * as Yaml from "yaml";
 
 import { FRONTMATTER, parseYaml } from "../graph/sourceFile.ts";
 
-/**
- * A Writing project is one Markdown file in the Graph folder's `Writing` folder: YAML frontmatter
- * with its settings, then the prose with its References (`[[Note]]{p. 64}`).
- */
 const WritingFrontmatter = Schema.Struct({
   glose: Schema.Literal("writing-project"),
   title: Schema.Union([Schema.String, Schema.Number]),
@@ -22,7 +18,6 @@ const WritingFrontmatter = Schema.Struct({
   language: Schema.optionalKey(Schema.String),
   "reference-form": Schema.optionalKey(ReferenceForm),
   "citation-style": Schema.optionalKey(CitationStyle),
-  /** YAML reads `2026-11-13` as a date unless it is quoted; both are read. */
   published: Schema.optionalKey(Schema.Unknown),
   "published-file": Schema.optionalKey(Schema.String),
 });
@@ -32,7 +27,6 @@ export type WritingFileContent = Omit<WritingProject, "id" | "modified">;
 
 const twoDigits = (value: number) => String(value).padStart(2, "0");
 
-/** A day as `2026-11-13`, from a YAML date or a string. */
 const dayOf = (value: unknown): string | null => {
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
     return `${value.getUTCFullYear()}-${twoDigits(value.getUTCMonth() + 1)}-${twoDigits(value.getUTCDate())}`;
@@ -42,7 +36,6 @@ const dayOf = (value: unknown): string | null => {
     : null;
 };
 
-/** None when the file is not a Writing project Glose can read. */
 export const parseWritingFile = (markdown: string): Option.Option<WritingFileContent> => {
   const match = FRONTMATTER.exec(markdown);
   if (!match) return Option.none();
@@ -66,7 +59,6 @@ export const parseWritingFile = (markdown: string): Option.Option<WritingFileCon
   );
 };
 
-/** A Blog post has no citation style, an assignment no Reference form; neither is written. */
 export const renderWritingFile = (content: WritingFileContent): string => {
   const frontmatter = Object.fromEntries(
     Object.entries({

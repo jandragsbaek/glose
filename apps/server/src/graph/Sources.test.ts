@@ -22,7 +22,6 @@ const ARENDT: SourceDetails = {
   translator: null,
 };
 
-/** A Graph folder after setup, with the real services over it. */
 const withGraph = <A, E>(
   test: (graph: {
     readonly folder: string;
@@ -235,7 +234,6 @@ it.layer(NodeServices.layer)("Sources", (it) => {
         const path = yield* Path.Path;
         const prober = yield* sources.create(ARENDT);
         yield* sources.chooseStart({ id: prober.id, start: "catch-up" });
-        // A second click, or a step another window took, changes nothing.
         const stale = yield* sources.advance({ id: prober.id, from: "extraction" });
         const extraction = yield* sources.advance({ id: prober.id, from: "probe" });
         const done = yield* sources.advance({ id: prober.id, from: "extraction" });
@@ -247,7 +245,6 @@ it.layer(NodeServices.layer)("Sources", (it) => {
         );
         assert.include(markdown, "reading-step: done\nreading-start: catch-up\n");
 
-        // A Source that starts with writing, or from before the question, goes on to the Probe.
         const writer = yield* sources.create({ ...ARENDT, title: "Between Past and Future" });
         yield* sources.saveFreeText({ id: writer.id, freeText: "", finish: true });
         const probe = yield* sources.advance({ id: writer.id, from: "extraction" });

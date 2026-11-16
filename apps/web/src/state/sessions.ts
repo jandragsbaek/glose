@@ -7,7 +7,6 @@ import { GloseClient } from "../rpc/client.ts";
 
 export const SESSION_KEYS = { sessions: ["sessions"] } as const;
 
-/** The latest Extraction Session of a Source, or null; it refetches when one starts. */
 export const extractionSessionAtom = Atom.family((sourceId: string) =>
   GloseClient.query(
     RPC_METHODS.sessionsFind,
@@ -16,7 +15,6 @@ export const extractionSessionAtom = Atom.family((sourceId: string) =>
   ),
 );
 
-/** The latest Card Extraction Session of a Note, or null; it refetches when one starts. */
 export const cardExtractionSessionAtom = Atom.family((noteId: string) =>
   GloseClient.query(
     RPC_METHODS.sessionsFind,
@@ -25,7 +23,6 @@ export const cardExtractionSessionAtom = Atom.family((noteId: string) =>
   ),
 );
 
-/** The latest Probe of a Source, or null; it refetches when one starts. */
 export const probeSessionAtom = Atom.family((sourceId: string) =>
   GloseClient.query(
     RPC_METHODS.sessionsFind,
@@ -34,7 +31,6 @@ export const probeSessionAtom = Atom.family((sourceId: string) =>
   ),
 );
 
-/** A Session as it changes, including the AI's answer as it arrives. */
 export const sessionAtom = Atom.family((id: string) =>
   GloseClient.runtime.atom(
     Stream.unwrap(

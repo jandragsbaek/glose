@@ -23,7 +23,6 @@ import { KEYS, saveNoteAtom } from "../state/graph.ts";
 import { AiText, NoteText, type WikilinkPart } from "./NoteText.tsx";
 import { CallNumber, Panel } from "./ui.tsx";
 
-/** The Notes and Sources that link to the Note, so the user knows what a new title touches. */
 export interface Linking {
   readonly notes: number;
   readonly sources: number;
@@ -31,12 +30,6 @@ export interface Linking {
 
 type Problem = { readonly kind: "noTitle" } | { readonly kind: "taken"; readonly name: string };
 
-/**
- * A Note rewritten beside the AI's words: each run of AI text stays on the left, marked, as
- * the model, and the user's words go in an empty field beside it. Words in that field replace
- * the AI text on save, so the mark goes because the user wrote them, not because they said so.
- * AI text the user only corrects keeps its mark; the user's own runs are edited in place.
- */
 export function RewriteNote({
   node,
   source,
@@ -52,13 +45,9 @@ export function RewriteNote({
   readonly source: Source | undefined;
   readonly linking: Linking;
   readonly renderLink: (part: WikilinkPart) => ReactNode;
-  /** The user asked to open another Note here while this one has unsaved words. */
   readonly leaving: boolean;
-  /** The user keeps writing after all. */
   readonly onStay: () => void;
-  /** Whether the user changed anything, so the page asks before it opens another Note. */
   readonly onChanged: (changed: boolean) => void;
-  /** Leaves the desk, unsaved words and all. */
   readonly onClose: () => void;
   readonly onSaved: (id: string) => void | Promise<void>;
 }) {
@@ -76,7 +65,6 @@ export function RewriteNote({
   const titleErrorId = useId();
   const pageId = useId();
 
-  // A Note marked only for its AI title holds no AI text in its body.
   const [segments] = useState(() => noteSegments(node.body, node.aiText && !node.aiTitle));
   const [edits, setEdits] = useState<ReadonlyArray<SegmentEdit>>(() => segments.map(startEdit));
   const [title, setTitle] = useState(node.aiTitle ? "" : node.title);
@@ -86,7 +74,6 @@ export function RewriteNote({
   const [problem, setProblem] = useState<Problem | null>(null);
   const [failed, setFailed] = useState(false);
   const [discarding, setDiscarding] = useState(false);
-  /** Back from the question, Cancel takes focus again once it is there. */
   const refocusCancel = useRef(false);
 
   const titleRewritten = node.aiTitle && title.trim() !== "";
@@ -106,14 +93,11 @@ export function RewriteNote({
     finalTitle !== node.title ||
     (page.trim() === "" ? null : page.trim()) !== node.page ||
     body !== composeBody(segments, segments.map(startEdit)).body ||
-    // A Part's heading the user wrote counts once its text follows.
     edits.some((edit) => edit.yourHeading.trim() !== "");
 
   // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- the page opens other Notes on the desk and must know first whether this one holds unsaved words.
   useEffect(() => onChanged(changed), [changed, onChanged]);
 
-  // Leaving the Graph with unsaved words asks first. Closing the window does not: Electron would
-  // keep the window open without asking anything.
   const blocker = useBlocker({
     shouldBlockFn: ({ next }) => changed && next.pathname !== "/graph",
     enableBeforeUnload: false,
@@ -122,7 +106,6 @@ export function RewriteNote({
   const asking = discarding || leaving || blocker.status === "blocked";
 
   const discard = () => (blocker.status === "blocked" ? blocker.proceed() : onClose());
-  /** Back to writing; focus returns to Cancel, where the question was asked. */
   const keepWriting = () => {
     refocusCancel.current = true;
     if (blocker.status === "blocked") blocker.reset();
@@ -183,7 +166,6 @@ export function RewriteNote({
         setProblem(null);
       }}
       spellCheck
-      // Writing starts where the AI's words are: the title when the AI wrote it.
       autoFocus={firstAi === -1}
     />
   );
@@ -352,7 +334,6 @@ export function RewriteNote({
   );
 }
 
-/** A run of the Note: the user's own Markdown, or AI text beside the user's words for it. */
 function SegmentRow({
   segment,
   edit,
@@ -364,7 +345,6 @@ function SegmentRow({
   readonly segment: Segment;
   readonly edit: SegmentEdit;
   readonly sides: boolean;
-  /** This run's field takes focus when the desk opens. */
   readonly autoFocus: boolean;
   readonly renderLink: (part: WikilinkPart) => ReactNode;
   readonly onEdit: (change: Partial<SegmentEdit>) => void;
@@ -462,7 +442,6 @@ function SegmentRow({
   );
 }
 
-/** AI text as the model, or, while the user corrects it, a field that keeps the mark. */
 function AiCorrectable({
   scope,
   count = 1,
@@ -474,7 +453,6 @@ function AiCorrectable({
   children,
 }: {
   readonly scope: AiScope | "title";
-  /** Stays above the text and above the correction field, such as a Part's heading. */
   readonly lead?: ReactNode;
   readonly count?: number;
   readonly corrected: string | null;

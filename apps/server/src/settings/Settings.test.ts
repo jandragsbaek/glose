@@ -7,7 +7,6 @@ import * as Path from "effect/Path";
 import { layerServices, makeDirs } from "../testkit/graph.ts";
 import * as Settings from "./Settings.ts";
 
-/** One computer: its own home and app data folder, with the real services over them. */
 const onComputer = (dirs: { readonly dataDir: string; readonly homeDir: string }) =>
   Effect.provide(layerServices(dirs));
 

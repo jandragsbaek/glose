@@ -6,16 +6,13 @@ import * as Stream from "effect/Stream";
 
 declare global {
   interface Window {
-    /** Set by the desktop app's preload; a browser has none. */
     readonly gloseDesktop?: DesktopBridge;
   }
 }
 
-/** The app's own updates, or nothing in a browser, where the page cannot update itself. */
 export const desktopUpdates = (): DesktopBridge["updates"] | undefined =>
   window.gloseDesktop?.updates;
 
-/** The desktop app pushes every change. In a browser the atom never gets a value. */
 export const updatesStatusAtom = Atom.make(
   Stream.callback<UpdatesStatus>((queue) =>
     Effect.gen(function* () {
@@ -32,7 +29,6 @@ export const updatesStatusAtom = Atom.make(
         (stop) => Effect.sync(stop),
       );
       const status = yield* Effect.promise(() => updates.status());
-      // A change that came in meanwhile is newer than this answer.
       if (!changed) Queue.offerUnsafe(queue, status);
       return yield* Effect.never;
     }),

@@ -5,7 +5,6 @@ import * as Stream from "effect/Stream";
 
 import { type Responses, ResponsesError } from "./Responses.ts";
 
-/** The text of a finished output item; anything but a message's output text is empty. */
 export const outputText = (item: Readonly<Record<string, unknown>>): string => {
   if (item.type !== "message" || !Array.isArray(item.content)) return "";
   return item.content
@@ -22,7 +21,6 @@ export const outputText = (item: Readonly<Record<string, unknown>>): string => {
     .join("");
 };
 
-/** A JSON schema object whose every property is required, as strict structured output asks. */
 export const strictObject = (properties: Record<string, unknown>) => ({
   type: "object",
   properties,
@@ -30,7 +28,6 @@ export const strictObject = (properties: Record<string, unknown>) => ({
   additionalProperties: false,
 });
 
-/** One call without tools whose answer is JSON in a strict schema, decoded. */
 export const askStructured = Effect.fn("askStructured")(function* <A>(
   responses: Responses["Service"],
   request: {

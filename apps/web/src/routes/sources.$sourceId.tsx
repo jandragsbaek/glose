@@ -73,11 +73,9 @@ function SourceView({ source }: { readonly source: Source }) {
       <Details source={source} />
     </div>
   );
-  // The Probe is its own page: the conversation at reading width, judged in the margin.
   if (source.readingStep === "probe") {
     return <Probe source={source} sub={sub} sourcePanels={sourcePanels} />;
   }
-  // Past the Free text, Extraction is the page: the points beside the Session in the margin.
   if (source.readingStep !== "free-text") {
     return (
       <Page title={source.title} sub={sub} fill flush>
@@ -156,7 +154,6 @@ function FreeText({ source }: { readonly source: Source }) {
           id={textId}
           aria-describedby={hintId}
           value={text}
-          // Right after "I have thoughts I want to write down", the box is where to go.
           autoFocus={inFreeText && source.readingStart === "write" && source.freeText === ""}
           onChange={(event) => {
             setText(event.target.value);

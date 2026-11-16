@@ -22,10 +22,8 @@ import "../styles/app.css";
 
 export const Route = createRootRoute({ component: Root, notFoundComponent: NotFound });
 
-/** Screens that fill the window without the rail, so nothing else asks for attention. */
 const FOCUS_SCREENS: ReadonlySet<string> = new Set(["/review"]);
 
-/** Glose opens straight into the user's work; a first start shows the setup instead. */
 function Root() {
   const settings = useAtomValue(settingsAtom);
   const focus = useRouterState({ select: (state) => FOCUS_SCREENS.has(state.location.pathname) });
