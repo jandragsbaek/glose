@@ -1,6 +1,5 @@
 packages:
   - apps/*
-  - oxlint-plugin-glose
   - packages/*
 
 # Electron has no install script; apps/desktop/scripts/launch-electron.mjs fetches the binary on first launch.
@@ -12,6 +11,8 @@ catalog:
   "@effect/atom-react": 4.1.2
   "@effect/platform-node": 4.1.2
   "@effect/vitest": 4.1.2
+  # Lint rules and presets shared across projects: github.com/jandragsbaek/oxlint-plugin
+  "@jandragsbaek/oxlint-plugin": ^0.1.0
   "@types/node": ^24.19.2
   effect: 4.1.2
   typescript: ^7.0.2
@@ -23,6 +24,8 @@ catalog:
   yaml: ^2.9.1
 
 minimumReleaseAgeExclude:
+  # Our own package: a rule released there is used here the same day.
+  - "@jandragsbaek/oxlint-plugin"
   - lucide-react@1.71.0
 
 overrides:

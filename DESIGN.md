@@ -312,7 +312,7 @@ and chrome. Data, Note text and controls stay plain. The world refuses the categ
 file-tree-plus-editor arrangement in neutral grey, and it refuses dashboards and gamification.
 
 Every string comes from the English and Danish catalogs (`i18n/en.ts`, `i18n/da.ts`; the lint
-rule `glose/no-untranslated-ui-text` enforces this), and every layout takes the longer Danish
+rule `jandragsbaek/no-untranslated-ui-text` enforces this), and every layout takes the longer Danish
 compounds without clipping.
 
 AI text carries rubric marks at its edge (a red pilcrow, a gloss and a rule) while the text

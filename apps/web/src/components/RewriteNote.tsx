@@ -109,7 +109,7 @@ export function RewriteNote({
     // A Part's heading the user wrote counts once its text follows.
     edits.some((edit) => edit.yourHeading.trim() !== "");
 
-  // oxlint-disable-next-line glose/no-unreasoned-state-sync -- the page opens other Notes on the desk and must know first whether this one holds unsaved words.
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- the page opens other Notes on the desk and must know first whether this one holds unsaved words.
   useEffect(() => onChanged(changed), [changed, onChanged]);
 
   // Leaving the Graph with unsaved words asks first. Closing the window does not: Electron would

@@ -164,7 +164,7 @@ export function ProseEditor({
   // What the editor is made with, read once when it mounts: a ref keeps `attach` the same
   // function, so React never detaches the editor (and its cursor and undo) while the writer types.
   const mount = useRef({ initial, label, placeholder, referenceLabel });
-  // oxlint-disable-next-line glose/no-unreasoned-state-sync -- a ref, not state: CodeMirror's listeners, made once, call the desk's newest callbacks.
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- a ref, not state: CodeMirror's listeners, made once, call the desk's newest callbacks.
   useLayoutEffect(() => {
     latest.current = { onChange, onLayout, onCite };
   });
@@ -221,7 +221,7 @@ export function ProseEditor({
     latest.current.onLayout();
   };
 
-  // oxlint-disable-next-line glose/no-unreasoned-state-sync -- CodeMirror is outside React: it draws the flagged References in rubric.
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- CodeMirror is outside React: it draws the flagged References in rubric.
   useEffect(() => {
     view.current?.dispatch({
       effects: setFlagged.of(new Set(flagged.split("\n").filter(Boolean))),

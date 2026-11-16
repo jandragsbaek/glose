@@ -66,7 +66,7 @@ function NothingDue({ queue, onDue }: { readonly queue: ReviewQueue; readonly on
   const t = useT();
   const due = queue.nextLearningDue;
   const askAgainAt = due ?? queue.nextDayStarts;
-  // oxlint-disable-next-line glose/no-unreasoned-state-sync -- a timer, not state: the queue reads again when a learning step comes due or a new day starts, as nothing else would ask for it.
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- a timer, not state: the queue reads again when a learning step comes due or a new day starts, as nothing else would ask for it.
   useEffect(() => {
     const timer = setTimeout(onDue, Math.max(0, askAgainAt - queue.now));
     return () => clearTimeout(timer);
@@ -89,7 +89,7 @@ export function ReviewScreen() {
   const queue = useAtomValue(reviewQueueAtom);
   const stop = () => void navigate({ to: "/recall" });
 
-  // oxlint-disable-next-line glose/no-unreasoned-state-sync -- a key listener, not state: Esc leaves the Review from anywhere on the screen.
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- a key listener, not state: Esc leaves the Review from anywhere on the screen.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape" && !event.defaultPrevented) stop();
@@ -229,12 +229,12 @@ function Leaf({
   const promptRef = useRef<HTMLParagraphElement>(null);
   const shownAt = useRef(0);
 
-  // oxlint-disable-next-line glose/no-unreasoned-state-sync -- a ref, not state: the time to answer counts from when the question is on screen.
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- a ref, not state: the time to answer counts from when the question is on screen.
   useEffect(() => {
     shownAt.current = Date.now();
   }, []);
 
-  // oxlint-disable-next-line glose/no-unreasoned-state-sync -- focus, not state: each step's question takes the focus, so a screen reader reads it and no stale button keeps it.
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- focus, not state: each step's question takes the focus, so a screen reader reads it and no stale button keeps it.
   useEffect(() => {
     (step === "question" ? questionRef : promptRef).current?.focus({ preventScroll: true });
   }, [step]);
@@ -264,7 +264,7 @@ function Leaf({
     else void rate(action);
   };
 
-  // oxlint-disable-next-line glose/no-unreasoned-state-sync -- a key listener, not state: the keys on the buttons work from anywhere on the screen.
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- a key listener, not state: the keys on the buttons work from anywhere on the screen.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (busy || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
