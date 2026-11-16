@@ -3,7 +3,6 @@ import { assert, describe, it } from "@effect/vitest";
 import { type CardText } from "./card.ts";
 import { type CheckId, gradeOf, ruleChecks, type Verdict } from "./cardScore.ts";
 
-/** The rule Checks that do not pass, as `id: verdict`. */
 const faults = (card: CardText, others: ReadonlyArray<CardText> = []) =>
   ruleChecks(card, others)
     .filter((check) => check.verdict !== "pass")

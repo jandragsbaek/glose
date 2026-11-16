@@ -19,10 +19,6 @@ import * as Versions from "./Versions.ts";
 const MINUTE = 60_000;
 const OTHER = ["-c", "user.name=Other computer", "-c", "user.email=other@example.com"];
 
-/**
- * A Graph folder after setup, with Versions over it and a bare repository as its remote. Git runs
- * for real, with a global config of the test's own.
- */
 const withGraph = <A, E>(
   test: (graph: {
     readonly folder: string;
@@ -30,7 +26,6 @@ const withGraph = <A, E>(
     readonly git: (cwd: string, ...args: ReadonlyArray<string>) => Effect.Effect<string, unknown>;
     readonly write: (relative: string, text: string) => Effect.Effect<void, unknown>;
     readonly read: (relative: string) => Effect.Effect<string, unknown>;
-    /** Builds the Versions service afresh, as a new start of Glose does. */
     readonly start: Effect.Effect<
       Versions.Versions["Service"],
       unknown,
@@ -52,7 +47,6 @@ const withGraph = <A, E>(
     const git = (cwd: string, ...args: ReadonlyArray<string>) =>
       runner.run(cwd, args).pipe(Effect.map((text) => text.trim()));
 
-    // GitHub as far as Versions sees it: each repository name is the bare remote of the test.
     const github = GitHub.of({
       status: Stream.empty,
       connect: Effect.void,
@@ -124,7 +118,6 @@ it.layer(NodeServices.layer)("Versions", (it) => {
         yield* versions.tick;
         assert.isTrue(on(yield* status(versions)).unsaved);
 
-        // Still writing: a second edit restarts the pause.
         yield* TestClock.adjust(4 * MINUTE);
         yield* write("A Note.md", "First words, and more.\n");
         yield* versions.tick;

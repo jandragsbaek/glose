@@ -47,15 +47,9 @@ type Entry<T extends SessionEntry["_tag"]> = Extract<SessionEntry, { _tag: T }>;
 interface Frame {
   readonly source: Source;
   readonly sub: ReactNode;
-  /** The Free text and the Source's details, shown on demand above the transcript. */
   readonly sourcePanels: ReactNode;
 }
 
-/**
- * The Probe step of the Reading Stage. The conversation is the page, at reading width: each
- * question, the user's Reasoning and answer, and beside the answer the AI's judgment as a gloss
- * in the margin. Teaching sits in the column as AI text; the answer box stays at the foot.
- */
 export function Probe(frame: Frame) {
   const found = useAtomValue(probeSessionAtom(frame.source.id));
   const refresh = useAtomRefresh(probeSessionAtom(frame.source.id));
@@ -115,7 +109,6 @@ const isFinished = (session: Session) =>
 const questionCount = (entries: ReadonlyArray<SessionEntry>) =>
   entries.filter((entry) => entry._tag === "ProbeQuestion").length;
 
-/** The page around the Probe: its header actions, the step bar and the tally, then the body. */
 function ProbePage({
   source,
   sub,
@@ -238,10 +231,6 @@ function StartProbe({ source }: { readonly source: Source }) {
 const prefersReducedMotion = () =>
   typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/**
- * The last row of the transcript comes into view when it mounts: a new question, answer or
- * teaching lands at the foot. The callback is stable, so a row already shown never scrolls again.
- */
 const followRow = (node: HTMLElement | null) => {
   node?.scrollIntoView({ block: "end", behavior: prefersReducedMotion() ? "auto" : "smooth" });
 };
@@ -300,10 +289,6 @@ type Row =
       readonly judgment: Entry<"ProbeJudgment"> | undefined;
     };
 
-/**
- * The transcript as rows: a run of tool uses folds into one, and an answer takes its judgment
- * beside it, wherever in the turn the judgment came.
- */
 const rowsOf = (entries: ReadonlyArray<SessionEntry>): ReadonlyArray<Row> => {
   const rows: Array<Row> = [];
   for (const entry of entries) {
@@ -440,7 +425,6 @@ function EntryRow({
   }
 }
 
-/** The Reasoning with the words the judgment points at marked. */
 function withQuote(text: string, quote: string | null): ReactNode {
   if (quote === null) return text;
   const at = text.indexOf(quote);
@@ -496,7 +480,6 @@ function VerdictIcon({ tone }: { readonly tone: "good" | "gap" | "none" }) {
   }
 }
 
-/** The AI's judgment as a gloss in the margin: the Reasoning and the result, apart. */
 function Judgment({ judgment }: { readonly judgment: Entry<"ProbeJudgment"> }) {
   const t = useT();
   const headingId = useId();
@@ -531,7 +514,6 @@ const DICTATION = IS_MAC
     ? "windows"
     : "other";
 
-/** The answer box at the foot: Reasoning (typed or dictated), the answer, then Send. */
 function AnswerBox({ session }: { readonly session: Session }) {
   const t = useT();
   const reasoningId = useId();
@@ -634,7 +616,6 @@ function AnswerBox({ session }: { readonly session: Session }) {
                 {t.session.stop}
               </button>
             ) : open === null ? (
-              // A stopped turn, or one that ended without a question, must not leave the Probe stuck.
               <button
                 type="button"
                 className="button"
@@ -670,7 +651,6 @@ const STATE_ORDER: ReadonlyArray<TopicState> = [
   "asking",
 ];
 
-/** What the Probe found, by topic, and the way on to the next step. */
 function Findings({ session, source }: { readonly session: Session; readonly source: Source }) {
   const t = useT();
   const headingId = useId();

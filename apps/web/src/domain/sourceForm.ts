@@ -2,7 +2,6 @@ import type { SourceDetails } from "@glose/contracts";
 
 export type FieldName = keyof SourceDetails;
 
-/** The Add Source form as typed: one string per field, empty when not filled in. */
 export type FormValues = Readonly<Record<FieldName, string>>;
 
 export const EMPTY_FORM: FormValues = {
@@ -29,12 +28,6 @@ export const formValuesOf = (details: SourceDetails): FormValues => ({
   translator: details.translator ?? "",
 });
 
-/**
- * Fills the form from a Catalog record without losing the user's own typing. A field is
- * replaced when it is empty or an earlier Catalog fill wrote it and the user has not edited it
- * since; anything else is the user's. `filled` names the fields the Catalog now holds; `kept`
- * names typed fields that differ from the record.
- */
 export const fillFromCatalog = (
   current: FormValues,
   filledBefore: ReadonlyArray<FieldName>,

@@ -66,7 +66,6 @@ export class Sessions extends Context.Service<
       readonly kind: SessionKind;
       readonly subject: string;
     }) => Effect.Effect<Session | null, GraphError>;
-    /** Makes a Session and starts the AI's first turn in the background. */
     readonly start: (input: {
       readonly kind: SessionKind;
       readonly subject: string;
@@ -76,17 +75,14 @@ export class Sessions extends Context.Service<
     readonly send: (input: {
       readonly id: string;
       readonly text: string;
-      /** The Point the message is about. */
       readonly about?: string;
     }) => Effect.Effect<void, SessionNotFound | SessionBusy | GraphError>;
     readonly retry: (id: string) => Effect.Effect<void, SessionNotFound | SessionBusy | GraphError>;
     readonly stop: (id: string) => Effect.Effect<void>;
-    /** Card Extraction from another passage of the Note. */
     readonly sendPassage: (input: {
       readonly id: string;
       readonly passage: string;
     }) => Effect.Effect<void, SessionNotFound | SessionBusy | GraphError>;
-    /** Saves a proposed Card, as the user changed it, as an AI-written Card. */
     readonly keepProposal: (input: {
       readonly id: string;
       readonly proposal: string;
@@ -97,7 +93,6 @@ export class Sessions extends Context.Service<
       readonly id: string;
       readonly proposal: string;
     }) => Effect.Effect<void, SessionNotFound | ProposalNotOpen | GraphError>;
-    /** Keeps a proposed Point to write, with the user's words for it. */
     readonly keepPoint: (
       input: PointInput & { readonly title: string },
     ) => Effect.Effect<void, SessionNotFound | PointNotFound | GraphError>;
@@ -107,23 +102,19 @@ export class Sessions extends Context.Service<
     readonly restorePoint: (
       input: PointInput,
     ) => Effect.Effect<void, SessionNotFound | PointNotFound | GraphError>;
-    /** A Point in the user's own words, kept to write. */
     readonly addPoint: (input: {
       readonly id: string;
       readonly title: string;
     }) => Effect.Effect<void, SessionNotFound | GraphError>;
-    /** Writes a kept Point as a Note file; answers with the Note's name. */
     readonly writePoint: (
       input: PointInput & {
         readonly title: string;
         readonly text: string;
-        /** The text is the AI's draft, edited or not; the Note keeps it marked. */
         readonly aiText: boolean;
         readonly page: string | null;
         readonly links: ReadonlyArray<string>;
       },
     ) => Effect.Effect<string, SessionNotFound | PointNotFound | NoteNameTaken | GraphError>;
-    /** The user's answer to the open question of a Probe; the AI judges it in a new turn. */
     readonly answerProbe: (input: {
       readonly id: string;
       readonly question: number;
@@ -131,7 +122,6 @@ export class Sessions extends Context.Service<
       readonly answer: string;
       readonly teachMe: boolean;
     }) => Effect.Effect<void, SessionNotFound | SessionBusy | QuestionNotOpen | GraphError>;
-    /** Ends a Probe. Its record in `Probes/` says what it found. */
     readonly finishProbe: (
       id: string,
     ) => Effect.Effect<void, SessionNotFound | SessionBusy | GraphError>;
@@ -143,10 +133,6 @@ interface PointInput {
   readonly point: string;
 }
 
-/**
- * A Session as kept in the Graph folder, in `.glose/sessions/<id>.json`: what the user saw
- * (`entries`) and the exact model input (`items`) that the next turn continues from.
- */
 const SessionRecord = Schema.Struct({
   version: Schema.Literal(2),
   id: Schema.String,
@@ -156,7 +142,6 @@ const SessionRecord = Schema.Struct({
   created: Schema.Number,
   entries: Schema.Array(SessionEntry),
   items: Schema.Array(Schema.Record(Schema.String, Schema.Unknown)),
-  /** Decisions on proposed Cards that the next turn has yet to tell the AI. */
   decisions: Schema.optionalKey(Schema.Array(Schema.String)),
 });
 type SessionRecord = typeof SessionRecord.Type;
@@ -166,7 +151,6 @@ const decodeJson = Schema.decodeUnknownEffect(Schema.fromJsonString(Schema.Unkno
 const decodeRecordFields = Schema.decodeUnknownEffect(SessionRecord);
 const encodeRecord = Schema.encodeEffect(RecordJson);
 
-/** Version 1 named the Session's file `sourceId`, when only Sources had Sessions. */
 const upgrade = (json: unknown): unknown => {
   if (typeof json !== "object" || json === null || !("version" in json)) return json;
   if (json.version !== 1 || !("sourceId" in json)) return json;
@@ -179,7 +163,6 @@ const decodeRecord = (text: string) =>
 
 const storageError = (cause: unknown) => new StorageError({ detail: String(cause) });
 
-/** What happened to a turn, as the user will read it. */
 const problemOf = (error: ResponsesError): SessionProblem => {
   switch (error.code) {
     case "subscription_sharing_usage_limit_exceeded":
@@ -200,16 +183,13 @@ const problemOf = (error: ResponsesError): SessionProblem => {
 
 interface Live {
   readonly view: SubscriptionRef.SubscriptionRef<Session>;
-  /** The model input so far; it grows with each completed model call. */
   items: ReadonlyArray<InputItem>;
-  /** What the user did with proposed Cards since the last turn; the next turn tells the AI. */
   decisions: Array<string>;
 }
 
 const proposalsOf = (entries: ReadonlyArray<SessionEntry>) =>
   entries.flatMap((entry) => (entry._tag === "CardProposals" ? entry.proposals : []));
 
-/** Changes one proposal in the Session's entries, wherever it is. */
 const setProposal = (
   entries: ReadonlyArray<SessionEntry>,
   id: string,
@@ -226,7 +206,6 @@ const setProposal = (
       : entry,
   );
 
-/** Changes one proposal in the Session's entries from what it is now. */
 const mapProposal = (
   entries: ReadonlyArray<SessionEntry>,
   id: string,
@@ -246,7 +225,6 @@ const mapProposal = (
 const pointsOf = (entries: ReadonlyArray<SessionEntry>) =>
   entries.flatMap((entry) => (entry._tag === "Points" ? entry.points : []));
 
-/** Changes one Point in the Session's entries, wherever it is. */
 const mapPoint = (
   entries: ReadonlyArray<SessionEntry>,
   id: string,
@@ -258,12 +236,10 @@ const mapPoint = (
       : entry,
   );
 
-/** A Point in the AI's words: its number and title. */
 const pointName = (point: Point) => `point ${Extraction.numberOf(point)} "${point.title}"`;
 
 const isRuleCheck = (check: Check) => (RULE_CHECKS as ReadonlyArray<string>).includes(check.id);
 
-/** The proposal's rule Checks with the AI's answer added, or with why it has none. */
 const withJudged = (proposal: CardProposal, judged: CardChecks.Judged): CardProposal => {
   const rules = (proposal.score?.checks ?? []).filter(isRuleCheck);
   return {
@@ -302,14 +278,10 @@ export const make = Effect.gen(function* () {
   const live = new Map<string, Live>();
   const loading = yield* Semaphore.make(1);
   const deciding = yield* Semaphore.make(1);
-  // The Card Checks save beside a turn; two writes of one file must not share its temp file.
   const saving = yield* Semaphore.make(1);
   const turns = yield* FiberMap.make<string>();
-  /** Runs of the AI Checks of proposals so far; each runs under its own key in `turns`. */
   let judgeRuns = 0;
-  /** Turns ask for reasoning summaries until the route refuses them once. */
   let summaries = true;
-  // Signing out stops every request on the user's plan, before the sign-in ends.
   yield* chatGpt.beforeSignOut(FiberMap.clear(turns));
 
   const sessionsFolder = settings.get.pipe(
@@ -347,11 +319,6 @@ export const make = Effect.gen(function* () {
     (effect) => saving.withPermit(effect),
   );
 
-  /**
-   * A Probe is also kept as Markdown, `Probes/<Source>.md` in the Graph folder, so any editor
-   * reads what was asked, answered, judged and taught. Glose reads only the top of the folder
-   * as the Graph, so the record is no Note.
-   */
   const writeProbeRecord = Effect.fn("Sessions.writeProbeRecord")(
     function* (view: Session) {
       const { graphFolder, language } = (yield* settings.get).settings;
@@ -380,24 +347,17 @@ export const make = Effect.gen(function* () {
     const records = yield* Effect.forEach(
       names.filter((name) => name.endsWith(".json")),
       (name) =>
-        fs.readFileString(path.join(folder, name)).pipe(
-          Effect.flatMap(decodeRecord),
-          // A file Glose cannot read (hand-edited, from a newer Glose) is skipped, not fatal.
-          Effect.option,
-        ),
+        fs
+          .readFileString(path.join(folder, name))
+          .pipe(Effect.flatMap(decodeRecord), Effect.option),
       { concurrency: 8 },
     );
     return records.flatMap((record) => Option.toArray(record));
   });
 
-  /**
-   * The one live copy of a Session, so every watcher sees the same turn. Opening it tries
-   * again the AI Checks of open proposals that have none.
-   */
   const adopt = Effect.fn("Sessions.adopt")(function* (record: SessionRecord) {
     const existing = live.get(record.id);
     if (existing) {
-      // In a live Session, pending Checks are still running; only these wait for a retry.
       yield* pendingProposals(existing, ["off", "failed"]);
       return existing;
     }
@@ -430,10 +390,6 @@ export const make = Effect.gen(function* () {
   const patch = (session: Live, change: (view: Session) => Session) =>
     SubscriptionRef.update(session.view, change);
 
-  /**
-   * Runs the AI Checks of open proposals in the background; signing out stops them with the
-   * turns. A proposal the user changed meanwhile keeps the answer for the words it was kept as.
-   */
   const judgeProposals = Effect.fn("Sessions.judgeProposals")(function* (
     session: Live,
     ids: ReadonlyArray<string>,
@@ -470,15 +426,10 @@ export const make = Effect.gen(function* () {
     ids: ReadonlyArray<string>,
   ) {
     const { id } = yield* SubscriptionRef.get(session.view);
-    // A key per run: a new run never stops an older one that is still saving its answer.
     judgeRuns += 1;
     yield* FiberMap.run(turns, `${id}:checks:${judgeRuns}`, judgeProposals(session, ids));
   });
 
-  /**
-   * Proposed Cards join the Session as one entry, each with an id unique in it and its rule
-   * Checks against the Note's Cards and each other. The AI Checks follow.
-   */
   const propose = (session: Live) => (proposed: ReadonlyArray<CardText>) =>
     Effect.gen(function* () {
       const { subject } = yield* SubscriptionRef.get(session.view);
@@ -505,15 +456,10 @@ export const make = Effect.gen(function* () {
       yield* startJudging(session, ids);
     });
 
-  /**
-   * Starts the AI Checks of open proposals in these states again: pending (left by a closed
-   * Glose), off (stopped by a sign-out, or no ChatGPT) or failed.
-   */
   const pendingProposals = Effect.fn("Sessions.pendingProposals")(function* (
     session: Live,
     retry: ReadonlyArray<JudgeState>,
   ) {
-    // Marked pending in the same step, so opening the Session twice checks them once.
     const ids = yield* SubscriptionRef.modify(session.view, (view) => {
       const chosen = proposalsOf(view.entries)
         .filter(
@@ -537,7 +483,6 @@ export const make = Effect.gen(function* () {
     if (ids.length > 0) yield* startJudging(session, ids);
   });
 
-  /** New Points join the Session as one entry, numbered on from the Points before them. */
   const addPoints = (session: Live, added: ReadonlyArray<Omit<Point, "id">>) =>
     SubscriptionRef.modify(session.view, (view) => {
       const before = pointsOf(view.entries).length;
@@ -548,7 +493,6 @@ export const make = Effect.gen(function* () {
       return [points, { ...view, entries: [...view.entries, { _tag: "Points" as const, points }] }];
     });
 
-  /** Changes a Point the AI named by number, if it is in one of these states. */
   const changeNumbered = (
     session: Live,
     number: number,
@@ -561,7 +505,6 @@ export const make = Effect.gen(function* () {
       return [true, { ...view, entries: mapPoint(view.entries, point.id, change) }];
     });
 
-  /** The entries of a Source's latest Probe, from its live copy when it has one. */
   const probeOf = (subject: string) =>
     readRecords.pipe(
       Effect.flatMap((records) => {
@@ -579,7 +522,6 @@ export const make = Effect.gen(function* () {
       Effect.orElseSucceed(() => null),
     );
 
-  /** What the AI of each kind of Session is told, and may do. */
   const rulesOf = (session: Live, { kind, subject }: Session) => {
     switch (kind) {
       case "extraction":
@@ -689,8 +631,6 @@ export const make = Effect.gen(function* () {
             Effect.andThen(patch(session, (view) => ({ ...view, problem }))),
           );
         }),
-        // A turn that ends early (stopped, or failed mid-answer) keeps what the AI already
-        // said, in the transcript and in the model input the next turn continues from.
         Effect.ensuring(
           Effect.gen(function* () {
             const { draft } = yield* SubscriptionRef.get(session.view);
@@ -717,7 +657,6 @@ export const make = Effect.gen(function* () {
       ),
   );
 
-  /** Marks the Session busy and runs a turn in the background; refuses while one runs. */
   const beginTurn = Effect.fn("Sessions.beginTurn")(function* (
     session: Live,
     entries: ReadonlyArray<SessionEntry>,
@@ -754,10 +693,6 @@ export const make = Effect.gen(function* () {
     yield* FiberMap.run(turns, id, runSessionTurn(session));
   });
 
-  /**
-   * The file a new Session works on, as the Graph folder names it. Extraction needs a Source;
-   * Card Extraction any file in the Graph.
-   */
   const subjectOf = Effect.fn("Sessions.subjectOf")(function* (kind: SessionKind, name: string) {
     switch (kind) {
       case "extraction":
@@ -797,7 +732,6 @@ export const make = Effect.gen(function* () {
     return { point, view };
   });
 
-  /** Changes a Point, notes what the user did for the next turn, and keeps the Session. */
   const decidePoint = Effect.fn("Sessions.decidePoint")(function* (
     session: Live,
     pointId: string,
@@ -869,7 +803,6 @@ export const make = Effect.gen(function* () {
     send: Effect.fn("Sessions.send")(function* ({ id, text, about }) {
       const session = yield* load(id);
       const view = yield* SubscriptionRef.get(session.view);
-      // A message about a Point that is not in the Session is a message about the Source.
       const point = pointsOf(view.entries).find((other) => other.id === about);
       yield* beginTurn(
         session,
@@ -902,7 +835,6 @@ export const make = Effect.gen(function* () {
       function* ({ id, proposal: proposalId, question, answer }) {
         const session = yield* load(id);
         const { proposal, subject } = yield* openProposal(session, proposalId);
-        // The AI wrote it, so it is AI text, edited or not, until the user rewrites it.
         const card = yield* cards.create({ from: subject, question, answer, ai: true });
         const kept = { question, answer };
         session.decisions.push(
@@ -1036,7 +968,6 @@ export const make = Effect.gen(function* () {
           }
           return [
             "now" as const,
-            // A turn that failed before the finish is no longer the user's next step.
             {
               ...view,
               problem: null,
@@ -1055,12 +986,10 @@ export const make = Effect.gen(function* () {
         const session = yield* load(id);
         const { point, view } = yield* findPoint(session, pointId, ["kept"]);
         const { language } = (yield* settings.get).settings;
-        // Only Links the AI proposed for this Point, under the names the Graph gives them.
         const asked = new Set(links.map(linkKey));
         const related = point.links
           .filter((link) => asked.has(linkKey(link.note)))
           .map((link) => link.note);
-        // AI text stays marked, edited or not, until the user says they rewrote it.
         const draft = aiText && text !== "" ? text : null;
         const own = draft === null ? text : "";
         const note = yield* notes.create({
@@ -1069,7 +998,6 @@ export const make = Effect.gen(function* () {
           page,
           text: own,
           draft,
-          // The AI wrote the title of every Point but the user's own, edited or not.
           aiTitle: point.origin !== "user",
           related,
           language: language ?? "en",

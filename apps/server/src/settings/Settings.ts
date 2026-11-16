@@ -23,23 +23,13 @@ export class Settings extends Context.Service<
   Settings,
   {
     readonly get: Effect.Effect<SettingsView, StorageError>;
-    /**
-     * This computer's opaque id, made on first use. It names this computer's folder of Reviews in
-     * the Graph, so two computers that share a Graph never write the same file.
-     */
     readonly computerId: Effect.Effect<string, StorageError>;
     readonly setLanguage: (language: Language) => Effect.Effect<SettingsView, StorageError>;
-    /** Creates a new Graph folder or opens an existing one, then remembers it on this computer. */
     readonly completeSetup: (input: {
       readonly language: Language;
       readonly graphFolder: string;
-      /** A Graph copied from a remote is cloned first (see Setup), then opened. */
       readonly action: Exclude<GraphFolderAction, "clone">;
     }) => Effect.Effect<SettingsView, GraphFolderUnavailable | StorageError>;
-    /**
-     * Chooses the user's Bridgetown site on this computer: a folder that holds `src`, where Glose
-     * writes Blog posts into `src/_posts`.
-     */
     readonly setSiteFolder: (
       siteFolder: string,
     ) => Effect.Effect<SettingsView, SiteFolderUnavailable | StorageError>;

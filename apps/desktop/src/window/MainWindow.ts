@@ -4,11 +4,6 @@ import * as NodePath from "node:path";
 
 const isWebUrl = (url: string) => url.startsWith("https://") || url.startsWith("http://");
 
-/**
- * Development builds have no View menu, so the window itself listens for the usual reload and
- * DevTools shortcuts: Ctrl/Cmd+R, Ctrl/Cmd+Shift+R, F5, Ctrl+Shift+I (Cmd+Option+I on macOS)
- * and F12. Packaged builds have none of them.
- */
 const addDevShortcuts = (window: Electron.BrowserWindow) => {
   window.webContents.on("before-input-event", (event, input) => {
     if (input.type !== "keyDown") return;
@@ -29,10 +24,6 @@ const addDevShortcuts = (window: Electron.BrowserWindow) => {
   });
 };
 
-/**
- * Opens the app window on `url`. Size and title bar are Electron's defaults: no design
- * decision has been made yet.
- */
 const create = (url: string) => {
   const appOrigin = new URL(url).origin;
   const window = new Electron.BrowserWindow({
@@ -40,12 +31,10 @@ const create = (url: string) => {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
-      // Built next to main.cjs (see vite.config.ts).
       preload: NodePath.join(__dirname, "preload.cjs"),
     },
   });
 
-  // The window only ever shows the app. Any other link opens in the user's browser.
   window.webContents.setWindowOpenHandler(({ url: target }) => {
     if (isWebUrl(target)) void Electron.shell.openExternal(target);
     return { action: "deny" };
@@ -62,11 +51,6 @@ const create = (url: string) => {
   return window;
 };
 
-/**
- * Windows and Linux get no menu bar in the window. macOS always shows a menu bar at the top
- * of the screen, and its copy, paste, undo, hide and quit shortcuts only work through menu
- * items, so it keeps the standard app, Edit and Window menus.
- */
 const setMenu = () => {
   const menu =
     process.platform === "darwin"
@@ -79,7 +63,6 @@ const setMenu = () => {
   Electron.Menu.setApplicationMenu(menu);
 };
 
-/** Opens the window and keeps the platform's conventions for closing and reopening it. */
 export const open = Effect.fn("MainWindow.open")(function* (url: string) {
   yield* Effect.sync(() => {
     setMenu();
@@ -91,7 +74,6 @@ export const open = Effect.fn("MainWindow.open")(function* (url: string) {
       if (window.isMinimized()) window.restore();
       window.focus();
     });
-    // macOS keeps an app running without windows and reopens one from the dock.
     Electron.app.on("activate", () => {
       if (Electron.BrowserWindow.getAllWindows().length === 0) create(url);
     });

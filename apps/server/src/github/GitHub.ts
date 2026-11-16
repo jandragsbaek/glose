@@ -30,29 +30,16 @@ import { GitHubApi, SCOPE } from "./GitHubApi.ts";
 export class GitHub extends Context.Service<
   GitHub,
   {
-    /** The status now, then every change. */
     readonly status: Stream.Stream<GitHubStatus>;
-    /** Asks GitHub for a code, opens GitHub's page for it, and returns; `status` follows. */
     readonly connect: Effect.Effect<void>;
     readonly cancel: Effect.Effect<void>;
-    /** Forgets the sign-in on this computer. GitHub keeps the repository. */
     readonly disconnect: Effect.Effect<void, StorageError>;
-    /**
-     * The address of the user's private repository of this name, made first when it is missing.
-     * A public repository of the name is refused.
-     */
     readonly repository: (name: string) => Effect.Effect<string, RemoteRefused>;
-    /**
-     * The private repositories the account owns or that are shared with it, Graphs first, then
-     * the latest pushed. Public ones are left out: Glose never keeps a Graph where all can read it.
-     */
     readonly repositories: Effect.Effect<ReadonlyArray<GitHubRepository>, RemoteRefused>;
-    /** Git config that signs git in to GitHub over HTTPS as the connected account, or none. */
     readonly gitConfig: Effect.Effect<Readonly<Record<string, string>>>;
   }
 >()("glose/github/GitHub") {}
 
-/** The sign-in of this computer. A GitHub OAuth token does not expire until it is revoked. */
 const Saved = Schema.Struct({ login: Schema.String, token: Schema.String });
 type Saved = typeof Saved.Type;
 const SavedJson = Schema.fromJsonString(Saved);
@@ -67,11 +54,9 @@ const DeviceCode = Schema.Struct({
   interval: Schema.Number,
 });
 
-/** GitHub answers a poll with 200 and either a token or an OAuth error. */
 const PollAnswer = Schema.Struct({
   access_token: Schema.optionalKey(Schema.String),
   error: Schema.optionalKey(Schema.String),
-  /** The new, longer wait after `slow_down`, in seconds. */
   interval: Schema.optionalKey(Schema.Number),
 });
 
@@ -88,7 +73,6 @@ const ListedRepository = Schema.Struct({
   pushed_at: Schema.NullOr(Schema.String),
 });
 
-/** A sign-in attempt that ended without a connection. */
 class ConnectFailed extends Data.TaggedError("ConnectFailed")<{
   readonly problem: GitHubProblem;
   readonly detail: string;
@@ -99,14 +83,10 @@ const failed = (detail: unknown) =>
 const storageError = (cause: unknown) => new StorageError({ detail: String(cause) });
 const refused = (reason: RemoteRefused["reason"]) => new RemoteRefused({ reason });
 
-/** GitHub's REST API asks every client to name itself. */
 const USER_AGENT = "Glose";
-/** GitHub's floor for the wait between polls, in seconds. */
 const MIN_INTERVAL = 5;
-/** `slow_down` without a new interval adds this many seconds. */
 const SLOW_DOWN = 5;
 const REQUEST_TIMEOUT = "30 seconds";
-/** GitHub's largest page of repositories; the list reads every page. */
 const PAGE = 100;
 
 export const make = Effect.gen(function* () {
@@ -128,7 +108,6 @@ export const make = Effect.gen(function* () {
     )
     .pipe(Effect.mapError(storageError));
 
-  /** Only the owner may read the file: it holds a token that can push to their repositories. */
   const write = (saved: Saved | null) =>
     lock
       .withPermit(
@@ -192,10 +171,6 @@ export const make = Effect.gen(function* () {
   const decodeRepository = Schema.decodeUnknownEffect(Repository);
   const decodeListed = Schema.decodeUnknownEffect(Schema.Array(ListedRepository));
 
-  /**
-   * GitHub's device flow: Glose shows a code, the user enters it on github.com, and Glose asks
-   * every few seconds until GitHub answers with a token or the code expires.
-   */
   const signIn = Effect.gen(function* () {
     const code = yield* postForm(api.deviceCodeUrl, { client_id: api.clientId, scope: SCOPE }).pipe(
       Effect.flatMap(decodeDeviceCode),
@@ -222,7 +197,6 @@ export const make = Effect.gen(function* () {
         grant_type: "urn:ietf:params:oauth:grant-type:device_code",
       }).pipe(
         Effect.flatMap(decodePollAnswer),
-        // A lost answer is asked again at the next poll; the deadline still ends the attempt.
         Effect.orElseSucceed(() => ({ error: "authorization_pending" }) as typeof PollAnswer.Type),
       );
       if (answer.access_token !== undefined) token = answer.access_token;
@@ -259,10 +233,8 @@ export const make = Effect.gen(function* () {
     Effect.onInterrupt(() => publish(null)),
   );
 
-  /** GitHub no longer accepts the token: forget it, and ask the user to connect again. */
   const expired = write(null).pipe(Effect.ignore, Effect.andThen(publish("expired")));
 
-  /** The sign-in, or a refusal that says GitHub is not connected. */
   const signedIn = read.pipe(
     Effect.orElseSucceed(() => null),
     Effect.flatMap((saved) =>
@@ -276,7 +248,6 @@ export const make = Effect.gen(function* () {
       Effect.mapError(() => refused("github-failed")),
     );
 
-  /** A 401 means the token was revoked: Glose forgets it, and the user connects again. */
   const unexpected = (response: HttpClientResponse.HttpClientResponse) =>
     response.status === 401
       ? expired.pipe(Effect.andThen(Effect.fail(refused("github-not-connected"))))
@@ -322,7 +293,6 @@ export const make = Effect.gen(function* () {
 
   const repositories = Effect.gen(function* () {
     const saved = yield* signedIn;
-    // Every page, so an old Graph is found among many newer repositories.
     const all: Array<typeof ListedRepository.Type> = [];
     for (let page = 1; ; page++) {
       const listed = yield* call(
@@ -345,7 +315,6 @@ export const make = Effect.gen(function* () {
       if (repos.length < PAGE) break;
     }
     const own = all.filter((repo) => repo.private);
-    // A Graph is a repository with Glose's settings file; a failed look counts as no Graph.
     const graphs = yield* Effect.forEach(
       own,
       (repo) =>
@@ -371,7 +340,6 @@ export const make = Effect.gen(function* () {
       graph: graphs[index] ?? false,
       pushedAt: repo.pushed_at === null ? null : Date.parse(repo.pushed_at) || null,
     }));
-    // GitHub sends the latest pushed first; a stable sort keeps that order within each group.
     return found.toSorted((a, b) => Number(b.graph) - Number(a.graph));
   }).pipe(Effect.withSpan("GitHub.repositories"));
 
@@ -380,8 +348,7 @@ export const make = Effect.gen(function* () {
     connect:
       api.clientId === ""
         ? Effect.void
-        : // The old attempt finishes interrupting first, so its status cannot land after the new one.
-          FiberHandle.clear(attempt).pipe(
+        : FiberHandle.clear(attempt).pipe(
             Effect.andThen(FiberHandle.run(attempt, runAttempt)),
             Effect.asVoid,
           ),

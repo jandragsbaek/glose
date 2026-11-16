@@ -28,7 +28,6 @@ type On = Extract<VersionsStatus, { _tag: "On" }>;
 
 const dayOf = (date: Date) => `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 
-/** Today's local date as a key; it changes at midnight, checked once a minute. */
 function useToday() {
   return useSyncExternalStore(
     (onChange) => {
@@ -39,10 +38,6 @@ function useToday() {
   );
 }
 
-/**
- * The running foot of the window, like the foot of a printed page: quiet status along the
- * bottom of the main column. Updates and Versions sit at its right end.
- */
 export function StatusBar() {
   return (
     <footer className="status-bar">
@@ -57,18 +52,12 @@ export function StatusBar() {
 
 type UpdatesOn = Extract<UpdatesStatus, { _tag: "On" }>;
 
-/** The step a problem stopped; the bar shows the problem while that step is still next. */
 const PROBLEM_STEP: Record<UpdatesProblem, ReturnType<typeof updatesNextStep>> = {
   "check-failed": "check",
   "download-failed": "download",
   "install-failed": "install",
 };
 
-/**
- * The app's own updates as one button that is always the next step: check, download,
- * restart. The tooltip says which version runs and when Glose last checked. Only the
- * desktop app has it, and only where it can replace itself.
- */
 function UpdatesItem() {
   const t = useT();
   const tipId = useId();
@@ -89,7 +78,6 @@ function UpdatesItem() {
   const act = () => {
     const updates = desktopUpdates();
     if (updates === undefined || step === "wait") return;
-    // Each step reports its outcome through the status, so a failed call needs nothing here.
     const run = { check: updates.check, download: updates.download, install: updates.install }[
       step
     ];
@@ -116,7 +104,6 @@ function UpdatesItem() {
       >
         {content}
       </button>
-      {/* Screen readers hear a step the user can take, not every percent of a download. */}
       <span className="sr-only" role="status">
         {look === "next" || look === "go" || look === "problem" ? tip : null}
       </span>
@@ -139,9 +126,7 @@ function UpdatesItem() {
 type UpdatesView = {
   readonly look: "rest" | "busy" | "next" | "go" | "problem";
   readonly content: ReactNode;
-  /** The tooltip's first line: what is true now. */
   readonly tip: string;
-  /** The tooltip's second line: the restart, the running version, or that and the last check. */
   readonly detail: "restart" | "running" | "checked";
 };
 
@@ -227,7 +212,6 @@ function updatesView(
   };
 }
 
-/** The download's progress as a ring that fills clockwise from the top. */
 function ProgressRing({ percent }: { readonly percent: number }) {
   const circumference = 2 * Math.PI * 6;
   return (
@@ -347,7 +331,6 @@ function VersionsDetails({ status, today }: { readonly status: On; readonly toda
   );
 }
 
-/** The day's last Version, named by the user: an active choice, not a timer. */
 function EndDayForm({ activity }: { readonly activity: On["activity"] }) {
   const t = useT();
   const inputId = useId();

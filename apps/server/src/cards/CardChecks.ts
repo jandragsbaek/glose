@@ -39,45 +39,31 @@ import * as Cards from "./Cards.ts";
 
 type GraphError = GraphFolderNotSet | StorageError;
 
-/** One Card for the AI Checks: its words and the file it is made from. */
 export interface JudgeItem extends CardText {
   readonly from: string | null;
 }
 
-/** The AI Checks of one item, or why there are none. */
 export type Judged = ReadonlyArray<Check> | "off" | "failed";
 
 export class CardChecks extends Context.Service<
   CardChecks,
   {
-    /** Rule Checks, and the AI Checks the AI already made; it never calls the AI. */
     readonly score: (cards: ReadonlyArray<Card>) => Effect.Effect<ReadonlyArray<ScoredCard>>;
-    /** Runs the AI Checks of these Card files that have none yet. */
     readonly judgeFiles: (files: ReadonlyArray<string>) => Effect.Effect<void, GraphError>;
-    /** Runs the AI Checks of Cards that are not saved yet, such as proposed Cards. */
     readonly judge: (items: ReadonlyArray<JudgeItem>) => Effect.Effect<ReadonlyArray<Judged>>;
   }
 >()("glose/cards/CardChecks") {}
 
-/** Change it when the prompts change, so the AI checks every Card again. */
 export const JUDGE_VERSION = 1;
 
-/** Cards per pair of AI calls; more makes long input and a slow answer. */
 export const BATCH = 10;
 
-/** A Note longer than this reaches the AI cut, so a Rich note cannot fill the context. */
 const NOTE_CHARS = 12_000;
 
-/** A failed AI Check is tried again after this long, not on every list. */
 const RETRY_AFTER_MS = 10 * 60 * 1000;
 
 const LANGUAGE_NAMES: Record<Language, string> = { en: "English", da: "Danish" };
 
-/**
- * The first call sees the questions without their answers, as the reader in a Review does.
- * What it finds shows whether a question has one exact answer, which a judge that sees the
- * expected answer does poorly (docs/ideas.md, "Card Checks").
- */
 export const BLIND_INSTRUCTIONS = `You test questions for a spaced-repetition app (like Anki). Each question is shown alone, months after the person read the Note it is made from. You do not see the expected answer.
 
 For each question, write every distinct answer that a fair grader who knows the Note would have to accept as correct.
@@ -149,7 +135,6 @@ const JUDGE_SCHEMA = strictObject({
   },
 });
 
-/** The AI Checks the app keeps, by a hash of what they were made from. */
 const CacheFile = Schema.Struct({
   version: Schema.Literal(1),
   entries: Schema.Record(Schema.String, Schema.Array(Check)),
@@ -161,7 +146,6 @@ const CacheJson = Schema.fromJsonString(CacheFile);
 const decodeCache = Schema.decodeUnknownEffect(CacheJson);
 const encodeCache = Schema.encodeEffect(CacheJson);
 
-/** The Note as the AI reads it, under its name. */
 const noteBlock = (name: string, text: string) =>
   `=== Note: ${name} ===\n${text.length > NOTE_CHARS ? `${text.slice(0, NOTE_CHARS)}\n[…]` : text}`;
 
@@ -175,20 +159,16 @@ export const make = Effect.gen(function* () {
   const chatGpt = yield* ChatGpt.ChatGpt;
   const responses = yield* Responses;
 
-  // Per computer, beside the app settings: a cache that a sync client must not merge.
   const cacheFile = path.join(dataDir, "card-checks.json");
   let cache: Map<string, ReadonlyArray<Check>> | null = null;
-  /** When the AI Checks of a hash last failed. */
   const failures = new Map<string, number>();
   const judging = yield* Semaphore.make(1);
 
   const loadCache = Effect.gen(function* () {
     if (cache !== null) return cache;
-    const read = yield* fs.readFileString(cacheFile).pipe(
-      Effect.flatMap(decodeCache),
-      // A missing or unreadable cache only means the AI checks the Cards again.
-      Effect.option,
-    );
+    const read = yield* fs
+      .readFileString(cacheFile)
+      .pipe(Effect.flatMap(decodeCache), Effect.option);
     cache = new Map(
       Option.match(read, { onNone: () => [], onSome: (file) => Object.entries(file.entries) }),
     );
@@ -207,7 +187,6 @@ export const make = Effect.gen(function* () {
     Effect.orElseSucceed((): Language => "en"),
   );
 
-  /** The text of each Graph file by its link key; empty when the Graph cannot be read. */
   const noteTexts = graph.read.pipe(
     Effect.map(
       (view) =>
@@ -216,7 +195,6 @@ export const make = Effect.gen(function* () {
     Effect.orElseSucceed(() => new Map<string, { name: string; text: string }>()),
   );
 
-  /** True when the AI may run on the user's ChatGPT plan now. */
   const connected = chatGpt.status.pipe(
     Stream.runHead,
     Effect.map((status) =>
@@ -238,7 +216,6 @@ export const make = Effect.gen(function* () {
       .digest("hex");
   };
 
-  /** A Card without a Note has nothing to be true to. */
   const relevant = (item: JudgeItem, checks: ReadonlyArray<Check>) =>
     item.from === null ? checks.filter((check) => check.id !== "true-to-note") : checks;
 
@@ -247,7 +224,6 @@ export const make = Effect.gen(function* () {
     return at !== undefined && now - at < RETRY_AFTER_MS;
   };
 
-  /** One call with a structured answer. */
   const ask = <A>(
     token: Redacted.Redacted<string>,
     model: string,
@@ -258,7 +234,6 @@ export const make = Effect.gen(function* () {
     decode: (text: string) => Effect.Effect<A, Schema.SchemaError>,
   ) => askStructured(responses, { token, model, instructions, input, name, schema, decode });
 
-  /** The AI Checks of one batch: a blind call, then the judge. */
   const judgeBatch = Effect.fn("CardChecks.judgeBatch")(function* (
     token: Redacted.Redacted<string>,
     model: string,
@@ -351,7 +326,6 @@ export const make = Effect.gen(function* () {
         const access = yield* chatGpt.accessToken.pipe(Effect.result);
         if (access._tag === "Failure") {
           unavailable = access.failure.reason === "unavailable" ? "failed" : "off";
-          // Recorded, so a list shows them failed for a while, not pending to be asked again.
           const now = yield* Clock.currentTimeMillis;
           for (const key of waiting.keys()) failures.set(key, now);
         } else {
@@ -394,7 +368,6 @@ export const make = Effect.gen(function* () {
     (effect) => judging.withPermit(effect),
   );
 
-  /** Cards made from the same Note can be confused with each other in a Review. */
   const siblingsOf = (all: ReadonlyArray<Card>) => {
     const byNote = new Map<string, Array<Card>>();
     for (const card of all) {

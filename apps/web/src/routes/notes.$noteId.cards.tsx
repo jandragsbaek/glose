@@ -21,7 +21,6 @@ import {
   startSessionAtom,
 } from "../state/sessions.ts";
 
-/** Card Extraction: Cards from one Note, proposed by the AI or written by the user. */
 export const Route = createFileRoute("/notes/$noteId/cards")({ component: CardExtractionStage });
 
 function CardExtractionStage() {
@@ -46,7 +45,6 @@ function CardExtractionStage() {
       </Page>
     ),
     onSuccess: ({ value }) => {
-      // A wikilink names a file without regard to case, and so does this address.
       const note = value.nodes.find((node) => linkKey(node.id) === linkKey(noteId));
       return note === undefined ? (
         <Page title={t.errors.notFoundTitle}>
@@ -90,7 +88,6 @@ function NotePage({ note, view }: { readonly note: GraphNode; readonly view: Gra
   );
 }
 
-/** The Note's text, where the user may select the passage to make Cards from. */
 function NotePanel({
   note,
   view,
@@ -124,7 +121,6 @@ function NotePanel({
       <div className="panel__body" ref={text}>
         <NoteText
           markdown={note.body}
-          // A Note marked only for its AI title holds no AI text in its body.
           aiText={note.aiText && !note.aiTitle}
           renderLink={(part) => {
             const target = byKey.get(linkKey(part.target));
@@ -165,7 +161,6 @@ function NotePanel({
   );
 }
 
-/** The Cards already made from this Note, and a form to write one in the user's own words. */
 function NoteCards({ note }: { readonly note: GraphNode }) {
   const t = useT();
   const cards = useAtomValue(cardsAtom);
@@ -344,7 +339,6 @@ function StartCardExtraction({
   );
 }
 
-/** In a running Session, the passage the user chose goes to the AI as its own request. */
 function SendPassage({
   session,
   passage,

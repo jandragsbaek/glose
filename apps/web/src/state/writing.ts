@@ -3,10 +3,6 @@ import * as Atom from "effect/reactivity/Atom";
 
 import { GloseClient } from "../rpc/client.ts";
 
-/**
- * The list reads again after any change. One project is read once per desk: its desk keeps the
- * text, so a save never reloads it under the writer's cursor.
- */
 export const WRITING_KEYS = { list: ["writing"] } as const;
 
 export const writingListAtom = GloseClient.query(RPC_METHODS.writingList, undefined, {

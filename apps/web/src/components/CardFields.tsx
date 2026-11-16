@@ -8,7 +8,6 @@ interface CardWords {
   readonly answer: string;
 }
 
-/** A Card's question and answer as a form: to keep a proposed Card, edit one, or write one. */
 export function CardFields({
   initial,
   submitLabel,
@@ -19,7 +18,6 @@ export function CardFields({
   readonly initial: CardWords;
   readonly submitLabel: string;
   readonly busy: boolean;
-  /** Resolves true when the Card was saved; a new Card's form then empties. */
   readonly onSubmit: (words: CardWords) => Promise<boolean | void>;
   readonly onCancel?: () => void;
 }) {

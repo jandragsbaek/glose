@@ -22,7 +22,6 @@ const MODEL_LIST: Answer = {
 };
 const NOTE = "Attention residue lowers performance";
 
-/** A streamed answer whose text is this JSON, as a structured answer arrives. */
 const json = (value: unknown): Answer => ({
   status: 200,
   sse: true,
@@ -42,7 +41,6 @@ const json = (value: unknown): Answer => ({
 
 const PASS = { verdict: "pass", note: "" };
 
-/** A Graph with one Note and two Cards from it; signed in to ChatGPT when asked. */
 const setUp = (signedIn: boolean, { expired = false } = {}) =>
   Effect.gen(function* () {
     const dirs = yield* makeDirs;
@@ -61,7 +59,6 @@ const setUp = (signedIn: boolean, { expired = false } = {}) =>
               idToken: "id-1",
               accessToken: "access-1",
               refreshToken: "refresh-1",
-              // An expired token makes Glose refresh it before the AI Checks.
               expiresAt: expired ? 0 : 10_000_000_000,
               scopes: ["chatgpt.tokens.use.direct"],
             },
@@ -70,7 +67,6 @@ const setUp = (signedIn: boolean, { expired = false } = {}) =>
         ],
       });
     }
-    // A new layer is a new start of Glose over the same folders.
     const start = () =>
       Server.layerApp.pipe(
         Layer.provide(fake.layer),
@@ -169,10 +165,8 @@ it.layer(NodeServices.layer)("CardChecks", (it) => {
         note: "The Note names no first name.",
       });
       assert.strictEqual(after.find((card) => card.file === files[1])?.score.judge, "pending");
-      // One blind call and one judge call; the restart read the rest from the cache.
       assert.lengthOf(checkRequests(), 2);
 
-      // Changed words are a new Card to the AI.
       yield* Cards.use((cards) =>
         cards.update({
           file: files[0],
@@ -206,7 +200,6 @@ it.layer(NodeServices.layer)("CardChecks", (it) => {
         yield* (yield* CardChecks).judgeFiles([files[0]]);
         return yield* scored;
       }).pipe(Effect.provide(start()));
-      // Pending would make Recall ask again at once, again and again.
       assert.strictEqual(after.find((card) => card.file === files[0])?.score.judge, "failed");
     }).pipe(Effect.scoped),
   );

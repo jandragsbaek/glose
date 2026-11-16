@@ -47,7 +47,6 @@ const longDate = new Intl.DateTimeFormat("en-GB", {
   month: "long",
 });
 
-/** The English catalog. Its shape is the type every other catalog must match. */
 export const en = {
   app: {
     name: "Glose",
@@ -461,7 +460,6 @@ export const en = {
       "list-notes": "The AI looked at the Notes you made from this Source.",
       "read-probe": "The AI read your Probe.",
     } satisfies Record<SessionTool, string>,
-    /** One line of what the AI read; a Note's name follows `readNote` as a link. */
     trail: {
       readSource: "Read the Source and your Free text",
       listSources: "Looked at your Sources",
@@ -471,7 +469,6 @@ export const en = {
       listNotes: "Looked at your Notes from this Source",
       readProbe: "Read your Probe",
     },
-    /** What the AI read in one turn, in one line. */
     trailSummary: (read: {
       readonly freeText: boolean;
       readonly notes: number;
@@ -500,7 +497,6 @@ export const en = {
         .join(" · ");
       return line.charAt(0).toUpperCase() + line.slice(1);
     },
-    /** What the AI does now, while it works. */
     live: (tool: SessionTool | null, detail: string | undefined) => {
       switch (tool) {
         case "read-source":
@@ -1018,7 +1014,6 @@ export const en = {
       `${numbers.format(counts.new)} new · ${numbers.format(counts.learning)} learning · ${numbers.format(counts.review)} due`,
     states: { new: "New Card", learning: "Learning", review: "Due" },
     showAnswer: "Show answer",
-    // Two steps, because people press Hard when they forgot, and FSRS reads Hard as a pass.
     didRecall: "Did you recall it?",
     forgot: "Forgot",
     recalled: "Recalled",
@@ -1161,7 +1156,6 @@ export const en = {
     } satisfies Record<CheckId, { readonly name: string; readonly tip: string }>,
   },
   updates: {
-    /** A nightly as "Nightly 13 Nov (42)"; any other version as it is. */
     version: (version: string) => {
       const nightly = nightlyOf(version);
       return nightly === null

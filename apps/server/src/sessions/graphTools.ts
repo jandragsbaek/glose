@@ -6,7 +6,6 @@ import * as Schema from "effect/Schema";
 import type * as Graph from "../graph/Graph.ts";
 import type { AgentTool } from "./agent.ts";
 
-/** Matches in one search; enough to see what the Graph holds on a subject. */
 export const MAX_MATCHES = 10;
 
 const SNIPPET = 240;
@@ -16,7 +15,6 @@ const SearchArguments = Schema.Struct({ query: Schema.String });
 const decodeReadNote = Schema.decodeUnknownOption(ReadNoteArguments);
 const decodeSearch = Schema.decodeUnknownOption(SearchArguments);
 
-/** Words of three letters or more, in any script, without regard to case. */
 const words = (text: string) =>
   Array.from(new Set(text.toLocaleLowerCase("und").match(/[\p{L}\p{N}]{3,}/gu) ?? []));
 
@@ -29,10 +27,6 @@ const snippetOf = (body: string, terms: ReadonlyArray<string>) => {
   return `${start > 0 ? "…" : ""}${cut}${start + SNIPPET < flat.length ? "…" : ""}`;
 };
 
-/**
- * The Graph's files that hold the most of the query's words, the title weighing more than the
- * text. Plain word matching: the AI searches again with other words when it needs to.
- */
 export const searchGraph = (nodes: ReadonlyArray<GraphNode>, query: string) => {
   const terms = words(query);
   if (terms.length === 0) return [];

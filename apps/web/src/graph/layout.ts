@@ -14,7 +14,6 @@ import {
 export interface LayoutNode extends SimulationNodeDatum {
   readonly id: string;
   readonly kind: GraphNodeKind;
-  /** Links in and out; a node's size grows with it, as in Obsidian. */
   degree: number;
   radius: number;
 }
@@ -22,20 +21,14 @@ export interface LayoutNode extends SimulationNodeDatum {
 export interface LayoutLink extends SimulationLinkDatum<LayoutNode> {
   source: LayoutNode;
   target: LayoutNode;
-  /** A Note's Link to its own Source: shorter, so a Source gathers its Notes around it. */
   readonly own: boolean;
 }
 
 export type GraphSimulation = Simulation<LayoutNode, LayoutLink>;
 
-/** World units. A Note with no Links is 3.5; a well-linked one about twice that. */
 export const nodeRadius = (kind: GraphNodeKind, degree: number): number =>
   kind === "source" ? 9 + Math.sqrt(degree) * 1.2 : 3.5 + Math.sqrt(degree) * 1.1;
 
-/**
- * Note names fade in as the user zooms in, the way Obsidian's text fades: hidden at the zoom
- * that fits the whole Graph, fully there a little closer.
- */
 export const LABEL_FADE = { from: 1, to: 1.6 } as const;
 
 export const labelAlpha = (zoom: number): number =>
@@ -43,11 +36,6 @@ export const labelAlpha = (zoom: number): number =>
 
 const SEED_RING = 320;
 
-/**
- * Nodes and Links for the simulation. A node that was already laid out keeps its place, so a
- * refresh does not scatter the Graph; a new Source starts on a ring, a new Note beside its
- * Source, which makes the first layout settle into one cluster per Source.
- */
 export const layoutData = (
   view: GraphView,
   previous: ReadonlyMap<string, LayoutNode>,
@@ -64,7 +52,6 @@ export const layoutData = (
     if (kept !== undefined) return Object.assign(kept, { degree: 0 });
     const anchor = (node.sourceId === null ? undefined : seeds.get(node.sourceId)) ??
       seeds.get(node.id) ?? { x: 0, y: 0 };
-    // A golden-angle spiral around the anchor: spread out, and the same on every start.
     const angle = index * 2.399963;
     const distance = node.kind === "source" ? 0 : 30 + (index % 7) * 6;
     return {
@@ -96,11 +83,6 @@ export const layoutData = (
   return { nodes, links };
 };
 
-/**
- * Obsidian's four forces, tuned for a few hundred Notes: Links pull, nodes repel, a weak pull
- * to the middle keeps loose parts near, and nodes do not overlap. The simulation does not run
- * on its own timer; the canvas ticks it once per frame.
- */
 export const makeSimulation = (
   nodes: Array<LayoutNode>,
   links: Array<LayoutLink>,
@@ -125,7 +107,6 @@ export const makeSimulation = (
     .alphaDecay(0.03)
     .stop();
 
-/** Runs the first layout off-screen, so the Graph opens settled rather than exploding. */
 export const settle = (simulation: GraphSimulation, ticks = 260): void => {
   simulation.tick(ticks);
 };

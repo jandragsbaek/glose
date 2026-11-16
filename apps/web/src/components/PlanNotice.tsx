@@ -6,10 +6,6 @@ import { useT } from "../i18n/I18n.tsx";
 import { chatGptStatusAtom, dismissPlanNoticeAtom } from "../state/chatgpt.ts";
 import { ManageUsageLink } from "./ChatGptConnection.tsx";
 
-/**
- * The one-time confirmation after the first sign-in that allows plan use, as OpenAI's
- * guidelines for "Sign in with ChatGPT" ask. It does not come back on later sign-ins.
- */
 export function PlanNotice() {
   const status = useAtomValue(chatGptStatusAtom);
   const show = AsyncResult.getOrElse(

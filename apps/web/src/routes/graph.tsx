@@ -15,7 +15,6 @@ import { useT } from "../i18n/I18n.tsx";
 import { cardsAtom } from "../state/cards.ts";
 import { graphAtom, sourcesAtom } from "../state/graph.ts";
 
-/** `?node=` names the selected node, so Back returns to the Note read before. */
 export const Route = createFileRoute("/graph")({
   component: GraphSection,
   validateSearch: (search: Record<string, unknown>): { readonly node?: string } =>
@@ -47,7 +46,6 @@ function GraphSection() {
   });
 }
 
-/** Source nodes wear their call number, which needs the Sources' bibliographic data. */
 function GraphWithSources({ view }: { readonly view: GraphView }) {
   const sources = useAtomValue(sourcesAtom);
   const refresh = useAtomRefresh(sourcesAtom);
@@ -79,7 +77,6 @@ function GraphProblem({ onRetry }: { readonly onRetry: () => void }) {
   );
 }
 
-/** The Graph and what one node holds, joined: Links in both directions, Sources by id. */
 interface GraphIndex {
   readonly byId: ReadonlyMap<string, GraphNode>;
   readonly byKey: ReadonlyMap<string, GraphNode>;
@@ -130,13 +127,9 @@ function GraphPage({
   const { node: selectedId } = Route.useSearch();
   const [canvas, setCanvas] = useState<GraphCanvas | null>(null);
   const [query, setQuery] = useState("");
-  /** The Note open on the desk to rewrite; the side panel stays free to read other nodes. */
   const [rewriting, setRewriting] = useState<string | null>(null);
-  /** The desk holds unsaved words, so opening another Note there asks first. */
   const [unsaved, setUnsaved] = useState(false);
-  /** Another Note the user asked to open on the desk while it holds unsaved words. */
   const [requested, setRequested] = useState<string | null>(null);
-  /** The button that opened the desk; focus returns to it when the desk closes. */
   const opener = useRef<HTMLButtonElement>(null);
   const findId = useId();
 
@@ -178,7 +171,6 @@ function GraphPage({
     });
     opener.current?.focus();
   };
-  /** A node chosen outside the canvas (side panel, search) is brought into view. */
   const show = (id: string) => canvas?.centerOn(id);
   const events: GraphCanvasEvents = {
     onSelect: (id) => void select(id),
@@ -253,7 +245,6 @@ function GraphPage({
                   setRewriting(null);
                   setUnsaved(false);
                   await select(id);
-                  // A new title remounts the panel; its button takes focus once it is there.
                   requestAnimationFrame(() => opener.current?.focus());
                 }}
               />
@@ -296,10 +287,8 @@ function GraphStage({
   readonly selectedId: string | null;
   readonly matches: ReadonlySet<string> | null;
   readonly events: GraphCanvasEvents;
-  /** The page steers the canvas too, from the side panel and the search. */
   readonly canvas: GraphCanvas | null;
   readonly onCanvas: (canvas: GraphCanvas | null) => void;
-  /** A Note is open on the desk over the canvas, which then takes no input. */
   readonly covered: boolean;
 }) {
   const t = useT();
@@ -325,7 +314,6 @@ function GraphStage({
     canvas.setData(view, labels);
     canvas.setSelected(selectedId);
     canvas.setMatches(matches);
-    // A link to `/graph?node=…` opens with that node in view.
     if (!opened.current && selectedId !== null) canvas.centerOn(selectedId);
     opened.current = true;
   }, [canvas, events, view, labels, selectedId, matches]);
@@ -418,7 +406,6 @@ function NodePanel({
 }: {
   readonly node: GraphNode;
   readonly index: GraphIndex;
-  /** The Note is open on the desk; its text and actions are there. */
   readonly rewriting: boolean;
   readonly opener: Ref<HTMLButtonElement>;
   readonly onShow: (id: string) => void;
@@ -475,7 +462,6 @@ function NodePanel({
         {rewriting ? null : (
           <NoteText
             markdown={node.body}
-            // A Note marked only for its AI title holds no AI text in its body.
             aiText={node.aiText && !node.aiTitle}
             renderLink={wikilinks(index, onShow)}
           />
@@ -528,10 +514,6 @@ function NodeList({
   );
 }
 
-/**
- * The ways on from a Note: rewriting it is the next step while it holds AI text, then making
- * Cards; how many Cards it has.
- */
 function NoteCards({
   noteId,
   aiText,
@@ -571,7 +553,6 @@ function NoteCards({
   );
 }
 
-/** Wikilinks in a Note's text lead to the node they name, or say the file is missing. */
 const wikilinks =
   (index: GraphIndex, onShow: (id: string) => void) =>
   (part: WikilinkPart): ReactNode => {
@@ -585,7 +566,6 @@ const wikilinks =
     );
   };
 
-/** The Notes, Sources and Cards whose wikilinks follow a Note's new title. */
 function linkingOf(node: GraphNode, view: GraphView, index: GraphIndex): Linking {
   const from = view.links
     .filter((link) => link.to === node.id && link.from !== node.id)
@@ -596,7 +576,6 @@ function linkingOf(node: GraphNode, view: GraphView, index: GraphIndex): Linking
   };
 }
 
-/** A link to a node in the Graph: it selects the node, and Back returns to the one before. */
 function NodeLink({
   id,
   kind,

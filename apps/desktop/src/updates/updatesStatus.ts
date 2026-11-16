@@ -21,7 +21,6 @@ export const initial = (
 
 export const checkStarted = (status: On): On => ({ ...status, activity: "checking" });
 
-/** `version` is the newest release when it is newer than this copy, else null. */
 export const checked = (status: On, version: string | null, at: number): On => ({
   ...status,
   activity: "idle",
@@ -30,14 +29,12 @@ export const checked = (status: On, version: string | null, at: number): On => (
   problem: null,
 });
 
-/** A check the user asked for failed: the bar says so, and a click tries again. */
 export const checkFailed = (status: On): On => ({
   ...status,
   activity: "idle",
   problem: "check-failed",
 });
 
-/** An hourly check failed (offline, most likely): nothing changes, the next hour tries again. */
 export const checkFailedQuietly = (status: On): On => ({ ...status, activity: "idle" });
 
 export const downloadStarted = (status: On): On => ({

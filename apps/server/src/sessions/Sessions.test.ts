@@ -23,7 +23,6 @@ const MODELS = `${FAKE_OPENAI.apiUrl}/models`;
 
 const NOTE = "Attention residue lowers performance";
 
-/** The Card Checks ask for a structured answer; a Session's turn never does. */
 const isChecks = (body: string) => body.includes('"json_schema"');
 
 const SOURCE = {
@@ -37,7 +36,6 @@ const SOURCE = {
   translator: null,
 };
 
-/** Streamed answers as OpenAI sends them. */
 const toolCall = (name: string, args: unknown = {}) => ({
   status: 200,
   sse: true,
@@ -76,7 +74,6 @@ const answer = (text: string) => ({
   ],
 });
 
-/** An answer that has begun to arrive and is not finished. */
 const halfAnswer = {
   status: 200,
   sse: true,
@@ -84,7 +81,6 @@ const halfAnswer = {
   body: [{ type: "response.output_text.delta", delta: "Half an ans" }],
 };
 
-/** The Session once the AI has begun to answer. */
 const answering = (id: string) =>
   Sessions.use((sessions) =>
     sessions.watch(id).pipe(
@@ -106,7 +102,6 @@ type Body = {
   readonly input: ReadonlyArray<Record<string, unknown>>;
 };
 
-/** A computer signed in to ChatGPT, with a Graph that holds one Source with Free text. */
 const setUp = Effect.gen(function* () {
   const dirs = yield* makeDirs;
   const path = yield* Path.Path;
@@ -155,7 +150,6 @@ const setUp = Effect.gen(function* () {
     path.join(graphFolder, `${NOTE}.md`),
     `---\nglose: note\nsource: "[[${sourceId}]]"\n---\n\nLeroy found that attention lingers.\n`,
   );
-  // The Card Checks of proposed Cards run beside the turn, on answers of their own.
   fake.answerMatching(RESPONSES, isChecks);
   const bodies = () =>
     fake.requests
@@ -164,7 +158,6 @@ const setUp = Effect.gen(function* () {
   return { fake, layer, graphFolder, sourceId, bodies };
 });
 
-/** The Session once the AI's turn is over. */
 const afterTurn = (id: string) =>
   Sessions.use((sessions) =>
     sessions.watch(id).pipe(
@@ -204,14 +197,12 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
           toolRound!.tools.map((tool) => [tool.type, tool.name]),
           [["namespace", "glose"]],
         );
-        // The tool answer reaches the model, and the model's own item goes back without its id.
         const call = answerRound!.input.find((item) => item.type === "function_call");
         const output = answerRound!.input.find((item) => item.type === "function_call_output");
         assert.strictEqual(call?.["call_id"], "call_1");
         assert.isUndefined(call?.["id"]);
         assert.include(String(output?.["output"]), "Labour leaves nothing behind.");
 
-        // A restarted app finds the Session in the Graph folder and continues where it stopped.
         fake.answer(RESPONSES, answer("Say it without 'durable'."));
         const second = yield* Effect.gen(function* () {
           const sessions = yield* Sessions;
@@ -256,7 +247,6 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
         return id;
       }).pipe(Effect.provide(layer));
 
-      // After a restart, the Session still shows the partial answer, and the model will see it.
       const found = yield* Sessions.use((sessions) =>
         sessions.find({ kind: "extraction", subject: sourceId }),
       ).pipe(Effect.provide(layer));
@@ -317,8 +307,6 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
   it.effect("proposes Cards from a passage of a Note, and saves the ones the user keeps", () =>
     Effect.gen(function* () {
       const { fake, layer, graphFolder, bodies } = yield* setUp;
-      // More for the Card Checks: they run beside the turn, and fail here (no answers queued),
-      // so the restart below tries them again.
       fake.answer(MODELS, MODEL_LIST, MODEL_LIST, MODEL_LIST, MODEL_LIST);
       fake.answer(
         RESPONSES,
@@ -336,7 +324,6 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
 
       const session = yield* Effect.gen(function* () {
         const sessions = yield* Sessions;
-        // The Note is found without regard to case, as a wikilink finds it.
         const { id } = yield* sessions.start({
           kind: "card-extraction",
           subject: NOTE.toLowerCase(),
@@ -346,7 +333,6 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
       }).pipe(Effect.provide(layer));
 
       assert.strictEqual(session.subject, NOTE);
-      // The Card Checks have a test of their own.
       const withoutScores = session.entries.map((entry) =>
         entry._tag === "CardProposals"
           ? { ...entry, proposals: entry.proposals.map(({ score: _score, ...rest }) => rest) }
@@ -400,7 +386,6 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
         return card;
       }).pipe(Effect.provide(layer));
 
-      // After a restart, the next turn still learns what the user decided.
       const after = yield* Effect.gen(function* () {
         const sessions = yield* Sessions;
         yield* sessions.send({ id: session.id, text: "Harder, please." });
@@ -408,7 +393,6 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
         return { card: kept, done, cards: yield* (yield* Cards.Cards).list };
       }).pipe(Effect.provide(layer));
 
-      // A kept Card is AI text, even after the user changed it.
       assert.deepInclude(after.card, { from: NOTE, ai: true, answer: "Sophie Leroy, in 2009." });
       assert.deepStrictEqual(after.cards, [after.card]);
       const fs = yield* FileSystem.FileSystem;
@@ -425,7 +409,6 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
         ],
       );
 
-      // The next turn tells the AI what the user kept and dropped, before their message.
       const [decisions, message] = bodies().at(-1)!.input.slice(-2);
       assert.strictEqual(decisions?.["role"], "developer");
       assert.include(String(decisions?.["content"]), "Sophie Leroy, in 2009.");
@@ -518,7 +501,6 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
         );
         const failed = (proposal: typeof yesNo) =>
           proposal?.score?.checks.filter((check) => check.verdict !== "pass");
-        // A yes/no question fails a rule; the AI found two answers to the other one.
         assert.strictEqual(yesNo?.score?.grade, "poor");
         assert.deepStrictEqual(failed(yesNo), [{ id: "recall", verdict: "fail", note: null }]);
         assert.strictEqual(broad?.score?.grade, "poor");
@@ -530,7 +512,6 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
           },
         ]);
 
-        // The first call never sees the expected answers; the judge sees them and the blind ones.
         const [blind, judge] = fake.requests.filter(
           (request) => request.url === RESPONSES && isChecks(request.body),
         );
@@ -566,7 +547,6 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
       const final = yield* Effect.gen(function* () {
         const sessions = yield* Sessions;
         const { id } = yield* sessions.start({ kind: "card-extraction", subject: NOTE });
-        // No answers for the Checks yet: they fail.
         yield* sessions.watch(id).pipe(
           Stream.filter((now) => judgeOf(now) === "failed"),
           Stream.runHead,
@@ -594,7 +574,6 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
             }),
           ),
         );
-        // The page opens the Session again; Glose is still running.
         yield* sessions.find({ kind: "card-extraction", subject: NOTE });
         return yield* sessions.watch(id).pipe(
           Stream.filter((now) => judgeOf(now) === "done"),
@@ -647,7 +626,6 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
               {
                 title: "Labour leaves nothing behind",
                 origin: "free-text",
-                // Spacing and case differ from the Free text; the Free text's words are kept.
                 quote: "“labour  leaves nothing behind”",
                 repeats: null,
                 pulls_against_note: null,
@@ -735,7 +713,6 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
             page: "7",
             links: [NOTE.toUpperCase(), "Not proposed"],
           });
-          // The AI's draft, edited by the user and not marked as rewritten, stays AI text.
           yield* sessions.keepPoint({
             id: session.id,
             point: "p2",
@@ -750,7 +727,6 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
             page: null,
             links: [],
           });
-          // A Point the user writes in their own words; its name is taken by the Note above.
           yield* sessions.addPoint({ id: session.id, title: "labour leaves nothing" });
           const taken = yield* Effect.flip(
             sessions.writePoint({
@@ -770,7 +746,6 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
         }).pipe(Effect.provide(layer));
 
         assert.strictEqual(note.name, "Labour leaves nothing");
-        // The AI proposed the title, so the Note carries the AI mark on its title.
         assert.strictEqual(
           yield* fs.readFileString(path.join(graphFolder, `${note.name}.md`)),
           [
@@ -805,7 +780,6 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
             "",
           ].join("\n"),
         );
-        // The next turn tells the AI what the user did, and which Point the message is about.
         const next = bodies().at(-1)!.input;
         const decisions = String(next.at(-2)?.["content"]);
         assert.include(decisions, 'Kept point 1 "Labour leaves nothing behind"');
@@ -920,7 +894,6 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
             reasoning_why: "You found the cause.",
             result_verdict: "partly-right",
             result_why: "The cost is worse work, not time.",
-            // Case aside, these are the user's words; Glose keeps them as the user wrote them.
             quote: "so i LOSE time",
           }),
           toolCall("teach", {
@@ -949,7 +922,6 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
             teachMe: false,
           });
           yield* afterTurn(id);
-          // Question 1 has its answer: only question 2 is open now.
           const late = yield* sessions
             .answerProbe({ id, question: 1, reasoning: "", answer: "Again.", teachMe: false })
             .pipe(Effect.flip);
@@ -990,7 +962,6 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
 
         const [first] = bodies();
         assert.include(JSON.stringify(first!.input[0]), "Start the Probe now.");
-        // The answer reaches the model with the Reasoning and the result apart.
         assert.deepStrictEqual(bodies()[2]!.input.at(-1), {
           type: "message",
           role: "user",
@@ -998,7 +969,6 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
             "(Answer to question 1)\n\nMy Reasoning:\nPart of my mind stays on the old task, so I lose time.\n\nMy answer:\nTime to refocus.",
         });
 
-        // The record in Probes/ reads in any editor; the Graph does not count it as a Note.
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const record = yield* fs.readFileString(path.join(graphFolder, "Probes", `${sourceId}.md`));

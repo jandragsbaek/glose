@@ -33,7 +33,6 @@ interface Recorded {
   readonly body: string;
 }
 
-/** A scripted GitHub: answers queued per method and URL, and every request recorded. */
 const withGitHub = <A, E>(
   test: (github: {
     readonly service: GitHub["Service"];
@@ -42,7 +41,6 @@ const withGitHub = <A, E>(
     readonly opened: ReadonlyArray<string>;
     readonly savedFile: string;
     readonly status: Effect.Effect<GitHubStatus>;
-    /** Writes the sign-in of an earlier start of Glose. */
     readonly signedIn: (login: string, token: string) => Effect.Effect<void, unknown>;
   }) => Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>,
   api: typeof FAKE = FAKE,
@@ -73,7 +71,6 @@ const withGitHub = <A, E>(
         );
       }),
     );
-    // Built in the test's scope: the sign-in fiber lives as long as the service.
     const context = yield* Layer.build(
       layer.pipe(
         Layer.provide(
@@ -118,10 +115,8 @@ const DEVICE_CODE = {
   interval: 5,
 };
 
-/** Lets the sign-in fiber run up to its next wait. */
 const settle = Effect.yieldNow.pipe(Effect.repeat({ times: 20 }));
 
-/** The status once the sign-in ended, one way or the other; saving it takes real file work. */
 const ended = (service: GitHub["Service"]) =>
   service.status.pipe(
     Stream.filter((status) => status._tag !== "Connecting"),
@@ -158,7 +153,6 @@ it.layer(NodeServices.layer)("GitHub", (it) => {
         yield* TestClock.adjust("5 seconds");
         yield* settle;
         assert.strictEqual(polls(), 2);
-        // GitHub asked for a slower pace: the next poll waits 10 seconds.
         yield* TestClock.adjust("5 seconds");
         yield* settle;
         assert.strictEqual(polls(), 2);
@@ -248,7 +242,6 @@ it.layer(NodeServices.layer)("GitHub", (it) => {
           owner: { login: fullName.split("/")[0] },
           pushed_at: pushedAt,
         });
-        // GitHub sends the latest pushed first.
         answer("GET", `${FAKE.apiUrl}/user/repos`, [
           repo("jan/dotfiles", true, "2026-11-13T08:00:00Z"),
           repo("jan/website", false, "2026-11-12T22:00:00Z"),

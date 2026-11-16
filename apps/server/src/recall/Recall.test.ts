@@ -14,10 +14,8 @@ const NOTE = "Retrieval practice strengthens memory";
 const MINUTE = 60_000;
 const DAY = 24 * 60 * MINUTE;
 
-/** Noon on 11 November 2026, local time, so a Review day (from 04:00) holds the whole test. */
 const NOON = new Date(2026, 10, 11, 12, 0).getTime();
 
-/** A Graph folder after setup at noon, with the real services over it. */
 const withGraph = <A, E>(
   test: (graph: {
     readonly folder: string;
@@ -64,7 +62,6 @@ it.layer(NodeServices.layer)("Recall", (it) => {
         assert.deepStrictEqual(first.counts, { new: 1, learning: 0, review: 0 });
         assert.strictEqual(first.next?.card.id, card.id);
         assert.strictEqual(first.next?.state, "new");
-        // Anki's default steps for a new Card: 1 minute, then 10.
         assert.strictEqual(first.next?.due.again, NOON + MINUTE);
         assert.strictEqual(first.next?.due.good, NOON + 10 * MINUTE);
 
@@ -79,8 +76,6 @@ it.layer(NodeServices.layer)("Recall", (it) => {
           })}\n`,
         );
 
-        // Nothing else is due, and the 10-minute step is within Anki's 20-minute learn ahead
-        // limit, so the Card comes back at once.
         const again = yield* recall.queue;
         assert.deepStrictEqual(again.counts, { new: 0, learning: 1, review: 0 });
         assert.strictEqual(again.next?.card.id, card.id);
@@ -102,7 +97,6 @@ it.layer(NodeServices.layer)("Recall", (it) => {
         const card = yield* makeCard(cards, "What strengthens memory?");
         const line = (at: number, rating: string) =>
           JSON.stringify({ card: card.id, at: new Date(at).toISOString(), rating, answerMs: 1 });
-        // Another computer reviewed the Card a week ago; one line was cut off by a sync.
         yield* write(
           ".glose/recall/reviews/other-computer/2026-11.jsonl",
           [line(NOON - 7 * DAY, "good"), '{"card":"c-0', line(NOON - 7 * DAY + 10 * MINUTE, "good")]
@@ -126,7 +120,6 @@ it.layer(NodeServices.layer)("Recall", (it) => {
           "---\nglose: card\n---\n\nWho wrote it?\n\n---\n\nI did.\n",
         );
 
-        // FSRS fuzzes by the Card id, so the id must exist before the dates are shown.
         const queue = yield* recall.queue;
         const id = /^id: (c-[0-9a-f]{8})$/m.exec(yield* read("Cards/By hand.md"))?.[1];
         assert.isDefined(id);
@@ -150,7 +143,6 @@ it.layer(NodeServices.layer)("Recall", (it) => {
         yield* makeCard(cards, "Two?");
 
         assert.deepStrictEqual((yield* recall.queue).counts, { new: 1, learning: 0, review: 0 });
-        // With one step, Good would graduate the Card at once; Again holds it at the step.
         yield* recall.review({ file: one.file, rating: "again", answerMs: 1000 });
         const waiting = yield* recall.queue;
         assert.strictEqual(waiting.next, null);
@@ -158,8 +150,6 @@ it.layer(NodeServices.layer)("Recall", (it) => {
         assert.strictEqual(waiting.nextLearningDue, NOON + 60 * MINUTE);
         assert.strictEqual(waiting.nextDayStarts, new Date(2026, 10, 12, 4, 0).getTime());
 
-        // At 04:00 the next day starts, with a new allowance of new Cards. The step is due, and
-        // comes first.
         yield* TestClock.setTime(new Date(2026, 10, 12, 4, 0).getTime());
         const tomorrow = yield* recall.queue;
         assert.deepStrictEqual(tomorrow.counts, { new: 1, learning: 1, review: 0 });

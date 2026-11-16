@@ -7,7 +7,6 @@ import { CredentialsData } from "../chatgpt/Credentials.ts";
 
 const encode = Schema.encodeEffect(Schema.fromJsonString(CredentialsData));
 
-/** A computer that already signed in to ChatGPT: the credentials file as Glose writes it. */
 export const writeCredentials = Effect.fn("testkit.writeCredentials")(function* (
   dirs: { readonly dataDir: string },
   data: CredentialsData,

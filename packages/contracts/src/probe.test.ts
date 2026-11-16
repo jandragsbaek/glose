@@ -49,11 +49,9 @@ const taught = (
 describe("probeFindings", () => {
   it("follows each topic through answers, judgments and teaching", () => {
     const entries: ReadonlyArray<SessionEntry> = [
-      // Known at once.
       question(1, "Deep work"),
       answer(1),
       judged(1, "sound", "right"),
-      // A gap, taught, then answered right: the same topic, named in another case.
       question(2, "Attention residue"),
       answer(2),
       judged(2, "sound", "partly-right"),
@@ -61,15 +59,12 @@ describe("probeFindings", () => {
       question(3, "attention residue", 2),
       answer(3),
       judged(3, "sound", "right"),
-      // A right result reached by flawed Reasoning is a gap, and stays one untaught.
       question(4, "Shallow work"),
       answer(4),
       judged(4, "flawed", "right"),
-      // Asked to be taught, and taught: waits to be asked again.
       question(5, "Boredom"),
       answer(5, true),
       taught(5, "Boredom"),
-      // An intro on a catch-up start teaches before the question; it is no gap.
       taught(null, "Social media", "intro"),
       question(6, "Social media"),
     ];

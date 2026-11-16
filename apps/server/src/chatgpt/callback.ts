@@ -7,12 +7,10 @@ import * as NodeHttp from "node:http";
 
 import { CALLBACK_PATH } from "./OpenAi.ts";
 
-/** The callback port is taken, most likely by a Codex sign-in in progress. */
 export class PortBusy extends Data.TaggedError("PortBusy")<{ readonly port: number }> {}
 
 export class ListenFailed extends Data.TaggedError("ListenFailed")<{ readonly cause: unknown }> {}
 
-/** The browser tab after the callback. The app itself shows how the sign-in ended. */
 const PAGES: Record<Language, { readonly title: string; readonly body: string }> = {
   en: {
     title: "Glose",
@@ -31,16 +29,9 @@ const page = (language: Language) => {
 
 export interface Listener {
   readonly port: number;
-  /** The query of the first callback that carries the attempt's `state`. */
   readonly callback: Effect.Effect<URLSearchParams>;
 }
 
-/**
- * A loopback listener on 127.0.0.1 for one sign-in attempt. It answers from the moment it
- * listens, so a fast browser cannot arrive before Glose waits. Requests without the attempt's
- * `state` are refused. The listener closes with the scope, so an ended, cancelled or timed-out
- * attempt never leaves a port open.
- */
 export const listen = (port: number, state: string, language: Language) =>
   Effect.acquireRelease(
     Effect.callback<NodeHttp.Server, PortBusy | ListenFailed>((resume) => {

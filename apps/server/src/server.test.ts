@@ -16,7 +16,6 @@ import * as ServerInfo from "./info/ServerInfo.ts";
 import * as Server from "./server.ts";
 import { layerServices, makeDirs } from "./testkit/graph.ts";
 
-// The real routes on a real socket: the same encoding, routing and decoding the web app uses.
 const layerServer = Layer.unwrap(
   Effect.map(makeDirs, (dirs) =>
     HttpRouter.serve(Server.layerRoutes).pipe(
@@ -28,7 +27,6 @@ const layerServer = Layer.unwrap(
   ),
 ).pipe(Layer.provide(NodeServices.layer));
 
-// As in the web app: an absolute URL, fetch, and the same serialization as the server.
 const layerClient = Layer.unwrap(
   Effect.gen(function* () {
     const server = yield* HttpServer.HttpServer;

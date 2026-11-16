@@ -27,41 +27,24 @@ import { Git } from "./Git.ts";
 export class Versions extends Context.Service<
   Versions,
   {
-    /** The status now, then every change. */
     readonly status: Stream.Stream<VersionsStatus>;
-    /**
-     * One look at the Graph folder. A newly opened folder saves what changed while Glose was
-     * closed and syncs at once; after that, changes are saved and synced after a quiet pause.
-     */
     readonly tick: Effect.Effect<void>;
-    /** Makes a Version named by the user's line about the day, even without changes, and syncs. */
     readonly endDay: (input: EndDay) => Effect.Effect<void>;
-    /** Saves what changed without syncing, as Glose closes. */
     readonly close: Effect.Effect<void>;
-    /** Makes the user's private GitHub repository of that name the remote, made first if missing. */
     readonly backUpToGitHub: (input: BackUpToGitHub) => Effect.Effect<void, RemoteRefused>;
-    /**
-     * Makes a git remote the remote, in place of the one before, and syncs. A remote git cannot
-     * reach, or one that holds another history, is refused, and nothing changes.
-     */
     readonly setRemote: (input: SetRemote) => Effect.Effect<void, RemoteRefused>;
-    /** Stops syncing; the Versions stay here and on the old remote. */
     readonly removeRemote: Effect.Effect<void>;
   }
 >()("glose/versions/Versions") {}
 
-/** How often Glose looks for changes. */
 export const TICK = "30 seconds";
-/** A change is saved once the Graph folder has been quiet this long. */
 export const QUIET_MS = 5 * 60 * 1000;
 const NETWORK_TIMEOUT_MS = 2 * 60 * 1000;
 
 const AUTO_SAVE = "Auto-save";
 const END_OF_DAY = "End of day";
-/** Changed files named in an automatic Version's message; the rest are counted. */
 const LISTED_FILES = 20;
 
-/** Files a new repository leaves out: half-written temporaries, OS litter, Obsidian's layout. */
 const GITIGNORE = [
   "# Written by Glose when it started versioning this Graph. Edit freely.",
   "*.glose-tmp",
@@ -73,15 +56,10 @@ const GITIGNORE = [
   "",
 ].join("\n");
 
-/**
- * Glose's own commits are never signed: a signing prompt every few minutes would interrupt the
- * user, and nobody is there to answer it.
- */
 const COMMIT_CONFIG = ["-c", "commit.gpgsign=false"];
 
 interface Opened {
   readonly folder: string;
-  /** False when the folder cannot be versioned; the status says why. */
   readonly usable: boolean;
 }
 
@@ -99,9 +77,7 @@ export const make = Effect.gen(function* () {
   const lock = yield* Semaphore.make(1);
 
   let opened: Opened | null = null;
-  /** What `git status` and the changed files' stamps looked like at the last look. */
   let fingerprint = "";
-  /** When the fingerprint last changed; the quiet pause counts from here. */
   let changedAt = 0;
   let syncedAt: number | null = null;
   let problem: VersionsProblem | null = null;
@@ -121,7 +97,6 @@ export const make = Effect.gen(function* () {
 
   const branchOf = (folder: string) => output(folder, ["symbolic-ref", "--short", "HEAD"]);
 
-  /** The remote to sync with: the branch's own, else `origin`, else the only one there is. */
   const remoteOf = Effect.fn("Versions.remoteOf")(function* (folder: string, branch: string) {
     const own = yield* output(folder, ["config", "--get", `branch.${branch}.remote`]);
     if (own) return own;
@@ -130,7 +105,6 @@ export const make = Effect.gen(function* () {
     return remotes.length === 1 ? (remotes[0] ?? null) : null;
   });
 
-  /** The remote's branch this one follows: its configured upstream, else one of the same name. */
   const remoteBranchOf = (folder: string, branch: string) =>
     output(folder, ["config", "--get", `branch.${branch}.merge`]).pipe(
       Effect.map((merge) => merge?.replace(/^refs\/heads\//, "") || branch),
@@ -141,7 +115,6 @@ export const make = Effect.gen(function* () {
   const count = (folder: string, range: string) =>
     output(folder, ["rev-list", "--count", range]).pipe(Effect.map((n) => Number(n ?? 0)));
 
-  /** Versions here that the remote lacks: all of them while the remote has no such branch. */
   const unpushedOf = Effect.fn("Versions.unpushedOf")(function* (
     folder: string,
     remote: string | null,
@@ -154,7 +127,6 @@ export const make = Effect.gen(function* () {
       : yield* count(folder, "HEAD");
   });
 
-  /** Changed paths, each with its modification time and size, so a second edit counts too. */
   const fingerprintOf = Effect.fn("Versions.fingerprintOf")(function* (folder: string) {
     const raw = yield* git.run(folder, ["status", "--porcelain=v1", "-z", "--untracked-files=all"]);
     if (raw === "") return "";
@@ -163,7 +135,6 @@ export const make = Effect.gen(function* () {
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i] ?? "";
       const file = entry.slice(3);
-      // A rename or copy carries its old path as the next entry.
       if (entry[0] === "R" || entry[0] === "C") i++;
       const info = yield* fs.stat(path.join(folder, file)).pipe(Effect.option);
       stamps.push(
@@ -177,13 +148,11 @@ export const make = Effect.gen(function* () {
     return stamps.join("\n");
   });
 
-  /** Publishes what the repository looks like now, with what this run of Glose knows. */
   const publish = Effect.fn("Versions.publish")(function* (folder: string) {
     const branch = yield* branchOf(folder);
     const remote = branch === null ? null : yield* remoteOf(folder, branch);
     const remoteBranch = branch === null ? null : yield* remoteBranchOf(folder, branch);
     const time = yield* output(folder, ["log", "-1", "--format=%ct"]);
-    // The address as the user set it; `remote get-url` would apply their `insteadOf` rewrites.
     const url =
       remote === null ? null : yield* output(folder, ["config", "--get", `remote.${remote}.url`]);
     yield* SubscriptionRef.set(status, {
@@ -199,7 +168,6 @@ export const make = Effect.gen(function* () {
     });
   });
 
-  /** A longer limit, and the GitHub sign-in when the user connected GitHub. */
   const networkOptions = github.gitConfig.pipe(
     Effect.map((config) => ({ timeoutMs: NETWORK_TIMEOUT_MS, config })),
   );
@@ -210,10 +178,6 @@ export const make = Effect.gen(function* () {
       return publish(folder);
     });
 
-  /**
-   * Git refuses to commit without a name and an e-mail address. When the user never set them,
-   * Glose signs with the computer's user name, so the history still says who wrote it.
-   */
   const identity = Effect.fn("Versions.identity")(function* (folder: string) {
     const name = yield* output(folder, ["config", "user.name"]);
     const email = yield* output(folder, ["config", "user.email"]);
@@ -225,7 +189,6 @@ export const make = Effect.gen(function* () {
     ];
   });
 
-  /** Stages everything and commits it; with `always`, a Version is made even without changes. */
   const save = Effect.fn("Versions.save")(function* (
     folder: string,
     summary: string | null,
@@ -261,10 +224,6 @@ export const make = Effect.gen(function* () {
     return result._tag === "Success";
   });
 
-  /**
-   * Fetches, puts this computer's Versions on top of the remote's, and pushes. When both sides
-   * changed the same lines, the rebase is undone: every Version stays, and the user decides.
-   */
   const sync = Effect.fn("Versions.sync")(function* (folder: string) {
     const branch = yield* branchOf(folder);
     const remote = branch === null ? null : yield* remoteOf(folder, branch);
@@ -278,12 +237,8 @@ export const make = Effect.gen(function* () {
       const remoteHasBranch = yield* succeeds(folder, ["rev-parse", "--verify", "-q", ref]);
       if (remoteHasBranch && (yield* count(folder, `HEAD..${ref}`)) > 0) {
         if (!(yield* hasCommits(folder))) {
-          // A new repository with nothing saved yet takes the remote's history as it is.
           yield* git.run(folder, ["reset", "--quiet", ref]);
         } else {
-          // Only a clean folder is rebased: work saved after the fetch would need a stash, and a
-          // stash that fails to apply leaves conflict markers the next save would commit. That
-          // work is saved first, and the next sync takes the remote's Versions.
           if ((yield* git.run(folder, ["status", "--porcelain"])) !== "") return "later" as const;
           const rebased = yield* git
             .run(folder, [
@@ -320,8 +275,6 @@ export const make = Effect.gen(function* () {
     return outcome;
   });
 
-  /** Starts versioning a Graph folder: a repository of its own, or none at all. */
-
   const open = Effect.fn("Versions.open")(function* (folder: string) {
     fingerprint = "";
     syncedAt = null;
@@ -343,17 +296,12 @@ export const make = Effect.gen(function* () {
         yield* fs.writeFileString(ignore, GITIGNORE).pipe(Effect.ignore);
       }
     } else if (top !== "") {
-      // Inside someone else's repository: its owner decides what gets committed there.
       yield* SubscriptionRef.set(status, { _tag: "Off", reason: "other-repository" });
       return false;
     }
     return true;
   });
 
-  /**
-   * Checks that git reaches the remote and that its history, if any, is this Graph's. Then the
-   * remote replaces the one before; its old branches and upstream go with it.
-   */
   const connectRemote = Effect.fn("Versions.connectRemote")(function* (url: string) {
     if (opened === null || !opened.usable)
       return yield* new RemoteRefused({ reason: "versions-off" });
@@ -365,7 +313,6 @@ export const make = Effect.gen(function* () {
       Effect.mapError(() => new RemoteRefused({ reason: "unreachable" })),
     );
     if (heads.trim() !== "" && (yield* hasCommits(folder))) {
-      // Any branch of the remote that shares a Version with this Graph shows it is this Graph's.
       yield* git.run(folder, ["fetch", "--quiet", url, `refs/heads/${branch}`], network).pipe(
         Effect.flatMap(() => git.run(folder, ["merge-base", "HEAD", "FETCH_HEAD"])),
         Effect.mapError(() => new RemoteRefused({ reason: "other-graph" })),
@@ -379,7 +326,6 @@ export const make = Effect.gen(function* () {
     );
     problem = problem === "save-failed" ? problem : null;
     syncedAt = null;
-    // A remote git reaches but will not take the push (no write access, say) is no backup.
     if ((yield* sync(folder)) === "sync-failed") {
       yield* git.run(folder, ["remote", "remove", name]).pipe(Effect.ignore);
       problem = null;
@@ -404,7 +350,6 @@ export const make = Effect.gen(function* () {
       const usable = yield* open(folder);
       opened = { folder, usable };
       if (!usable) return;
-      // Work done while Glose was closed (in Obsidian, say) is saved first, then the Graph syncs.
       yield* save(folder, null, false);
       yield* sync(folder);
       return;
@@ -469,10 +414,8 @@ export const make = Effect.gen(function* () {
   });
 });
 
-/** The name Glose gives a remote it adds, as `git clone` does. */
 const REMOTE_NAME = "origin";
 
-/** A remote address to show: an `https://user:token@host/…` address loses its user and token. */
 export const withoutPassword = (url: string) => {
   if (!/^https?:\/\//i.test(url)) return url;
   try {
@@ -485,7 +428,6 @@ export const withoutPassword = (url: string) => {
   }
 };
 
-/** "Auto-save: 3 files", then the files, so the history says what changed. */
 const autoMessage = (files: ReadonlyArray<string>) => {
   const listed = files.slice(0, LISTED_FILES).map((file) => `- ${file}`);
   const more = files.length - listed.length;
@@ -499,10 +441,6 @@ const autoMessage = (files: ReadonlyArray<string>) => {
 
 export const layer = Layer.effect(Versions, make);
 
-/**
- * Looks at the Graph folder now and every 30 seconds while the server runs, and saves what
- * changed as the server stops. Only the running server has it; tests drive `tick` themselves.
- */
 export const layerRunner = Layer.effectDiscard(
   Effect.gen(function* () {
     const versions = yield* Versions;

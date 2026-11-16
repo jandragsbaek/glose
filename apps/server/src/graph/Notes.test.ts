@@ -13,7 +13,6 @@ import * as Notes from "./Notes.ts";
 const AI_TITLE = "Digital tools should serve deeply held values";
 const MINE = "A tool earns its place only by serving something I value";
 
-/** A Note the AI drafted, with a tag the user added in Obsidian. */
 const AI_NOTE = [
   "---",
   "glose: note",
@@ -29,7 +28,6 @@ const AI_NOTE = [
   "",
 ].join("\n");
 
-/** A Graph folder after setup, holding these files, with the real services over it. */
 const withGraph = <A, E>(
   files: Record<string, string>,
   test: (graph: {

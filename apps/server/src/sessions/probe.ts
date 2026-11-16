@@ -32,10 +32,8 @@ const NO_ARGUMENTS = {
 
 const LANGUAGE_NAMES: Record<Language, string> = { en: "English", da: "Danish" };
 
-/** The folder of the Probe records, beside the Graph's files: Glose reads only the top as the Graph. */
 export const PROBES_FOLDER = "Probes";
 
-/** The rules of a Probe. They follow docs/ideas.md: the user does the thinking; Reasoning counts. */
 export const INSTRUCTIONS = `You are the AI in Glose, a desktop app where a person learns from what they read. You run the Probe of the Reading Stage for one Source (usually a book): one adaptive conversation that finds what the user knows about it, what they do not know, and what they still must learn.
 
 The loop:
@@ -63,14 +61,12 @@ const START_NOTES: Record<ReadingStart, string> = {
     'The user read the Source a while ago, or only in part, and chose to be questioned first. Before the first question on each topic, explain the topic briefly with teach (kind "intro"), then ask. What you find feeds Extraction, which makes the Notes after the Probe.',
 };
 
-/** The hidden first message that starts the Probe. */
 export const kickoff = (language: Language, start: ReadingStart): InputItem => ({
   type: "message",
   role: "developer",
   content: `Start the Probe now. The user's interface language is ${LANGUAGE_NAMES[language]}. ${START_NOTES[start]}`,
 });
 
-/** The user's answer to a question, as the model reads it. */
 export const answerMessage = (answer: Extract<SessionEntry, { _tag: "ProbeAnswer" }>): string =>
   answer.teachMe
     ? `(Answer to question ${answer.question}) I do not know. Please teach me.${answer.reasoning === "" ? "" : `\n\nWhat I thought:\n${answer.reasoning}`}`
@@ -120,9 +116,7 @@ const decodeTeach = Schema.decodeUnknownOption(TeachArguments);
 export interface Context {
   readonly sources: Sources.Sources["Service"];
   readonly graph: Graph.Graph["Service"];
-  /** The Source the Probe questions the user on. */
   readonly source: string;
-  /** Changes the Session's entries in one step and answers with what the change says. */
   readonly update: <A>(
     change: (entries: ReadonlyArray<SessionEntry>) => readonly [A, ReadonlyArray<SessionEntry>],
   ) => Effect.Effect<A>;
@@ -272,7 +266,6 @@ export const tools = ({ sources, graph, source, update }: Context): AgentTool[] 
         if (isJudged(entries, asked.question)) {
           return [{ error: `Question ${asked.question} is judged already.` }, entries];
         }
-        // Only the user's own words may be marked as theirs; a paraphrase is dropped.
         const quote = asked.quote === null ? null : findQuote(answer.reasoning, asked.quote);
         const judgment: Extract<SessionEntry, { _tag: "ProbeJudgment" }> = {
           _tag: "ProbeJudgment",
@@ -351,14 +344,12 @@ export const tools = ({ sources, graph, source, update }: Context): AgentTool[] 
   },
 ];
 
-/** The Probe's answers in the user's own words: where an Extraction Point may quote from. */
 export const userWords = (entries: ReadonlyArray<SessionEntry>): string =>
   entries
     .flatMap((entry) => (entry._tag === "ProbeAnswer" ? [entry.reasoning, entry.answer] : []))
     .filter((text) => text !== "")
     .join("\n\n");
 
-/** What the Probe asked and found, for the Extraction that follows it. */
 export const forExtraction = (entries: ReadonlyArray<SessionEntry>) => ({
   findings: probeFindings(entries).map(({ topic, state }) => ({ topic, state })),
   questions: questionsOf(entries).map((question) => {
@@ -452,14 +443,9 @@ const localDate = (time: number) => {
   return `${date.getFullYear()}-${twoDigits(date.getMonth() + 1)}-${twoDigits(date.getDate())}`;
 };
 
-/** Text as a callout's lines: every line behind `> `, paragraphs kept apart by `>`. */
 const callout = (head: string, text: string) =>
   [head, ...text.split(/\r?\n/).map((line) => (line.trim() === "" ? ">" : `> ${line}`))].join("\n");
 
-/**
- * The Probe as Markdown that any editor reads: each question with the user's Reasoning and
- * answer, the judgment, and the teaching as AI text, then what the Probe found.
- */
 export const renderRecord = (input: {
   readonly source: Pick<Source, "id" | "title">;
   readonly entries: ReadonlyArray<SessionEntry>;

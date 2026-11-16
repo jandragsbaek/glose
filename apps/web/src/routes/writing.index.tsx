@@ -18,7 +18,6 @@ export const Route = createFileRoute("/writing/")({ component: WritingProjectsPa
 
 const TYPES: ReadonlyArray<WritingProjectType> = ["blog-post", "assignment"];
 
-/** A new piece is saved at once under a placeholder title, numbered when the name is taken. */
 const MAX_UNTITLED = 50;
 
 function WritingProjectsPage() {
@@ -123,7 +122,6 @@ function StartPiece() {
   );
 }
 
-/** A small finished page of the type, so the choice shows what it becomes. */
 function Miniature({ type }: { readonly type: WritingProjectType }) {
   const t = useT();
   if (type === "blog-post") {

@@ -13,14 +13,12 @@ const program = Effect.gen(function* () {
   const backend = yield* Backend.Backend;
   yield* Updates.start(new URL(backend.url).origin);
   yield* MainWindow.open(backend.url);
-  // Electron ends the process on quit; until then the server and the update checks stay up.
   yield* Effect.never;
 }).pipe(
   Effect.provide(devServerUrl ? Backend.layerDevServer(devServerUrl) : Backend.layerOwnServer),
   Effect.scoped,
 );
 
-// A second launch focuses the running window instead of starting a second server.
 if (Electron.app.requestSingleInstanceLock()) {
   NodeRuntime.runMain(program);
 } else {

@@ -11,19 +11,15 @@ import { CardItem } from "./CardItem.tsx";
 import { AiText } from "./NoteText.tsx";
 import { Flourish } from "./ui.tsx";
 
-/** The trays, by the work their Cards need. */
 type TrayId = "fix" | "ai" | "good";
 
-/** A tray shows this many Cards at a time: there may be thousands. */
 const PAGE = 50;
 
 const FIRST: Record<TrayId, number> = { fix: PAGE, ai: PAGE, good: PAGE };
 
-/** A Card's tray. A Check that warns or fails comes first: fixing a Card rewrites its AI text. */
 const trayOf = (card: ScoredCard): TrayId =>
   card.score.grade !== "good" ? "fix" : card.ai ? "ai" : "good";
 
-/** The lift and the closing of its slot (200ms each, the close starting at 160ms). */
 const LEAVE_MS = 380;
 
 const motionDone = () =>
@@ -31,19 +27,13 @@ const motionDone = () =>
     setTimeout(done, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : LEAVE_MS),
   );
 
-/** In To fix, the Cards that need work come before those that could be better. */
 const GRADE_ORDER: Record<Grade, number> = { poor: 0, fix: 1, good: 2 };
 
-/** The Checks that warn or fail, failures first: they make the Grade poor. */
 const faultsOf = (card: ScoredCard): ReadonlyArray<Check> =>
   card.score.checks
     .filter((check) => check.verdict !== "pass")
     .toSorted((a, b) => (a.verdict === b.verdict ? 0 : a.verdict === "fail" ? -1 : 1));
 
-/**
- * Every Card, sorted into trays by the work it needs: To fix, AI text to rewrite, and Good,
- * which stays folded until it is asked for or a search reaches into it. A Card opens in a sheet.
- */
 export function CardTrays({ cards }: { readonly cards: ReadonlyArray<ScoredCard> }) {
   const t = useT();
   const findId = useId();
@@ -75,7 +65,6 @@ export function CardTrays({ cards }: { readonly cards: ReadonlyArray<ScoredCard>
   const onScreen = [...shown.fix, ...shown.ai, ...shown.good];
   useJudgeShown(onScreen);
 
-  // The open Card is read from the list, so the sheet shows each change; deleted, it closes.
   const open = openFile === null ? undefined : cards.find((card) => card.file === openFile);
   const more = (tray: TrayId) => setLimits({ ...limits, [tray]: limits[tray] + PAGE });
 
@@ -184,7 +173,6 @@ export function CardTrays({ cards }: { readonly cards: ReadonlyArray<ScoredCard>
                     {t.recall.showGood}
                   </button>
                 </div>
-                {/* The good Cards lie under it as paper edges, as the Review's leaves do. */}
                 {Array.from({ length: Math.min(2, trays.good.length - 1) }, (_, index) => (
                   <span
                     key={`edge-${index + 1}`}
@@ -252,7 +240,6 @@ function Slips({
   readonly total: number;
   readonly onOpen: (file: string) => void;
   readonly onMore: () => void;
-  /** The slips offer "I rewrote it": the tray of AI text. */
   readonly rewrite?: boolean;
 }) {
   const t = useT();
@@ -277,11 +264,6 @@ function Slips({
   );
 }
 
-/**
- * One Card as a slip in its tray: the question opens it, the answer under it, and the first
- * Check that fails or warns, in words. In the tray of AI text, "I rewrote it" lifts the slip
- * out of the tray.
- */
 function Slip({
   card,
   onOpen,
@@ -302,7 +284,6 @@ function Slip({
   const rewrote = async () => {
     setFailed(false);
     setLeaving(true);
-    // The list reads again only once the slip has left, so the motion is not cut short.
     const [exit] = await Promise.all([clearAiMark({ payload: { file: card.file } }), motionDone()]);
     if (Exit.isFailure(exit)) {
       setLeaving(false);
@@ -376,7 +357,6 @@ function Slip({
   );
 }
 
-/** A Card open on its own leaf over the trays: its words, its Checks, and what to do with it. */
 function CardSheet({ card, onClose }: { readonly card: ScoredCard; readonly onClose: () => void }) {
   const t = useT();
   const titleId = useId();
@@ -388,7 +368,6 @@ function CardSheet({ card, onClose }: { readonly card: ScoredCard; readonly onCl
       ref={(node) => {
         if (node && !node.open) {
           node.showModal();
-          // The leaf takes focus, so the first thing read is the Card, not its first link.
           node.focus();
         }
       }}

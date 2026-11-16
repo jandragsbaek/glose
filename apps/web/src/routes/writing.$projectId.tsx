@@ -8,7 +8,6 @@ import { WritingDesk } from "../components/WritingDesk.tsx";
 import { useT } from "../i18n/I18n.tsx";
 import { writingProjectAtom } from "../state/writing.ts";
 
-/** `?fresh` marks a piece just started, whose placeholder title waits to be typed over. */
 export const Route = createFileRoute("/writing/$projectId")({
   component: WritingProjectPage,
   validateSearch: (search: Record<string, unknown>): { readonly fresh?: boolean } =>
@@ -19,8 +18,6 @@ function WritingProjectPage() {
   const { projectId } = Route.useParams();
   const { fresh } = Route.useSearch();
   const navigate = useNavigate();
-  // A new title renames the file and the address; the desk stays open with the cursor where it
-  // was. Only a move to another project opens another desk.
   const [desk, setDesk] = useState({ opened: projectId, current: projectId });
   if (projectId !== desk.current) setDesk({ opened: projectId, current: projectId });
   return (

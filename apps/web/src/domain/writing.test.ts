@@ -5,7 +5,6 @@ import { citationParts, insertionAfter, type ProofInline, proofBlocks } from "./
 
 const NODES = [{ id: "Busy", kind: "note" as const, sourceId: null, body: "", page: null }];
 
-/** Each block as its kind and its pieces, with References as `[n]`. */
 const shape = (body: string) =>
   proofBlocks(body, resolveReferences(body, NODES, [])).map((block) => {
     const pieces =

@@ -61,7 +61,6 @@ export function LanguageSwitch({
   );
 }
 
-/** Today and Sources, then the Sections, as large icons with their names under them. */
 export function Rail({ language }: { readonly language: Language }) {
   const t = useT();
   const setLanguage = useAtomSet(setLanguageAtom);

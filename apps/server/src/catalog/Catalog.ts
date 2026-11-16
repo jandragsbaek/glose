@@ -9,16 +9,13 @@ import * as Schema from "effect/Schema";
 
 import * as Settings from "../settings/Settings.ts";
 
-/** Open Library's search API: open data, free and without a key. https://openlibrary.org/dev/docs/api/search */
 const SEARCH_URL = "https://openlibrary.org/search.json";
 
-/** Open Library asks every app to name itself and a way to reach its makers. */
 const USER_AGENT = "Glose (jan@dragsbaek.tech)";
 
 const LIMIT = 8;
 const TIMEOUT = Duration.seconds(10);
 
-/** Work fields, and the fields of the edition that best matches the search. */
 const FIELDS = [
   "key",
   "title",
@@ -60,7 +57,6 @@ const decodeSearchResult = Schema.decodeUnknownEffect(Schema.fromJsonString(Sear
 export class Catalog extends Context.Service<
   Catalog,
   {
-    /** Works that match the query, best match first, each with its best-matching edition. */
     readonly search: (
       query: string,
     ) => Effect.Effect<ReadonlyArray<CatalogRecord>, CatalogUnavailable>;
@@ -72,17 +68,11 @@ const text = (value: string | undefined) => {
   return trimmed === "" ? null : trimmed;
 };
 
-/** Catalogers end some titles with ISBD punctuation ("Erindringer."); a Source title has none. */
 const titleText = (value: string | undefined) => text(value?.replace(/[\s.,;:/]+$/u, ""));
 
-/** Open Library has some impossible years; a Source only takes those its schema accepts. */
 const year = (value: number | undefined) =>
   value !== undefined && Number.isInteger(value) && value >= -3000 && value <= 9999 ? value : null;
 
-/**
- * Open Library keeps an author's name as one string, mostly "Given Family" and sometimes
- * "Family, Given". The last word is taken as the family name; the user corrects the rest.
- */
 export const splitName = (name: string): { familyName: string; givenName: string | null } => {
   const comma = name.indexOf(",");
   if (comma !== -1) {
@@ -95,10 +85,6 @@ export const splitName = (name: string): { familyName: string; givenName: string
   };
 };
 
-/**
- * The edition supplies the title as printed, the publisher and the edition year; the work
- * supplies the year of first publication. A work without an author or a title is left out.
- */
 const toRecord = (work: Work): ReadonlyArray<CatalogRecord> => {
   const edition = work.editions?.docs[0];
   const author = text(work.author_name?.[0]);
@@ -127,7 +113,6 @@ export const make = Effect.gen(function* () {
 
   return Catalog.of({
     search: Effect.fn("Catalog.search")(function* (query) {
-      // Editions in the interface language come first, so a Danish reader finds the Danish one.
       const language = yield* settings.get.pipe(
         Effect.map(({ settings }) => settings.language ?? "en"),
         Effect.orElseSucceed(() => "en" as const),

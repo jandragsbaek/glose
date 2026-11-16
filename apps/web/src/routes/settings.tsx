@@ -67,7 +67,6 @@ function Settings() {
   );
 }
 
-/** Where Blog posts are published: the folder of the user's Bridgetown site on this computer. */
 function SitePanel({ folder }: { readonly folder: string | null }) {
   const t = useT();
   const [open, setOpen] = useState(false);

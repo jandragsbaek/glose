@@ -18,7 +18,6 @@ const list = new Intl.ListFormat("da", { type: "conjunction" });
 const clockTime = new Intl.DateTimeFormat("da-DK", { timeStyle: "short" });
 const shortDate = new Intl.DateTimeFormat("da-DK", { day: "numeric", month: "short" });
 const monthYear = new Intl.DateTimeFormat("da-DK", { month: "long", year: "numeric" });
-/** Danish month names are lower case; a label that starts with one takes a capital. */
 const capitalised = (text: string) => text.charAt(0).toLocaleUpperCase("da") + text.slice(1);
 const longDate = new Intl.DateTimeFormat("da-DK", {
   weekday: "long",
@@ -26,7 +25,6 @@ const longDate = new Intl.DateTimeFormat("da-DK", {
   month: "long",
 });
 
-/** The Danish catalog. Typed by the English one, so a missing message fails the typecheck. */
 export const da: Messages = {
   app: {
     name: "Glose",

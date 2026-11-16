@@ -12,7 +12,6 @@ import {
   settle,
 } from "./layout.ts";
 
-/** What the canvas writes beside a node: a Source's call number and title, a Note's name. */
 export interface NodeLabel {
   readonly text: string;
   readonly call: string | null;
@@ -20,7 +19,6 @@ export interface NodeLabel {
 
 export interface GraphCanvasEvents {
   readonly onSelect: (id: string | null) => void;
-  /** Double click: open the node's own page. */
   readonly onOpen: (id: string) => void;
 }
 
@@ -54,21 +52,14 @@ const CALL_FONT = '700 11px "Courier Prime", ui-monospace, monospace';
 const LABEL_WIDTH = 170;
 const LINE_HEIGHT = 15;
 const CALL_HEIGHT = 17;
-/** Nodes outside the focus fade to this much of their colour. */
 const FADED = 0.14;
 const SCALE_EXTENT: [number, number] = [0.12, 6];
-/** Movement that still counts as a click rather than a drag, in CSS pixels. */
 const CLICK_SLOP = 4;
 const FADE_MS = 160;
 const CAMERA_MS = 420;
 
 const easeOut = (t: number) => 1 - (1 - t) ** 3;
 
-/**
- * The Graph on one canvas, drawn by one animation loop: the force layout, the camera (d3-zoom:
- * wheel and pinch zoom to the pointer, drag to pan), dragging nodes, hover and selection. Input
- * only changes state and asks for a frame; nothing is drawn while nothing changes.
- */
 export class GraphCanvas {
   readonly #canvas: HTMLCanvasElement;
   readonly #context: CanvasRenderingContext2D;
@@ -97,12 +88,10 @@ export class GraphCanvas {
   #hovered: string | null = null;
   #selected: string | null = null;
   #matches: ReadonlySet<string> | null = null;
-  /** The node whose neighbourhood stays bright; kept while the fade runs out. */
   #focus: string | null = null;
   #dim = 0;
   #lastFrame = 0;
 
-  /** The pointer's last place over the canvas; null once it leaves. */
   #pointer: [number, number] | null = null;
   #drag: { readonly node: LayoutNode; readonly pointerId: number } | null = null;
   #down: { readonly x: number; readonly y: number; moved: boolean } | null = null;
@@ -125,7 +114,6 @@ export class GraphCanvas {
 
     this.#zoom = zoom<HTMLCanvasElement, unknown>()
       .scaleExtent(SCALE_EXTENT)
-      // A press on a node drags the node; anywhere else it pans.
       .filter((event: MouseEvent | TouchEvent | WheelEvent) => {
         if (event.type === "wheel") return true;
         if ("button" in event && (event.button !== 0 || event.ctrlKey)) return false;
@@ -134,7 +122,6 @@ export class GraphCanvas {
       })
       .on("zoom", (event: { transform: ZoomTransform }) => {
         this.#transform = event.transform;
-        // The camera moved under a resting pointer: what it points at may have changed.
         if (this.#pointer !== null && this.#drag === null) {
           this.#hover(this.#hit(this.#pointer)?.id ?? null);
         }
@@ -154,7 +141,6 @@ export class GraphCanvas {
     this.#resize = new ResizeObserver(() => this.#measure());
     this.#resize.observe(canvas);
     this.#measure();
-    // Labels are measured in the web fonts; measure again once they have loaded.
     void document.fonts.ready.then(() => {
       this.#wrapped.clear();
       this.#request();
@@ -165,7 +151,6 @@ export class GraphCanvas {
     this.#events = events;
   }
 
-  /** New files or Links: nodes already placed stay where they are, new ones settle in. */
   setData(view: GraphView, labels: ReadonlyMap<string, NodeLabel>): void {
     if (this.#labels !== labels) {
       this.#labels = labels;
@@ -201,7 +186,6 @@ export class GraphCanvas {
     this.#request();
   }
 
-  /** Nodes that match a search; null shows every node at full strength. */
   setMatches(ids: ReadonlySet<string> | null): void {
     this.#matches = ids;
     this.#request();
@@ -214,7 +198,6 @@ export class GraphCanvas {
     this.#moveCamera(zoomIdentity.translate(center[0] - wx * k, center[1] - wy * k).scale(k));
   }
 
-  /** The whole Graph in view, with room for the labels under the outer nodes. */
   fit(animate = true): void {
     if (this.#nodes.length === 0 || this.#width === 0) return;
     let minX = Infinity;
@@ -248,7 +231,6 @@ export class GraphCanvas {
     this.#moveCamera(target, animate);
   }
 
-  /** Brings a node to the middle, close enough to read the names around it. */
   centerOn(id: string): void {
     const node = this.#byId.get(id);
     if (node === undefined || this.#width === 0) return;
@@ -275,14 +257,11 @@ export class GraphCanvas {
     canvas.removeEventListener("keydown", this.#onKeyDown);
   }
 
-  // Input
-
   #local(point: { readonly clientX: number; readonly clientY: number }): [number, number] {
     const rect = this.#canvas.getBoundingClientRect();
     return [point.clientX - rect.left, point.clientY - rect.top];
   }
 
-  /** The node under a canvas point, generous by a few pixels so small Notes are easy to catch. */
   #hit(point: [number, number]): LayoutNode | null {
     const [x, y] = this.#transform.invert(point);
     const slop = 5 / this.#transform.k;
@@ -321,7 +300,6 @@ export class GraphCanvas {
       const [x, y] = this.#transform.invert(point);
       this.#drag.node.fx = x;
       this.#drag.node.fy = y;
-      // Wake the layout, so the node's neighbours follow it.
       const simulation = this.#simulation;
       if (simulation !== null)
         simulation.alphaTarget(0.25).alpha(Math.max(simulation.alpha(), 0.25));
@@ -337,7 +315,6 @@ export class GraphCanvas {
     const down = this.#down;
     this.#down = null;
     if (this.#drag !== null && this.#drag.pointerId === event.pointerId) {
-      // Released, the node rejoins the layout, as in Obsidian.
       this.#drag.node.fx = null;
       this.#drag.node.fy = null;
       this.#drag = null;
@@ -408,8 +385,6 @@ export class GraphCanvas {
     this.#request();
   }
 
-  // Frames
-
   #request(): void {
     this.#dirty = true;
     if (this.#frame === 0) this.#frame = requestAnimationFrame(this.#step);
@@ -456,8 +431,6 @@ export class GraphCanvas {
     else if (!busy) this.#lastFrame = 0;
   };
 
-  // Drawing
-
   #alpha(node: LayoutNode): number {
     let alpha = 1;
     if (this.#matches !== null && !this.#matches.has(node.id)) alpha = FADED;
@@ -484,7 +457,6 @@ export class GraphCanvas {
 
     context.setTransform(ratio * k, 0, 0, ratio * k, ratio * x, ratio * y);
 
-    // Links: a hairline at any zoom, faded outside the focus, lapis inside it.
     const focused = this.#focus !== null && this.#dim > 0;
     context.lineWidth = 1 / k;
     context.strokeStyle = palette.lineStrong;
@@ -572,7 +544,6 @@ export class GraphCanvas {
       if (strong) late.push(draw);
       else draw();
     }
-    // The focus and its neighbours are written last, over everything else.
     for (const draw of late) draw();
   }
 
@@ -592,7 +563,6 @@ export class GraphCanvas {
     context.fillText(call, cx, Math.round(top) + 3);
   }
 
-  /** Names are Mute until they matter: the focus, its neighbours, a match, a Source's title. */
   #drawText(node: LayoutNode, label: NodeLabel, cx: number, top: number, strong: boolean): void {
     const context = this.#context;
     context.font = node.kind === "source" ? SOURCE_FONT : NOTE_FONT;
@@ -606,7 +576,6 @@ export class GraphCanvas {
     });
   }
 
-  /** A name broken into lines that fit the label width; whole words, nothing cut off. */
   #lines(id: string, text: string, font: string): ReadonlyArray<string> {
     const cached = this.#wrapped.get(id);
     if (cached !== undefined) return cached;

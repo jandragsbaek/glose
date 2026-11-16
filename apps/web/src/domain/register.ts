@@ -2,22 +2,15 @@ import type { GraphView, Source } from "@glose/contracts";
 
 import { callNumber, type MissingDetail, missingDetails } from "./source.ts";
 
-/** One Source as the Sources page lists it: what it holds and what it is linked to. */
 export interface SourceRecord {
   readonly source: Source;
   readonly call: string;
   readonly notes: number;
-  /** Notes from this Source that give a Location, such as a page. */
   readonly located: number;
-  /** The other Sources whose Notes share Links with this Source's Notes, and how many Links. */
   readonly linked: ReadonlyMap<string, number>;
   readonly missing: ReadonlyArray<MissingDetail>;
 }
 
-/**
- * Joins the Sources with the Graph. A Link counts between two Sources when it runs from a Note
- * of one (or the Source file itself) to a Note of the other, in either direction.
- */
 export const sourceRecords = (
   sources: ReadonlyArray<Source>,
   graph: GraphView,
@@ -73,7 +66,6 @@ const matchesText = (record: SourceRecord, needle: string, locale: string) => {
   const { source } = record;
   return [
     source.title,
-    // The author as the register shows it, given name first, so "Cal Newport" finds Newport.
     [source.givenName, source.familyName].filter(Boolean).join(" "),
     source.publisher,
     source.translator,
@@ -81,7 +73,6 @@ const matchesText = (record: SourceRecord, needle: string, locale: string) => {
   ].some((text) => text !== null && text.toLocaleLowerCase(locale).includes(needle));
 };
 
-/** The Sources that match a search (title, author, call number, publisher) and the filters. */
 export const filterRecords = (
   records: ReadonlyArray<SourceRecord>,
   query: RegisterQuery,
@@ -119,10 +110,6 @@ const groupKey = (record: SourceRecord, order: RegisterOrder): RegisterGroupKey 
 const keyId = (key: RegisterGroupKey) =>
   key.kind === "month" ? `${key.year}-${key.month}` : key.letter;
 
-/**
- * The register in the chosen order, cut into groups: the month a Source was added (newest
- * first), or the first letter of its call number or its author's family name.
- */
 export const groupRecords = (
   records: ReadonlyArray<SourceRecord>,
   order: RegisterOrder,

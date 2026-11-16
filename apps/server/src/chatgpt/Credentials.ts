@@ -11,23 +11,16 @@ import * as NodeCrypto from "node:crypto";
 import * as ServerConfig from "../config.ts";
 import { writeFileAtomic } from "../storage.ts";
 
-/** Tokens of one signed-in account; all null after signing out. */
 export const Tokens = Schema.Struct({
   idToken: Schema.String,
   accessToken: Schema.String,
   refreshToken: Schema.String,
-  /** When the access token expires, in epoch milliseconds. */
   expiresAt: Schema.Number,
   scopes: Schema.Array(Schema.String),
 });
 export type Tokens = typeof Tokens.Type;
 
-/**
- * One ChatGPT account that approved Glose. The issued client ID is kept after signing out, so
- * signing in again to the same account reuses the registration.
- */
 export const Account = Schema.Struct({
-  /** The verified `sub` of the account's ID token. */
   subject: Schema.String,
   email: Schema.String,
   clientId: Schema.String,
@@ -37,9 +30,7 @@ export const Account = Schema.Struct({
 export type Account = typeof Account.Type;
 
 export const CredentialsData = Schema.Struct({
-  /** This computer's opaque host ID; OpenAI counts usage per host. */
   hostId: Schema.String,
-  /** The subject of the account in use, or null. */
   active: Schema.NullOr(Schema.String),
   accounts: Schema.Array(Account),
 });
@@ -51,25 +42,18 @@ const encode = Schema.encodeEffect(CredentialsJson);
 
 const storageError = (cause: unknown) => new StorageError({ detail: String(cause) });
 
-/** The active account, if one is chosen. */
 export const activeAccount = (data: CredentialsData): Account | undefined =>
   data.accounts.find((account) => account.subject === data.active);
 
-/** Replaces one account by subject, or adds it. */
 export const putAccount = (data: CredentialsData, account: Account): CredentialsData => ({
   ...data,
   accounts: [...data.accounts.filter((other) => other.subject !== account.subject), account],
 });
 
-/**
- * The ChatGPT credentials of this computer, in `chatgpt.json` beside the computer settings.
- * They never go into the Graph folder, which may be shared. Only the owner may read the file.
- */
 export class Credentials extends Context.Service<
   Credentials,
   {
     readonly get: Effect.Effect<CredentialsData, StorageError>;
-    /** Reads, changes and writes the file as one step; concurrent updates wait their turn. */
     readonly update: (
       change: (data: CredentialsData) => CredentialsData,
     ) => Effect.Effect<CredentialsData, StorageError>;
@@ -88,7 +72,6 @@ export const make = Effect.gen(function* () {
     yield* writeFileAtomic(fs, file, yield* encode(data), { mode: 0o600 });
   }, Effect.mapError(storageError));
 
-  /** A first read makes the file, so the host ID exists before the first sign-in. */
   const read = Effect.gen(function* () {
     if (yield* fs.exists(file).pipe(Effect.mapError(storageError))) {
       return yield* fs

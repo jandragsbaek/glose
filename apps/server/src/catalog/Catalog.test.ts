@@ -11,7 +11,6 @@ import * as Settings from "../settings/Settings.ts";
 import { makeDirs } from "../testkit/graph.ts";
 import * as Catalog from "./Catalog.ts";
 
-/** A Catalog over a fake Open Library that gives one answer and records the request. */
 const withCatalog = <A, E>(
   answer: { readonly status: number; readonly body: unknown },
   test: (

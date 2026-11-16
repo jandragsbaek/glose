@@ -13,7 +13,6 @@ import {
 } from "../state/chatgpt.ts";
 import { Notice } from "./ui.tsx";
 
-/** Opens ChatGPT's own usage page, where the user sees and limits what Glose uses. */
 export function ManageUsageLink() {
   const t = useT();
   return (
@@ -23,7 +22,6 @@ export function ManageUsageLink() {
   );
 }
 
-/** Connect, follow and end the ChatGPT connection. Used in the setup and in Settings. */
 export function ChatGptConnection() {
   const t = useT();
   const status = useAtomValue(chatGptStatusAtom);

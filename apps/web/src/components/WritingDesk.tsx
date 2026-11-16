@@ -46,13 +46,10 @@ import { flaggedKeys, ProseEditor, type ProseHandle, referenceKey } from "./Pros
 import { CallNumber } from "./ui.tsx";
 import { CiteSheet, ReplaceSheet, SiteFolderSheet } from "./WritingSheets.tsx";
 
-/** The writer pauses this long before the text is saved. */
 const SAVE_AFTER_MS = 700;
 
-/** Margin notes keep at least this much space between them. */
 const MARGIN_GAP = 12;
 
-/** Below this width the margins fold under the leaf (see `.writing-desk` in app.css). */
 const WIDE = "(min-width: 1200px)";
 
 const TYPES: ReadonlyArray<WritingProjectType> = ["blog-post", "assignment"];
@@ -78,7 +75,6 @@ const fieldsOf = (project: WritingProject): WritingProjectFields => ({
 
 const isMac = () => /mac|iphone|ipad/i.test(navigator.platform || navigator.userAgent);
 
-/** The file's name and the folder it is in, from an absolute path. */
 const fileNameOf = (file: string) => file.split(/[\\/]/).pop() ?? file;
 
 const dayDate = (day: string) => new Date(`${day}T12:00:00`);
@@ -90,7 +86,6 @@ const today = () => {
   return `${now.getFullYear()}-${twoDigits(now.getMonth() + 1)}-${twoDigits(now.getDate())}`;
 };
 
-/** A Citation with its title in italic. */
 function Citation({ text }: { readonly text: string }) {
   return (
     <>
@@ -105,17 +100,12 @@ function Citation({ text }: { readonly text: string }) {
   );
 }
 
-/**
- * The writing desk of one Writing project, "The Glossed Manuscript": one leaf in the middle, the
- * Citations in the right margin beside their lines, the checks and the AI's flags in the left.
- */
 export function WritingDesk({
   project,
   fresh,
   onRenamed,
 }: {
   readonly project: WritingProject;
-  /** Just started: the placeholder title is selected, ready to type over. */
   readonly fresh: boolean;
   readonly onRenamed: (id: string) => void;
 }) {
@@ -137,7 +127,6 @@ export function WritingDesk({
   const leftMargin = useRef<HTMLDivElement | null>(null);
   const rightMargin = useRef<HTMLDivElement | null>(null);
   const editorBox = useRef<HTMLDivElement | null>(null);
-  /** The file name the server knows the project by; it changes with the title. */
   const savedId = useRef(project.id);
   const lastSaved = useRef(JSON.stringify(fieldsOf(project)));
   const [savedSnapshot, setSavedSnapshot] = useState(() => JSON.stringify(fieldsOf(project)));
@@ -158,7 +147,6 @@ export function WritingDesk({
       .map((reference) => referenceKey(reference.target, reference.location)),
   );
   const sourceIdOf = (reference: ResolvedReference) => reference.source?.id ?? null;
-  // The AI's notes belong to the text it read; edits since then may move or remove a passage.
   const reviewFits = review !== null && reviewedBody !== null;
   const claims = reviewFits
     ? review.claims.filter((claim) => fields.body.includes(claim.excerpt))
@@ -174,10 +162,6 @@ export function WritingDesk({
   const update = (change: Partial<WritingProjectFields>) =>
     setFields((current) => ({ ...current, ...change }));
 
-  /**
-   * Saves what is on the desk, one save after another, so a rename never races a save. True when
-   * the file holds this text.
-   */
   const save = (next: WritingProjectFields): Promise<boolean> => {
     const snapshot = JSON.stringify(next);
     const run = saving.current.then(async () => {
@@ -222,7 +206,6 @@ export function WritingDesk({
   // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- a save, not state: what the writer typed in the last moment is kept when the desk closes.
   useEffect(() => () => void latest.current.save(latest.current.fields), []);
 
-  /** Lines each margin note up with its place in the prose, and keeps notes from overlapping. */
   const placeMargins = () => {
     const box = editorBox.current;
     const handle = editor.current;
@@ -264,7 +247,6 @@ export function WritingDesk({
 
   const runReview = async () => {
     setReviewState("running");
-    // The AI reads the file; a text that could not be saved is not what the writer sees.
     if (!(await save(fields))) {
       setReviewState("failed");
       return;
@@ -289,7 +271,6 @@ export function WritingDesk({
   const runPublish = async (replace: boolean) => {
     setSheet(null);
     setPublish({ kind: "writing" });
-    // The post is written from the file; never publish an older text than the desk shows.
     if (!(await save(fields))) {
       setPublish({ kind: "failed" });
       return;
@@ -316,12 +297,10 @@ export function WritingDesk({
     }
   };
 
-  /** Puts the Reference into the prose, replacing a range (a broken token) or at a place. */
   const insertReference = (target: string, page: string | null) => {
     if (cite === null) return;
     const { from, to } = cite;
     setCite(null);
-    // The modal sheet makes the page inert; the text takes the focus once it has closed.
     window.requestAnimationFrame(() =>
       editor.current?.replace(from, to, referenceToken(target, page)),
     );
@@ -675,7 +654,6 @@ export function WritingDesk({
   );
 }
 
-/** The way to fix what a check found in one Reference. */
 function FlagAction({
   reference,
   sourceId,
@@ -720,7 +698,6 @@ function FlagAction({
   return null;
 }
 
-/** The type of the piece, how its References appear, and its language. */
 function PieceSettings({
   fields,
   onChange,
@@ -887,7 +864,6 @@ function PieceSettings({
   );
 }
 
-/** The post as readers will see it, in the Reference form the piece uses. */
 function Proof({
   fields,
   references,
@@ -1024,7 +1000,6 @@ function Proof({
   );
 }
 
-/** What to fix before publishing; each line says how. */
 function Checks({
   references,
   claims,
@@ -1101,7 +1076,6 @@ function Checks({
   );
 }
 
-/** The AI's questions about the argument, asked before publishing. */
 function Questions({
   review,
   running,

@@ -18,10 +18,6 @@ import { ChatGpt } from "./ChatGpt.ts";
 
 type FakeOpenAi = Effect.Success<typeof makeFakeOpenAi>;
 
-/**
- * The user in the browser: signs in as `sub` and is sent back to Glose's loopback callback,
- * as OpenAI's redirect would. `decline` answers as a user who says no.
- */
 const browserUser = (
   fake: FakeOpenAi,
   user: { readonly sub: string; readonly email: string; readonly decline?: boolean },
@@ -59,7 +55,6 @@ const browserUser = (
   return { opened, layer: Layer.succeed(Browser, { open }) };
 };
 
-/** One computer with its own folders, the real services, and a fake OpenAI (and user). */
 const onComputer =
   (dirs: { readonly dataDir: string; readonly homeDir: string }, fakes: Layer.Layer<any>) =>
   <A, E>(effect: Effect.Effect<A, E, ChatGpt>) =>
@@ -73,7 +68,6 @@ const onComputer =
       ),
     );
 
-/** Starts a sign-in and waits until it ends, one way or the other. */
 const signIn = (account: "new" | "saved") =>
   Effect.gen(function* () {
     const chatGpt = yield* ChatGpt;
@@ -122,7 +116,6 @@ it.layer(NodeServices.layer)("ChatGpt", (it) => {
       assert.include(query.get("scope") ?? "", "chatgpt.tokens.use.direct");
       assert.strictEqual(saved.accounts[0].clientId, "oaiapp_issued");
 
-      // The code exchange proves the PKCE verifier and repeats the exact callback address.
       const exchange = new URLSearchParams(
         fake.requests.find((request) => request.url === FAKE_OPENAI.tokenUrl)!.body,
       );
@@ -184,7 +177,6 @@ it.layer(NodeServices.layer)("ChatGpt", (it) => {
       assert.strictEqual(query.get("ext_agent_host_id"), "urn:uuid:host-1");
       assert.strictEqual(query.get("login_hint"), "reader@example.com");
       assert.isNull(query.get("agent_name_hint"));
-      // Signed out: the old ID token no longer names the account.
       assert.isNull(query.get("id_token_hint"));
       assert.strictEqual(status._tag === "Some" ? status.value._tag : null, "Connected");
     }).pipe(Effect.scoped),

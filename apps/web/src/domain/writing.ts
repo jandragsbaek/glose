@@ -2,10 +2,8 @@ import { REFERENCE, type ResolvedReference } from "@glose/contracts";
 
 import { wordCount } from "./source.ts";
 
-/** The words of the prose; a Reference is a pointer, not words. */
 export const proseWords = (body: string): number => wordCount(body.replace(REFERENCE, " "));
 
-/** One piece of a line of prose in Proof. */
 export type ProofInline =
   | { readonly kind: "text"; readonly at: number; readonly text: string }
   | { readonly kind: "em" | "strong"; readonly at: number; readonly text: string }
@@ -16,7 +14,6 @@ export type ProofBlock =
       readonly kind: "paragraph" | "quote";
       readonly at: number;
       readonly inlines: ReadonlyArray<ProofInline>;
-      /** The References in this block, in order (side notes go beside it). */
       readonly references: ReadonlyArray<ResolvedReference>;
     }
   | {
@@ -36,7 +33,6 @@ export type ProofBlock =
 
 const EMPHASIS = /\*\*([^*\n]+)\*\*|\*([^*\n]+)\*|_([^_\n]+)_/g;
 
-/** Text with `*em*`, `**strong**` and `_em_`; other Markdown shows as written. */
 const emphasis = (text: string, at: number): ReadonlyArray<ProofInline> => {
   const out: Array<ProofInline> = [];
   let last = 0;
@@ -55,7 +51,6 @@ const emphasis = (text: string, at: number): ReadonlyArray<ProofInline> => {
   return out;
 };
 
-/** A stretch of the prose, `[start, end)`, with its References in place. */
 const inlines = (
   body: string,
   start: number,
@@ -88,10 +83,6 @@ const HEADING = /^(#{1,6})\s+/;
 const QUOTE = /^>\s?/;
 const BULLET = /^\s*(?:[-*+]|\d+[.)])\s+/;
 
-/**
- * The prose as readers see it: paragraphs, headings, quotes and lists, each with the References
- * it holds. A blank line ends a block, as in Markdown.
- */
 export const proofBlocks = (
   body: string,
   references: ReadonlyArray<ResolvedReference>,
@@ -154,7 +145,6 @@ export const proofBlocks = (
   return blocks;
 };
 
-/** `*Deep Work*` in a Citation as text and italic parts. */
 export const citationParts = (
   citation: string,
 ): ReadonlyArray<{ readonly text: string; readonly italic: boolean }> =>
@@ -167,7 +157,6 @@ export const citationParts = (
         : { text: part, italic: false },
     );
 
-/** Where to put a Reference after a passage: after the sentence's last word, before a space. */
 export const insertionAfter = (body: string, excerpt: string): number | null => {
   const at = body.indexOf(excerpt);
   if (at < 0) return null;

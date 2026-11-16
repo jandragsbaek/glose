@@ -12,17 +12,12 @@ import * as Stream from "effect/Stream";
 
 import { OpenAi } from "./OpenAi.ts";
 
-/**
- * A Responses API request failed. `code` is OpenAI's machine-readable error code when there is
- * one, such as `subscription_sharing_usage_limit_exceeded`.
- */
 export class ResponsesError extends Data.TaggedError("ResponsesError")<{
   readonly status: number | null;
   readonly code: string | null;
   readonly detail: string;
 }> {}
 
-/** An output item exactly as the API sent it; the next request sends it back as input. */
 export type OutputItem = { readonly type: string } & Readonly<Record<string, unknown>>;
 
 export type ResponseEvent =
@@ -38,12 +33,10 @@ export interface Model {
 export class Responses extends Context.Service<
   Responses,
   {
-    /** Streams one response. It ends with `Completed`, or fails. */
     readonly stream: (
       token: Redacted.Redacted<string>,
       body: Readonly<Record<string, unknown>>,
     ) => Stream.Stream<ResponseEvent, ResponsesError>;
-    /** The models this account may use, in OpenAI's order. */
     readonly models: (
       token: Redacted.Redacted<string>,
     ) => Effect.Effect<ReadonlyArray<Model>, ResponsesError>;
@@ -75,7 +68,6 @@ const StreamEvent = Schema.Union([
 ]);
 const decodeStreamEvent = Schema.decodeUnknownOption(Schema.fromJsonString(StreamEvent));
 
-/** Error bodies before a stream opens: the API's `{ error }` or the admission layer's `{ detail }`. */
 const ErrorBody = Schema.Union([
   Schema.Struct({ error: ErrorObject }),
   Schema.Struct({ detail: Schema.String }),
@@ -109,7 +101,6 @@ const errorFromBody = (status: number, text: string) =>
 const transportError = (cause: unknown) =>
   new ResponsesError({ status: null, code: null, detail: String(cause) });
 
-/** One SSE event as zero or one `ResponseEvent`; a failure event fails the stream. */
 const toEvents = (data: string): Effect.Effect<ReadonlyArray<ResponseEvent>, ResponsesError> =>
   Option.match(decodeStreamEvent(data), {
     onNone: () => Effect.succeed([]),

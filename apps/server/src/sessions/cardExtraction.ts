@@ -10,10 +10,8 @@ import { readNoteTool } from "./graphTools.ts";
 
 const LANGUAGE_NAMES: Record<Language, string> = { en: "English", da: "Danish" };
 
-/** Proposed Cards in one call; more at once is more than a user can judge with care. */
 export const MAX_PROPOSALS = 10;
 
-/** The rules of a Card Extraction Session. The Review never leans on the AI; this step may. */
 export const INSTRUCTIONS = `You are the AI in Glose, a desktop app where a person learns from what they read. You run Card Extraction: you propose Cards made from one Note, for spaced-repetition Review (FSRS, as in Anki).
 
 A Card is one question and its answer. The user keeps, edits or drops each Card you propose; only kept Cards are saved. Kept Cards stay marked as AI text until the user rewrites them.
@@ -29,21 +27,18 @@ How to work:
 - Write the Cards in the language of the Note. Write your messages in the language of the user's messages, or the interface language named in the first message.
 - Write plain text.`;
 
-/** The hidden first message that starts the Session. */
 export const kickoff = (note: string, language: Language): InputItem => ({
   type: "message",
   role: "developer",
   content: `Start Card Extraction for the Note named "${note}". The user's interface language is ${LANGUAGE_NAMES[language]}.`,
 });
 
-/** The passage the user chose, as the model reads it. */
 export const passageMessage = (passage: string): InputItem => ({
   type: "message",
   role: "user",
   content: `Make Cards from this passage of the Note only:\n\n"""\n${passage}\n"""`,
 });
 
-/** What the user did with proposed Cards since the AI last took a turn. */
 export const decisionsMessage = (decisions: ReadonlyArray<string>): InputItem => ({
   type: "message",
   role: "developer",
@@ -65,9 +60,7 @@ const decodePropose = Schema.decodeUnknownOption(ProposeArguments);
 export interface Context {
   readonly graph: Graph.Graph["Service"];
   readonly cards: Cards.Cards["Service"];
-  /** The Note the Session makes Cards from. */
   readonly note: string;
-  /** Shows the proposed Cards to the user. */
   readonly propose: (cards: ReadonlyArray<CardText>) => Effect.Effect<void>;
 }
 

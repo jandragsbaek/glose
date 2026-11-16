@@ -33,7 +33,6 @@ import { CardProposals } from "./CardProposals.tsx";
 import { ManageUsageLink } from "./ChatGptConnection.tsx";
 import { Notice, Panel, SkeletonPanel, StorageProblem } from "./ui.tsx";
 
-/** True once ChatGPT is connected and Glose may use the user's plan. */
 export function useChatGptReady(): boolean {
   const status = useAtomValue(chatGptStatusAtom);
   return AsyncResult.getOrElse(
@@ -42,7 +41,6 @@ export function useChatGptReady(): boolean {
   );
 }
 
-/** A Session cannot start without ChatGPT; this says where to connect it. */
 export function NeedsChatGpt({ title, body }: { readonly title: string; readonly body: string }) {
   const t = useT();
   return (
@@ -60,11 +58,9 @@ export function NeedsChatGpt({ title, body }: { readonly title: string; readonly
 interface SessionFrame {
   readonly title: string;
   readonly initial: "rubric" | "lapis";
-  /** More ways to go on than a message, shown above the message box. */
   readonly renderControls?: (session: Session) => ReactNode;
 }
 
-/** A Session in a panel, with its transcript and message box (Card Extraction). */
 export function LiveSession({ id, ...frame }: { readonly id: string } & SessionFrame) {
   const result = useAtomValue(sessionAtom(id));
   const refresh = useAtomRefresh(sessionAtom(id));
@@ -111,11 +107,9 @@ function SessionView({
   );
 }
 
-/** The Points of a Session, in the order they arrived. */
 export const pointsOf = (entries: ReadonlyArray<SessionEntry>): ReadonlyArray<Point> =>
   entries.flatMap((entry) => (entry._tag === "Points" ? entry.points : []));
 
-/** The number the user sees: `p3` is point 3. */
 export const pointNumber = (point: Pick<Point, "id">): number => Number(point.id.slice(1));
 
 type Turn =
@@ -127,7 +121,6 @@ const isUserEntry = (entry: SessionEntry) =>
   entry._tag === "Passage" ||
   (entry._tag === "Points" && entry.points.every((point) => point.origin === "user"));
 
-/** Entries as turns: each user entry is one, and what the AI did between them is one. */
 const turnsOf = (entries: ReadonlyArray<SessionEntry>): ReadonlyArray<Turn> => {
   const turns: Array<Turn> = [];
   for (const entry of entries) {
@@ -147,7 +140,6 @@ type Step =
     }
   | { readonly kind: "entry"; readonly entry: SessionEntry };
 
-/** One AI turn's entries, with each run of tool uses folded into one step. */
 const stepsOf = (entries: ReadonlyArray<SessionEntry>): ReadonlyArray<Step> => {
   const steps: Array<Step> = [];
   for (const entry of entries) {
@@ -162,14 +154,9 @@ const stepsOf = (entries: ReadonlyArray<SessionEntry>): ReadonlyArray<Step> => {
 
 interface TranscriptProps {
   readonly session: Session;
-  /** Shows a Point the AI names, such as [3]. */
   readonly onPoint?: (point: string) => void;
 }
 
-/**
- * What the user and the AI said, in turns. What the AI read and thought folds into one quiet
- * line each, open on demand; while it works, one live line says what it does.
- */
 export function Transcript({ session, onPoint }: TranscriptProps) {
   const t = useT();
   const turns = turnsOf(session.entries);
@@ -216,7 +203,6 @@ export function Transcript({ session, onPoint }: TranscriptProps) {
   );
 }
 
-/** The AI's answer as it arrives, or else what it does now. */
 export function Live({
   session,
   points,
@@ -361,7 +347,6 @@ function PointRef({
   );
 }
 
-/** A run of tool uses as one quiet line; open, it lists each, with the Notes as links. */
 export function ToolUses({
   uses,
 }: {
@@ -428,7 +413,6 @@ function ToolUseLine({ use }: { readonly use: Extract<SessionEntry, { _tag: "Too
   }
 }
 
-/** A summary's `**heading**` as bold words; nothing else of Markdown. */
 const withBold = (text: string): ReadonlyArray<ReactNode> =>
   text.split(/\*\*(.+?)\*\*/g).map((part, index) =>
     // oxlint-disable-next-line react/no-array-index-key -- a kept summary never changes, so a part's place is its identity.
@@ -441,13 +425,8 @@ const paragraphs = (text: string) =>
     .map((paragraph) => paragraph.trim())
     .filter((paragraph) => paragraph !== "");
 
-/** `[[Note]]` and a Point's number in brackets, such as `[3]`. */
 const REFERENCE = new RegExp(`${WIKILINK.source}|\\[(\\d{1,3})\\]`, "g");
 
-/**
- * The AI's words, with its wikilinks as links into the Graph and its Point numbers as buttons
- * that show the Point. A closing question stands out: it is what the AI asks the user.
- */
 export function MessageText({
   text,
   points,
@@ -501,7 +480,6 @@ const references = (
   return out;
 };
 
-/** Why the last turn stopped, and the way on. */
 export function SessionProblem({ session }: { readonly session: Session }) {
   const t = useT();
   const retry = useAtomSet(retrySessionAtom);
@@ -540,7 +518,6 @@ export function SessionProblem({ session }: { readonly session: Session }) {
 export const IS_MAC =
   typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.userAgent);
 
-/** The message box. A message may be about one Point, named above the box. */
 export function Composer({
   session,
   about,

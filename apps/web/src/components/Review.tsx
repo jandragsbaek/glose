@@ -10,19 +10,12 @@ import { RECALL_KEYS, recordReviewAtom, reviewQueueAtom } from "../state/recall.
 import { AiText } from "./NoteText.tsx";
 import { Flourish, Notice, SkeletonPanel, StorageProblem } from "./ui.tsx";
 
-/** Cards still to review today, the one on the desk included. */
 const leftToday = (counts: ReviewQueue["counts"]) => counts.new + counts.learning + counts.review;
 
-/** At most this many leaf edges under the leaf: they say "many" or "few"; the bar says how many. */
 const MAX_EDGES = 5;
 
-/** At most this many edges under Recall's Review leaf: the leaf leads the page, not the stack. */
 const MAX_START_EDGES = 3;
 
-/**
- * Recall's way in: today's Review as a leaf on top of the desk, the Cards still due as paper
- * edges under it, and the button that opens the Review screen.
- */
 export function ReviewStart() {
   const t = useT();
   const headingId = useId();
@@ -61,7 +54,6 @@ export function ReviewStart() {
   });
 }
 
-/** Nothing to review now: a learning step comes back later today, or the day is done. */
 function NothingDue({ queue, onDue }: { readonly queue: ReviewQueue; readonly onDue: () => void }) {
   const t = useT();
   const due = queue.nextLearningDue;
@@ -79,10 +71,6 @@ function NothingDue({ queue, onDue }: { readonly queue: ReviewQueue; readonly on
   );
 }
 
-/**
- * The Review screen: one leaf on the desk and nothing else. The Cards still to review show as
- * paper edges under it; the bar holds the count and the way out (Esc).
- */
 export function ReviewScreen() {
   const t = useT();
   const navigate = useNavigate();
@@ -113,7 +101,6 @@ export function ReviewScreen() {
           )}
         </p>
         {value !== null && value.next === null ? null : (
-          // Once the day is done the desk offers the way back; Esc still leaves.
           <button type="button" className="button" aria-keyshortcuts="Escape" onClick={stop}>
             {t.review.stop} <Key>{t.review.keys.escape}</Key>
           </button>
@@ -126,7 +113,6 @@ export function ReviewScreen() {
   );
 }
 
-/** The desk: the leaf to review, or what to do now that nothing is due. */
 function Desk() {
   const t = useT();
   const queue = useAtomValue(reviewQueueAtom);
@@ -155,8 +141,6 @@ function Desk() {
       ) : (
         <div className="review__stage">
           <Leaf
-            // A new leaf for each Review, and only then: the next Card starts with its answer
-            // hidden, while a queue that reads again for another reason keeps the open step.
             key={`${value.next.card.file}:${value.next.reviews}`}
             item={value.next}
             now={value.now}
@@ -190,18 +174,12 @@ function Key({ children }: { readonly children: ReactNode }) {
   );
 }
 
-/**
- * Where a Review is. The rating comes in two steps, because people press Hard when they forgot,
- * and FSRS reads Hard as a pass: first recalled or forgot, then, after a recall, how hard it was.
- */
 type Step = "question" | "answer" | "recalled";
 
 type Action = "show" | "recalled" | "back" | Rating;
 
-/** After a recall, how it went, as FSRS's passing ratings. */
 const EFFORTS = ["hard", "good", "easy"] as const satisfies ReadonlyArray<Rating>;
 
-/** The keys each step answers to; the buttons show the same keys. */
 const KEYS: Record<Step, Readonly<Record<string, Action>>> = {
   question: { " ": "show", Enter: "show" },
   answer: { "1": "again", "2": "recalled" },
@@ -215,7 +193,6 @@ function Leaf({
 }: {
   readonly item: ReviewCard;
   readonly now: number;
-  /** Leaf edges under this one, for the Cards still to come. */
   readonly edges: number;
 }) {
   const t = useT();
@@ -250,7 +227,6 @@ function Leaf({
       },
       reactivityKeys: RECALL_KEYS.queue,
     });
-    // On success the queue reads again and the next leaf replaces this one.
     if (Exit.isFailure(exit)) {
       setBusy(false);
       setFailed(true);
@@ -268,7 +244,6 @@ function Leaf({
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (busy || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
-      // Space and Enter on a focused button press that button; the browser does that.
       const onControl = event.target instanceof Element && event.target.closest("button, a");
       if (onControl && (event.key === " " || event.key === "Enter")) return;
       const action = KEYS[step][event.key];
@@ -364,7 +339,6 @@ function Leaf({
               )}
             </div>
             {step === "recalled" ? (
-              // Back is a way out of a slip, not a fourth answer: quiet, and under the answers.
               <button
                 type="button"
                 className="review__back"

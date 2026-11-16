@@ -11,7 +11,6 @@ import { CardFields } from "./CardFields.tsx";
 import { AiText } from "./NoteText.tsx";
 import { Notice } from "./ui.tsx";
 
-/** The Cards the AI proposed in one turn. Each is a Card only once the user keeps it. */
 export function CardProposals({
   sessionId,
   proposals,

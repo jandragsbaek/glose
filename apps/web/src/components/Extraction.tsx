@@ -37,17 +37,11 @@ import {
 import { StepBar } from "./StepBar.tsx";
 import { CallNumber, Flourish, Notice, SkeletonPanel, StorageProblem } from "./ui.tsx";
 
-/**
- * The Extraction step of the Reading Stage. The core points are the page: the user keeps the
- * ones that matter and writes each as a Note in their own words. The Session with the AI sits
- * in the margin beside them.
- */
 export function Extraction({
   source,
   sourcePanels,
 }: {
   readonly source: Source;
-  /** The Free text and the Source's details, shown on demand above the points. */
   readonly sourcePanels: ReactNode;
 }) {
   const found = useAtomValue(extractionSessionAtom(source.id));
@@ -79,7 +73,6 @@ export function Extraction({
   });
 }
 
-/** The work column: the step bar, the Source on demand, then the points. */
 function Desk({
   source,
   sourcePanels,
@@ -96,7 +89,6 @@ function Desk({
   const t = useT();
   const [showSource, setShowSource] = useState(false);
   const counted = points.filter((point) => point.state !== "dropped");
-  // A Probe before or after Extraction says on its step how much it asked.
   const probe = AsyncResult.getOrElse(useAtomValue(probeSessionAtom(source.id)), () => null);
   const asked = probe?.entries.filter((entry) => entry._tag === "ProbeQuestion").length ?? 0;
   return (
@@ -236,7 +228,6 @@ function LiveExtraction({
   });
 }
 
-/** Points by what the user did with them. */
 const groupsOf = (points: ReadonlyArray<Point>) => ({
   kept: points.filter((point) => point.state === "kept"),
   open: points.filter((point) => point.state === "open"),
@@ -258,14 +249,11 @@ function ExtractionView({
   const t = useT();
   const points = pointsOf(session.entries);
   const groups = groupsOf(points);
-  /** The Point the user talks to the AI about; it wears the gilt mark. */
   const [aboutId, setAbout] = useState<string | null>(null);
-  /** The kept Point open for writing; the first kept one when the user chose none. */
   const [writingId, setWriting] = useState<string | null>(null);
   const writing = groups.kept.find((point) => point.id === writingId) ?? groups.kept[0];
   const about = points.find((point) => point.id === aboutId && point.state !== "dropped");
 
-  /** Brings a Point into view and makes it the subject of the next message. */
   const show = (pointId: string) => {
     setAbout(pointId);
     if (groups.kept.some((point) => point.id === pointId)) setWriting(pointId);
@@ -307,7 +295,6 @@ function ExtractionView({
         ) : null}
         {writing === undefined ? null : (
           <div className="points__group">
-            {/* Every kept Point's form stays mounted, so switching Points keeps unsaved words. */}
             {groups.kept.map((point) => (
               <div key={point.id} hidden={point.id !== writing.id}>
                 <WritePoint
@@ -393,10 +380,6 @@ function ExtractionView({
   );
 }
 
-/**
- * The way on from Extraction: to the Probe when the Source started with writing, else the
- * Source is read. Extraction does not end by itself; the user says when the points are written.
- */
 function NextStep({ source }: { readonly source: Source }) {
   const t = useT();
   const [failed, setFailed] = useState(false);
@@ -440,7 +423,6 @@ function NextStep({ source }: { readonly source: Source }) {
   );
 }
 
-/** Where a Point comes from, and how it meets the Notes the user has. */
 function PointSource({ point }: { readonly point: Point }) {
   const t = useT();
   return (
@@ -521,7 +503,6 @@ function PointRow({
   );
 }
 
-/** One quiet AI mark for the whole group: the AI wrote every one of these titles. */
 function ProposedPoints({
   session,
   points,
@@ -596,10 +577,6 @@ function ProposedPoints({
 
 type SaveProblem = { readonly kind: "taken"; readonly name: string } | { readonly kind: "failed" };
 
-/**
- * A kept Point, open for the user to write as a Note. The text starts as the AI's draft, marked
- * as AI text, edited or not, until the user says they rewrote it in their own words.
- */
 function WritePoint({
   session,
   point,
@@ -609,7 +586,6 @@ function WritePoint({
 }: {
   readonly session: Session;
   readonly point: Point;
-  /** The open Point; a hidden form keeps its words for when the user comes back. */
   readonly shown: boolean;
   readonly about: boolean;
   readonly onAbout: () => void;
@@ -619,9 +595,7 @@ function WritePoint({
   const pageId = useId();
   const [title, setTitle] = useState(point.title);
   const [text, setText] = useState(point.draft ?? "");
-  /** The text is the AI's draft, edited or not; the Note keeps it marked. */
   const [aiText, setAiText] = useState(point.draft !== null);
-  /** A new draft the user asked for replaces the text. */
   const [draftShown, setDraftShown] = useState(point.draft);
   if (point.draft !== draftShown) {
     setDraftShown(point.draft);
@@ -678,7 +652,6 @@ function WritePoint({
       value={text}
       onChange={(event) => {
         setText(event.target.value);
-        // An empty box holds no AI text; what the user types next is their own.
         if (event.target.value.trim() === "") setAiText(false);
       }}
       onFocus={onAbout}
@@ -834,7 +807,6 @@ function WritePoint({
 const paragraphCount = (text: string) =>
   text.split(/\n[ \t]*\n/).filter((paragraph) => paragraph.trim() !== "").length;
 
-/** Ways on: a Point in the user's own words, more from the AI, and the dropped ones. */
 function PointsFoot({
   session,
   dropped,

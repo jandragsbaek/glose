@@ -17,26 +17,19 @@ import * as GraphFolder from "../graph/GraphFolder.ts";
 import { Git, type GitFailed, type GitMissing } from "../versions/Git.ts";
 import { Settings } from "./Settings.ts";
 
-/** The first start: a new Graph, a folder on this computer, or a Graph copied from a remote. */
 export class Setup extends Context.Service<
   Setup,
   {
-    /**
-     * Completes the first start. `clone` copies the Graph into a folder that is missing or empty;
-     * the remote stays its `origin`, so Versions sync with it from then on.
-     */
     readonly complete: (
       input: CompleteSetup,
     ) => Effect.Effect<
       SettingsView,
       GraphFolderUnavailable | GraphRemoteUnavailable | StorageError
     >;
-    /** Checks that git on this computer can read a remote, with the user's own git sign-in. */
     readonly checkRemote: (url: string) => Effect.Effect<void, GraphRemoteUnavailable>;
   }
 >()("glose/settings/Setup") {}
 
-/** A large Graph with years of Versions takes a while to copy over a slow line. */
 const CLONE_TIMEOUT_MS = 15 * 60 * 1000;
 const CHECK_TIMEOUT_MS = 2 * 60 * 1000;
 
@@ -54,7 +47,6 @@ export const make = Effect.gen(function* () {
   const { homeDir } = yield* ServerConfig.ServerConfig;
   const graphFolders = GraphFolder.make(fs, path);
 
-  /** The GitHub sign-in goes along for a GitHub address; any other uses the user's own git. */
   const network = (timeoutMs: number) =>
     github.gitConfig.pipe(Effect.map((config) => ({ timeoutMs, config })));
 
@@ -66,7 +58,6 @@ export const make = Effect.gen(function* () {
       .pipe(
         Effect.tapError((error) => Effect.logWarning("Glose could not copy the Graph", error)),
         Effect.mapError(remoteFailed),
-        // Git cleans up what it copied; a folder Glose made for the copy goes too.
         Effect.tapError(() =>
           made
             ? fs.remove(folder, { recursive: true, force: true }).pipe(Effect.ignore)
@@ -81,7 +72,6 @@ export const make = Effect.gen(function* () {
         return yield* settings.completeSetup({ language, graphFolder, action });
       const folder = graphFolder.trim();
       yield* clone(remote?.trim() ?? "", folder);
-      // A copied repository without Glose's settings file becomes a Graph as it is.
       return yield* settings.completeSetup({ language, graphFolder: folder, action: "open" });
     }),
     checkRemote: Effect.fn("Setup.checkRemote")(function* (url: string) {
