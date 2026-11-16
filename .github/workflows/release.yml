@@ -4,12 +4,21 @@ name: Release
 # v0.1.0-nightly.20261113.42. <version> is apps/desktop/package.json's. An installed nightly
 # finds the newest release whose tag has the same "nightly" prerelease word, and reads the
 # nightly*.yml in it. See "Releases" in README.md.
+#
+# A run publishes only when no nightly has main's commit yet, so a night or a request with
+# nothing new builds nothing. After a publish, only the newest 5 nightlies stay.
 on:
   schedule:
     # 02:17 UTC. Not minute zero, when GitHub's scheduled jobs are busiest.
     - cron: "17 2 * * *"
   # A nightly on request: Actions > Release > Run workflow, or `gh workflow run release.yml`.
+  # `gh workflow run release.yml -f force=true` publishes even when main has nothing new.
   workflow_dispatch:
+    inputs:
+      force:
+        description: Publish even when a nightly already has main's commit
+        type: boolean
+        default: false
   # A change to the release itself builds the installers, but publishes nothing.
   pull_request:
     paths:
@@ -38,18 +47,19 @@ jobs:
         with:
           fetch-depth: 0
       - id: version
+        env:
+          FORCE: ${{ inputs.force || false }}
         run: |
           base="$(node -p "require('./apps/desktop/package.json').version")"
           version="${base}-nightly.$(date -u +%Y%m%d).${GITHUB_RUN_NUMBER}"
           previous_tag="$(git tag --list 'v*-nightly.*' --sort=-v:refname | head -n 1)"
+          released_as="$(git tag --points-at "$GITHUB_SHA" --list 'v*-nightly.*' --sort=-v:refname | head -n 1)"
 
           publish=true
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" || "$GITHUB_REF" != "refs/heads/main" ]]; then
             publish=false
-          elif [[ "$GITHUB_EVENT_NAME" == "schedule" && -n "$previous_tag" &&
-            "$(git rev-parse "$previous_tag^{commit}")" == "$GITHUB_SHA" ]]; then
-            # Nothing new on main since the last nightly. A run on request builds anyway.
-            echo "::notice::$previous_tag already has $GITHUB_SHA. No nightly tonight."
+          elif [[ -n "$released_as" && "$FORCE" != "true" ]]; then
+            echo "::notice::$released_as already has $GITHUB_SHA. Nothing new to release."
             publish=false
           fi
 
@@ -64,8 +74,9 @@ jobs:
   build:
     name: Build (${{ matrix.name }})
     needs: version
-    # A scheduled run with nothing new builds nothing.
-    if: needs.version.outputs.publish == 'true' || github.event_name != 'schedule'
+    # On main, a run with nothing new builds nothing. A pull request or another branch builds to
+    # check the installers.
+    if: needs.version.outputs.publish == 'true' || github.ref != 'refs/heads/main'
     strategy:
       fail-fast: false
       matrix:
@@ -104,6 +115,8 @@ jobs:
         with:
           name: glose-${{ matrix.name }}
           if-no-files-found: error
+          # The release job attaches them to the nightly; a pull request's stay a week for testing.
+          retention-days: 7
           path: |
             apps/desktop/release/*.AppImage
             apps/desktop/release/*.exe
@@ -143,3 +156,18 @@ jobs:
             --prerelease \
             --draft
           gh release edit "$TAG" --draft=false
+      # Only the newest published nightlies stay. An older one goes with its tag.
+      - name: Prune
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          KEEP: 5
+        run: |
+          gh release list --limit 1000 --exclude-drafts --json tagName,createdAt |
+            jq -r --argjson keep "$KEEP" '
+              map(select(.tagName | contains("-nightly.")))
+              | sort_by(.createdAt) | reverse | .[$keep:] | .[].tagName' |
+            while read -r tag; do
+              echo "Deleting $tag"
+              gh release delete "$tag" --cleanup-tag --yes
+            done

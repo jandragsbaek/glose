@@ -745,8 +745,10 @@ Taken from learnharness: the user thinks out loud, by typing or by dictation, an
 - New compared to Chalk: the Electron shell. T3 Code's `apps/desktop` is the model for it.
 - The app updates itself, so a new version reaches both users without manual installs. T3 Code does this with `electron-builder` and `electron-updater`.
 - Releases are nightlies for now: a GitHub prerelease each night when `main` has new commits, or
-  on request. The tag `v<version>-nightly.<yyyymmdd>.<run>` puts every installed nightly on the
-  nightly update channel. A stable channel can come later.
+  on request. A request also needs new commits, unless it forces the build. The tag
+  `v<version>-nightly.<yyyymmdd>.<run>` puts every installed nightly on the nightly update
+  channel. Only the 5 newest nightlies stay; an older one is deleted with its tag. A stable
+  channel can come later.
 - Each nightly has a Linux AppImage, for Jan's Omarchy laptop, and a Windows installer. macOS
   joins when the app can be signed.
 - Updating works as in T3 Code: Glose looks for a newer nightly every hour and when the user
