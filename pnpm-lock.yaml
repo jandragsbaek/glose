@@ -174,8 +174,8 @@ catalogs:
       specifier: 4.1.2
       version: 4.1.2
     '@jandragsbaek/oxlint-plugin':
-      specifier: ^0.1.0
-      version: 0.1.0
+      specifier: ^0.2.0
+      version: 0.2.0
     '@types/node':
       specifier: ^24.19.2
       version: 24.19.2
@@ -205,7 +205,7 @@ importers:
     devDependencies:
       '@jandragsbaek/oxlint-plugin':
         specifier: 'catalog:'
-        version: 0.1.0(oxlint@1.91.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.5.1(@types/node@24.19.2)(@vitest/ui@5.1.0)(jiti@2.7.0)(typescript@7.0.2)(yaml@2.9.1)))
+        version: 0.2.0(oxlint@1.91.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.5.1(@types/node@24.19.2)(@vitest/ui@5.1.0)(jiti@2.7.0)(typescript@7.0.2)(yaml@2.9.1)))
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -566,8 +566,8 @@ packages:
     resolution: {integrity: sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w==}
     engines: {node: '>=18.0.0'}
 
-  '@jandragsbaek/oxlint-plugin@0.1.0':
-    resolution: {integrity: sha512-uTFwwxj5iFWtb39e32XoI8K3gQBbca8oWk6LicqGJ/zeElJjvGvQLpszV/OR78MHlzOtbhZTP9791IEHLasTdg==}
+  '@jandragsbaek/oxlint-plugin@0.2.0':
+    resolution: {integrity: sha512-klZzqIsshxrCq/unWTf5A+PjnqbjTQmMI8gRG1Mwt91LDMuoPoe8oeYemrda1P71b5ymWboSblJLAqbI0UxOIA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     peerDependencies:
       oxlint: '>=1.91.0'
@@ -3363,7 +3363,7 @@ snapshots:
     dependencies:
       minipass: 7.1.3
 
-  '@jandragsbaek/oxlint-plugin@0.1.0(oxlint@1.91.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.5.1(@types/node@24.19.2)(@vitest/ui@5.1.0)(jiti@2.7.0)(typescript@7.0.2)(yaml@2.9.1)))':
+  '@jandragsbaek/oxlint-plugin@0.2.0(oxlint@1.91.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.5.1(@types/node@24.19.2)(@vitest/ui@5.1.0)(jiti@2.7.0)(typescript@7.0.2)(yaml@2.9.1)))':
     optionalDependencies:
       oxlint: 1.91.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.5.1(@types/node@24.19.2)(@vitest/ui@5.1.0)(jiti@2.7.0)(typescript@7.0.2)(yaml@2.9.1))
 
