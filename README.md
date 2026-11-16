@@ -96,9 +96,11 @@ apps/desktop                        Electron main process
 
 ## Releases
 
-`.github/workflows/release.yml` publishes a nightly every night at 02:17 UTC when `main` has new
-commits, and on request (`gh workflow run release.yml`, or Actions > Release > Run workflow).
-A nightly is a GitHub prerelease tagged `v<version>-nightly.<yyyymmdd>.<run>`, for example
+`.github/workflows/release.yml` publishes a nightly every night at 02:17 UTC and on request
+(`gh workflow run release.yml`, or Actions > Release > Run workflow), when `main` has commits that
+no nightly has yet. To publish without new commits, use `gh workflow run release.yml -f force=true`.
+After each publish, only the 5 newest nightlies stay; the workflow deletes older ones with their
+tags. A nightly is a GitHub prerelease tagged `v<version>-nightly.<yyyymmdd>.<run>`, for example
 `v0.1.0-nightly.20261113.42`, where `<version>` is `apps/desktop/package.json`'s. It holds the
 Linux AppImage, the Windows installer and their `nightly*.yml` update files. An installed nightly
 updates to the newest release whose tag says `nightly`: it checks every hour and from the
