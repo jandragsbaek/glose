@@ -1,3 +1,4 @@
+/* oxlint-disable jandragsbaek/max-file-lines -- the Backup panel with its connect sheet and remote forms; move the sheet out next */
 import { useAtom, useAtomSet, useAtomValue } from "@effect/atom-react";
 import {
   DEFAULT_BACKUP_REPOSITORY,

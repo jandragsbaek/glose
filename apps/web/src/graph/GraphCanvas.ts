@@ -1,3 +1,4 @@
+/* oxlint-disable jandragsbaek/max-file-lines -- one canvas renderer whose drawing, hit-testing and camera share one mutable scene; split next */
 import type { GraphView } from "@glose/contracts";
 import { select, type Selection } from "d3-selection";
 import { zoom, zoomIdentity, type ZoomBehavior, type ZoomTransform } from "d3-zoom";

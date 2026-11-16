@@ -1,3 +1,4 @@
+/* oxlint-disable jandragsbaek/max-file-lines -- the /graph route with its stage, lists and node panel; move the panels to components next */
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
 import { type GraphNode, type GraphView, linkKey, type Source } from "@glose/contracts";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";

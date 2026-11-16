@@ -1,3 +1,4 @@
+/* oxlint-disable jandragsbaek/max-file-lines -- the Probe page, its rows, answer box and findings; move AnswerBox and Findings out next */
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import {
   nextReadingStep,

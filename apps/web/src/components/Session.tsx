@@ -1,3 +1,4 @@
+/* oxlint-disable jandragsbaek/max-file-lines -- the Session transcript, message rendering and composer; move the composer out next */
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import {
   CHATGPT_USAGE_URL,
