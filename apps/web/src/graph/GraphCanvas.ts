@@ -13,6 +13,7 @@ import {
   settle,
 } from "./layout.ts";
 import { type Box, frameTarget, labelCenter, overlaps, wrapWords } from "./canvasGeometry.ts";
+import { subscribeAppearance } from "../theme/appearance.ts";
 import { type Palette, readPalette } from "./canvasPalette.ts";
 import { drawStopTabs, drawTrailLine, layoutStopTabs, type StopTab } from "./canvasTrail.ts";
 
@@ -53,7 +54,8 @@ export class GraphCanvas {
   readonly #selection: Selection<HTMLCanvasElement, unknown, null, undefined>;
   readonly #resize: ResizeObserver;
   readonly #reducedMotion: MediaQueryList;
-  readonly #palette: Palette;
+  #palette: Palette;
+  readonly #stopRestyle: () => void;
   #events: GraphCanvasEvents = { onSelect: () => {}, onOpen: () => {} };
 
   #width = 0;
@@ -104,6 +106,10 @@ export class GraphCanvas {
     if (context === null) throw new Error("Canvas 2D is not available.");
     this.#context = context;
     this.#palette = readPalette();
+    this.#stopRestyle = subscribeAppearance(() => {
+      this.#palette = readPalette();
+      this.#request();
+    });
     this.#reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     this.#zoom = zoom<HTMLCanvasElement, unknown>()
@@ -292,6 +298,7 @@ export class GraphCanvas {
 
   destroy(): void {
     cancelAnimationFrame(this.#frame);
+    this.#stopRestyle();
     this.#resize.disconnect();
     this.#simulation?.stop();
     this.#selection.on(".zoom", null);
@@ -523,7 +530,7 @@ export class GraphCanvas {
     context.stroke();
     if (focused) {
       context.globalAlpha = this.#dim * (this.#trail.length > 0 ? 0.6 : 1);
-      context.strokeStyle = this.#trail.length > 0 ? palette.ink : palette.lapis;
+      context.strokeStyle = this.#trail.length > 0 ? palette.ink : palette.accent;
       context.lineWidth = 1.4 / k;
       context.beginPath();
       for (const link of this.#links) {
@@ -538,13 +545,13 @@ export class GraphCanvas {
     for (const node of this.#nodes) {
       context.globalAlpha = this.#alpha(node);
       const lit = node.kind === "source" || (focused && node.id === this.#focus);
-      context.fillStyle = lit ? palette.lapis : palette.mute;
+      context.fillStyle = lit ? palette.accent : palette.mute;
       context.beginPath();
       context.arc(node.x ?? 0, node.y ?? 0, node.radius, 0, Math.PI * 2);
       context.fill();
       const cited = this.#cited.has(node.id);
       if (cited) {
-        context.strokeStyle = palette.lapis;
+        context.strokeStyle = palette.accent;
         context.lineWidth = 1.5 / k;
         context.beginPath();
         context.arc(node.x ?? 0, node.y ?? 0, node.radius + 3.5 / k, 0, Math.PI * 2);
@@ -569,7 +576,7 @@ export class GraphCanvas {
   #drawTrail(): void {
     const stops = this.#trail.flatMap((id) => this.#byId.get(id) ?? []);
     const points = stops.map((node): [number, number] => [node.x ?? 0, node.y ?? 0]);
-    drawTrailLine(this.#context, points, 3 / this.#transform.k, this.#palette.lapis);
+    drawTrailLine(this.#context, points, 3 / this.#transform.k, this.#palette.accent);
   }
 
   #stopTabs(): ReadonlyArray<StopTab> {

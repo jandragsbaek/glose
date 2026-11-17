@@ -5,6 +5,7 @@ import type {
   VersionsOffReason,
   VersionsProblem,
 } from "@glose/contracts";
+import type { Appearance, Mode, ThemeId } from "../../theme/paint.ts";
 import { nightlyOf } from "../../domain/appVersion.ts";
 import { numbers, count, clockTime, shortDate } from "./format.ts";
 
@@ -157,6 +158,21 @@ export const settingsMessages = {
       "other-graph":
         "That remote holds another Graph. Glose does not mix two Graphs. Use an empty remote, or the one of this Graph.",
     } satisfies Record<RemoteRefusedReason, string>,
+  },
+  appearance: {
+    title: "Appearance",
+    mode: "Light or dark",
+    modes: { light: "Light", dark: "Dark", system: "Same as the computer" } satisfies Record<
+      Mode,
+      string
+    >,
+    systemNow: {
+      light: "The computer is light now.",
+      dark: "The computer is dark now.",
+    } satisfies Record<Appearance, string>,
+    theme: "Theme",
+    themes: { lapis: "Lapis", murex: "Murex", sepia: "Sepia" } satisfies Record<ThemeId, string>,
+    hint: "Every theme comes in a light and a dark version.",
   },
   settings: {
     title: "Settings",

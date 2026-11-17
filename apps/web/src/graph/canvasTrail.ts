@@ -31,7 +31,7 @@ export const drawStopTabs = (
   tabs: ReadonlyArray<StopTab>,
   height: number,
   font: string,
-  palette: { readonly paper: string; readonly lapis: string; readonly gold: string },
+  palette: { readonly paper: string; readonly accent: string; readonly gold: string },
 ): void => {
   context.globalAlpha = 1;
   context.textAlign = "center";
@@ -40,13 +40,13 @@ export const drawStopTabs = (
   for (const { box, number, here } of tabs) {
     const width = box.right - box.left;
     context.fillStyle = palette.paper;
-    context.strokeStyle = palette.lapis;
+    context.strokeStyle = palette.accent;
     context.lineWidth = 1;
     context.beginPath();
     context.roundRect(box.left, box.top, width, height - 1, 2);
     context.fill();
     context.stroke();
-    context.fillStyle = palette.lapis;
+    context.fillStyle = palette.accent;
     context.fillText(String(number), box.left + width / 2, box.top + 2.5);
     if (here) {
       context.fillStyle = palette.gold;

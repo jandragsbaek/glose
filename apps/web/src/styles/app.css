@@ -4,27 +4,12 @@
  * data, Note text and controls stay plain.
  */
 
-:root {
-  --lapis: #1e2f7a;
-  --lapis-raised: #2b3e92;
-  --lapis-line: #3a4c9c;
-  --on-lapis: #ffffff;
-  --on-lapis-mute: #c3cbec;
-  --gold: #c8a040;
-  --gold-wash: #f6efdc;
-  --rubric: #b3261e;
-  --rubric-wash: #fbeceb;
-  --rubric-line: #e7c9c6;
-  --verdigris: #3e7c5a;
-  --ground: #fbfaf7;
-  --paper: #ffffff;
-  --ink: #141414;
-  --mute: #5c5f6a;
-  --line: #dedde3;
-  --line-strong: #c9c8d1;
-  --tint: #eef0f8;
-  --tray: #f3f2ee;
+@import "./themes/lapis.css";
+@import "./themes/murex.css";
+@import "./themes/sepia.css";
+@import "./themes/appearance.css";
 
+:root {
   --font-ui: "Public Sans", system-ui, sans-serif;
   --font-call: "Courier Prime", ui-monospace, monospace;
   --font-initial: "Cinzel Decorative", "Cinzel", serif;
@@ -33,9 +18,8 @@
   --rail: 96px;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 
-  color-scheme: light;
-  accent-color: var(--lapis);
-  caret-color: var(--lapis);
+  accent-color: var(--accent);
+  caret-color: var(--accent);
   scrollbar-color: var(--line-strong) transparent;
 }
 
@@ -85,7 +69,7 @@ ul {
 }
 
 a {
-  color: var(--lapis);
+  color: var(--accent);
   text-underline-offset: 3px;
   text-decoration-thickness: 1px;
 }
@@ -95,7 +79,7 @@ a:hover {
 }
 
 :focus-visible {
-  outline: 2px solid var(--lapis);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -131,8 +115,8 @@ a:hover {
   flex-direction: column;
   gap: 4px;
   padding: 16px 8px;
-  background: var(--lapis);
-  color: var(--on-lapis-mute);
+  background: var(--field);
+  color: var(--on-field-mute);
   overflow-y: auto;
 }
 
@@ -148,7 +132,7 @@ a:hover {
 .rail__rule {
   height: 1px;
   margin: 6px 12px;
-  background: var(--lapis-line);
+  background: var(--field-line);
 }
 
 .rail__link {
@@ -173,14 +157,14 @@ a:hover {
 }
 
 .rail__link:hover {
-  background: color-mix(in srgb, var(--lapis) 50%, var(--lapis-raised));
-  color: var(--on-lapis);
+  background: color-mix(in srgb, var(--field) 50%, var(--field-raised));
+  color: var(--on-field);
 }
 
 .rail__link[aria-current="page"],
 .rail__link[data-current] {
-  background: var(--lapis-raised);
-  color: var(--on-lapis);
+  background: var(--field-raised);
+  color: var(--on-field);
 }
 
 .rail__link[aria-current="page"] .rail__icon,
@@ -230,7 +214,7 @@ button.rail__link {
   flex-direction: column;
   margin: 0;
   padding: 0;
-  border: 1px solid var(--lapis-line);
+  border: 1px solid var(--field-line);
   border-radius: var(--radius);
   overflow: hidden;
 }
@@ -253,8 +237,8 @@ button.rail__link {
 }
 
 .lang-switch label:has(input:checked) {
-  background: var(--on-lapis);
-  color: var(--lapis);
+  background: var(--on-field);
+  color: var(--field);
 }
 
 .lang-switch label:has(input:focus-visible) {
@@ -363,19 +347,19 @@ button.rail__link {
 
 .status-bar__item--next,
 .status-bar__item--next:hover {
-  color: var(--lapis);
+  color: var(--accent);
   font-weight: 600;
 }
 
 .status-bar__item--go {
-  background: var(--lapis);
-  color: var(--on-lapis);
+  background: var(--primary);
+  color: var(--on-primary);
   font-weight: 600;
 }
 
 .status-bar__item--go:hover {
-  background: var(--lapis-raised);
-  color: var(--on-lapis);
+  background: var(--primary-raised);
+  color: var(--on-primary);
 }
 
 .status-bar__item--problem .status-bar__problem {
@@ -406,7 +390,7 @@ button.rail__link {
 }
 
 .status-ring__fill {
-  stroke: var(--lapis);
+  stroke: var(--accent);
   transition: stroke-dashoffset 160ms var(--ease-out);
 }
 
@@ -429,7 +413,7 @@ button.rail__link {
   padding: 8px 10px;
   border-radius: var(--radius);
   background: var(--ink);
-  color: rgb(255 255 255 / 0.78);
+  color: color-mix(in srgb, var(--paper) 78%, transparent);
   font-size: 13px;
   line-height: 1.4;
   pointer-events: none;
@@ -651,7 +635,7 @@ button.rail__link {
 }
 
 .panel[data-initial="lapis"] .panel__title::first-letter {
-  color: var(--lapis);
+  color: var(--accent);
 }
 
 .panel__meta {
@@ -743,7 +727,7 @@ button.rail__link {
   min-height: 136px;
   padding: 8px 0 10px;
   border-radius: var(--radius);
-  background: var(--lapis);
+  background: var(--field);
 }
 
 .spine__band {
@@ -923,7 +907,7 @@ button.rail__link {
 }
 
 .choice.start-choice:has(input:checked) {
-  border-color: var(--lapis);
+  border-color: var(--accent);
 }
 
 .choice.start-choice:has(input:disabled) {
@@ -1019,15 +1003,15 @@ button.rail__link {
 }
 
 .button--primary {
-  background: var(--lapis);
-  border-color: var(--lapis);
-  color: var(--on-lapis);
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
 }
 
 .button--primary:hover {
-  background: var(--lapis-raised);
-  border-color: var(--lapis-raised);
-  box-shadow: 0 2px 6px rgb(30 47 122 / 22%);
+  background: var(--primary-raised);
+  border-color: var(--primary-raised);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--primary) 22%, transparent);
 }
 
 .button:disabled,
@@ -1103,7 +1087,7 @@ button.rail__link {
 }
 
 .field__hint--catalog {
-  color: var(--lapis);
+  color: var(--accent);
 }
 
 .field__error {
@@ -1136,8 +1120,8 @@ button.rail__link {
 .input:focus-visible,
 .textarea:focus-visible {
   outline: none;
-  border-color: var(--lapis);
-  box-shadow: 0 0 0 3px rgb(30 47 122 / 18%);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--halo);
 }
 
 .input[aria-invalid="true"] {
@@ -1171,7 +1155,7 @@ button.rail__link {
 }
 
 .choice:has(input:checked) {
-  border-color: var(--lapis);
+  border-color: var(--accent);
   background: var(--tint);
 }
 
@@ -1207,7 +1191,7 @@ button.rail__link {
 }
 
 .catalog-results .choice[aria-pressed="true"] {
-  border-color: var(--lapis);
+  border-color: var(--accent);
   background: var(--tint);
 }
 
@@ -1259,7 +1243,7 @@ button.rail__link {
 }
 
 .notice--info .notice__icon {
-  color: var(--lapis);
+  color: var(--accent);
 }
 
 /* Inside a panel the panel is the box; the notice keeps only its icon and words. A callout
@@ -1357,7 +1341,7 @@ button.rail__link {
 }
 
 .setup__band {
-  background: var(--lapis);
+  background: var(--field);
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -1486,7 +1470,7 @@ button.rail__link {
   content: "";
   width: 16px;
   height: 2px;
-  background: linear-gradient(90deg, var(--lapis) 0 33%, transparent 33% 66%, var(--lapis) 66%);
+  background: linear-gradient(90deg, var(--accent) 0 33%, transparent 33% 66%, var(--accent) 66%);
   background-size: 200% 100%;
   animation: tick 1.2s linear infinite;
 }
@@ -1512,7 +1496,7 @@ button.rail__link {
 }
 
 .wikilink {
-  color: var(--lapis);
+  color: var(--accent);
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
@@ -1538,7 +1522,7 @@ button.rail__link {
   border: 1px solid var(--line-strong);
   border-radius: 2px;
   background: var(--paper);
-  color: var(--lapis);
+  color: var(--accent);
   font: 700 12px/18px var(--font-ui);
   font-variant-numeric: tabular-nums;
   vertical-align: 1px;
@@ -1552,7 +1536,7 @@ button.ref {
 }
 
 button.ref:hover {
-  border-color: var(--lapis);
+  border-color: var(--accent);
   background: var(--tint);
 }
 
@@ -1641,8 +1625,8 @@ button.ref:hover {
 
 .composer__text:focus-visible {
   outline: none;
-  border-color: var(--lapis);
-  box-shadow: 0 0 0 3px rgb(30 47 122 / 18%);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--halo);
 }
 
 .composer__row {
@@ -1722,7 +1706,7 @@ button.ref:hover {
 }
 
 .extraction__margin .panel__title::first-letter {
-  color: var(--lapis);
+  color: var(--accent);
 }
 
 .extraction__margin .panel__head {
@@ -1752,7 +1736,7 @@ button.ref:hover {
   padding: 0;
   border: 0;
   background: none;
-  color: var(--lapis);
+  color: var(--accent);
   font: inherit;
   text-decoration: underline;
   text-decoration-thickness: 1px;
@@ -1846,7 +1830,7 @@ button.ref:hover {
 }
 
 .point__from--graph .point__icon {
-  color: var(--lapis);
+  color: var(--accent);
 }
 
 .point__from .call {
@@ -1936,7 +1920,7 @@ button.ref:hover {
 
 .write__title:focus-visible {
   outline: none;
-  border-bottom-color: var(--lapis);
+  border-bottom-color: var(--accent);
 }
 
 .write__text {
@@ -2576,7 +2560,7 @@ a.written__title:hover {
 }
 
 .graph__link[data-kind="source"] {
-  color: var(--lapis);
+  color: var(--accent);
 }
 
 .graph__link:hover,
@@ -2587,7 +2571,7 @@ a.written__title:hover {
 }
 
 .graph__wikilink {
-  color: var(--lapis);
+  color: var(--accent);
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
@@ -2707,7 +2691,7 @@ a.written__title:hover {
   font-size: 2em;
   letter-spacing: 0;
   line-height: 0.9;
-  color: var(--lapis);
+  color: var(--accent);
 }
 
 .review__progress {
@@ -2919,9 +2903,9 @@ a.written__title:hover {
 }
 
 .button--primary .key {
-  border-color: rgb(255 255 255 / 45%);
+  border-color: color-mix(in srgb, var(--on-primary) 45%, transparent);
   background: transparent;
-  color: var(--on-lapis);
+  color: var(--on-primary);
 }
 
 /*
@@ -3025,7 +3009,7 @@ a.written__title:hover {
 }
 
 .tray[data-initial="lapis"] .panel__title::first-letter {
-  color: var(--lapis);
+  color: var(--accent);
 }
 
 .tray__head .panel__title {
@@ -3124,7 +3108,7 @@ a.written__title:hover {
 }
 
 .slip:has(.slip__open:focus-visible) {
-  outline: 2px solid var(--lapis);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -3373,7 +3357,7 @@ a.written__title:hover {
 }
 
 .marks__dot[data-state="current"] {
-  border-color: var(--lapis);
+  border-color: var(--accent);
 }
 
 .marks__dot[data-state="current"]::after {
@@ -3470,7 +3454,7 @@ a.written__title:hover {
   flex: none;
   width: 3px;
   height: 16px;
-  background: var(--lapis);
+  background: var(--accent);
 }
 
 .segmented {
@@ -3517,11 +3501,11 @@ a.written__title:hover {
 }
 
 .segmented label:has(input:checked) span {
-  color: var(--lapis);
+  color: var(--accent);
 }
 
 .segmented label:has(input:focus-visible) {
-  outline: 2px solid var(--lapis);
+  outline: 2px solid var(--accent);
   outline-offset: -2px;
 }
 
@@ -3619,14 +3603,14 @@ a.written__title:hover {
 
 /* A row that shares Links with the chosen Source wears a lapis edge, like a ribbon marker. */
 .register__row[data-linked] > :first-child {
-  box-shadow: inset 3px 0 0 var(--lapis);
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 .register__links {
   padding: 2px 0;
   border: 0;
   background: none;
-  color: var(--lapis);
+  color: var(--accent);
   font: inherit;
   text-decoration: underline;
   text-decoration-thickness: 1px;
@@ -3700,7 +3684,7 @@ a.written__title:hover {
   padding: 0;
   border: 0;
   background: none;
-  color: var(--lapis);
+  color: var(--accent);
   font: inherit;
   text-align: left;
   text-decoration: underline 1px;
@@ -3788,7 +3772,7 @@ a.written__title:hover {
 }
 
 .sheet::backdrop {
-  background: rgb(20 20 20 / 32%);
+  background: var(--veil);
   transition:
     background-color 160ms var(--ease-out),
     display 160ms allow-discrete,
@@ -3802,7 +3786,7 @@ a.written__title:hover {
   }
 
   .sheet[open]::backdrop {
-    background: rgb(20 20 20 / 0%);
+    background: transparent;
   }
 }
 
@@ -3846,7 +3830,7 @@ a.written__title:hover {
   max-height: none;
   margin: auto;
   padding: 0;
-  border: 1px solid var(--lapis);
+  border: 1px solid var(--field);
   border-radius: var(--radius);
   background: var(--paper);
   color: var(--ink);
@@ -3864,7 +3848,7 @@ a.written__title:hover {
 }
 
 .settings-window::backdrop {
-  background: rgb(20 20 20 / 32%);
+  background: var(--veil);
   transition:
     background-color 160ms var(--ease-out),
     display 160ms allow-discrete,
@@ -3878,7 +3862,7 @@ a.written__title:hover {
   }
 
   .settings-window[open]::backdrop {
-    background: rgb(20 20 20 / 0%);
+    background: transparent;
   }
 }
 
@@ -3899,7 +3883,7 @@ a.written__title:hover {
 
 @keyframes settings-veil-out {
   to {
-    background: rgb(20 20 20 / 0%);
+    background: transparent;
   }
 }
 
@@ -3910,8 +3894,8 @@ a.written__title:hover {
   min-height: 0;
   padding: 76px 10px 26px;
   overflow-y: auto;
-  background: var(--lapis);
-  color: var(--on-lapis-mute);
+  background: var(--field);
+  color: var(--on-field-mute);
   background-image:
     linear-gradient(var(--gold), var(--gold)), linear-gradient(var(--gold), var(--gold)),
     linear-gradient(var(--gold), var(--gold)), linear-gradient(var(--gold), var(--gold));
@@ -3959,13 +3943,13 @@ a.written__title:hover {
 }
 
 .settings-window__section-link:hover {
-  background: color-mix(in srgb, var(--lapis) 50%, var(--lapis-raised));
-  color: var(--on-lapis);
+  background: color-mix(in srgb, var(--field) 50%, var(--field-raised));
+  color: var(--on-field);
 }
 
 .settings-window__section-link[aria-current="true"] {
-  background: var(--lapis-raised);
-  color: var(--on-lapis);
+  background: var(--field-raised);
+  color: var(--on-field);
 }
 
 .settings-window__icon {
@@ -4062,6 +4046,182 @@ a.written__title:hover {
   align-self: flex-start;
   white-space: normal;
   overflow-wrap: anywhere;
+}
+
+/* Appearance: each theme is shown as a bound specimen, its light leaf beside its dark one. */
+.appearance {
+  display: grid;
+  gap: 24px;
+}
+
+.appearance__group {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.appearance__legend {
+  margin-bottom: 10px;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+.appearance__modes {
+  justify-self: start;
+}
+
+.appearance__modes span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.appearance__mode-icon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+.bindings {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(184px, 1fr));
+  gap: 12px;
+}
+
+.binding {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--paper);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 160ms var(--ease-out);
+}
+
+.binding:hover {
+  border-color: var(--mute);
+}
+
+.binding:has(input:checked) {
+  border-color: var(--accent);
+  box-shadow: inset 0 -3px 0 var(--gold);
+}
+
+.binding:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.binding input {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.binding__specimen {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  height: 92px;
+  border-bottom: 1px solid var(--line);
+}
+
+.binding__leaf {
+  display: flex;
+  min-width: 0;
+  background: var(--ground);
+}
+
+.binding__spine {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 18px;
+  padding: 8px 0;
+  background: var(--field);
+}
+
+.binding__band {
+  height: 4px;
+  border-top: 1px solid var(--gold);
+  border-bottom: 1px solid var(--gold);
+}
+
+.binding__page {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  margin: 10px 10px 0;
+  padding: 9px 10px 0;
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: 2px 2px 0 0;
+  background: var(--paper);
+}
+
+.binding__initial::before {
+  content: "G";
+  display: block;
+  font: 700 15px/1 var(--font-initial);
+  color: var(--rubric);
+}
+
+.binding__line {
+  height: 4px;
+  border-radius: 2px;
+}
+
+.binding__line--ink {
+  width: 86%;
+  background: var(--ink);
+}
+
+.binding__line--mute {
+  width: 64%;
+  background: var(--mute);
+}
+
+.binding__line--accent {
+  width: 42%;
+  background: var(--accent);
+}
+
+.binding__button {
+  width: 30px;
+  height: 9px;
+  margin-top: 2px;
+  border-radius: 2px;
+  background: var(--primary);
+}
+
+.binding__name {
+  padding: 10px 12px 12px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.binding:has(input:checked) .binding__name {
+  color: var(--accent);
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 280ms;
+  animation-timing-function: var(--ease-out);
 }
 
 /* Narrow windows: the window fills the screen and the spine lies across its top as a band. */
@@ -4251,7 +4411,7 @@ a.written__title:hover {
 }
 
 .repo:has(input:checked) {
-  border-color: var(--lapis);
+  border-color: var(--accent);
   background: var(--tint);
 }
 
@@ -4293,7 +4453,7 @@ a.written__title:hover {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  color: var(--lapis);
+  color: var(--accent);
   font-size: 13px;
   font-weight: 600;
 }
@@ -4446,7 +4606,7 @@ a.written__title:hover {
 }
 
 .probe__qn {
-  color: var(--lapis);
+  color: var(--accent);
   font: 700 12px/18px var(--font-call);
   font-variant-numeric: tabular-nums;
 }
@@ -4503,7 +4663,10 @@ a.written__title:hover {
 
 /* The words of the Reasoning the judgment points at; the gloss beside says why in words. */
 .probe__quote {
-  background: linear-gradient(transparent 60%, rgb(179 38 30 / 16%) 60%);
+  background: linear-gradient(
+    transparent 60%,
+    color-mix(in srgb, var(--rubric) 16%, transparent) 60%
+  );
   color: inherit;
 }
 
@@ -4515,7 +4678,7 @@ a.written__title:hover {
 
 .probe__gloss-head {
   margin-bottom: 8px;
-  color: var(--lapis);
+  color: var(--accent);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -4734,7 +4897,7 @@ a.written__title:hover {
 
 .specimen:hover,
 .specimen:focus-within {
-  border-color: var(--lapis);
+  border-color: var(--accent);
 }
 
 .specimen__text {
@@ -4797,7 +4960,7 @@ a.written__title:hover {
 }
 
 .miniature sup {
-  color: var(--lapis);
+  color: var(--accent);
   font-weight: 700;
 }
 
@@ -4954,7 +5117,7 @@ a.written__title:hover {
   padding: 5px 10px;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
-  color: var(--lapis);
+  color: var(--accent);
   font-size: 13px;
   font-weight: 600;
   list-style: none;
@@ -4972,7 +5135,7 @@ a.written__title:hover {
 }
 
 .piece-settings__chip:focus-visible {
-  outline: 2px solid var(--lapis);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -5028,7 +5191,7 @@ a.written__title:hover {
 }
 
 .piece-settings__choice:has(input:checked) {
-  border-color: var(--lapis);
+  border-color: var(--accent);
   background: var(--tint);
 }
 
@@ -5063,7 +5226,7 @@ a.written__title:hover {
 
 .piece-settings__sample sup,
 .piece-settings__link {
-  color: var(--lapis);
+  color: var(--accent);
   font-weight: 600;
 }
 
@@ -5152,7 +5315,7 @@ a.written__title:hover {
 
 .leaf__title-input:focus-visible {
   outline: none;
-  border-bottom-color: var(--lapis);
+  border-bottom-color: var(--accent);
 }
 
 .leaf__title-input[aria-invalid="true"] {
@@ -5194,7 +5357,7 @@ a.written__title:hover {
 .prose-editor .cm-content {
   min-height: 320px;
   padding: 0;
-  caret-color: var(--lapis);
+  caret-color: var(--accent);
 }
 
 .prose-editor .cm-line {
@@ -5206,7 +5369,7 @@ a.written__title:hover {
 }
 
 .prose-editor .cm-cursor {
-  border-left: 2px solid var(--lapis);
+  border-left: 2px solid var(--accent);
 }
 
 .prose-editor .cm-selectionBackground,
@@ -5223,7 +5386,7 @@ a.written__title:hover {
 
 .prose-editor__ref {
   margin: 0 1px;
-  color: var(--lapis);
+  color: var(--accent);
   font: 700 12px/1 var(--font-call);
   font-variant-numeric: tabular-nums;
   cursor: pointer;
@@ -5273,7 +5436,7 @@ a.written__title:hover {
   gap: 2px;
   padding: 2px;
   border-radius: var(--radius);
-  background: var(--lapis);
+  background: var(--field);
   transform: translateY(calc(-100% - 4px));
 }
 
@@ -5307,19 +5470,19 @@ a.written__title:hover {
   border: 0;
   border-radius: 2px;
   background: none;
-  color: var(--on-lapis-mute);
+  color: var(--on-field-mute);
   font: 600 13px/1 var(--font-ui);
   cursor: pointer;
 }
 
 .format-bar__button:hover {
-  background: color-mix(in srgb, var(--lapis) 50%, var(--lapis-raised));
-  color: var(--on-lapis);
+  background: color-mix(in srgb, var(--field) 50%, var(--field-raised));
+  color: var(--on-field);
 }
 
 .format-bar__button[aria-pressed="true"] {
-  background: var(--lapis-raised);
-  color: var(--on-lapis);
+  background: var(--field-raised);
+  color: var(--on-field);
   box-shadow: inset 0 -2px 0 var(--gold);
 }
 
@@ -5330,7 +5493,7 @@ a.written__title:hover {
 
 .format-bar__button--cite {
   padding: 0 10px;
-  color: var(--on-lapis);
+  color: var(--on-field);
 }
 
 .format-bar__icon {
@@ -5343,7 +5506,7 @@ a.written__title:hover {
   width: 1px;
   height: 18px;
   margin: 0 3px;
-  background: var(--lapis-line);
+  background: var(--field-line);
 }
 
 /* Cite a Note: a slip under the line being written, so the sentence stays in view. */
@@ -5358,7 +5521,7 @@ a.written__title:hover {
   left: 40px;
   max-width: 600px;
   margin: 0 auto;
-  border: 1px solid var(--lapis);
+  border: 1px solid var(--accent);
   border-radius: var(--radius);
   background: var(--paper);
   font-size: 14px;
@@ -5417,7 +5580,7 @@ a.written__title:hover {
 
 .cite-slip__option[aria-selected="true"] {
   background: var(--tint);
-  box-shadow: inset 2px 0 0 var(--lapis);
+  box-shadow: inset 2px 0 0 var(--accent);
 }
 
 .cite-slip__title {
@@ -5489,7 +5652,7 @@ a.written__title:hover {
 }
 
 .gloss--current {
-  border-top-color: var(--lapis);
+  border-top-color: var(--accent);
 }
 
 .gloss__head {
@@ -5512,14 +5675,14 @@ a.written__title:hover {
 }
 
 .gloss__head:focus-visible {
-  outline: 2px solid var(--lapis);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
 .gloss__number {
   flex: none;
   min-width: 4px;
-  color: var(--lapis);
+  color: var(--accent);
   font: 700 12px/1 var(--font-call);
 }
 
@@ -5733,7 +5896,7 @@ a.written__title:hover {
 
 .proof__ref {
   margin-left: 1px;
-  color: var(--lapis);
+  color: var(--accent);
   font-size: 12px;
   font-weight: 700;
 }
@@ -5752,7 +5915,7 @@ a.written__title:hover {
 }
 
 .proof__side-notes sup {
-  color: var(--lapis);
+  color: var(--accent);
   font-weight: 700;
 }
 
@@ -5947,9 +6110,9 @@ a.written__title:hover {
 }
 
 .desk-bar__graph[aria-pressed="true"] {
-  border-color: var(--lapis);
+  border-color: var(--accent);
   background: var(--tint);
-  color: var(--lapis);
+  color: var(--accent);
 }
 
 .graph-beside {
@@ -5994,7 +6157,7 @@ a.written__title:hover {
 .graph-beside__find .graph-find__count {
   padding: 1px 6px;
   border-radius: 2px;
-  background: rgb(251 250 247 / 90%);
+  background: color-mix(in srgb, var(--ground) 90%, transparent);
 }
 
 .graph-beside__find .graph-find__icon {
@@ -6038,7 +6201,7 @@ a.written__title:hover {
   font-weight: 700;
   line-height: 0.9;
   letter-spacing: 0;
-  color: var(--lapis);
+  color: var(--accent);
 }
 
 .graph-beside__count {
@@ -6157,7 +6320,7 @@ a.written__title:hover {
 }
 
 .trail__slip--here {
-  border-color: var(--lapis);
+  border-color: var(--accent);
   background: var(--tint);
 }
 
@@ -6181,9 +6344,9 @@ a.written__title:hover {
   min-width: 22px;
   height: 20px;
   padding: 0 5px;
-  border: 1px solid var(--lapis);
+  border: 1px solid var(--accent);
   border-radius: 2px;
-  color: var(--lapis);
+  color: var(--accent);
   font: 700 12px/1 var(--font-call);
   font-variant-numeric: tabular-nums;
 }
@@ -6207,7 +6370,7 @@ a.written__title:hover {
 }
 
 .trail__source-link {
-  color: var(--lapis);
+  color: var(--accent);
   font-weight: 600;
 }
 
@@ -6220,13 +6383,13 @@ a.written__title:hover {
 }
 
 .trail__title:focus-visible {
-  outline: 2px solid var(--lapis);
+  outline: 2px solid var(--accent);
   outline-offset: 4px;
 }
 
 .trail__cited {
   margin-top: 6px;
-  color: var(--lapis);
+  color: var(--accent);
   font-size: 13px;
   font-weight: 600;
 }
@@ -6249,7 +6412,7 @@ a.written__title:hover {
 }
 
 .graph-beside__pick[data-kind="source"] .trail__name {
-  color: var(--lapis);
+  color: var(--accent);
 }
 
 /* Find's matches drop under the field, over the Graph, as a short list to choose from. */
@@ -6281,12 +6444,12 @@ a.written__title:hover {
 .graph-beside__results .graph-beside__pick:focus-visible {
   background: var(--tint);
   outline: none;
-  box-shadow: inset 2px 0 0 var(--lapis);
+  box-shadow: inset 2px 0 0 var(--accent);
 }
 
 .graph-beside__find:has(input:focus) li:first-child .graph-beside__pick {
   background: var(--tint);
-  box-shadow: inset 2px 0 0 var(--lapis);
+  box-shadow: inset 2px 0 0 var(--accent);
 }
 
 .graph-beside__none {
@@ -6314,7 +6477,7 @@ a.written__title:hover {
   max-width: calc(100% - 80px);
   padding: 2px 6px;
   border-radius: 2px;
-  background: rgb(251 250 247 / 90%);
+  background: color-mix(in srgb, var(--ground) 90%, transparent);
   color: var(--mute);
   font-size: 12px;
   pointer-events: none;
@@ -6342,11 +6505,11 @@ a.written__title:hover {
   background: var(--mute);
   box-shadow:
     0 0 0 2px var(--ground),
-    0 0 0 3.5px var(--lapis);
+    0 0 0 3.5px var(--accent);
 }
 
 .graph-beside__key--open::before {
-  background: var(--lapis);
+  background: var(--accent);
   box-shadow:
     0 0 0 2px var(--ground),
     0 0 0 4px var(--gold);
@@ -6356,7 +6519,7 @@ a.written__title:hover {
   width: 18px;
   height: 3px;
   border-radius: 2px;
-  background: var(--lapis);
+  background: var(--accent);
 }
 
 @media (max-width: 1399px) {
@@ -6487,7 +6650,7 @@ a.written__title:hover {
   font-weight: 700;
   line-height: 0.9;
   letter-spacing: 0;
-  color: var(--lapis);
+  color: var(--accent);
 }
 
 .contents__item {
@@ -6578,7 +6741,7 @@ a.written__title:hover {
 }
 
 .article .unit[data-marked]::before {
-  color: var(--lapis);
+  color: var(--accent);
   font-weight: 700;
 }
 
@@ -6755,7 +6918,7 @@ h4.article__heading {
 .article__noteref::after {
   content: attr(data-label);
   margin-left: 1px;
-  color: var(--lapis);
+  color: var(--accent);
   font: 700 11px/1 var(--font-call);
 }
 
@@ -6795,7 +6958,7 @@ h4.article__heading {
 .passage {
   border-radius: 2px;
   background: var(--gold-wash);
-  box-shadow: inset 0 -1px 0 rgb(200 160 64 / 70%);
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--gold) 70%, transparent);
   color: inherit;
   cursor: pointer;
   transition:
@@ -6804,7 +6967,7 @@ h4.article__heading {
 }
 
 .passage[data-tone="deeper"] {
-  box-shadow: inset 0 -1px 0 var(--lapis);
+  box-shadow: inset 0 -1px 0 var(--accent);
 }
 
 .passage[data-tone="point"] {
@@ -6821,7 +6984,7 @@ h4.article__heading {
 }
 
 .passage:focus-visible {
-  outline: 2px solid var(--lapis);
+  outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
 
@@ -6834,7 +6997,7 @@ h4.article__heading {
   align-items: stretch;
   padding: 2px;
   border-radius: var(--radius);
-  background: var(--lapis);
+  background: var(--field);
   transform: translate(-50%, calc(-100% - 8px));
   white-space: nowrap;
   animation: markbar-in 140ms var(--ease-out);
@@ -6868,14 +7031,14 @@ h4.article__heading {
   border: 0;
   border-radius: 2px;
   background: none;
-  color: var(--on-lapis);
+  color: var(--on-field);
   font: 600 13px/1 var(--font-ui);
   cursor: pointer;
   transition: background-color 160ms var(--ease-out);
 }
 
 .markbar__button:hover {
-  background: color-mix(in srgb, var(--lapis) 50%, var(--lapis-raised));
+  background: color-mix(in srgb, var(--field) 50%, var(--field-raised));
 }
 
 .markbar__button:focus-visible {
@@ -6895,16 +7058,16 @@ h4.article__heading {
   min-width: 18px;
   height: 18px;
   padding: 0 4px;
-  border: 1px solid rgb(255 255 255 / 45%);
+  border: 1px solid color-mix(in srgb, var(--on-field) 45%, transparent);
   border-radius: 2px;
-  color: var(--on-lapis-mute);
+  color: var(--on-field-mute);
   font: 600 11px/1 var(--font-ui);
 }
 
 .markbar__rule {
   width: 1px;
   margin: 4px 2px;
-  background: var(--lapis-line);
+  background: var(--field-line);
 }
 
 .reader__notice:empty {
@@ -6963,7 +7126,7 @@ h4.article__heading {
 }
 
 .apparatus__n {
-  color: var(--lapis);
+  color: var(--accent);
   font: 700 12px/1.4 var(--font-call);
   font-variant-numeric: tabular-nums;
   justify-self: start;
@@ -7194,7 +7357,7 @@ h4.article__heading {
 /* Taken deeper: the Probe on this one Passage, in the margin. */
 
 .deeper__title {
-  color: var(--lapis);
+  color: var(--accent);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -7230,7 +7393,7 @@ h4.article__heading {
 .deeper__working .live__tick {
   width: 16px;
   height: 2px;
-  background: linear-gradient(90deg, var(--lapis) 0 33%, transparent 33% 66%, var(--lapis) 66%);
+  background: linear-gradient(90deg, var(--accent) 0 33%, transparent 33% 66%, var(--accent) 66%);
   background-size: 200% 100%;
   animation: tick 1.2s linear infinite;
 }
@@ -7418,13 +7581,13 @@ h4.article__heading {
 }
 
 .kind-choice__option:has(input:checked) {
-  border-color: var(--lapis);
+  border-color: var(--accent);
   background: var(--tint);
   box-shadow: inset 0 -3px 0 var(--gold);
 }
 
 .kind-choice__option:has(input:focus-visible) {
-  outline: 2px solid var(--lapis);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -7442,7 +7605,7 @@ h4.article__heading {
 }
 
 .kind-choice__option:has(input:checked) .kind-choice__name {
-  color: var(--lapis);
+  color: var(--accent);
 }
 
 .kind-choice__hint {
@@ -7465,7 +7628,7 @@ h4.article__heading {
 }
 
 .dropzone[data-over] {
-  border-color: var(--lapis);
+  border-color: var(--accent);
   background: var(--tint);
 }
 
@@ -7497,7 +7660,7 @@ h4.article__heading {
   flex: none;
   width: 24px;
   height: 24px;
-  color: var(--lapis);
+  color: var(--accent);
 }
 
 .add-text__file {
