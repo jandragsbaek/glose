@@ -131,7 +131,7 @@ describe("renderBlogPost", () => {
         "",
         "Busy is not productive.[^1]",
         "",
-        "A second claim [^2].",
+        "A second claim[^2].",
         "",
         "[^1]: Cal Newport, *Deep Work* (Grand Central Publishing, 2016), 64.",
         "[^2]: Cal Newport, *Deep Work* (Grand Central Publishing, 2016), 65.",

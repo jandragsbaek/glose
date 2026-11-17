@@ -72,7 +72,7 @@ export const writingMessages: Pick<Messages, "writing"> = {
     titleEmpty: "En tekst skal have en titel. Glose beholder den sidste, til du skriver en ny.",
     bodyLabel: "Tekst",
     placeholder: (key: string) =>
-      `Begynd at skrive. Skriv [[ eller tryk ${key} for at henvise til en note.`,
+      `Begynd at skrive. Skriv [[ eller tryk ${key} for at henvise til en note. Markér ord for at formatere dem.`,
     meta: (words: number, references: number) =>
       `${count(words, "ord", "ord")} · ${count(references, "henvisning", "henvisninger")}`,
     saving: "Gemmer…",
@@ -104,6 +104,20 @@ export const writingMessages: Pick<Messages, "writing"> = {
     languageLabel: "Tekstens sprog",
     sample: "… travlhed som stedfortræder for produktivitet.",
     referenceLabel: (n: number) => `Henvisning ${n}`,
+    referenceMarkLabel: (n: number, flagged: boolean) =>
+      flagged ? `Henvisning ${n}, skal rettes` : `Henvisning ${n}`,
+    editReference: (n: number) => `Ret eller fjern henvisning ${n}`,
+    formatHint: (bold: string, italic: string, heading: string) =>
+      `Formatér: ${bold} fed · ${italic} kursiv · ${heading} overskrift`,
+    formatLabel: "Formatér teksten",
+    format: { h2: "Overskrift", h3: "Underoverskrift", strong: "Fed", em: "Kursiv" },
+    citeShort: "Henvis",
+    citeFind: "Find en note, en kilde eller en forfatter",
+    citePageFromNote: (page: string) => `Tomt felt bruger s. ${page} fra noten.`,
+    citePageMissing: "Noten har ingen side. Tilføj den her.",
+    citePageSource: "En kilde har ingen side i sig selv. Tilføj den side, du henviser til.",
+    citeSave: "Gem",
+    citeRemove: "Fjern",
     problems: {
       "not-found": "Ingen note eller kilde har dette navn",
       "no-source": "Noten nævner ingen kilde",
@@ -130,7 +144,6 @@ export const writingMessages: Pick<Messages, "writing"> = {
     citeSearch: "Find en note eller en kilde",
     citeEmpty: "Ingen note eller kilde passer.",
     citePage: "Side",
-    citePageHint: "Lad feltet stå tomt for at bruge notens egen side.",
     citeAction: "Henvis",
     cancel: "Annuller",
     citeNote: "Note",

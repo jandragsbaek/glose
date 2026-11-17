@@ -1,24 +1,18 @@
-import {
-  noteCitation,
-  referenceToken,
-  type ResolvedReference,
-  shortCitation,
-  type WritingProjectFields,
-  type WritingReview,
-} from "@glose/contracts";
+import { referenceToken, type ResolvedReference, type WritingReview } from "@glose/contracts";
 import { Link } from "@tanstack/react-router";
 import { Check, TriangleAlert } from "lucide-react";
 import { type RefObject, useEffect, useLayoutEffect, useRef } from "react";
 
-import { insertionAfter } from "../domain/writing.ts";
+import { hugWord, insertionAfter } from "../domain/writing.ts";
 import { useT } from "../i18n/I18n.tsx";
 import type { ProseHandle } from "./ProseEditor.tsx";
 import { CallNumber } from "./ui.tsx";
-import { Citation } from "./WritingProof.tsx";
 
 const MARGIN_GAP = 12;
 
 const WIDE = "(min-width: 1200px)";
+
+const GLOSSES_BESIDE = "(min-width: 960px)";
 
 export function useMarginPlacement(editor: RefObject<ProseHandle | null>, mode: "write" | "proof") {
   const leftMargin = useRef<HTMLDivElement | null>(null);
@@ -29,9 +23,12 @@ export function useMarginPlacement(editor: RefObject<ProseHandle | null>, mode: 
     const box = editorBox.current;
     const handle = editor.current;
     if (box === null || handle === null) return;
-    const wide = window.matchMedia(WIDE).matches && mode === "write";
-    for (const margin of [leftMargin.current, rightMargin.current]) {
+    for (const [margin, query] of [
+      [leftMargin.current, WIDE],
+      [rightMargin.current, GLOSSES_BESIDE],
+    ] as const) {
       if (margin === null) continue;
+      const wide = window.matchMedia(query).matches && mode === "write";
       const items = Array.from(margin.querySelectorAll<HTMLElement>("[data-pos]"));
       if (!wide) {
         for (const item of items) item.style.top = "";
@@ -68,45 +65,22 @@ export function useMarginPlacement(editor: RefObject<ProseHandle | null>, mode: 
 
 const sourceIdOf = (reference: ResolvedReference) => reference.source?.id ?? null;
 
-export function ReferenceFlags({
-  references,
+export function ReviewFlags({
   claims,
   suggestions,
   body,
-  onAddPage,
   onChoose,
   onReplace,
 }: {
-  readonly references: ReadonlyArray<ResolvedReference>;
   readonly claims: WritingReview["claims"];
   readonly suggestions: WritingReview["suggestions"];
   readonly body: string;
-  readonly onAddPage: (reference: ResolvedReference) => void;
-  readonly onChoose: (range: { readonly from: number; readonly to: number }) => void;
+  readonly onChoose: (at: number) => void;
   readonly onReplace: (from: number, to: number, text: string) => void;
 }) {
   const t = useT();
   return (
     <>
-      {references.map((reference) =>
-        reference.problems.length === 0 ? null : (
-          <div key={`ref-${reference.start}`} className="flag" data-pos={reference.start}>
-            {reference.problems.map((problem) => (
-              <p key={problem} className="flag__title">
-                <TriangleAlert className="flag__icon" aria-hidden="true" />
-                {t.writing.problems[problem]}
-              </p>
-            ))}
-            <p className="flag__text">{t.writing.referenceLabel(reference.number)}</p>
-            <FlagAction
-              reference={reference}
-              sourceId={sourceIdOf(reference)}
-              onAddPage={() => onAddPage(reference)}
-              onChoose={() => onChoose({ from: reference.start, to: reference.end })}
-            />
-          </div>
-        ),
-      )}
       {claims.map((claim) => {
         const at = body.indexOf(claim.excerpt);
         return (
@@ -119,10 +93,7 @@ export function ReferenceFlags({
             <button
               type="button"
               className="link-button"
-              onClick={() => {
-                const place = insertionAfter(body, claim.excerpt) ?? at;
-                onChoose({ from: place, to: place });
-              }}
+              onClick={() => onChoose(insertionAfter(body, claim.excerpt) ?? at)}
             >
               {t.writing.findNote}
             </button>
@@ -143,7 +114,12 @@ export function ReferenceFlags({
             className="link-button"
             onClick={() => {
               const place = insertionAfter(body, suggestion.excerpt) ?? body.length;
-              onReplace(place, place, referenceToken(suggestion.noteId, null));
+              const at = hugWord(body, place);
+              onReplace(
+                at,
+                place,
+                referenceToken(suggestion.noteId, null) + (at < place ? " " : ""),
+              );
             }}
           >
             {t.writing.citeThis}
@@ -156,35 +132,67 @@ export function ReferenceFlags({
 
 export function ReferenceGlosses({
   references,
-  fields,
+  current,
+  onEdit,
+  onAddPage,
+  onChoose,
 }: {
   readonly references: ReadonlyArray<ResolvedReference>;
-  readonly fields: WritingProjectFields;
+  readonly current: number | null;
+  readonly onEdit: (reference: ResolvedReference) => void;
+  readonly onAddPage: (reference: ResolvedReference) => void;
+  readonly onChoose: (reference: ResolvedReference) => void;
 }) {
+  const t = useT();
   return (
     <>
-      {references.map((reference) => (
-        <div
-          key={`gloss-${reference.start}`}
-          className={reference.problems.length > 0 ? "gloss gloss--flagged" : "gloss"}
-          data-pos={reference.start}
-        >
-          <p className="gloss__cite">
-            <span className="gloss__number">{reference.number}</span>
-            {reference.source === null ? (
-              reference.target
-            ) : fields.type === "assignment" ? (
-              `(${shortCitation(reference.source, reference.page, fields.citationStyle)})`
-            ) : (
-              <Citation text={noteCitation(reference.source, reference.page)} />
-            )}
-          </p>
-          {reference.noteId === null ? null : <p className="gloss__note">{reference.noteId}</p>}
-          {reference.source === null ? null : (
-            <CallNumber source={reference.source} page={reference.page} />
-          )}
-        </div>
-      ))}
+      {references.map((reference) => {
+        const flagged = reference.problems.length > 0;
+        return (
+          <div
+            key={`gloss-${reference.start}`}
+            className={[
+              "gloss",
+              flagged ? "gloss--flagged" : "",
+              current === reference.start ? "gloss--current" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            data-pos={reference.start}
+          >
+            <button
+              type="button"
+              className="gloss__head"
+              aria-label={`${t.writing.editReference(reference.number)}: ${reference.noteId ?? reference.source?.title ?? reference.target}`}
+              onClick={() => onEdit(reference)}
+            >
+              <span className="gloss__number">{reference.number}</span>
+              <span className="gloss__note">
+                {reference.noteId ?? reference.source?.title ?? reference.target}
+              </span>
+            </button>
+            <div className="gloss__meta">
+              {reference.source === null ? null : (
+                <CallNumber source={reference.source} page={reference.page} />
+              )}
+              {reference.problems.map((problem) => (
+                <span key={problem} className="gloss__problem">
+                  <TriangleAlert className="gloss__icon" aria-hidden="true" />
+                  {t.writing.problems[problem]}
+                </span>
+              ))}
+              {flagged ? (
+                <FlagAction
+                  reference={reference}
+                  sourceId={sourceIdOf(reference)}
+                  onAddPage={() => onAddPage(reference)}
+                  onChoose={() => onChoose(reference)}
+                />
+              ) : null}
+            </div>
+          </div>
+        );
+      })}
     </>
   );
 }

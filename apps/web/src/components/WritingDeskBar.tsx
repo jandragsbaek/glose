@@ -51,82 +51,86 @@ export function DeskBar({
   const shortcut = isMac() ? "⌘K" : "Ctrl+K";
   return (
     <header className="desk-bar">
-      <Link to="/writing" className="desk-bar__back">
-        {t.writing.title}
-      </Link>
-      <span className="desk-bar__title">{fields.title}</span>
-      <PieceSettings fields={fields} onChange={onChange} />
-      <span className="desk-bar__status" role="status">
-        {saveState === "saving"
-          ? t.writing.saving
-          : saveState === "failed" || saveState === "taken"
-            ? t.writing.notSaved
-            : pending
-              ? ""
-              : t.writing.saved}
-      </span>
-      <fieldset className="segmented desk-bar__mode">
-        <legend className="sr-only">{t.writing.mode}</legend>
-        {(["write", "proof"] as const).map((option) => (
-          <label key={option}>
-            <input
-              type="radio"
-              name={`${deskId}-mode`}
-              checked={mode === option}
-              onChange={() => onMode(option)}
-            />
-            <span>{option === "write" ? t.writing.write : t.writing.proof}</span>
-          </label>
-        ))}
-      </fieldset>
-      {mode === "write" ? (
-        <>
-          <button
-            type="button"
-            className="button"
-            aria-keyshortcuts={isMac() ? "Meta+K" : "Control+K"}
-            onClick={onCite}
-          >
-            {t.writing.cite}
-            <kbd className="key" aria-hidden="true">
-              {shortcut}
-            </kbd>
-          </button>
-          <button
-            type="button"
-            className="button button--quiet"
-            disabled={reviewing}
-            onClick={onReview}
-          >
-            {reviewing ? t.writing.reviewing : t.writing.askAi}
-          </button>
-        </>
-      ) : fields.type === "assignment" ? (
-        <span className="desk-bar__note">{t.writing.pdfLater}</span>
-      ) : (
-        <>
-          {siteFolder === null ? null : (
-            <code
-              className="desk-bar__path"
-              title={`${siteFolder}/${POSTS_FOLDER.join("/")}/${postFile}`}
+      <div className="desk-bar__where">
+        <Link to="/writing" className="desk-bar__back">
+          {t.writing.title}
+        </Link>
+        <span className="desk-bar__title">{fields.title}</span>
+        <PieceSettings fields={fields} onChange={onChange} />
+      </div>
+      <div className="desk-bar__tools">
+        <span className="desk-bar__status" role="status">
+          {saveState === "saving"
+            ? t.writing.saving
+            : saveState === "failed" || saveState === "taken"
+              ? t.writing.notSaved
+              : pending
+                ? ""
+                : t.writing.saved}
+        </span>
+        <fieldset className="segmented desk-bar__mode">
+          <legend className="sr-only">{t.writing.mode}</legend>
+          {(["write", "proof"] as const).map((option) => (
+            <label key={option}>
+              <input
+                type="radio"
+                name={`${deskId}-mode`}
+                checked={mode === option}
+                onChange={() => onMode(option)}
+              />
+              <span>{option === "write" ? t.writing.write : t.writing.proof}</span>
+            </label>
+          ))}
+        </fieldset>
+        {mode === "write" ? (
+          <>
+            <button
+              type="button"
+              className="button"
+              aria-keyshortcuts={isMac() ? "Meta+K" : "Control+K"}
+              onClick={onCite}
             >
-              {`${POSTS_FOLDER.join("/")}/${postFile}`}
-            </code>
-          )}
-          <button
-            type="button"
-            className="button button--primary"
-            disabled={publishing}
-            onClick={onPublish}
-          >
-            {publishing
-              ? t.writing.writingToSite
-              : siteFolder === null
-                ? t.writing.chooseSite
-                : t.writing.writeToSite}
-          </button>
-        </>
-      )}
+              {t.writing.cite}
+              <kbd className="key" aria-hidden="true">
+                {shortcut}
+              </kbd>
+            </button>
+            <button
+              type="button"
+              className="button button--quiet"
+              disabled={reviewing}
+              onClick={onReview}
+            >
+              {reviewing ? t.writing.reviewing : t.writing.askAi}
+            </button>
+          </>
+        ) : fields.type === "assignment" ? (
+          <span className="desk-bar__note">{t.writing.pdfLater}</span>
+        ) : (
+          <>
+            {siteFolder === null ? null : (
+              <code
+                className="desk-bar__path"
+                title={`${siteFolder}/${POSTS_FOLDER.join("/")}/${postFile}`}
+              >
+                {`${POSTS_FOLDER.join("/")}/${postFile}`}
+              </code>
+            )}
+            <button
+              type="button"
+              className="button button--primary"
+              disabled={publishing}
+              onClick={onPublish}
+            >
+              {publishing
+                ? t.writing.writingToSite
+                : siteFolder === null
+                  ? t.writing.chooseSite
+                  : t.writing.writeToSite}
+            </button>
+          </>
+        )}
+      </div>
     </header>
   );
 }

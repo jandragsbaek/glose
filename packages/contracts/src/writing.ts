@@ -345,7 +345,8 @@ export const renderBlogPost = (
   const anchor = sourcesHeading(project.language).toLocaleLowerCase("und");
   let body = project.body;
   for (const reference of [...references].reverse()) {
-    const before = body.slice(0, reference.start);
+    const raw = body.slice(0, reference.start);
+    const before = project.referenceForm === "links" ? raw : raw.replace(/[ \t]+$/, "");
     const after = body.slice(reference.end);
     const replacement =
       project.referenceForm === "links"

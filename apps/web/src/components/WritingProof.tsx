@@ -8,7 +8,6 @@ import {
   sourcesHeading,
   type WritingProjectFields,
 } from "@glose/contracts";
-import { TriangleAlert } from "lucide-react";
 import type { ReactNode } from "react";
 
 import {
@@ -51,14 +50,20 @@ export function Proof({
   const citation = (reference: ResolvedReference) =>
     reference.source === null ? reference.target : noteCitation(reference.source, reference.page);
 
-  const renderInline = (part: ProofInline): ReactNode => {
+  const renderInline = (
+    part: ProofInline,
+    index: number,
+    all: ReadonlyArray<ProofInline>,
+  ): ReactNode => {
     switch (part.kind) {
-      case "text":
-        return <span key={part.at}>{part.text}</span>;
-      case "em":
-        return <em key={part.at}>{part.text}</em>;
-      case "strong":
-        return <strong key={part.at}>{part.text}</strong>;
+      case "text": {
+        const text = part.em ? <em>{part.text}</em> : part.text;
+        return part.strong ? (
+          <strong key={part.at}>{text}</strong>
+        ) : (
+          <span key={part.at}>{text}</span>
+        );
+      }
       case "reference": {
         const { reference } = part;
         const flagged = reference.problems.length > 0;
@@ -76,8 +81,11 @@ export function Proof({
             </span>
           );
         }
+        const previous = all[index - 1];
+        const joined = previous?.kind === "reference";
         return (
           <sup key={part.at} className={flagged ? "proof__ref proof__ref--flagged" : "proof__ref"}>
+            {joined ? <span className="ref-sep">,</span> : null}
             {reference.number}
           </sup>
         );
@@ -99,12 +107,18 @@ export function Proof({
     switch (block.kind) {
       case "heading": {
         const Tag = block.level <= 2 ? "h2" : "h3";
-        return <Tag key={block.at}>{block.inlines.map(renderInline)}</Tag>;
+        return (
+          <Tag key={block.at}>
+            {block.inlines.map((part, index, all) => renderInline(part, index, all))}
+          </Tag>
+        );
       }
       case "quote":
         return (
           <div key={block.at}>
-            <blockquote>{block.inlines.map(renderInline)}</blockquote>
+            <blockquote>
+              {block.inlines.map((part, index, all) => renderInline(part, index, all))}
+            </blockquote>
             {sideNotes}
           </div>
         );
@@ -114,7 +128,9 @@ export function Proof({
           <div key={block.at}>
             <Tag>
               {block.items.map((item) => (
-                <li key={item[0]?.at ?? block.at}>{item.map(renderInline)}</li>
+                <li key={item[0]?.at ?? block.at}>
+                  {item.map((part, index, all) => renderInline(part, index, all))}
+                </li>
               ))}
             </Tag>
             {sideNotes}
@@ -124,7 +140,7 @@ export function Proof({
       case "paragraph":
         return (
           <div key={block.at}>
-            <p>{block.inlines.map(renderInline)}</p>
+            <p>{block.inlines.map((part, index, all) => renderInline(part, index, all))}</p>
             {sideNotes}
           </div>
         );
@@ -150,17 +166,8 @@ export function Proof({
       ) : fields.referenceForm === "footnotes" ? (
         <ol className="proof__notes">
           {references.map((reference) => (
-            <li
-              key={reference.start}
-              className={reference.problems.length > 0 ? "proof__note--flagged" : undefined}
-            >
+            <li key={reference.start}>
               <Citation text={citation(reference)} />
-              {reference.problems.length > 0 ? (
-                <span className="proof__problem">
-                  <TriangleAlert className="call__icon" aria-hidden="true" />
-                  {t.writing.problems[reference.problems[0] ?? "no-location"]}
-                </span>
-              ) : null}
             </li>
           ))}
         </ol>
