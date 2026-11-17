@@ -1,4 +1,4 @@
-import type { Box } from "./canvasGeometry.ts";
+import { type Box, overlaps, stopBox } from "./canvasGeometry.ts";
 
 export const drawTrailLine = (
   context: CanvasRenderingContext2D,
@@ -53,4 +53,32 @@ export const drawStopTabs = (
       context.fillRect(box.left - 0.5, box.top + height + 1, width + 1, 2);
     }
   }
+};
+
+export const layoutStopTabs = (
+  stops: ReadonlyArray<{
+    readonly cx: number;
+    readonly nodeTop: number;
+    readonly width: number;
+    readonly number: number;
+    readonly here: boolean;
+  }>,
+  height: number,
+  canvasHeight: number,
+): ReadonlyArray<StopTab> => {
+  const placed: Array<Box> = [];
+  return stops.flatMap((stop) => {
+    const first = stopBox(stop.cx, stop.nodeTop, stop.width, height);
+    const raised = (by: number): Box => ({
+      ...first,
+      top: first.top - by,
+      bottom: first.bottom - by,
+    });
+    let by = 0;
+    while (placed.some((other) => overlaps(other, raised(by)))) by += height + 2;
+    const box = raised(by);
+    if (box.top < 0 || box.bottom > canvasHeight) return [];
+    placed.push(box);
+    return [{ box, number: stop.number, here: stop.here }];
+  });
 };

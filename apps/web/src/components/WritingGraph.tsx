@@ -216,7 +216,6 @@ function GraphFind({
       <form
         className="graph-find"
         role="search"
-        data-keep-clear=""
         onSubmit={(event) => {
           event.preventDefault();
           const first = found?.[0];
@@ -232,6 +231,7 @@ function GraphFind({
           id={findId}
           className="input graph-find__input"
           type="search"
+          data-keep-clear=""
           value={query}
           placeholder={t.graph.findPlaceholder}
           aria-controls={found === null ? undefined : resultsId}
@@ -246,7 +246,7 @@ function GraphFind({
             }
           }}
         />
-        <span className="graph-find__count" aria-live="polite">
+        <span className="graph-find__count" aria-live="polite" data-keep-clear="">
           {found === null ? "" : t.graph.found(found.length)}
         </span>
       </form>

@@ -5997,7 +5997,13 @@ a.written__title:hover {
   background: rgb(251 250 247 / 90%);
 }
 
+.graph-beside__find .graph-find__icon {
+  top: 50%;
+  translate: 0 -50%;
+}
+
 .graph-beside__find .graph-find__input {
+  flex: none;
   width: min(280px, 100%);
 }
 
@@ -6215,7 +6221,7 @@ a.written__title:hover {
 
 .trail__title:focus-visible {
   outline: 2px solid var(--lapis);
-  outline-offset: 2px;
+  outline-offset: 4px;
 }
 
 .trail__cited {
@@ -6262,7 +6268,9 @@ a.written__title:hover {
 .graph-beside__results ul {
   min-height: 0;
   max-height: 248px;
+  padding-bottom: 8px;
   overflow-y: auto;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 10px), transparent);
 }
 
 .graph-beside__results .graph-beside__pick {

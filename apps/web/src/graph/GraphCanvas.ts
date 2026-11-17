@@ -12,16 +12,9 @@ import {
   makeSimulation,
   settle,
 } from "./layout.ts";
-import {
-  type Box,
-  frameTarget,
-  labelCenter,
-  overlaps,
-  stopBox,
-  wrapWords,
-} from "./canvasGeometry.ts";
+import { type Box, frameTarget, labelCenter, overlaps, wrapWords } from "./canvasGeometry.ts";
 import { type Palette, readPalette } from "./canvasPalette.ts";
-import { drawStopTabs, drawTrailLine } from "./canvasTrail.ts";
+import { drawStopTabs, drawTrailLine, layoutStopTabs, type StopTab } from "./canvasTrail.ts";
 
 export interface NodeLabel {
   readonly text: string;
@@ -249,10 +242,10 @@ export class GraphCanvas {
     if (node === undefined || this.#width === 0) return;
     const [sx, sy] = this.#transform.apply([node.x ?? 0, node.y ?? 0]);
     const inside =
-      sx > this.#insetLeft + 80 &&
-      sx < this.#width - 100 &&
-      sy > this.#insetTop + 40 &&
-      sy < this.#height - 70;
+      sx > this.#insetLeft + Math.min(80, this.#width * 0.12) &&
+      sx < this.#width - Math.min(100, this.#width * 0.15) &&
+      sy > this.#insetTop + Math.min(40, this.#height * 0.1) &&
+      sy < this.#height - Math.min(110, this.#height * 0.25);
     if (!inside) this.#centerAt(node, this.#transform.k);
   }
 
@@ -567,8 +560,10 @@ export class GraphCanvas {
       }
     }
 
-    this.#drawLabels();
-    this.#drawStops();
+    this.#context.setTransform(this.#ratio, 0, 0, this.#ratio, 0, 0);
+    const tabs = this.#stopTabs();
+    this.#drawLabels(tabs);
+    drawStopTabs(this.#context, tabs, STOP_HEIGHT, STOP_FONT, this.#palette);
   }
 
   #drawTrail(): void {
@@ -577,39 +572,21 @@ export class GraphCanvas {
     drawTrailLine(this.#context, points, 3 / this.#transform.k, this.#palette.lapis);
   }
 
-  #stopBox(id: string, index: number): Box | null {
-    const node = this.#byId.get(id);
-    if (node === undefined) return null;
+  #stopTabs(): ReadonlyArray<StopTab> {
     const { k, x, y } = this.#transform;
     this.#context.font = STOP_FONT;
-    const width = Math.max(STOP_HEIGHT, this.#context.measureText(String(index + 1)).width + 10);
-    const nodeTop = (node.y ?? 0) * k + y - node.radius * k;
-    return stopBox((node.x ?? 0) * k + x, nodeTop, width, STOP_HEIGHT);
-  }
-
-  #drawStops(): void {
-    if (this.#trail.length === 0) return;
-    this.#context.setTransform(this.#ratio, 0, 0, this.#ratio, 0, 0);
-    const placed: Array<Box> = [];
-    const tabs = this.#trail.flatMap((id, index) => {
-      const first = this.#stopBox(id, index);
-      if (first === null) return [];
-      const step = first.right - first.left + 2;
-      const shifted = (by: number): Box => ({
-        ...first,
-        left: first.left + by,
-        right: first.right + by,
-      });
-      let by = 0;
-      while (placed.some((other) => overlaps(other, shifted(by)))) by += step;
-      const box = shifted(by);
-      placed.push(box);
-      return [{ box, number: index + 1, here: id === this.#selected }];
+    const stops = this.#trail.flatMap((id, index) => {
+      const node = this.#byId.get(id);
+      if (node === undefined) return [];
+      const number = index + 1;
+      const width = Math.max(STOP_HEIGHT, this.#context.measureText(String(number)).width + 10);
+      const nodeTop = (node.y ?? 0) * k + y - node.radius * k;
+      return [{ cx: (node.x ?? 0) * k + x, nodeTop, width, number, here: id === this.#selected }];
     });
-    drawStopTabs(this.#context, tabs, STOP_HEIGHT, STOP_FONT, this.#palette);
+    return layoutStopTabs(stops, STOP_HEIGHT, this.#height);
   }
 
-  #drawLabels(): void {
+  #drawLabels(tabs: ReadonlyArray<StopTab>): void {
     const context = this.#context;
     const { k, x, y } = this.#transform;
     context.setTransform(this.#ratio, 0, 0, this.#ratio, 0, 0);
@@ -621,10 +598,15 @@ export class GraphCanvas {
     const focused = this.#focus !== null && this.#dim > 0;
     const showMatches = this.#matches !== null && this.#matches.size <= 40;
     const margin = 220;
-    const placed: Array<Box> = [
-      ...this.#keepClear,
-      ...this.#trail.flatMap((id, index) => this.#stopBox(id, index) ?? []),
-    ];
+    const taken: ReadonlyArray<Box> = [...this.#keepClear, ...tabs.map((tab) => tab.box)];
+    const open = this.#byId.get(this.#selected ?? "");
+    const ring = open === undefined ? 0 : open.radius * k + 8;
+    const [ox, oy] =
+      open === undefined ? [0, 0] : this.#transform.apply([open.x ?? 0, open.y ?? 0]);
+    const placed: Array<Box> = [...taken];
+    if (open !== undefined) {
+      placed.push({ left: ox - ring, right: ox + ring, top: oy - ring, bottom: oy + ring });
+    }
     const items: Array<{ readonly rank: number; readonly box: Box; readonly draw: () => void }> =
       [];
 
@@ -653,8 +635,14 @@ export class GraphCanvas {
       const below = sy + node.radius * k + 4;
       const callSpace = call === null ? 0 : CALL_HEIGHT + 3;
       const height = callSpace + lines.length * LINE_HEIGHT;
-      const flip = node.id === this.#selected && below + height > this.#height - 2;
-      const top = flip ? sy - node.radius * k - 30 - height : below;
+      const fits = (at: number) => {
+        const cx = labelCenter(sx, width, at, at + height, this.#keepClear, this.#width);
+        const box = { left: cx - width / 2, right: cx + width / 2, top: at, bottom: at + height };
+        return at + height <= this.#height - 2 && !taken.some((other) => overlaps(other, box));
+      };
+      const above = Math.max(2, sy - node.radius * k - 16 - STOP_HEIGHT - height);
+      const flip = node.id === this.#selected && !fits(below) && fits(above);
+      const top = flip ? above : below;
       const bottom = top + height;
       const cx = labelCenter(sx, width, top, bottom, this.#keepClear, this.#width);
       const box: Box = { left: cx - width / 2 - 2, right: cx + width / 2 + 2, top, bottom };

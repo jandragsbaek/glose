@@ -29,7 +29,7 @@ export const labelCenter = (
 
 export const stopBox = (cx: number, nodeTop: number, width: number, height: number): Box => {
   const left = Math.round(cx - width / 2) + 0.5;
-  const top = Math.round(nodeTop - 9 - height) + 0.5;
+  const top = Math.round(nodeTop - 12 - height) + 0.5;
   return { left, top, right: left + Math.round(width), bottom: top + height + 3 };
 };
 
