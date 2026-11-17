@@ -21,7 +21,11 @@ const browser = (options: { readonly refuseWrites?: boolean } = {}) => {
     documentElement: root,
     startViewTransition: (change: () => void) => {
       pending.push(change);
-      return { ready: Promise.resolve() };
+      return {
+        ready: Promise.resolve(),
+        finished: Promise.resolve(),
+        updateCallbackDone: Promise.resolve(),
+      };
     },
   });
   return {

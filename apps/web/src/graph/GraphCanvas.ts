@@ -108,7 +108,7 @@ export class GraphCanvas {
     this.#palette = readPalette();
     this.#stopRestyle = subscribePaint(() => {
       this.#palette = readPalette();
-      this.#request();
+      this.#draw();
     });
     this.#reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 

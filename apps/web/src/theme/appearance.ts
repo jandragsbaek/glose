@@ -3,28 +3,40 @@ import { useSyncExternalStore } from "react";
 import {
   type Appearance,
   type Choice,
+  MODES,
   PAINT_CONFIG,
   type Painted,
   paint,
+  THEMES,
   type ThemeId,
 } from "./paint.ts";
 
+export interface AppearanceView extends Painted {
+  readonly settled: boolean;
+}
+
 const listeners = new Set<() => void>();
 const paintListeners = new Set<() => void>();
+const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
 let painted = paint(PAINT_CONFIG);
 let chosen: Choice = { theme: painted.theme, mode: painted.mode };
-let snapshot: Painted = painted;
+let view: AppearanceView = { ...painted, settled: true };
 
 const notify = () => {
-  const next = { ...chosen, appearance: painted.appearance };
+  const next = {
+    ...chosen,
+    appearance: painted.appearance,
+    settled: chosen.theme === painted.theme && chosen.mode === painted.mode,
+  };
   if (
-    next.theme === snapshot.theme &&
-    next.mode === snapshot.mode &&
-    next.appearance === snapshot.appearance
+    next.theme === view.theme &&
+    next.mode === view.mode &&
+    next.appearance === view.appearance &&
+    next.settled === view.settled
   ) {
     return;
   }
-  snapshot = next;
+  view = next;
   for (const listener of listeners) listener();
 };
 
@@ -33,6 +45,26 @@ const settle = (next: Painted) => {
   painted = next;
   if (changed) for (const listener of paintListeners) listener();
   notify();
+};
+
+const appearanceOf = (choice: Choice, systemDark?: boolean): Appearance => {
+  if (choice.mode !== "system") return choice.mode;
+  return (systemDark ?? darkQuery.matches) ? "dark" : "light";
+};
+
+const show = (systemDark?: boolean) => {
+  const apply = () => settle(paint(PAINT_CONFIG, chosen, systemDark));
+  const unchanged =
+    chosen.theme === painted.theme && appearanceOf(chosen, systemDark) === painted.appearance;
+  const quiet = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (unchanged || quiet || document.startViewTransition === undefined) {
+    apply();
+    return;
+  }
+  const transition = document.startViewTransition(apply);
+  for (const done of [transition.ready, transition.finished, transition.updateCallbackDone]) {
+    done.catch(() => undefined);
+  }
 };
 
 const remember = (choice: Choice) => {
@@ -44,13 +76,16 @@ const remember = (choice: Choice) => {
   }
 };
 
-const crossfade = (change: () => void) => {
-  const quiet = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (quiet || document.startViewTransition === undefined) {
-    change();
-    return;
+const stored = (): Choice | null => {
+  try {
+    const value: unknown = JSON.parse(window.localStorage.getItem(PAINT_CONFIG.key) ?? "null");
+    if (typeof value !== "object" || value === null) return null;
+    const theme = THEMES.find((id) => "theme" in value && value.theme === id);
+    const mode = MODES.find((id) => "mode" in value && value.mode === id);
+    return theme === undefined || mode === undefined ? null : { theme, mode };
+  } catch {
+    return null;
   }
-  document.startViewTransition(change).ready.catch(() => undefined);
 };
 
 const groundOf = (theme: ThemeId, appearance: Appearance) => {
@@ -71,17 +106,15 @@ const tellDesktop = async (choice: Choice): Promise<boolean | undefined> => {
   return desktop.set(choice.mode, grounds).catch(() => undefined);
 };
 
-window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
-  if (chosen.mode === "system") crossfade(() => settle(paint(PAINT_CONFIG, chosen)));
+darkQuery.addEventListener("change", () => {
+  if (chosen.mode === "system") show();
 });
 
 window.addEventListener("storage", (event) => {
   if (event.key !== PAINT_CONFIG.key) return;
-  crossfade(() => {
-    const next = paint(PAINT_CONFIG);
-    chosen = { theme: next.theme, mode: next.mode };
-    settle(next);
-  });
+  chosen = stored() ?? PAINT_CONFIG.fallback;
+  notify();
+  show();
 });
 
 void tellDesktop(chosen);
@@ -92,8 +125,7 @@ export async function chooseAppearance(choice: Partial<Choice>) {
   notify();
   remember(next);
   const systemDark = await tellDesktop(next);
-  if (chosen !== next) return;
-  crossfade(() => settle(paint(PAINT_CONFIG, next, systemDark)));
+  if (chosen === next) show(systemDark);
 }
 
 export function subscribePaint(listener: () => void) {
@@ -110,8 +142,8 @@ function subscribeAppearance(listener: () => void) {
   };
 }
 
-const read = () => snapshot;
+const read = () => view;
 
-export function useAppearance(): Painted {
+export function useAppearance(): AppearanceView {
   return useSyncExternalStore(subscribeAppearance, read, read);
 }

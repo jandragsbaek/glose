@@ -37,7 +37,9 @@ export function AppearancePanel() {
             })}
           </div>
           <p className="field__hint appearance__now" aria-live="polite">
-            {painted.mode === "system" ? t.appearance.systemNow[painted.appearance] : ""}
+            {painted.mode === "system" && painted.settled
+              ? t.appearance.systemNow[painted.appearance]
+              : ""}
           </p>
         </fieldset>
         <fieldset className="appearance__group">
