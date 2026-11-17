@@ -10,7 +10,6 @@ import {
   referenceLead,
   type ProofInline,
   proofBlocks,
-  withHeading,
 } from "./writing.ts";
 
 const NODES = [{ id: "Busy", kind: "note" as const, sourceId: null, body: "", page: null }];
@@ -76,12 +75,9 @@ describe("insertionAfter", () => {
 });
 
 describe("headings", () => {
-  it("reads a heading line and sets or clears its level", () => {
+  it("reads a heading line and its level", () => {
     assert.deepStrictEqual(headingOf("## The visible work trap"), { level: 2, marker: 3 });
     assert.strictEqual(headingOf("#hashtag"), null);
-    assert.strictEqual(withHeading("## The trap", 3), "### The trap");
-    assert.strictEqual(withHeading("### The trap", 0), "The trap");
-    assert.strictEqual(withHeading("The trap", 2), "## The trap");
   });
 });
 

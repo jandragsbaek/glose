@@ -228,7 +228,7 @@ export function ProseEditor({
   const view = useRef<EditorView | null>(null);
   const [bar, setBar] = useState<FormatState | null>(null);
   const latest = useRef({ onChange, onLayout, onCite, onEditReference, setBar });
-  const mount = useRef(initial);
+  const mount = useRef({ initial, label, placeholder, referenceLabel });
   // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- a ref, not state: CodeMirror's listeners, made once, call the desk's newest callbacks.
   useLayoutEffect(() => {
     latest.current = { onChange, onLayout, onCite, onEditReference, setBar };
@@ -272,7 +272,7 @@ export function ProseEditor({
     view.current = new EditorView({
       parent: node,
       state: EditorState.create({
-        doc: mount.current,
+        doc: mount.current.initial,
         extensions: [
           history(),
           keymap.of([
@@ -296,7 +296,7 @@ export function ProseEditor({
           ]),
           EditorView.lineWrapping,
           flaggedField,
-          words.current.of(wording({ label, placeholder, referenceLabel })),
+          words.current.of(wording(mount.current)),
           formattingMarks,
           EditorView.domEventHandlers({
             mousedown: (event, editor) => {

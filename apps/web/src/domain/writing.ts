@@ -193,11 +193,6 @@ export const headingOf = (
   return match === null ? null : { level: match[1]?.length ?? 1, marker: match[0].length };
 };
 
-export const withHeading = (line: string, level: number): string => {
-  const text = line.replace(HEADING_LINE, "");
-  return level === 0 ? text : `${"#".repeat(level)} ${text}`;
-};
-
 export const hugWord = (body: string, at: number): number =>
   at > 1 && body[at - 1] === " " && /\S/.test(body[at - 2] ?? "") ? at - 1 : at;
 
