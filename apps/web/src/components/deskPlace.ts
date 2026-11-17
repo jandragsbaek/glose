@@ -2,6 +2,7 @@ import type { ProseHandle } from "./ProseEditor.tsx";
 
 export interface PlaceInText {
   readonly pos: number | null;
+  readonly anchor: Element | null;
   readonly offset: number;
   readonly refocus: boolean;
 }
@@ -32,7 +33,18 @@ export const placeInText = (editor: ProseHandle | null, box: HTMLElement | null)
   const pos = seen ? caret : editor.posAtHeight(top + 8);
   const posTop = pos === null ? null : editor.topOf(pos);
   if (pos === null || posTop === null) return null;
-  return { pos, offset: box.getBoundingClientRect().top + posTop - top };
+  return { pos, anchor: null, offset: box.getBoundingClientRect().top + posTop - top };
+};
+
+export const placeInProof = (leaf: HTMLElement | null) => {
+  const scroller = scrollerOf(leaf);
+  if (leaf === null || scroller === null) return null;
+  const top = viewTop(scroller);
+  const anchor = Array.from(leaf.querySelectorAll("h1, h2, h3, p, li")).find(
+    (block) => block.getBoundingClientRect().bottom > top,
+  );
+  if (anchor === undefined) return null;
+  return { pos: null, anchor, offset: anchor.getBoundingClientRect().top - top };
 };
 
 export const keepPlace = (
@@ -40,6 +52,12 @@ export const keepPlace = (
   editor: ProseHandle | null,
   box: HTMLElement | null,
 ) => {
+  if (kept.anchor !== null) {
+    const scroller = scrollerOf(kept.anchor);
+    if (scroller === null) return;
+    scroller.scrollTop += kept.anchor.getBoundingClientRect().top - viewTop(scroller) - kept.offset;
+    return;
+  }
   const scroller = scrollerOf(box);
   if (kept.pos === null || editor === null || box === null || scroller === null) return;
   const posTop = editor.topOf(kept.pos);

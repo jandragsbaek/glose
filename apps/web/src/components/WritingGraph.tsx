@@ -45,6 +45,12 @@ export const rememberGraph = (pieceId: string, open: boolean) => {
   } catch {}
 };
 
+export const moveGraphMemory = (from: string, to: string) => {
+  if (from === to || !graphWasOpen(from)) return;
+  rememberGraph(from, false);
+  rememberGraph(to, true);
+};
+
 const citedNodes = (references: ReadonlyArray<ResolvedReference>) => {
   const numbers = new Map<string, Array<number>>();
   for (const reference of references) {

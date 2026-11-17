@@ -27,7 +27,7 @@ import {
   type PublishState,
   type ReviewState,
 } from "./WritingDeskBar.tsx";
-import { keepPlace, type PlaceInText, placeInText } from "./deskPlace.ts";
+import { keepPlace, type PlaceInText, placeInProof, placeInText } from "./deskPlace.ts";
 import { CiteSlip, type CiteTarget, type CloseReason } from "./WritingCite.tsx";
 import {
   Checks,
@@ -39,6 +39,7 @@ import {
 import {
   followTrail,
   graphWasOpen,
+  moveGraphMemory,
   rememberGraph,
   useGraphFits,
   useGraphKey,
@@ -70,9 +71,15 @@ export function WritingDesk({
 }) {
   const t = useT();
   const deskId = useId();
+  const graphKey = useRef(project.id);
+  const leaf = useRef<HTMLElement | null>(null);
   const { fields, update, saveState, setSaveState, savedId, save, pending } = useWritingSave(
     project,
-    onRenamed,
+    (id) => {
+      moveGraphMemory(graphKey.current, id);
+      graphKey.current = id;
+      onRenamed(id);
+    },
   );
   const [titleInput, setTitleInput] = useState(project.title);
   const [mode, setMode] = useState<"write" | "proof">("write");
@@ -222,9 +229,17 @@ export function WritingDesk({
   const place = useRef<PlaceInText | null>(null);
   const toggleGraph = () => {
     const next = !graphOpen;
-    const kept = placeInText(editor.current, editorBox.current);
+    const kept =
+      mode === "write"
+        ? placeInText(editor.current, editorBox.current)
+        : placeInProof(leaf.current);
     const refocus = !next && document.activeElement?.closest(".graph-beside") != null;
-    place.current = { pos: kept?.pos ?? null, offset: kept?.offset ?? 0, refocus };
+    place.current = {
+      pos: kept?.pos ?? null,
+      anchor: kept?.anchor ?? null,
+      offset: kept?.offset ?? 0,
+      refocus,
+    };
     setGraphOpen(next);
     rememberGraph(savedId.current, next);
   };
@@ -303,7 +318,7 @@ export function WritingDesk({
       <div className="desk-body">
         <div className="desk-body__desk">
           <div className="writing-desk" data-mode={mode}>
-            <article className="leaf" aria-label={t.writing.deskLabel}>
+            <article ref={leaf} className="leaf" aria-label={t.writing.deskLabel}>
               {mode === "write" ? (
                 <>
                   <label className="sr-only" htmlFor={`${deskId}-title`}>
