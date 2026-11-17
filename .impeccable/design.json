@@ -480,7 +480,7 @@
       "onPaper": "2px solid lapis, offset 2px",
       "onLapis": "2px solid gold, offset 2px"
     },
-    "themes": ["light"]
+    "themes": ["light", "dark"]
   },
   "components": [
     {

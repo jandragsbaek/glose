@@ -368,7 +368,8 @@ components:
 This file records the visual system as it is built today in `apps/web/src`. It is the current
 committed state, not a fixed rule set: Jan designs Glose's UI, and every visual choice
 (layout, color, type, window chrome, icons) goes to him. A change he approves updates this file.
-Light theme only; a dark theme is planned and not yet designed.
+Every color comes from a theme: Lapis (the default), Murex and Sepia, each in a light and a dark
+variant. The values in this file are Lapis light; see Themes under Colors.
 
 ## Overview
 
@@ -531,6 +532,88 @@ came from. A 1px underline at its foot says its work: Gilt (at 70%) marked, Lapi
 Verdigris a Point. The open Passage alone wears the 2px Gilt "here" underline. The paragraph
 number beside it turns Lapis 700, so the gutter also shows where Passages sit. Gilt Wash marks
 only the user's own selections and Passages, never AI text.
+
+### Themes
+
+Every color comes from a theme, and every theme comes in a light and a dark variant. The user
+picks the theme and the mode (Light, Dark, or Same as the computer) in Settings, under
+Appearance. The default is Lapis, same as the computer. The palette described above is Lapis
+light; the other themes keep every job and change the pigments.
+
+- **Lapis** (default): ultramarine binding; the field, the primary button and the marks are all
+  Lapis, as described above.
+- **Murex** ("Purpur"): a Tyrian purple binding; field, primary and marks are purple.
+- **Sepia**: a brown leather binding with iron-gall ink. The field and the primary button are
+  brown; the marks (links, focus, the current Reading mark, the trail) are a blue-black ink, so
+  they never read as Gilt.
+
+**Roles.** The prose above says "Lapis" for three jobs that a theme can split, and the code names
+them by role:
+
+- **Field** (`--field`, `--field-raised`, `--field-line`, `--on-field`, `--on-field-mute`): the one
+  large color field: the rail, a Source's spine, the Settings window's spine and border, the
+  setup band, the Format Bar and the Mark Bar.
+- **Primary** (`--primary`, `--primary-raised`, `--on-primary`): the primary button and the status
+  bar's "go" item. In dark it is a step lighter than the field, so it stands on dark Paper.
+- **Accent** (`--accent`): Lapis as a mark on Paper: links, focus outlines, the caret, rings,
+  edges, underlines, the Graph's trail and lit nodes.
+
+Gilt, Rubric, Verdigris and the neutrals keep their names and jobs in every theme. Two shared
+tokens follow the appearance: **Veil** (`--veil`, Ink at 32% in light, black at 58% in dark)
+behind a sheet and the Settings window, and **Halo** (`--halo`, Accent at 18% in light, 30% in
+dark) around a focused input.
+
+**Dark.** The scene is the same desk in the evening: long reading under a lamp. Ground is a
+near-black tinted with the theme's hue, Paper one step lighter (a leaf still lifts off the desk),
+the Tray well one step darker. Ink is a soft warm white, never pure white. The field keeps its
+pigment, deep, so the rail is still the one color field; Accent turns light, so marks read on dark
+Paper. Text selection and a Passage keep a dark Gilt Wash under Ink.
+
+| Token            | Lapis Light | Lapis Dark | Murex Light | Murex Dark | Sepia Light | Sepia Dark |
+| ---------------- | ----------- | ---------- | ----------- | ---------- | ----------- | ---------- |
+| `field`          | `#1e2f7a`   | `#1b2768`  | `#4a1c50`   | `#441a4b`  | `#3b2a1e`   | `#3b2b1f`  |
+| `field-raised`   | `#2b3e92`   | `#283686`  | `#5d2a65`   | `#57255f`  | `#4d3828`   | `#4e3929`  |
+| `field-line`     | `#3a4c9c`   | `#34439a`  | `#703a79`   | `#6a3273`  | `#604735`   | `#614734`  |
+| `on-field`       | `#ffffff`   | `#ffffff`  | `#ffffff`   | `#ffffff`  | `#ffffff`   | `#ffffff`  |
+| `on-field-mute`  | `#c3cbec`   | `#b3bce6`  | `#dcc4e0`   | `#dcc0e0`  | `#e0cfbd`   | `#dcc8b2`  |
+| `primary`        | `#1e2f7a`   | `#3a52c6`  | `#4a1c50`   | `#8a3d97`  | `#3b2a1e`   | `#8a6040`  |
+| `primary-raised` | `#2b3e92`   | `#4660d6`  | `#5d2a65`   | `#9849a6`  | `#4d3828`   | `#986c4b`  |
+| `on-primary`     | `#ffffff`   | `#ffffff`  | `#ffffff`   | `#ffffff`  | `#ffffff`   | `#ffffff`  |
+| `accent`         | `#1e2f7a`   | `#97a9fa`  | `#5c2463`   | `#dba6e6`  | `#283a57`   | `#a8bde0`  |
+| `tint`           | `#eef0f8`   | `#1c2346`  | `#f6eff6`   | `#2b1b30`  | `#eef1f5`   | `#1d2534`  |
+| `gold`           | `#c8a040`   | `#d8b55e`  | `#c8a040`   | `#d8b55e`  | `#c8a040`   | `#d8b55e`  |
+| `gold-wash`      | `#f6efdc`   | `#3b3220`  | `#f6efdc`   | `#3b3220`  | `#f6efdc`   | `#3b3220`  |
+| `rubric`         | `#b3261e`   | `#f2836f`  | `#b3261e`   | `#f2836f`  | `#b3261e`   | `#f2836f`  |
+| `rubric-wash`    | `#fbeceb`   | `#2c1715`  | `#fbeceb`   | `#2c1715`  | `#fbeceb`   | `#2c1715`  |
+| `rubric-line`    | `#e7c9c6`   | `#5c2d27`  | `#e7c9c6`   | `#5c2d27`  | `#e7c9c6`   | `#5c2d27`  |
+| `verdigris`      | `#3e7c5a`   | `#6dc494`  | `#3e7c5a`   | `#6dc494`  | `#3e7c5a`   | `#6dc494`  |
+| `ground`         | `#fbfaf7`   | `#0d0f17`  | `#fbf9f9`   | `#110d12`  | `#faf8f4`   | `#100e0b`  |
+| `paper`          | `#ffffff`   | `#151824`  | `#ffffff`   | `#1a141c`  | `#ffffff`   | `#1a1712`  |
+| `ink`            | `#141414`   | `#e7e5df`  | `#171217`   | `#e9e3e7`  | `#18150f`   | `#ebe5da`  |
+| `mute`           | `#5c5f6a`   | `#9c9fb2`  | `#635a66`   | `#a798a9`  | `#635b50`   | `#a99f90`  |
+| `line`           | `#dedde3`   | `#252a3c`  | `#e4dde4`   | `#2d2430`  | `#e3ddd3`   | `#2e2920`  |
+| `line-strong`    | `#c9c8d1`   | `#363c54`  | `#d0c6d1`   | `#3f3343`  | `#d0c7b9`   | `#40392d`  |
+| `tray`           | `#f3f2ee`   | `#090b11`  | `#f4eff0`   | `#0c090d`  | `#f2eee6`   | `#0b0a07`  |
+
+**The Two Leaves Rule.** A theme is complete only with both leaves: every theme defines every
+token in light and in dark. `apps/web/src/styles/themes.test.ts` checks that the sets match, and
+that the readable pairs hold their contrast in all six (Ink 7:1 on Paper, Ground, Tint, Gilt
+Wash and Rubric Wash; Mute, Accent, Rubric and Verdigris 4.5:1; labels on the field and primary
+4.5:1 or more; Gilt 3:1 on the field).
+
+**The Token Rule.** A color value lives only in `apps/web/src/styles/themes/`. Every other
+stylesheet and component reads a token (`var(--accent)`, or `color-mix()` of tokens for a
+tint); the same test fails on a color literal anywhere else (mask images, which use only alpha,
+are the exception). The Graph canvas reads the tokens from the page and redraws when the theme
+changes.
+
+**The Crossfade.** Changing the theme or the mode crossfades the whole window in 280ms on the
+shared ease-out (a view transition); under reduced motion it changes at once. A change of the
+computer's own mode does the same while the mode is Same as the computer.
+
+**No flash.** A script in the page head sets the theme before the first paint. On the desktop,
+Electron follows the mode (`nativeTheme`), so the title bar matches, and the window opens on the
+last Ground color.
 
 ## Typography
 
@@ -874,7 +957,7 @@ All settings in one window over the page the user is on, like a small bound volu
 desk. A native `<dialog>` opened with `showModal`, `min(1040px, 100vw - 64px)` by
 `min(720px, 100vh - 64px)`, centred, so the page shows 32px around it at the least. The address
 holds it: `?settings=<section>` on any page with the rail (not the Review focus screen) opens it at that section (`language`,
-`graph-folder`, `backup`, `chatgpt`, `site`).
+`appearance`, `graph-folder`, `backup`, `chatgpt`, `site`).
 
 - **Window:** Paper, a 1px Lapis border, 4px corners, no shadow. Two columns: the 220px spine, then
   the leaf.
@@ -896,8 +979,8 @@ holds it: `?settings=<section>` on any page with the rail (not the Review focus 
   section that lands at the top shows nothing of the panel before it). The panels as on any page, in one column up to
   760px with 20px gaps, their Initials alternating rubric and lapis, their titles `h3` under the
   window's `h2`: Interface language (choice
-  rows), Graph folder (the path as a Call Number label that wraps, and a Meta hint), Backup (the
-  Backup Panel), ChatGPT and Your website. A sheet opened from a panel opens over the window.
+  rows), Appearance (the Appearance Panel), Graph folder (the path as a Call Number label that
+  wraps, and a Meta hint), Backup (the Backup Panel), ChatGPT and Your website. A sheet opened from a panel opens over the window.
 - **Spine and scroll:** the last section is at least as tall as the body, so every section can reach
   the top. The window opens with the asked section 20px under the head and keeps it there while
   panels load, until the user scrolls; that section takes focus, so the first Tab goes to its first
@@ -920,6 +1003,25 @@ holds it: `?settings=<section>` on any page with the rail (not the Review focus 
   across the top as a band: the sections wrap in rows (36px tall, 6px 10px padding), with two Gilt
   bands at the top (6px and 12px down) and one at the foot. The head pads 16px at the left; the body
   pads 16px 16px 32px.
+
+### Appearance Panel
+
+The second panel in Settings ("Udseende"), with a lapis Initial. Two fieldsets, 24px apart, each
+under a field legend:
+
+- **Light or dark** ("Lyst eller mørkt"): the Segmented control with three options, each a 16px
+  Lucide icon and a label: Light (Sun), Dark (Moon), Same as the computer (Monitor). While the
+  mode follows the computer, a Meta hint under it says which it is now ("The computer is dark
+  now."), in a polite live region.
+- **Theme** ("Tema"): one Binding per theme in a grid (184px at the least, 12px gaps), then the
+  hint "Every theme comes in a light and a dark version." A Binding is a radio option drawn like
+  a Kind Choice option: Paper, a Strong Hairline border, 4px corners; hover borders it Mute; the
+  checked one takes an Accent border, the 3px Gilt underline and an Accent name. Its top is a
+  92px specimen of the theme itself, its light leaf beside its dark leaf: an 18px spine of the
+  field with two Gilt bands, then on each leaf a Paper page rising from Ground with a Rubric
+  Cinzel "G", an Ink, a Mute and an Accent line, and a small Primary bar. The specimen sets
+  `data-theme` and `data-appearance` on each leaf, so it is drawn by the real tokens. Under it,
+  the theme's name in 600 15px.
 
 ### Sheet
 

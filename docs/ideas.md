@@ -80,6 +80,19 @@ The core loop depends on the stage the user is in. Stages known so far:
   focus screen) opens it at that section (`language`, `graph-folder`, `backup`, `chatgpt`,
   `site`). There is no `/settings` page.
 
+## Decided, themes with light and dark (November 2026)
+
+- Glose has themes, after T3 Code: every theme comes in a light and a dark variant, and the user
+  picks the theme and the mode (Light, Dark, or Same as the computer) in Settings, under
+  Appearance. Jan uses dark.
+- Three themes, each a book binding: Lapis (the default, the design so far), Murex (purple) and
+  Sepia (brown leather with blue-black ink). The default mode follows the computer.
+- The choice belongs to the computer, not the Graph: it is kept in the app's local storage, and
+  the desktop app remembers it so the window opens in the right colors.
+- Every color is a theme token. A test fails on a color value outside the theme files, on a theme
+  without both variants, and on text that loses its contrast; the shared lint plugin gets a rule
+  (`no-raw-color`) for colors in code.
+
 ## Sources
 
 - Every note in the graph must have a source.
