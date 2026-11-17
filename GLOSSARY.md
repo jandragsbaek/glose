@@ -42,6 +42,22 @@ _Avoid_: edge, connection, relation, backlink
 The book, video or other work that a **Note** comes from, with its bibliographic data.
 _Avoid_: core reference, reference, book (as the general term), material
 
+**Article**:
+A **Source** that brings its own text, read in Glose: an academic paper, a web essay, or a
+magazine or newspaper piece, imported as Markdown.
+_Avoid_: paper (alone), post, document
+
+**Course lesson**:
+A **Source** that is one lesson of a course, imported as Markdown with the course's other lessons.
+It brings its own text, read in Glose; the course is where it appeared, as a journal is for a paper.
+_Avoid_: module, unit, chapter, lecture
+
+**Passage**:
+Words of an **Article** or a **Course lesson** that the user marks while reading. The user's own
+words on it are kept with it. A **Passage** can be taken deeper in the **Probe**, or become a
+**Point**.
+_Avoid_: highlight, mark (that is the **AI mark** or a Reading mark), annotation, excerpt, quote
+
 **Catalog**:
 An outside book database that Glose searches to fill in the bibliographic data of a new
 **Source**. The user checks what it gives against their own copy.
@@ -130,7 +146,8 @@ A pointer in the prose of a **Writing project** to a **Note** or a **Source**, w
 _Avoid_: cite, link
 
 **Location**:
-The exact place in a **Source**, such as a page or a timestamp.
+The exact place in a **Source**, such as a page, a timestamp, or a paragraph number (¶ 8) in an
+**Article** or a **Course lesson**.
 _Avoid_: locator, pinpoint, position, page (as the general term)
 
 **Citation**:
@@ -139,6 +156,8 @@ The text the tool builds from a **Reference** in the style the **Writing project
 ## Relationships
 
 - Every **Note** has a **Source**; **Links** join **Notes** into the **Graph**
+- A **Source** is a book (read elsewhere), an **Article** or a **Course lesson**; the last two bring
+  their text, so the Reading **Stage** starts by reading it in Glose and marking **Passages**
 - A new **Source** can be filled in from a **Catalog**; the **Source** file, not the **Catalog**,
   is the truth
 - A **Probe** is a **Session**; the user's **Reasoning** in it is kept
@@ -165,6 +184,8 @@ The text the tool builds from a **Reference** in the style the **Writing project
   section, so the Danish term is "del".)
 - "reference" meant both the book a user reads ("core reference") and the pointer in prose.
   Resolved: the book is a **Source**; "reference" is kept for the pointer in prose.
+- "article" names a kind of **Source** that the user reads. A **Blog post** is what the user writes,
+  and is never called an article.
 - "assignment" alone could mean any **Writing project**. Resolved: the type is a **University
   assignment**; a Writing project is never called an assignment.
 - "reading quiz" and "recall quiz" shared a word though they have different goals. Resolved: the

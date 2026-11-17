@@ -61,6 +61,11 @@ typography:
     fontSize: "16px"
     fontWeight: 400
     lineHeight: 1.65
+  body-reading:
+    fontFamily: "Public Sans, system-ui, sans-serif"
+    fontSize: "17px"
+    fontWeight: 400
+    lineHeight: 1.7
   label:
     fontFamily: "Public Sans, system-ui, sans-serif"
     fontSize: "14px"
@@ -81,6 +86,12 @@ typography:
     fontSize: "12px"
     fontWeight: 700
     lineHeight: "18px"
+    fontFeature: '"tnum"'
+  paragraph-number:
+    fontFamily: "Courier Prime, ui-monospace, monospace"
+    fontSize: "12px"
+    fontWeight: 400
+    lineHeight: 1.2
     fontFeature: '"tnum"'
   code:
     fontFamily: "Courier Prime, ui-monospace, monospace"
@@ -302,6 +313,54 @@ components:
     rounded: "{rounded.base}"
     padding: "9px 12px"
     height: "42px"
+  reader-leaf:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
+    typography: "{typography.body-reading}"
+    padding: "44px 56px 56px 88px"
+    width: "780px"
+  passage:
+    backgroundColor: "{colors.gold-wash}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.label}"
+  mark-bar:
+    backgroundColor: "{colors.lapis}"
+    textColor: "{colors.on-lapis}"
+    rounded: "{rounded.base}"
+    padding: "2px"
+  mark-bar-button:
+    textColor: "{colors.on-lapis}"
+    rounded: "{rounded.label}"
+    padding: "0 10px"
+    height: "30px"
+  apparatus:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
+    padding: "10px 24px 12px 88px"
+  reader-notice:
+    backgroundColor: "{colors.rubric-wash}"
+    textColor: "{colors.ink}"
+    padding: "10px 24px 10px 88px"
+  margin-quote:
+    backgroundColor: "{colors.gold-wash}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.base}"
+    padding: "10px 12px"
+  kind-choice:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.base}"
+    padding: "14px 16px"
+  kind-choice-selected:
+    backgroundColor: "{colors.tint}"
+    textColor: "{colors.lapis}"
+  drop-zone:
+    backgroundColor: "{colors.ground}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.base}"
+    padding: "22px 20px"
+  drop-zone-over:
+    backgroundColor: "{colors.tint}"
 ---
 
 # Design System: Glose
@@ -349,6 +408,9 @@ itself stays ink; see the AI Text component.
 - A focus screen (Review) drops the rail and the page header: one Paper leaf on Ground.
 - Recall is a desk: today's Review leaf on top, and under it Trays (a well a step darker than
   Ground) that hold the Cards as Paper slips, sorted by the work they need.
+- An Article or a Course lesson is read in Glose, set like a critical edition: Contents at the
+  left, each paragraph numbered in the gutter as its Location, the Passages in an apparatus under
+  the text, and the work on one Passage in the margin.
 
 ## Colors
 
@@ -366,6 +428,10 @@ three small pigments (gold, rubric red, verdigris) each with one job.
   it is the question number and the head of each judgment gloss. Beside the Writing Desk it is the
   trail: the one Lapis line on the Graph, its stop tabs, and the ring around Notes the piece cites;
   while a trail shows, the open Note's other Links turn quiet ink so Lapis means the trail alone.
+  In the Reader it is the Mark Bar, the paragraph number where a Passage sits, the ¶ numbers in
+  the apparatus, the 1px underline of a Passage taken deeper and "Taken deeper" in the margin. On
+  Add Source it is the border and name of the checked kind and the border of a Drop Zone while a
+  file is dragged over it.
 - **Raised Lapis** (lapis-raised): the current rail item, and the section in view on the Settings
   window's spine; primary button hover. Hover on a rail item or a spine section is half a step,
   Lapis and Raised Lapis mixed half and half, so "here" stays the stronger mark.
@@ -380,8 +446,13 @@ three small pigments (gold, rubric red, verdigris) each with one job.
   underline, the 2px underline under the current Reading mark, the two gilt bands on a spine (a
   Source's, and the top and foot of the Settings window's spine), the icon of the section in view
   on that spine, and the focus outline on lapis. Also the triangle of a Check that warns on a Recall slip, beside
-  Ink words. Never text on paper.
-- **Gilt Wash** (gold-wash): text selection only.
+  Ink words. In the Reader: the 3px edge of the current section in Contents, the 2px underline
+  under the open Passage and under its ¶ number in the apparatus, and the 1px underline (at 70%)
+  of a Passage that is only marked. On Add Source, the 3px underline of the checked kind. Never
+  text on paper.
+- **Gilt Wash** (gold-wash): text selection, and a Passage, which is a kept selection. The quote
+  of the open Passage in the margin and of a Passage taken deeper in the Probe sits on it too.
+  Hover on a Passage, and the open Passage, mix it with Gilt (70% Wash, 30% Gilt).
 
 ### Tertiary
 
@@ -389,17 +460,22 @@ three small pigments (gold, rubric red, verdigris) each with one job.
   signals of missing data or error, always paired with an icon and words (on a Recall slip, the
   triangle and words of a Check that fails). In the Probe, at 16% (`rgb(179 38 30 / 16%)`), it
   is the faint highlight under the words of the user's Reasoning a judgment points at.
-- **Rubric Wash** (rubric-wash): the background of a stand-alone warning notice.
-- **Rubric Line** (rubric-line): the border of a stand-alone warning notice.
+- **Rubric Wash** (rubric-wash): the background of a stand-alone warning notice and of the
+  Reader Foot notice.
+- **Rubric Line** (rubric-line): the border of a stand-alone warning notice and of the Reader Foot
+  notice.
 - **Verdigris** (verdigris): done. The check icon and 3px underline of a finished step, the
   check of a finished sheet and the "Copied" check, a filled (done) Reading mark, and the check
   and "Ready" of a Source ready to cite. In the Probe, the check of a sound Reasoning, a right
-  result and a known topic.
+  result and a known topic. In the Reader, the 1px underline of a Passage made into a Point, the
+  check of "Saved", "Point made" and an understood Passage; on Add lessons, the check of an added
+  lesson.
 
 ### Neutral
 
 - **Ground** (ground): the page behind panels and the setup body; the group rows of the register;
-  the band over the Probe and the user's turns in a transcript; the Settings window's body.
+  the band over the Probe and the user's turns in a transcript; the Settings window's body. In the
+  Reader, the band over the desk and the box of code in an Article; on Add Source, the Drop Zone.
 - **Paper** (paper): panels, the page header, inputs, buttons, call-number labels.
 - **Ink** (ink): text, secondary button border, call-number and typed-code border; at 32%
   (`rgb(20 20 20 / 32%)`) the veil behind a sheet and the Settings window.
@@ -409,8 +485,11 @@ three small pigments (gold, rubric red, verdigris) each with one job.
 - **Strong Hairline** (line-strong): input and choice borders, the segmented control's border and
   dividers, key-cap borders, the ring of a Reading mark not reached yet, the border of a leaf over
   the page (the Versions panel, a sheet), the left rule of a Probe judgment gloss, scrollbar thumb.
+  Also the border of a Kind Choice option and of the Drop Zone, and the left rule of a quote in an
+  Article.
 - **Lapis Tint** (tint): secondary button hover, the current step, a selected choice, a hovered or
-  checked segment, the register row whose Links are shown, the Settings window's Close on hover.
+  checked segment, the register row whose Links are shown, the Settings window's Close on hover,
+  the checked Kind Choice option and a Drop Zone while a file is dragged over it.
 - **Tray** (tray): a warm well a step darker than Ground, behind the Recall Trays only, so the
   Paper slips in it read as lying in a tray. A neutral, not a field of color.
 
@@ -419,7 +498,8 @@ three small pigments (gold, rubric red, verdigris) each with one job.
 **The Rubric Rule.** Rubric red marks the decorated initials, the pen flourish and AI text.
 When red marks an error or missing data, it always comes with a warning icon and words; red
 alone never carries a meaning. The Probe's faint highlight under the user's words follows the
-same rule: the gloss beside it gives the triangle and the words.
+same rule: the gloss beside it gives the triangle and the words. The Reader Foot notice too: Rubric
+Wash and Rubric Line, a Rubric triangle and Ink words.
 
 **The Gilt Marker Rule.** Gold says "here": the current Section, the section in view on the
 Settings window's spine, the current step (in the Step Bar and under a Reading mark), a spine's
@@ -428,6 +508,10 @@ icon of a Check that warns on a Recall slip, always beside Ink words ("Could be 
 the Writing Desk's Format Bar a 2px Gilt underline marks the style the selection already has. Beside
 the desk, the open stop of the trail wears it: a ring around its node, a 2px underline under its stop
 tab on the Graph, and a 3px underline under its number in the stop strip.
+In the Reader, the current section in Contents wears a 3px Gilt edge (a 2px underline when Contents
+is a strip), and the open Passage and its ¶ number in the apparatus a 2px Gilt underline. On Add
+Source the checked kind wears a 3px Gilt underline, as the current step does. A marked Passage's
+1px underline is Gilt at 70%: the Passage Rule gives it that job.
 It is never used for text on paper or for decoration elsewhere.
 
 **The One Field Rule.** Lapis is the only large color field (rail, spine, the primary button).
@@ -438,15 +522,23 @@ and the page stay
 paper and ground; the one other surface is the neutral Tray well under Recall's slips.
 
 **The Ribbon Edge Rule.** A 3px Lapis edge on the left of a register row says "this Source shares
-Links with the one you chose", like a ribbon marker in a book. It is the one place a side edge
-marks rows, and it never comes alone: the row's Links cell reads "N shared" in Lapis 700, and the
+Links with the one you chose", like a ribbon marker in a book. It is the one place a Lapis side
+edge marks rows (the Reader's Contents uses a Gilt side edge, which says "here"), and it never comes alone: the row's Links cell reads "N shared" in Lapis 700, and the
 hint above the table repeats the same edge beside a sentence that names the Source.
+
+**The Passage Rule.** A Passage is a kept selection, so it keeps the Gilt Wash of the selection it
+came from. A 1px underline at its foot says its work: Gilt (at 70%) marked, Lapis taken deeper,
+Verdigris a Point. The open Passage alone wears the 2px Gilt "here" underline. The paragraph
+number beside it turns Lapis 700, so the gutter also shows where Passages sit. Gilt Wash marks
+only the user's own selections and Passages, never AI text.
 
 ## Typography
 
 **Display and UI Font:** Public Sans 400/500/600/700 (with system-ui, sans-serif)
 **Initial Font:** Cinzel Decorative 700 (with Cinzel, serif)
 **Label Font:** Courier Prime 400/700 (with ui-monospace, monospace)
+**Code Font:** the system monospace stack (ui-monospace, "SF Mono", Menlo, Consolas, monospace),
+for code inside an Article or Course lesson only
 
 All three are self-hosted via @fontsource. **Character:** a plain, civic sans does all the
 working text; a typewriter face types the library labels; a decorated capital appears once per
@@ -466,6 +558,14 @@ heading like an illuminated initial.
   first letter, in rubric or lapis.
 - **Body** (400, 15px, 1.5): all running text; empty states cap at 62ch.
 - **Body for writing** (400, 16px, 1.65, max 72ch): the Free text area.
+- **Body for reading** (400, 17px, 1.7, max 66ch): the text of an Article or Course lesson in the
+  Reader. It is one step above writing, for long reading. Its headings: h2 700 22px (-0.01em), h3
+  700 18px, h4 700 16px, all 1.3 with balanced wrap, 1.7em above and 0.55em below. Tables in the
+  text are 14px/1.45 with tabular numerals and Mute 600 13px heads; captions are Mute 13px; the
+  text's own notes are 14px/1.55 under a Hairline.
+- **Code in an Article** (system monospace 400; inline 0.86em on Ground with 2px corners, a block
+  13.5px/1.55 on Ground in a Hairline 4px box): code the author wrote. It is part of the text, not
+  a label, so it does not take Courier Prime.
 - **Review question** (700, 28px, 1.3, -0.01em, max 30ch, balanced wrap; 24px on phones): the
   question on the Review leaf.
 - **Review answer** (400, 21px, 1.5, max 40ch; 18px on phones): the answer on the Review leaf.
@@ -476,7 +576,12 @@ heading like an illuminated initial.
 - **Meta** (400, 13px, tabular numerals): hints, step notes, panel meta, status lines.
 - **Rail label** (500, 12px, 1.25): Section names under rail icons; they wrap and hyphenate.
 - **Call** (Courier Prime 700, 12px/18px, tabular): call numbers, step numbers and the Probe's
-  question numbers (in Lapis); the Location part of a call number is 400 in Mute.
+  question numbers (in Lapis); the Location part of a call number is 400 in Mute. A Course lesson's
+  call number ends in its week·day (`LIN 2026 1.3`). In the Reader's apparatus, the ¶ number of a
+  Passage (Lapis 700 12px/1.4), and in the text a note number (Lapis 700 11px).
+- **Paragraph number** (Courier Prime 400, 12px/1.2, tabular, Mute, right-aligned in the 88px
+  gutter): "¶ 8" beside each paragraph, list item and quote of the Reader's text. It is the
+  paragraph's Location. Where a Passage sits it turns Lapis 700. It is not selectable text.
 - **Code** (Courier Prime 700, 28px/36px, 0.14em tracking, tabular): a code the user types
   elsewhere, today the GitHub sign-in code in the Backup sheet; see Typed Code.
 
@@ -488,8 +593,11 @@ whole for screen readers. Never on data, buttons or body.
 
 **The Typed Label Rule.** Courier Prime is for call numbers, step numbers, the Probe's question
 numbers ("Q6"), repository names in the
-Repository Rows (a repository is the Graph's shelf mark on GitHub) and a code the user types
-elsewhere (the GitHub sign-in code) only.
+Repository Rows (a repository is the Graph's shelf mark on GitHub), a code the user types
+elsewhere (the GitHub sign-in code), the paragraph numbers that are Locations ("¶ 8", in the
+Reader's gutter and apparatus), note numbers in a read text, and a Course lesson's week·day
+(in its call number and in the Week · Day field of the lesson table) only. Code in an Article is
+not a label: it takes the system monospace stack.
 
 ## Layout
 
@@ -557,6 +665,25 @@ desk the margins fold under the leaf in reading order (left margin, then right) 
 Beside the Desk): the window then splits in two equal columns under the bar, each with its own
 scroll, and the desk's margins fold under the leaf.
 
+The Reader (the Read step of an Article or Course lesson, at `/sources/<id>`, and with `?text=1`
+from a later step) fills the window under the page header. The head carries the title, the author,
+the course or site with the lesson's "Week 1 · Day 2" after a Mute "·", and the call number; its
+actions are the Lesson Nav. Under it a Ground band (14px 32px, a Hairline below; 10px 24px gaps,
+it wraps) holds the Step Bar on Paper (up to 560px; Read · Extraction · Probe, or Read · Probe ·
+Extraction) and a Mute 13px line that says how to mark and names the keys ("M marks · D goes
+deeper · Esc leaves"). Then the desk: three columns, `190–240px | up to 780px | 300–360px`, 32px
+apart, centred, 32px at the sides, each scrolling on its own (thin scrollbars, contained
+overscroll): Contents, the leaf column, and the margin. The leaf column ends in the Reader Foot,
+which stays under the scrolling leaf. Below 1240px Contents becomes a strip across the top (h2
+sections only, one line, scrolling sideways with its last 48px faded out), and the leaf and the
+margin (280–340px) share the row. Below 900px the desk is one column that scrolls as a whole (16px
+sides), the foot sticks to the bottom of the window, the band pads 12px 16px, and the gutter
+narrows to 64px.
+
+Add Source (`/sources/new`) opens with the Kind Choice (up to 760px, 24px below it); the form under
+it follows the kind. Book keeps its form; Article is one narrow form (the text, then the data);
+Course lessons is the lesson files panel with its table, then the course panel.
+
 A focus screen (today only Review, at `/review`) fills the window without the rail and the page
 header. A 64px bar (12px 32px padding) holds the title left, a centred progress line and the way
 out right; the desk below centres one 720px column (68px top, 32px sides, 48px bottom). Below
@@ -598,7 +725,13 @@ the folded Good pile up to two. The Trays sink one step below Ground (Tray), wit
 border, so their Paper slips lie in them; nothing casts a shadow.
 
 The register's lapis edge is drawn with `box-shadow: inset 3px 0 0` on a row's first cell, so it
-needs no border that would shift the columns. It is a mark, not depth.
+needs no border that would shift the columns. It is a mark, not depth. The Reader draws its marks
+the same way: a Passage's underline (`inset 0 -1px 0`, `-2px` when open), the Gilt edge of the
+current section in Contents (`inset 3px 0 0`), and the checked Kind Choice's Gilt underline
+(`inset 0 -3px 0`).
+
+The Mark Bar floats over the text without a shadow: the Lapis strip on Paper is contrast enough.
+The apparatus sits under the leaf behind a 2px Ink rule, not a shadow.
 
 ### Named Rules
 
@@ -613,7 +746,9 @@ rail items, key caps, the Review leaf, a sheet, the Settings window and its spin
 and skeleton bars; 3px on the spine. Review leaf edges round only their two lower corners (4px). The one curve is the
 pen flourish (a 64 by 10px stroked SVG with a center dot) set between two hairlines. The one circle
 is the Reading mark (9px, 1.5px ring). The register's lapis edge is a straight 3px band. The one dashed line is the folded Good pile's
-1px Strong Hairline border: a leaf that stands for Cards not laid out.
+1px Strong Hairline border: a leaf that stands for Cards not laid out. In the Reader a Passage
+rounds 2px, the Mark Bar 4px with 2px buttons and key caps; the leaf is square with an open lower
+edge, where the apparatus meets it. The one heavy line is the apparatus's 2px Ink top rule.
 
 ## Components
 
@@ -889,7 +1024,9 @@ A ledger, not a form; setting up happens in the Backup sheet.
 ### Call Number (signature)
 
 A typed spine label: Paper, 1px Ink border, 2px corners, Courier Prime 700 12px, no wrapping,
-for example `ARE 1958 · p. 79`. With a missing year it turns Rubric (border and text), shows a
+for example `ARE 1958 · p. 79`. A Course lesson adds its week·day after the year (`LIN 2026 1.3`),
+so the lessons of one course sort in order; in the Reader its Location is the paragraph
+(`LIN 2026 1.3 · ¶ 8`). With a missing year it turns Rubric (border and text), shows a
 triangle icon, and ends in `?`; its accessible name says what it is.
 
 ### Spine (signature)
@@ -917,10 +1054,187 @@ and the Source's details (lapis Initial) in the side column.
 
 The Reading steps in the order the Source's start gives them, in one bordered strip of equal
 columns divided by Hairlines: three for a Source started by writing (Free text, Extraction,
-Probe), two for one started with the Probe or a catch-up (Probe, Extraction). Each step: a Courier
+Probe), two for one started with the Probe or a catch-up (Probe, Extraction). An Article or Course
+lesson has its own text, so its first step is Read: Read, Extraction, Probe, or Read, Probe,
+Extraction. Read's note counts the Passages and the place ("2 Passages · ¶ 8 of 40"). Each step: a Courier
 step number, a Label name, a Meta note ("203 words", "0 of 1 point written", "6 questions", or
 "with ChatGPT" before a step starts). Current: Lapis Tint with a 3px Gilt underline and
 `aria-current`. Done: a 3px Verdigris underline and a Verdigris check.
+
+### Reader (signature: The Critical Edition)
+
+The Read step of an Article or Course lesson, set like a scholarly edition. See Layout for the
+band and the three columns.
+
+- **Leaf:** one Paper sheet (44px 56px 56px 88px padding, Hairline border, the lower edge open to
+  the Reader Foot; 32px 24px 40px 64px below 900px), 24px below the band. The text is Body for
+  reading at 66ch. The 88px left padding is the gutter for the paragraph numbers. The text's own
+  title is not repeated under the page head. A quote in the text has a 1px Strong Hairline rule on
+  the left (18px padding); a rule in the text is a Hairline; an image Glose did not copy is a Mute
+  13px line with a 16px icon. The text carries the `lang` of the text.
+- **Paragraph numbers:** each paragraph, list item and quote is a Location and shows "¶ 8" in the
+  gutter (the Paragraph number set), set back to the left past list and quote indents so the
+  numbers stand in one column.
+- **Back:** read again from a later step, the leaf ends in "Back to the step" (secondary, with a
+  left arrow) under a Hairline, 48px below the text.
+
+### Passage (signature)
+
+Words the reader marked in the text: a kept selection, on the Passage Rule. A `mark` in Gilt Wash
+with 2px corners and a 1px underline at its foot (Gilt at 70% marked, Lapis taken deeper,
+Verdigris a Point). It is a button (`role="button"`, `aria-pressed`), named as a Passage that Enter
+opens; a click, Enter or Space opens it in the margin. Hover and the open Passage mix the wash with
+30% Gilt; the open one also takes the 2px Gilt underline. Focus is the 2px Lapis outline at 1px
+offset. 160ms on the shared ease-out. A Passage stays inside one paragraph: a selection that runs
+on is cut at the paragraph's end and the Reader Foot says so ("A Passage stays inside one
+paragraph, so only the words in ¶ 8 will be marked.").
+
+### Mark Bar
+
+Over a selection in the text, a small Lapis strip, as the Format Bar is on the desk (2px padding,
+4px corners, centred on the selection, 8px above it). Two buttons divided by a Lapis Rule: "Mark
+Passage" and "Mark and go deeper", each On-Lapis White 600 13px, 30px tall (10px sides, 2px
+corners) and ending in its key in a small cap (18px, a 45% white border, 2px corners, Lapis Mist
+600 11px): M and D, named in `aria-keyshortcuts`. Hover is half a step to Raised Lapis; focus is a
+Gilt outline inside the button. While Glose marks, the first reads "Marking…" and both are off. It
+flips under the selection (12px below) when the selection is in the first line after a heading or
+less than 64px from the top of the scroll, so it never covers the heading or leaves the view. It
+fades in from 4px off in 140ms; under reduced motion it shows at once. It takes no focus from the
+text.
+
+### Reader Foot
+
+The foot of the leaf column, under the scrolling leaf: the notice above the Apparatus.
+
+- **Notice:** one line on the Rubric Rule: Rubric Wash, a 1px Rubric Line, a 16px Rubric triangle
+  and Ink 13px words (10px 24px 10px 88px, so the words start on the text's edge), with
+  `role="status"`. It says why a selection was not marked as chosen (outside the running text, cut
+  at the paragraph's end, overlapping a Passage, the AI still working) or that the reader's words
+  were not saved, then an "Open it" link button that opens them again. It is empty, and hidden,
+  when there is nothing to say.
+
+### Apparatus (signature)
+
+"Passages in view": the Passages in the paragraphs on screen, under the text like an edition's
+critical notes. Paper, a Hairline border with a 2px Ink rule on top (10px 24px 12px 88px). The
+title is Mute 600 12px, 0.06em tracking, uppercase. Each row (6px, a Hairline above, 14px) is a
+grid of the ¶ number (Call set in Lapis 700), the Passage's words in one line cut with an ellipsis,
+its state in Mute 13px ("Marked", "Your words", "Taken deeper · Q3", "Understood", "Point made"),
+and a small Open (`aria-pressed`). The open Passage's ¶ number takes a 2px Gilt underline. Three
+rows show; past that, a "Show 4 more Passages" link button (13px, `aria-expanded`) opens the rest
+and "Show fewer" closes them. With no Passage in view, the apparatus is not there.
+
+### Contents
+
+The left column (28px top): "Contents" in the panel-heading set with a lapis Initial over a
+Hairline, then the headings (h2 and h3) as rows (8px 0 8px 12px, a Hairline under each, Ink
+14px/1.35; an h3 24px in and 13px). A heading that is the text's own title reads "Opening". A
+section with Passages ends in a Mute 12px tabular count ("2 Passages"). The section the reader is
+in turns 600 and wears a 3px Gilt edge on its left, with `aria-current="location"`, and stays in
+view in the list. Hover underlines the name (3px offset). A click scrolls the text to the heading,
+smoothly. The foot is Mute 13px tabular: paragraphs and words, then "about 6 minutes to read".
+Below 1240px it is the strip in Layout: no title and no foot, the current section with a 2px Gilt
+underline.
+
+### Reader Margin
+
+The right column (24px top): one Panel at a time.
+
+- **Reading notes** (rubric Initial): the reader's Free text, written while reading. A Meta hint,
+  then a textarea (at least 200px; 15px/1.6, 10px 12px), the Save Line, and under a Hairline a Mute
+  13px line that counts the Passages or says how to mark one.
+- **The open Passage** (lapis Initial): titled "Passage · ¶ 8", with a 30px close button (a 16px X,
+  Mute; hover adds a Strong Hairline and turns it Ink) on the right of the head. Then the Passage's
+  words on Gilt Wash (4px, 10px 12px, 15px/1.55) with the call number and the Location under them
+  (`LIN 2026 1.3 · ¶ 8`); "Your words" (a field label, a Meta hint that they are kept as a footnote
+  under the Passage, a textarea at least 112px) with the Save Line; then the work: "Point made:
+  <title>" in 600 with a Verdigris check and a Mute line, or Go deeper (primary, with a D key cap)
+  and Make a Point (secondary) under a Meta hint. Make a Point opens a one-field form in place ("The
+  Point, as a full sentence", Save the Point and a quiet Cancel). When another Passage's question
+  is still open, a Mute 13px line says so with an "Open that Passage" link button.
+- **Taken deeper:** the Taken Deeper group under the work, when the Passage has been questioned.
+- **Foot:** "Remove the mark", a Mute 13px link button pushed right, alone in the last group. It
+  asks first, in place: "Remove the mark and your words on it?" in 600, Remove (secondary) and
+  Keep it (quiet).
+- **Save Line:** under each textarea, Mute 12px, `role="status"`: "Saving…", then a 14px Verdigris
+  check and "Saved". A failed save turns the line Rubric with a triangle, the words "Not saved.
+  Glose could not write the file." and a "Try again" link button; the words stay in the field, and
+  the Reader Foot keeps the way back to them if the Passage closes.
+
+### Taken Deeper
+
+The Probe on one Passage, in the margin under the open Passage, so the reader is questioned on it
+without leaving the text. "Taken deeper" in Lapis 600 12px, 0.06em tracking, uppercase, then the
+turns 14px apart in the Probe Transcript's sets (the question at 15px, the user's answer, the
+Judgment Gloss 10px under it, taught text under the AI Text mark), and the answer form under a
+Hairline (14px above and inside): "Your Reasoning · Q3" and its textarea, "Your answer" and its
+field, Send (primary, with its key cap) and the quiet "I don't know, teach me". While the AI works,
+a Mute 13px live line with the moving Lapis tick ("The AI reads the Passage…"); when the Passage is
+understood, a Verdigris check and that sentence in 13px.
+
+In the Probe, a Passage taken deeper while reading comes back as the user's turn ("You went deeper
+on ¶ 8 while reading:") over its words on Gilt Wash (4px, 8px 12px), a link to that paragraph in the
+text; its close is a 600 line ("¶ 8 understood."). The Probe of the whole text then starts from the
+empty-state lead and a primary "Start the Probe of the whole text", 28px below.
+
+### Done Reading
+
+The way on, at the foot of the text like a colophon: 56px under the last paragraph, a Hairline,
+28px, up to 66ch. "Done reading" in the panel-heading set with a rubric Initial, beside a Mute 13px
+tabular summary ("6 Passages · 2 taken deeper · 1 Point"). Then "What next?" (600 15px) over two
+stacked Choice rows in the Reading Start's form (a 600 label over a Mute hint): "Make Points from
+the text" (Extraction first) and "Question me first" (the Probe first). One primary button that
+names the step ("Continue to Extraction", "Start the Probe", with a right arrow), 18px below. A
+failed step shows an error notice above the button.
+
+### Lesson Nav
+
+The page head's actions on a Course lesson: the lesson before as a quiet button with a left arrow
+and the lesson after as a secondary button with a right arrow, each named by its week and day
+("Week 1 · Day 3"; screen readers hear "Next lesson: Week 1 · Day 3") with the lesson's title as its
+tooltip. 8px apart; it wraps. The first lesson has only the next; the last only the one before.
+
+### Kind Choice
+
+The first question on Add Source, "What are you adding?" (Mute 600 13px, 0.06em tracking,
+uppercase): three options side by side in equal columns, 12px apart: Book, Article, Course lessons.
+Each is a Paper box with a Strong Hairline border (4px, 14px 16px): the name in 600 15px over a
+Mute 13px/1.4 hint that says what Glose does with it. The radio is invisible over the whole box.
+Hover darkens the border to Mute; checked turns the border Lapis, the fill Lapis Tint, the name
+Lapis, and adds a 3px Gilt underline inside its foot; keyboard focus draws the 2px Lapis outline at
+2px. 160ms on the shared ease-out. The kind lives in the address (`?kind=article|lesson`; Book is
+the default). Below 720px the options stack.
+
+### Drop Zone
+
+Where a file or a folder is chosen or dropped: a Ground box with a Strong Hairline border (4px, 22px
+20px, 10px gaps). A wrapping row of buttons (10px gaps): for an Article, "Choose a Markdown file"
+(primary, with a file icon) and a quiet "Paste the text instead"; for Course lessons, "Choose the
+course folder" (primary, with a folder icon) and "Choose lesson files" (secondary). Under them a
+Mute 13px hint says what happens to the files. While a file is dragged over it, the border turns
+Lapis and the fill Lapis Tint (160ms). A chosen file replaces it with a row: a 24px Lapis file
+icon, the name in 600 (it wraps anywhere) over Mute 13px tabular counts ("12 paragraphs · 2,300
+words"), and "Choose another". Pasting opens a 220px textarea (14px) in its place.
+
+### Lesson Table
+
+On Add Source for Course lessons, the files read from the folder, in the "The lesson files" panel
+(rubric Initial, the count as Meta) under the Drop Zone, set like the register's table: 14px
+tabular, cells 6px 12px (20px at the panel edges), a Hairline under each, Mute 600 13px heads, Words
+aligned right. Columns: "Week · Day" as a 64px field in Courier Prime 700 ("1.3"), the title as a
+field (at least 18em), the file in Mute 13px, words, and the state. Fields in the table are 5px 8px
+at 14px.
+
+- **State marks:** a 15px icon and Mute 13px words, in a fixed cell: a dash and "New"; a Mute
+  circle-alert and "Already in your Graph"; a Verdigris check and "Added"; a Rubric circle-alert and
+  "Not added" in Rubric.
+- **Locked rows:** an added lesson reads as text: its fields lose border and fill and turn Mute, so
+  the row cannot be edited and does not look like a form.
+- **Clash:** two lessons with the same week and day turn their Week · Day fields Rubric, and the
+  status line under the panels gives the field error with its icon and the clashing parts.
+- The course panel (lapis Initial) follows with the course name, teacher, year, address and lessons
+  a week. The foot: "Add 20 lessons" (primary; "Adding lesson 3 of 20…" while it works), then
+  "Open Week 1 · Day 1" and "See them in Sources" when done.
 
 ### Reading Marks
 
@@ -1435,6 +1749,13 @@ Skeleton bars (14px, 2px corners) shimmer Tint to Ground over 1.4s inside a pane
   Paper slips in the Tray well, with Good folded to its count until asked for or searched.
 - **Do** let a slip that leaves its Tray finish its lift and the closing of its slot before the
   list reads again; under reduced motion it goes at once.
+- **Do** keep a Passage inside one paragraph, so its Location is one exact "¶ 8"; cut a selection
+  that runs on, and say so in the Reader Foot.
+- **Do** say a Passage's work with its 1px underline (Gilt marked, Lapis taken deeper, Verdigris a
+  Point) and keep the 2px Gilt underline for the open Passage only.
+- **Do** number every paragraph, list item and quote of a read text in the gutter, in Courier, as
+  its Location.
+- **Do** keep the reader's words where they are when a save fails, and give the way back to them.
 
 ### Don't:
 
@@ -1443,7 +1764,11 @@ Skeleton bars (14px, 2px corners) shimmer Tint to Ground over 1.4s inside a pane
 - **Don't** add resting shadows or new fields of color beyond the lapis rail, spine, primary and
   the Settings window's spine.
 - **Don't** use Cinzel Decorative beyond a single heading initial, or Courier Prime beyond call
-  numbers, step numbers, question numbers, repository names and a code the user types elsewhere.
+  numbers, step numbers, question numbers, repository names, a code the user types elsewhere,
+  paragraph and note numbers, and a lesson's week·day.
+- **Don't** set code in an Article in Courier Prime; it is text, in the system monospace stack.
+- **Don't** mark AI text with Gilt Wash; Gilt Wash is the reader's own selection and Passages.
+- **Don't** cover the heading or the line the reader is selecting with the Mark Bar; flip it below.
 - **Don't** fix widths to English text, truncate labels, or block wrapping.
 - **Don't** build a file-tree-plus-editor arrangement in neutral grey, a busy dashboard, or
   gamification.
