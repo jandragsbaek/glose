@@ -1,28 +1,17 @@
 import {
   type GraphNode,
   type GraphView,
-  linkKey,
   type ResolvedReference,
   type Source,
 } from "@glose/contracts";
 import { Search } from "lucide-react";
-import {
-  type ReactNode,
-  useEffect,
-  useId,
-  useLayoutEffect,
-  useRef,
-  useEffectEvent,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useEffect, useId, useRef, useEffectEvent, useState, useSyncExternalStore } from "react";
 
 import type { GraphCanvas, GraphCanvasEvents } from "../graph/GraphCanvas.ts";
 import { findNodes, type GraphIndex, indexGraph, labelOf } from "../graph/graphIndex.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { GraphStage } from "./GraphStage.tsx";
-import { AiText, MissingLink, NoteText, type WikilinkPart } from "./NoteText.tsx";
-import { CallNumber } from "./ui.tsx";
+import { StopCall, Trail, type TrailOpened } from "./WritingTrail.tsx";
 
 const BESIDE = "(min-width: 1200px)";
 
@@ -66,7 +55,13 @@ const citedNodes = (references: ReadonlyArray<ResolvedReference>) => {
   return numbers;
 };
 
-type Opened = (id: string, from: "graph" | "reader") => void;
+type Opened = TrailOpened;
+
+const FIND_SHOWN = 8;
+
+const FIND_INSET = 52;
+
+const unique = (ids: ReadonlyArray<string>) => Array.from(new Set(ids));
 
 export function WritingGraph({
   id,
@@ -89,19 +84,24 @@ export function WritingGraph({
 }) {
   const t = useT();
   const [canvas, setCanvas] = useState<GraphCanvas | null>(null);
-  const [query, setQuery] = useState("");
-  const findId = useId();
 
   const index = indexGraph(view, sources);
   const labels = new Map(view.nodes.map((node) => [node.id, labelOf(node, index)]));
   const numbers = citedNodes(references);
   const cited = Array.from(numbers.keys());
+  const [query, setQuery] = useState("");
   const found = findNodes(view, labels, query);
   const matches = found === null ? null : new Set(found.map((node) => node.id));
 
+  const frameTrail = (stops: ReadonlyArray<string>) => {
+    if (canvas === null) return;
+    if (stops.length === 1) canvas.centerOn(stops[0] ?? "");
+    else canvas.frame(stops);
+  };
   const openNode: Opened = (target, from) => {
     onOpen(target);
-    if (from === "reader") canvas?.centerOn(target);
+    setQuery("");
+    if (from === "reader") frameTrail(followTrail(trail, target));
   };
   const events: GraphCanvasEvents = {
     onSelect: (target) => {
@@ -124,33 +124,33 @@ export function WritingGraph({
         trail={trail}
         cited={cited}
         home={cited}
+        insetTop={FIND_INSET}
+        fitLabel={trail.length > 0 ? t.writing.showTrail : t.writing.showCited}
+        onFit={() => {
+          const home = unique([...cited, ...trail]);
+          if (home.length === 0) canvas?.fit();
+          else canvas?.frame(home);
+        }}
         label={t.writing.graphCanvasLabel(view.nodes.length, view.links.length)}
       >
-        <form
-          className="graph-find graph-beside__find"
-          role="search"
-          onSubmit={(event) => {
-            event.preventDefault();
-            const first = found?.[0];
-            if (first !== undefined) openNode(first.id, "reader");
-          }}
-        >
-          <label htmlFor={findId} className="sr-only">
-            {t.graph.findLabel}
-          </label>
-          <Search className="graph-find__icon" aria-hidden="true" />
-          <input
-            id={findId}
-            className="input graph-find__input"
-            type="search"
-            value={query}
-            placeholder={t.graph.findPlaceholder}
-            onChange={(event) => setQuery(event.target.value)}
-          />
-          <span className="graph-find__count" aria-live="polite">
-            {found === null ? "" : t.graph.found(found.length)}
+        <GraphFind
+          index={index}
+          query={query}
+          found={found}
+          onQuery={setQuery}
+          onOpen={(target) => openNode(target, "reader")}
+        />
+        <p className="graph-beside__legend" aria-hidden="true">
+          <span className="graph-beside__key graph-beside__key--cited">
+            {t.writing.legendCited}
           </span>
-        </form>
+          <span className="graph-beside__key graph-beside__key--open">{t.writing.legendOpen}</span>
+          {trail.length > 1 ? (
+            <span className="graph-beside__key graph-beside__key--trail">
+              {t.writing.legendTrail}
+            </span>
+          ) : null}
+        </p>
       </GraphStage>
       <Trail
         index={index}
@@ -164,254 +164,100 @@ export function WritingGraph({
   );
 }
 
-function Trail({
+function GraphFind({
   index,
-  numbers,
-  trail,
-  open,
+  query,
+  found,
+  onQuery,
   onOpen,
-  onClear,
 }: {
   readonly index: GraphIndex;
-  readonly numbers: ReadonlyMap<string, ReadonlyArray<number>>;
-  readonly trail: ReadonlyArray<string>;
-  readonly open: string | null;
-  readonly onOpen: Opened;
-  readonly onClear: () => void;
+  readonly query: string;
+  readonly found: ReadonlyArray<GraphNode> | null;
+  readonly onQuery: (query: string) => void;
+  readonly onOpen: (id: string) => void;
 }) {
   const t = useT();
-  const headingId = useId();
-  const openSlip = useRef<HTMLLIElement>(null);
-  const focusOpen = useRef(false);
-  const stops = trail.flatMap((id) => index.byId.get(id) ?? []);
-
-  const fromReader: Opened = (id, from) => {
-    focusOpen.current = from === "reader";
-    onOpen(id, from);
+  const findId = useId();
+  const resultsId = useId();
+  const input = useRef<HTMLInputElement>(null);
+  const results = useRef<HTMLUListElement>(null);
+  const shown = found?.slice(0, FIND_SHOWN) ?? [];
+  const move = (from: Element | null, step: 1 | -1) => {
+    const buttons = Array.from(results.current?.querySelectorAll("button") ?? []);
+    const at = buttons.findIndex((button) => button === from);
+    const next = buttons[at + step];
+    if (next !== undefined) next.focus();
+    else if (step === -1) input.current?.focus();
   };
-
-  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- scroll and focus, not state: the Note just opened comes into view, and takes focus when the reader opened it.
-  useLayoutEffect(() => {
-    const slip = openSlip.current;
-    if (slip === null || open === null) return;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    slip.scrollIntoView({ block: "start", behavior: reduced ? "auto" : "smooth" });
-    if (focusOpen.current) {
-      slip.querySelector<HTMLElement>(".trail__title")?.focus({ preventScroll: true });
-    }
-    focusOpen.current = false;
-  }, [open]);
-
   return (
-    <section className="graph-beside__reader" aria-labelledby={headingId}>
-      <div className="graph-beside__head">
-        <h2 className="graph-beside__title" id={headingId}>
-          {t.writing.trailTitle}
-        </h2>
-        {stops.length === 0 ? null : (
-          <>
-            <span className="graph-beside__count">{t.writing.trailCount(stops.length)}</span>
-            <button type="button" className="button button--quiet" onClick={onClear}>
-              {t.writing.clearTrail}
-            </button>
-          </>
-        )}
-      </div>
-      {stops.length === 0 ? (
-        <TrailStart index={index} numbers={numbers} onOpen={fromReader} />
-      ) : (
-        <ol className="trail">
-          {stops.map((node, at) =>
-            node.id === open ? (
-              <li
-                key={node.id}
-                ref={openSlip}
-                className="trail__open"
-                aria-current="step"
-                aria-label={t.writing.trailOpen(at + 1)}
-              >
-                <span className="trail__no trail__no--here" aria-hidden="true">
-                  {at + 1}
-                </span>
-                <NoteReader
-                  node={node}
-                  index={index}
-                  numbers={numbers.get(node.id) ?? []}
-                  onOpen={fromReader}
-                />
-              </li>
-            ) : (
-              <li key={node.id} className="trail__slip">
+    <div className="graph-beside__find">
+      <form
+        className="graph-find"
+        role="search"
+        onSubmit={(event) => {
+          event.preventDefault();
+          const first = found?.[0];
+          if (first !== undefined) onOpen(first.id);
+        }}
+      >
+        <label htmlFor={findId} className="sr-only">
+          {t.graph.findLabel}
+        </label>
+        <Search className="graph-find__icon" aria-hidden="true" />
+        <input
+          ref={input}
+          id={findId}
+          className="input graph-find__input"
+          type="search"
+          value={query}
+          placeholder={t.graph.findPlaceholder}
+          aria-controls={found === null ? undefined : resultsId}
+          onChange={(event) => onQuery(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "ArrowDown") {
+              event.preventDefault();
+              results.current?.querySelector("button")?.focus();
+            }
+          }}
+        />
+        <span className="graph-find__count" aria-live="polite">
+          {found === null ? "" : t.graph.found(found.length)}
+        </span>
+      </form>
+      {found === null || found.length === 0 ? null : (
+        <div className="graph-beside__results">
+          <ul
+            ref={results}
+            id={resultsId}
+            aria-label={t.graph.findLabel}
+            onKeyDown={(event) => {
+              if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                event.preventDefault();
+                move(document.activeElement, event.key === "ArrowDown" ? 1 : -1);
+              } else if (event.key === "Escape") {
+                onQuery("");
+                input.current?.focus();
+              }
+            }}
+          >
+            {shown.map((node) => (
+              <li key={node.id}>
                 <button
                   type="button"
-                  aria-label={t.writing.trailStop(at + 1, node.title)}
-                  onClick={() => fromReader(node.id, "reader")}
+                  className="graph-beside__pick"
+                  onClick={() => onOpen(node.id)}
                 >
-                  <span className="trail__no" aria-hidden="true">
-                    {at + 1}
-                  </span>
                   <span className="trail__name">{node.title}</span>
                   <StopCall node={node} index={index} />
                 </button>
               </li>
-            ),
-          )}
-        </ol>
-      )}
-    </section>
-  );
-}
-
-function StopCall({ node, index }: { readonly node: GraphNode; readonly index: GraphIndex }) {
-  const source = index.sources.get(node.kind === "source" ? node.id : (node.sourceId ?? ""));
-  return source === undefined ? null : <CallNumber source={source} />;
-}
-
-function TrailStart({
-  index,
-  numbers,
-  onOpen,
-}: {
-  readonly index: GraphIndex;
-  readonly numbers: ReadonlyMap<string, ReadonlyArray<number>>;
-  readonly onOpen: Opened;
-}) {
-  const t = useT();
-  const cited = Array.from(numbers.keys()).flatMap((id) => index.byId.get(id) ?? []);
-  return (
-    <div className="graph-beside__start">
-      <p className="graph-beside__lead">{t.writing.trailEmptyLead}</p>
-      <p className="empty">{t.writing.trailEmptyBody}</p>
-      <h3 className="subhead">{t.writing.citedHere}</h3>
-      {cited.length === 0 ? (
-        <p className="empty">{t.writing.noneCited}</p>
-      ) : (
-        <ul className="graph-beside__cited">
-          {cited.map((node) => (
-            <li key={node.id}>
-              <button
-                type="button"
-                className="graph-beside__pick"
-                onClick={() => onOpen(node.id, "reader")}
-              >
-                <span className="trail__name">{node.title}</span>
-                <StopCall node={node} index={index} />
-              </button>
-              <span className="graph-beside__as">
-                {t.writing.citedAs(numbers.get(node.id) ?? [])}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-function NoteReader({
-  node,
-  index,
-  numbers,
-  onOpen,
-}: {
-  readonly node: GraphNode;
-  readonly index: GraphIndex;
-  readonly numbers: ReadonlyArray<number>;
-  readonly onOpen: Opened;
-}) {
-  const t = useT();
-  const isSource = node.kind === "source";
-  const source = index.sources.get(isSource ? node.id : (node.sourceId ?? ""));
-  const linked = index.linked.get(node.id) ?? [];
-  const fromSource = isSource ? linked.filter((other) => other.sourceId === node.id) : [];
-  const others = isSource ? linked.filter((other) => other.sourceId !== node.id) : linked;
-  const title = (
-    <h3 className="trail__title" tabIndex={-1}>
-      {node.title}
-    </h3>
-  );
-  const renderLink = (part: WikilinkPart): ReactNode => {
-    const target = index.byKey.get(linkKey(part.target));
-    return target === undefined ? (
-      <MissingLink key={part.at} name={part.target} label={part.label} />
-    ) : (
-      <button
-        key={part.at}
-        type="button"
-        className="graph__wikilink trail__link"
-        onClick={() => onOpen(target.id, "reader")}
-      >
-        {part.label}
-      </button>
-    );
-  };
-  return (
-    <article className="trail__note">
-      {source === undefined ? (
-        isSource ? null : (
-          <p className="graph__source graph__source--none">{t.graph.noSource}</p>
-        )
-      ) : (
-        <p className="graph__source trail__source">
-          <CallNumber source={source} page={isSource ? null : node.page} />
-          {isSource ? (
-            <span>{[source.givenName, source.familyName].filter(Boolean).join(" ")}</span>
-          ) : (
-            <button
-              type="button"
-              className="trail__source-link"
-              onClick={() => onOpen(source.id, "reader")}
-            >
-              {source.title}
-            </button>
-          )}
-        </p>
-      )}
-      {node.aiTitle ? <AiText scope="title">{title}</AiText> : title}
-      {numbers.length === 0 ? null : <p className="trail__cited">{t.writing.citedAs(numbers)}</p>}
-      <NoteText
-        markdown={node.body}
-        aiText={node.aiText && !node.aiTitle}
-        renderLink={renderLink}
-      />
-      {fromSource.length === 0 ? null : (
-        <LinkList title={t.graph.notesFromSource} nodes={fromSource} onOpen={onOpen} />
-      )}
-      <LinkList title={t.graph.linkCount(others.length)} nodes={others} onOpen={onOpen} />
-    </article>
-  );
-}
-
-function LinkList({
-  title,
-  nodes,
-  onOpen,
-}: {
-  readonly title: string;
-  readonly nodes: ReadonlyArray<GraphNode>;
-  readonly onOpen: Opened;
-}) {
-  const t = useT();
-  return (
-    <div className="trail__links">
-      <h4 className="subhead">{title}</h4>
-      {nodes.length === 0 ? (
-        <p className="empty">{t.graph.noLinks}</p>
-      ) : (
-        <ul className="graph__list">
-          {nodes.map((other) => (
-            <li key={other.id}>
-              <button
-                type="button"
-                className="graph__link trail__pick"
-                data-kind={other.kind}
-                onClick={() => onOpen(other.id, "reader")}
-              >
-                {other.title}
-              </button>
-            </li>
-          ))}
-        </ul>
+            ))}
+          </ul>
+          {found.length > shown.length ? (
+            <p className="graph-beside__more">{t.writing.findMore(found.length - shown.length)}</p>
+          ) : null}
+        </div>
       )}
     </div>
   );
@@ -428,6 +274,7 @@ export const useGraphKey = (enabled: boolean, onToggle: () => void, mac: boolean
     const listen = (event: KeyboardEvent) => {
       if (event.key.toLowerCase() !== "g" || event.altKey || event.shiftKey) return;
       if (!(mac ? event.metaKey : event.ctrlKey)) return;
+      if (event.target instanceof Element && event.target.closest(".cite-slip, dialog")) return;
       event.preventDefault();
       event.stopPropagation();
       toggle();

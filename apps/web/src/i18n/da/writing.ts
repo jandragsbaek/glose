@@ -193,9 +193,9 @@ export const writingMessages: Pick<Messages, "writing"> = {
     graphToggleTitle: "Læs grafen ved siden af din tekst",
     graphPanel: "Grafen ved siden af din tekst",
     graphCanvasLabel: (notes: number, links: number) =>
-      `Grafen: ${count(notes, "punkt", "punkter")} forbundet af ${count(links, "link", "links")}. Dit spor og de noter, teksten henviser til, er markeret. Listen under den viser de samme noter.`,
+      `Grafen: ${count(notes, "punkt", "punkter")} forbundet af ${count(links, "link", "links")}. Dit spor og de noter, teksten henviser til, er markeret. Brug søgningen over den for at åbne en note ved navn; den åbner i Dit spor nedenfor.`,
     trailTitle: "Dit spor",
-    trailCount: (n: number) => count(n, "note", "noter"),
+    trailCount: (n: number) => count(n, "stop", "stop"),
     clearTrail: "Ryd sporet",
     trailEmptyLead: "Læs dine noter ved siden af teksten",
     trailEmptyBody:
@@ -205,9 +205,15 @@ export const writingMessages: Pick<Messages, "writing"> = {
     citedAs: (numbers: ReadonlyArray<number>) =>
       numbers.length === 1
         ? `Henvisning ${numbers[0]} i teksten`
-        : `Henvisning ${list.format(numbers.map(String))} i teksten`,
+        : `Henvisninger ${list.format(numbers.map(String))} i teksten`,
     trailStop: (n: number, title: string) => `${n}. ${title}. Læs den igen`,
-    trailOpen: (n: number) => `Nummer ${n} i dit spor, åben`,
+    trailOpen: (n: number) => `Stop ${n}, åben nedenfor:`,
+    showTrail: "Vis dit spor og de noter, teksten henviser til",
+    showCited: "Vis de noter, teksten henviser til",
+    legendCited: "Henvist til i teksten",
+    legendOpen: "Åben",
+    legendTrail: "Dit spor",
+    findMore: (n: number) => `${numbers.format(n)} mere. Skriv mere af navnet.`,
     notFound: "Skriveprojektet findes ikke. Filen kan være omdøbt eller slettet.",
     backToList: "Tilbage til skriveprojekter",
   },

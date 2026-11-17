@@ -13,7 +13,7 @@ import * as Exit from "effect/Exit";
 import * as Option from "effect/Option";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { TriangleAlert } from "lucide-react";
-import { useId, useRef, useState } from "react";
+import { useId, useLayoutEffect, useRef, useState } from "react";
 
 import { hugWord, proseWords, referenceLead } from "../domain/writing.ts";
 import { useT } from "../i18n/I18n.tsx";
@@ -27,6 +27,7 @@ import {
   type PublishState,
   type ReviewState,
 } from "./WritingDeskBar.tsx";
+import { keepPlace, type PlaceInText, placeInText } from "./deskPlace.ts";
 import { CiteSlip, type CiteTarget, type CloseReason } from "./WritingCite.tsx";
 import {
   Checks,
@@ -218,13 +219,31 @@ export function WritingDesk({
 
   const addPage = (reference: ResolvedReference) => editReference(reference, true);
 
+  const place = useRef<PlaceInText | null>(null);
   const toggleGraph = () => {
     const next = !graphOpen;
+    const kept = placeInText(editor.current, editorBox.current);
+    const refocus = !next && document.activeElement?.closest(".graph-beside") != null;
+    place.current = { pos: kept?.pos ?? null, offset: kept?.offset ?? 0, refocus };
     setGraphOpen(next);
     rememberGraph(savedId.current, next);
   };
   const besideOpen = graphFits && graphOpen && graph !== null;
-  useGraphKey(graphFits, toggleGraph, isMac());
+  useGraphKey(graphFits && graph !== null, toggleGraph, isMac());
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- scroll and focus, not state: the line the writer was at stays where it was when the desk changes width, and focus comes back to the text from a closing panel.
+  useLayoutEffect(() => {
+    const kept = place.current;
+    place.current = null;
+    if (kept === null) return;
+    keepPlace(kept, editor.current, editorBox.current);
+    window.requestAnimationFrame(() =>
+      window.requestAnimationFrame(() => keepPlace(kept, editor.current, editorBox.current)),
+    );
+    if (kept.refocus && !besideOpen) {
+      if (mode === "write") editor.current?.focus();
+      else document.querySelector<HTMLElement>(".desk-bar__graph")?.focus();
+    }
+  }, [besideOpen, mode, editorBox]);
 
   const words = proseWords(fields.body);
   const shortcut = isMac() ? "⌘K" : "Ctrl+K";
@@ -241,7 +260,8 @@ export function WritingDesk({
           mode !== "write" ||
           event.key.toLowerCase() !== "k" ||
           !(isMac() ? event.metaKey : event.ctrlKey) ||
-          (event.target instanceof Element && event.target.closest(".cm-editor, .cite-slip"))
+          (event.target instanceof Element &&
+            event.target.closest(".cm-editor, .cite-slip, .graph-beside"))
         ) {
           return;
         }
@@ -269,7 +289,14 @@ export function WritingDesk({
         publishing={publish.kind === "writing"}
         onPublish={() => void runPublish(false)}
         graph={
-          graphFits ? { open: graphOpen, panelId: `${deskId}-graph`, onToggle: toggleGraph } : null
+          graphFits
+            ? {
+                open: besideOpen,
+                ready: graph !== null,
+                panelId: `${deskId}-graph`,
+                onToggle: toggleGraph,
+              }
+            : null
         }
       />
       <DeskNote reviewState={reviewState} review={review} publish={publish} />

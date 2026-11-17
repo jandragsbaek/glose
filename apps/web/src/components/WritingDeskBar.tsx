@@ -49,6 +49,7 @@ export function DeskBar({
   readonly onPublish: () => void;
   readonly graph: {
     readonly open: boolean;
+    readonly ready: boolean;
     readonly panelId: string;
     readonly onToggle: () => void;
   } | null;
@@ -96,6 +97,7 @@ export function DeskBar({
             aria-controls={graph.open ? graph.panelId : undefined}
             aria-keyshortcuts={isMac() ? "Meta+G" : "Control+G"}
             title={t.writing.graphToggleTitle}
+            disabled={!graph.ready}
             onClick={graph.onToggle}
           >
             <Waypoints className="button__icon" aria-hidden="true" />

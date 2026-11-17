@@ -19,6 +19,9 @@ export function GraphStage({
   trail = NO_IDS,
   cited = NO_IDS,
   home = null,
+  insetTop = 0,
+  fitLabel,
+  onFit,
   label,
   className = "graph__stage",
   children,
@@ -34,6 +37,9 @@ export function GraphStage({
   readonly trail?: ReadonlyArray<string>;
   readonly cited?: ReadonlyArray<string>;
   readonly home?: ReadonlyArray<string> | null;
+  readonly insetTop?: number;
+  readonly fitLabel?: string;
+  readonly onFit?: () => void;
   readonly label?: string;
   readonly className?: string;
   readonly children?: ReactNode;
@@ -63,12 +69,13 @@ export function GraphStage({
     canvas.setMatches(matches);
     canvas.setTrail(trail);
     canvas.setCited(cited);
+    canvas.setInsetTop(insetTop);
     if (!opened.current) {
       if (selectedId !== null) canvas.centerOn(selectedId);
       else if (home !== null) canvas.setHome(home);
     }
     opened.current = true;
-  }, [canvas, events, view, labels, selectedId, matches, trail, cited, home]);
+  }, [canvas, events, view, labels, selectedId, matches, trail, cited, home, insetTop]);
 
   return (
     <div className={className} inert={covered}>
@@ -101,9 +108,9 @@ export function GraphStage({
         <button
           type="button"
           className="button graph__control"
-          aria-label={t.graph.fit}
-          title={t.graph.fit}
-          onClick={() => canvas?.fit()}
+          aria-label={fitLabel ?? t.graph.fit}
+          title={fitLabel ?? t.graph.fit}
+          onClick={() => (onFit === undefined ? canvas?.fit() : onFit())}
         >
           <Maximize size={16} aria-hidden="true" />
         </button>

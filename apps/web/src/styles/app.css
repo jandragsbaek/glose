@@ -4832,6 +4832,7 @@ a.written__title:hover {
 
 .desk-frame {
   display: flex;
+  flex: none;
   flex-direction: column;
   min-height: 100%;
 }
@@ -5077,8 +5078,7 @@ a.written__title:hover {
 /* The desk under the bar, and the Graph beside it when open. */
 .desk-body {
   display: flex;
-  flex: 1;
-  min-height: 0;
+  flex: 1 0 auto;
 }
 
 .desk-body__desk {
@@ -5935,6 +5935,8 @@ a.written__title:hover {
 }
 
 .desk-frame[data-graph="open"] .desk-body {
+  flex: 1 1 0;
+  min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
@@ -5972,6 +5974,7 @@ a.written__title:hover {
   top: 12px;
   left: 16px;
   right: 16px;
+  z-index: 1;
 }
 
 .graph-beside__find .graph-find__input {
@@ -5979,25 +5982,20 @@ a.written__title:hover {
 }
 
 .graph-beside__reader {
+  display: flex;
+  flex-direction: column;
   min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 0 24px 32px;
 }
 
 .graph-beside__head {
-  position: sticky;
-  top: 0;
-  z-index: 1;
   display: flex;
+  flex: none;
   flex-wrap: wrap;
   align-items: center;
   gap: 4px 12px;
   min-height: 52px;
-  margin-bottom: 12px;
-  padding: 8px 0;
+  padding: 8px 24px;
   border-bottom: 1px solid var(--line);
-  background: var(--paper);
 }
 
 .graph-beside__title {
@@ -6024,13 +6022,13 @@ a.written__title:hover {
 }
 
 .graph-beside__head .button--quiet {
+  margin-right: -12px;
   min-height: 30px;
   margin-left: auto;
 }
 
 .graph-beside__start {
   max-width: 62ch;
-  padding-top: 4px;
 }
 
 .graph-beside__lead {
@@ -6093,18 +6091,25 @@ a.written__title:hover {
 
 .trail {
   display: flex;
+  flex: none;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  max-height: 214px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--line);
+  background: var(--ground);
+  overflow-y: auto;
 }
 
-.trail__slip > button {
+.trail__slip > button,
+.trail__slip--here {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
   width: 100%;
-  min-height: 40px;
-  padding: 7px 12px;
+  min-height: 38px;
+  padding: 6px 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--paper);
@@ -6117,6 +6122,19 @@ a.written__title:hover {
 
 .trail__slip > button:hover {
   border-color: var(--mute);
+}
+
+.trail__slip--here {
+  border-color: var(--lapis);
+  background: var(--tint);
+}
+
+.graph-beside__page {
+  flex: 1;
+  min-height: 0;
+  padding: 18px 24px 32px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .trail__name {
@@ -6146,23 +6164,6 @@ a.written__title:hover {
   left: -1px;
   height: 3px;
   background: var(--gold);
-}
-
-.trail__open {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
-  gap: 0 14px;
-  padding: 18px 20px 22px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius);
-  background: var(--paper);
-  /* Room for the sticky head and the slip before it, so the way back stays in view. */
-  scroll-margin-top: 116px;
-}
-
-.trail__open > .trail__no {
-  margin-top: 1px;
 }
 
 .trail__note {
@@ -6207,16 +6208,105 @@ a.written__title:hover {
   border-top: 1px solid var(--line);
 }
 
-.trail__pick {
-  font-weight: 600;
+.trail__links .graph-beside__pick,
+.graph-beside__results .graph-beside__pick {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  width: 100%;
 }
 
-.trail__pick[data-kind="source"] {
+.graph-beside__pick[data-kind="source"] .trail__name {
   color: var(--lapis);
 }
 
-.trail__pick:hover {
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 3px;
+/* Find's matches drop under the field, over the Graph, as a short list to choose from. */
+.graph-beside__results {
+  width: min(420px, 100%);
+  margin-top: 6px;
+  padding: 6px 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+
+.graph-beside__results ul {
+  max-height: 248px;
+  overflow-y: auto;
+}
+
+.graph-beside__results .graph-beside__pick {
+  padding: 7px 12px;
+}
+
+.graph-beside__results .graph-beside__pick:hover,
+.graph-beside__results .graph-beside__pick:focus-visible {
+  background: var(--tint);
+  outline: none;
+  box-shadow: inset 2px 0 0 var(--lapis);
+}
+
+.graph-beside__more {
+  padding: 6px 12px 2px;
+  border-top: 1px solid var(--line);
+  color: var(--mute);
+  font-size: 13px;
+}
+
+/* The key to the Graph's marks, as the sketch had it: at the stage's foot, right. */
+.graph-beside__legend {
+  position: absolute;
+  right: 14px;
+  bottom: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px 14px;
+  max-width: calc(100% - 80px);
+  color: var(--mute);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.graph-beside__key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px;
+  border-radius: 2px;
+  background: rgb(251 250 247 / 85%);
+}
+
+.graph-beside__key::before {
+  content: "";
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.graph-beside__key--cited::before {
+  background: var(--mute);
+  box-shadow:
+    0 0 0 2px var(--ground),
+    0 0 0 3.5px var(--lapis);
+}
+
+.graph-beside__key--open::before {
+  background: var(--lapis);
+  box-shadow:
+    0 0 0 2px var(--ground),
+    0 0 0 4px var(--gold);
+}
+
+.graph-beside__key--trail::before {
+  width: 18px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--lapis);
+}
+
+@media (max-width: 1399px) {
+  .desk-bar__graph .key {
+    display: none;
+  }
 }
