@@ -20,6 +20,7 @@ export function GraphStage({
   cited = NO_IDS,
   home = null,
   insetTop = 0,
+  insetLeft = 0,
   fitLabel,
   onFit,
   label,
@@ -38,6 +39,7 @@ export function GraphStage({
   readonly cited?: ReadonlyArray<string>;
   readonly home?: ReadonlyArray<string> | null;
   readonly insetTop?: number;
+  readonly insetLeft?: number;
   readonly fitLabel?: string;
   readonly onFit?: () => void;
   readonly label?: string;
@@ -47,6 +49,7 @@ export function GraphStage({
   const t = useT();
   const element = useRef<HTMLCanvasElement>(null);
   const opened = useRef(false);
+  const stage = useRef<HTMLDivElement>(null);
   const notes = view.nodes.length;
 
   // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- the canvas is an imperative renderer that owns DOM listeners and an animation loop; it lives exactly as long as this element.
@@ -69,16 +72,41 @@ export function GraphStage({
     canvas.setMatches(matches);
     canvas.setTrail(trail);
     canvas.setCited(cited);
-    canvas.setInsetTop(insetTop);
+    canvas.setInsets(insetTop, insetLeft);
     if (!opened.current) {
       if (selectedId !== null) canvas.centerOn(selectedId);
       else if (home !== null) canvas.setHome(home);
     }
     opened.current = true;
-  }, [canvas, events, view, labels, selectedId, matches, trail, cited, home, insetTop]);
+  }, [canvas, events, view, labels, selectedId, matches, trail, cited, home, insetTop, insetLeft]);
+
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- layout, not state: labels keep clear of the controls laid over the canvas, which move as the stage resizes.
+  useEffect(() => {
+    const host = stage.current;
+    if (canvas === null || host === null) return;
+    const measure = () => {
+      const origin = host.getBoundingClientRect();
+      canvas.setKeepClear(
+        Array.from(host.querySelectorAll(".graph__controls, [data-keep-clear]"), (element) => {
+          const rect = element.getBoundingClientRect();
+          return {
+            left: rect.left - origin.left - 4,
+            top: rect.top - origin.top - 4,
+            right: rect.right - origin.left + 4,
+            bottom: rect.bottom - origin.top + 4,
+          };
+        }),
+      );
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(host);
+    for (const child of host.querySelectorAll("[data-keep-clear]")) observer.observe(child);
+    return () => observer.disconnect();
+  }, [canvas]);
 
   return (
-    <div className={className} inert={covered}>
+    <div ref={stage} className={className} inert={covered}>
       <canvas
         ref={element}
         className="graph__canvas"

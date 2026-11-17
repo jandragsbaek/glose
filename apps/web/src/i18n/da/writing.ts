@@ -213,6 +213,7 @@ export const writingMessages: Pick<Messages, "writing"> = {
     legendCited: "Henvist til i teksten",
     legendOpen: "Åben",
     legendTrail: "Dit spor",
+    findNone: "Ingen note eller kilde har det i navnet.",
     findMore: (n: number) => `${numbers.format(n)} mere. Skriv mere af navnet.`,
     notFound: "Skriveprojektet findes ikke. Filen kan være omdøbt eller slettet.",
     backToList: "Tilbage til skriveprojekter",

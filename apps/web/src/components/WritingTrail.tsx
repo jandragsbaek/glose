@@ -14,6 +14,7 @@ export function Trail({
   numbers,
   trail,
   open,
+  focusId,
   onOpen,
   onClear,
 }: {
@@ -21,6 +22,7 @@ export function Trail({
   readonly numbers: ReadonlyMap<string, ReadonlyArray<number>>;
   readonly trail: ReadonlyArray<string>;
   readonly open: string | null;
+  readonly focusId: string | null;
   readonly onOpen: TrailOpened;
   readonly onClear: () => void;
 }) {
@@ -28,25 +30,18 @@ export function Trail({
   const headingId = useId();
   const here = useRef<HTMLLIElement>(null);
   const page = useRef<HTMLDivElement>(null);
-  const focusOpen = useRef(false);
   const stops = trail.flatMap((id) => index.byId.get(id) ?? []);
   const reading = stops.find((node) => node.id === open);
-
-  const fromReader: TrailOpened = (id, from) => {
-    focusOpen.current = from === "reader";
-    onOpen(id, from);
-  };
 
   // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- scroll and focus, not state: the stop just opened comes into view in the strip, its Note starts at the top, and it takes focus when the reader opened it.
   useLayoutEffect(() => {
     if (open === null) return;
     here.current?.scrollIntoView({ block: "nearest" });
     if (page.current !== null) page.current.scrollTop = 0;
-    if (focusOpen.current) {
+    if (focusId === open) {
       page.current?.querySelector<HTMLElement>(".trail__title")?.focus({ preventScroll: true });
     }
-    focusOpen.current = false;
-  }, [open]);
+  }, [open, focusId]);
 
   return (
     <section className="graph-beside__reader" aria-labelledby={headingId}>
@@ -65,7 +60,7 @@ export function Trail({
       </div>
       {stops.length === 0 ? (
         <div className="graph-beside__page">
-          <TrailStart index={index} numbers={numbers} onOpen={fromReader} />
+          <TrailStart index={index} numbers={numbers} onOpen={onOpen} />
         </div>
       ) : (
         <>
@@ -92,7 +87,7 @@ export function Trail({
                   <button
                     type="button"
                     aria-label={t.writing.trailStop(at + 1, node.title)}
-                    onClick={() => fromReader(node.id, "reader")}
+                    onClick={() => onOpen(node.id, "reader")}
                   >
                     <span className="trail__no" aria-hidden="true">
                       {at + 1}
@@ -111,7 +106,7 @@ export function Trail({
                 node={reading}
                 index={index}
                 numbers={numbers.get(reading.id) ?? []}
-                onOpen={fromReader}
+                onOpen={onOpen}
               />
             )}
           </div>

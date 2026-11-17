@@ -218,6 +218,7 @@ export const writingMessages = {
     legendCited: "Cited in this piece",
     legendOpen: "Open",
     legendTrail: "Your trail",
+    findNone: "No Note or Source has this in its name.",
     findMore: (n: number) => `${numbers.format(n)} more. Type more of the name.`,
     notFound: "This Writing project does not exist. Its file may have been renamed or deleted.",
     backToList: "Back to Writing projects",

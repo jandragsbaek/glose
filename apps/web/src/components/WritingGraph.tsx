@@ -61,7 +61,14 @@ const FIND_SHOWN = 8;
 
 const FIND_INSET = 52;
 
+const CONTROLS_INSET = 56;
+
 const unique = (ids: ReadonlyArray<string>) => Array.from(new Set(ids));
+
+const nearStops = (trail: ReadonlyArray<string>, id: string) => {
+  const at = trail.indexOf(id);
+  return trail.slice(Math.max(0, at - 2), at + 2);
+};
 
 export function WritingGraph({
   id,
@@ -98,16 +105,26 @@ export function WritingGraph({
     if (stops.length === 1) canvas.centerOn(stops[0] ?? "");
     else canvas.frame(stops);
   };
+  const [focusId, setFocusId] = useState<string | null>(null);
   const openNode: Opened = (target, from) => {
+    setFocusId(from === "reader" ? target : null);
     onOpen(target);
     setQuery("");
-    if (from === "reader") frameTrail(followTrail(trail, target));
+    if (from !== "reader") return;
+    if (trail.includes(target)) canvas?.reveal(target);
+    else frameTrail(nearStops(followTrail(trail, target), target));
+  };
+  const showHome = () => {
+    const home = unique([...cited, ...trail]);
+    if (home.length === 0) canvas?.fit();
+    else canvas?.frame(home);
   };
   const events: GraphCanvasEvents = {
     onSelect: (target) => {
       if (target !== null) openNode(target, "graph");
     },
     onOpen: (target) => openNode(target, "graph"),
+    onFit: showHome,
   };
 
   return (
@@ -126,11 +143,8 @@ export function WritingGraph({
         home={cited}
         insetTop={FIND_INSET}
         fitLabel={trail.length > 0 ? t.writing.showTrail : t.writing.showCited}
-        onFit={() => {
-          const home = unique([...cited, ...trail]);
-          if (home.length === 0) canvas?.fit();
-          else canvas?.frame(home);
-        }}
+        onFit={showHome}
+        insetLeft={CONTROLS_INSET}
         label={t.writing.graphCanvasLabel(view.nodes.length, view.links.length)}
       >
         <GraphFind
@@ -140,11 +154,17 @@ export function WritingGraph({
           onQuery={setQuery}
           onOpen={(target) => openNode(target, "reader")}
         />
-        <p className="graph-beside__legend" aria-hidden="true">
-          <span className="graph-beside__key graph-beside__key--cited">
-            {t.writing.legendCited}
-          </span>
-          <span className="graph-beside__key graph-beside__key--open">{t.writing.legendOpen}</span>
+        <p className="graph-beside__legend" aria-hidden="true" data-keep-clear="">
+          {cited.length === 0 ? null : (
+            <span className="graph-beside__key graph-beside__key--cited">
+              {t.writing.legendCited}
+            </span>
+          )}
+          {open === null ? null : (
+            <span className="graph-beside__key graph-beside__key--open">
+              {t.writing.legendOpen}
+            </span>
+          )}
           {trail.length > 1 ? (
             <span className="graph-beside__key graph-beside__key--trail">
               {t.writing.legendTrail}
@@ -157,6 +177,7 @@ export function WritingGraph({
         numbers={numbers}
         trail={trail}
         open={open}
+        focusId={focusId}
         onOpen={openNode}
         onClear={onClear}
       />
@@ -195,6 +216,7 @@ function GraphFind({
       <form
         className="graph-find"
         role="search"
+        data-keep-clear=""
         onSubmit={(event) => {
           event.preventDefault();
           const first = found?.[0];
@@ -218,6 +240,9 @@ function GraphFind({
             if (event.key === "ArrowDown") {
               event.preventDefault();
               results.current?.querySelector("button")?.focus();
+            } else if (event.key === "Escape" && query !== "") {
+              event.preventDefault();
+              onQuery("");
             }
           }}
         />
@@ -225,7 +250,9 @@ function GraphFind({
           {found === null ? "" : t.graph.found(found.length)}
         </span>
       </form>
-      {found === null || found.length === 0 ? null : (
+      {found === null ? null : found.length === 0 ? (
+        <p className="graph-beside__results graph-beside__none">{t.writing.findNone}</p>
+      ) : (
         <div className="graph-beside__results">
           <ul
             ref={results}

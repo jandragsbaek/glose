@@ -10,6 +10,23 @@ export interface Box {
 export const overlaps = (a: Box, b: Box) =>
   a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
 
+export const labelCenter = (
+  sx: number,
+  width: number,
+  top: number,
+  bottom: number,
+  keepClear: ReadonlyArray<Box>,
+  canvasWidth: number,
+): number => {
+  let cx = sx;
+  for (const clear of keepClear) {
+    const box = { left: cx - width / 2 - 2, right: cx + width / 2 + 2, top, bottom };
+    if (!overlaps(clear, box)) continue;
+    cx = clear.left < canvasWidth / 2 ? clear.right + width / 2 + 6 : clear.left - width / 2 - 6;
+  }
+  return Math.min(canvasWidth - width / 2 - 4, Math.max(width / 2 + 4, cx));
+};
+
 export const stopBox = (cx: number, nodeTop: number, width: number, height: number): Box => {
   const left = Math.round(cx - width / 2) + 0.5;
   const top = Math.round(nodeTop - 9 - height) + 0.5;
@@ -37,7 +54,8 @@ export const wrapWords = (
 };
 
 interface Framing {
-  readonly x: number;
+  readonly left: number;
+  readonly right: number;
   readonly top: number;
   readonly bottom: number;
   readonly maxScale: number;
@@ -69,12 +87,15 @@ export const frameTarget = (
     framing.maxScale,
     Math.max(
       framing.minScale,
-      Math.min((width - framing.x * 2) / Math.max(1, maxX - minX), room / Math.max(1, maxY - minY)),
+      Math.min(
+        (width - framing.left - framing.right) / Math.max(1, maxX - minX),
+        room / Math.max(1, maxY - minY),
+      ),
     ),
   );
   return zoomIdentity
     .translate(
-      width / 2 - ((minX + maxX) / 2) * k,
+      framing.left + (width - framing.left - framing.right) / 2 - ((minX + maxX) / 2) * k,
       framing.top + room / 2 - ((minY + maxY) / 2) * k,
     )
     .scale(k);

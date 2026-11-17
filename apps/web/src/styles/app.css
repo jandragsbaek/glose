@@ -5954,7 +5954,7 @@ a.written__title:hover {
 
 .graph-beside {
   display: grid;
-  grid-template-rows: minmax(240px, 44%) minmax(0, 1fr);
+  grid-template-rows: minmax(200px, 40%) minmax(0, 1fr);
   min-width: 0;
   min-height: 0;
   border-left: 1px solid var(--line);
@@ -6094,11 +6094,17 @@ a.written__title:hover {
   flex: none;
   flex-direction: column;
   gap: 6px;
-  max-height: 214px;
+  max-height: min(170px, 22vh);
   padding: 12px 24px;
   border-bottom: 1px solid var(--line);
-  background: var(--ground);
   overflow-y: auto;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    #000 12px,
+    #000 calc(100% - 12px),
+    transparent
+  );
 }
 
 .trail__slip > button,
@@ -6245,6 +6251,17 @@ a.written__title:hover {
   box-shadow: inset 2px 0 0 var(--lapis);
 }
 
+.graph-beside__find:has(input:focus) li:first-child .graph-beside__pick {
+  background: var(--tint);
+  box-shadow: inset 2px 0 0 var(--lapis);
+}
+
+.graph-beside__none {
+  padding: 8px 12px;
+  color: var(--mute);
+  font-size: 13px;
+}
+
 .graph-beside__more {
   padding: 6px 12px 2px;
   border-top: 1px solid var(--line);
@@ -6262,18 +6279,22 @@ a.written__title:hover {
   justify-content: flex-end;
   gap: 4px 14px;
   max-width: calc(100% - 80px);
+  padding: 2px 6px;
+  border-radius: 2px;
+  background: rgb(251 250 247 / 90%);
   color: var(--mute);
   font-size: 12px;
   pointer-events: none;
+}
+
+.graph-beside__legend:empty {
+  display: none;
 }
 
 .graph-beside__key {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 0 4px;
-  border-radius: 2px;
-  background: rgb(251 250 247 / 85%);
 }
 
 .graph-beside__key::before {
@@ -6308,5 +6329,15 @@ a.written__title:hover {
 @media (max-width: 1399px) {
   .desk-bar__graph .key {
     display: none;
+  }
+}
+
+@media (max-height: 800px) {
+  .graph-beside {
+    grid-template-rows: minmax(170px, 34%) minmax(0, 1fr);
+  }
+
+  .trail {
+    max-height: min(170px, 17vh);
   }
 }
