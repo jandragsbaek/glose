@@ -13,7 +13,7 @@ export function AppearancePanel() {
   const id = useId();
   const painted = useAppearance();
   return (
-    <Panel title={t.appearance.title} initial="lapis" level={3}>
+    <Panel title={t.appearance.title} initial="accent" level={3}>
       <div className="panel__body appearance">
         <fieldset className="appearance__group">
           <legend className="appearance__legend">{t.appearance.mode}</legend>
@@ -26,7 +26,7 @@ export function AppearancePanel() {
                     type="radio"
                     name={`${id}-mode`}
                     checked={painted.mode === mode}
-                    onChange={() => chooseAppearance({ mode })}
+                    onChange={() => void chooseAppearance({ mode })}
                   />
                   <span>
                     <Icon className="appearance__mode-icon" aria-hidden="true" />
@@ -36,11 +36,9 @@ export function AppearancePanel() {
               );
             })}
           </div>
-          {painted.mode === "system" ? (
-            <p className="field__hint" aria-live="polite">
-              {t.appearance.systemNow[painted.appearance]}
-            </p>
-          ) : null}
+          <p className="field__hint appearance__now" aria-live="polite">
+            {painted.mode === "system" ? t.appearance.systemNow[painted.appearance] : ""}
+          </p>
         </fieldset>
         <fieldset className="appearance__group">
           <legend className="appearance__legend">{t.appearance.theme}</legend>
@@ -51,7 +49,7 @@ export function AppearancePanel() {
                   type="radio"
                   name={`${id}-theme`}
                   checked={painted.theme === theme}
-                  onChange={() => chooseAppearance({ theme })}
+                  onChange={() => void chooseAppearance({ theme })}
                 />
                 <span className="binding__specimen" aria-hidden="true">
                   <Leaf theme={theme} appearance="light" />

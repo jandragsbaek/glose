@@ -117,7 +117,7 @@ export function CardTrays({ cards }: { readonly cards: ReadonlyArray<ScoredCard>
               />
             )}
           </Tray>
-          <Tray title={t.recall.trays.ai} initial="lapis" total={trays.ai.length}>
+          <Tray title={t.recall.trays.ai} initial="accent" total={trays.ai.length}>
             {trays.ai.length === 0 ? (
               <TrayEmpty
                 lead={searching ? null : t.recall.aiEmptyTitle}
@@ -199,7 +199,7 @@ function Tray({
   children,
 }: {
   readonly title: string;
-  readonly initial: "rubric" | "lapis";
+  readonly initial: "rubric" | "accent";
   readonly total: number;
   readonly action?: ReactNode;
   readonly children: ReactNode;

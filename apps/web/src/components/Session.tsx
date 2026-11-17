@@ -59,7 +59,7 @@ export function NeedsChatGpt({ title, body }: { readonly title: string; readonly
 
 interface SessionFrame {
   readonly title: string;
-  readonly initial: "rubric" | "lapis";
+  readonly initial: "rubric" | "accent";
   readonly renderControls?: (session: Session) => ReactNode;
 }
 

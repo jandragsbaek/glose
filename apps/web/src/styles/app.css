@@ -634,7 +634,7 @@ button.rail__link {
   color: var(--rubric);
 }
 
-.panel[data-initial="lapis"] .panel__title::first-letter {
+.panel[data-initial="accent"] .panel__title::first-letter {
   color: var(--accent);
 }
 
@@ -3008,7 +3008,7 @@ a.written__title:hover {
   border-bottom: 1px solid var(--line);
 }
 
-.tray[data-initial="lapis"] .panel__title::first-letter {
+.tray[data-initial="accent"] .panel__title::first-letter {
   color: var(--accent);
 }
 
@@ -4075,6 +4075,10 @@ a.written__title:hover {
 
 .appearance__modes {
   justify-self: start;
+}
+
+.appearance__now:empty {
+  margin-top: -10px;
 }
 
 .appearance__modes span {
@@ -6290,8 +6294,8 @@ a.written__title:hover {
   mask-image: linear-gradient(
     to bottom,
     transparent,
-    #000 12px,
-    #000 calc(100% - 12px),
+    var(--mask) 12px,
+    var(--mask) calc(100% - 12px),
     transparent
   );
 }
@@ -6433,7 +6437,7 @@ a.written__title:hover {
   max-height: 248px;
   padding-bottom: 8px;
   overflow-y: auto;
-  mask-image: linear-gradient(to bottom, #000 calc(100% - 10px), transparent);
+  mask-image: linear-gradient(to bottom, var(--mask) calc(100% - 10px), transparent);
 }
 
 .graph-beside__results .graph-beside__pick {
@@ -7466,7 +7470,7 @@ h4.article__heading {
     gap: 6px 18px;
     overflow-x: auto;
     scrollbar-width: none;
-    mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent);
+    mask-image: linear-gradient(90deg, var(--mask) calc(100% - 48px), transparent);
   }
 
   .contents__item {

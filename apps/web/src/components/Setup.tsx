@@ -136,7 +136,7 @@ function SetupForm({
             </div>
           </Panel>
 
-          <Panel title={t.setup.folderStep} initial="lapis">
+          <Panel title={t.setup.folderStep} initial="accent">
             <div className="panel__body field">
               <p className="field__hint">{t.setup.folderHint}</p>
               <fieldset className="fieldset" style={{ display: "block" }}>

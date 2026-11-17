@@ -173,7 +173,7 @@ export function RewriteNote({
   return (
     <Panel
       title={total > 0 ? t.rewrite.titleAi : t.rewrite.titleOwn}
-      initial="lapis"
+      initial="accent"
       meta={
         source === undefined ? undefined : (
           <span className="rewrite__source">

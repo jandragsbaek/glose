@@ -188,7 +188,7 @@ function NoteCards({ note }: { readonly note: GraphNode }) {
   };
 
   return (
-    <Panel title={t.cards.title} initial="lapis" meta={t.cards.fromNote(fromNote.length)}>
+    <Panel title={t.cards.title} initial="accent" meta={t.cards.fromNote(fromNote.length)}>
       {AsyncResult.isFailure(cards) ? (
         <div className="panel__body">
           <StorageProblem onRetry={refresh} />
@@ -247,7 +247,7 @@ function CardSession({
         <LiveSession
           id={value.id}
           title={t.cards.extraction}
-          initial="lapis"
+          initial="accent"
           renderControls={(session) =>
             passage === null ? null : (
               <SendPassage session={session} passage={passage} onSent={onPassageSent} />
@@ -261,7 +261,7 @@ function CardSession({
 function SessionProblem({ onRetry }: { readonly onRetry: () => void }) {
   const t = useT();
   return (
-    <Panel title={t.cards.extraction} initial="lapis">
+    <Panel title={t.cards.extraction} initial="accent">
       <div className="panel__body">
         <StorageProblem onRetry={onRetry} />
       </div>
@@ -300,7 +300,7 @@ function StartCardExtraction({
   };
 
   return (
-    <Panel title={t.cards.extraction} initial="lapis">
+    <Panel title={t.cards.extraction} initial="accent">
       <div className="panel__body stack">
         {ready ? (
           <>

@@ -331,7 +331,7 @@ export function AddArticle() {
           <p>{t.importText.filledFromFile}</p>
         </Notice>
       )}
-      <Panel title={t.addSource.author} initial="lapis">
+      <Panel title={t.addSource.author} initial="accent">
         <div className="panel__body">
           <fieldset className="fieldset">
             <legend className="sr-only">{t.addSource.author}</legend>

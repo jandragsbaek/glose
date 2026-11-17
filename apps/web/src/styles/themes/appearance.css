@@ -1,3 +1,7 @@
+:root {
+  --mask: #000;
+}
+
 :root,
 [data-appearance="light"] {
   --veil: color-mix(in srgb, var(--ink) 32%, transparent);

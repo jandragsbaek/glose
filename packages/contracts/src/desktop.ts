@@ -2,9 +2,14 @@ import type { UpdatesStatus } from "./updates.ts";
 
 export type AppearanceMode = "light" | "dark" | "system";
 
+export interface AppearanceGrounds {
+  readonly light: string;
+  readonly dark: string;
+}
+
 export interface DesktopBridge {
   readonly appearance: {
-    readonly set: (mode: AppearanceMode, background: string) => void;
+    readonly set: (mode: AppearanceMode, grounds: AppearanceGrounds) => Promise<boolean>;
   };
   readonly updates: {
     readonly status: () => Promise<UpdatesStatus>;

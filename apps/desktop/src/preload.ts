@@ -4,8 +4,7 @@ import * as Electron from "electron";
 
 const bridge: DesktopBridge = {
   appearance: {
-    set: (mode, background) =>
-      Electron.ipcRenderer.send(DESKTOP_IPC.appearanceSet, mode, background),
+    set: (mode, grounds) => Electron.ipcRenderer.invoke(DESKTOP_IPC.appearanceSet, mode, grounds),
   },
   updates: {
     status: () => Electron.ipcRenderer.invoke(DESKTOP_IPC.updatesStatus),

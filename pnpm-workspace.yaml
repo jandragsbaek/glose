@@ -12,7 +12,7 @@ catalog:
   "@effect/platform-node": 4.1.2
   "@effect/vitest": 4.1.2
   # Lint rules and presets shared across projects: github.com/jandragsbaek/oxlint-plugin
-  "@jandragsbaek/oxlint-plugin": ^0.2.0
+  "@jandragsbaek/oxlint-plugin": ^0.3.0
   "@types/node": ^24.19.2
   effect: 4.1.2
   typescript: ^7.0.2

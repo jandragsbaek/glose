@@ -409,7 +409,7 @@ function SitePanel({ folder }: { readonly folder: string | null }) {
     requestAnimationFrame(() => opener.current?.focus());
   };
   return (
-    <Panel title={t.settings.site} initial="lapis" level={3}>
+    <Panel title={t.settings.site} initial="accent" level={3}>
       <div className="panel__body field">
         {folder === null ? (
           <p className="empty">{t.settings.siteNotChosen}</p>

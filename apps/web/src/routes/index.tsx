@@ -41,7 +41,7 @@ function Today() {
       <div className="columns">
         <div className="stack">
           <SourcesInProgress />
-          <Panel title={t.today.notesNear} initial="lapis">
+          <Panel title={t.today.notesNear} initial="accent">
             <div className="panel__body">
               <p className="empty">{t.today.notesNearEmpty}</p>
             </div>
@@ -248,7 +248,7 @@ function WritingToday() {
   const projects = AsyncResult.getOrElse(useAtomValue(writingListAtom), () => null);
   const latest = projects?.[0] ?? null;
   return (
-    <Panel title={t.today.writingProject} initial="lapis">
+    <Panel title={t.today.writingProject} initial="accent">
       <div className="panel__body">
         {latest === null ? (
           <p className="empty">

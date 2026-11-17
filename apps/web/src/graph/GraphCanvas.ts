@@ -13,7 +13,7 @@ import {
   settle,
 } from "./layout.ts";
 import { type Box, frameTarget, labelCenter, overlaps, wrapWords } from "./canvasGeometry.ts";
-import { subscribeAppearance } from "../theme/appearance.ts";
+import { subscribePaint } from "../theme/appearance.ts";
 import { type Palette, readPalette } from "./canvasPalette.ts";
 import { drawStopTabs, drawTrailLine, layoutStopTabs, type StopTab } from "./canvasTrail.ts";
 
@@ -106,7 +106,7 @@ export class GraphCanvas {
     if (context === null) throw new Error("Canvas 2D is not available.");
     this.#context = context;
     this.#palette = readPalette();
-    this.#stopRestyle = subscribeAppearance(() => {
+    this.#stopRestyle = subscribePaint(() => {
       this.#palette = readPalette();
       this.#request();
     });

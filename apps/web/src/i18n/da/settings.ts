@@ -164,7 +164,7 @@ export const settingsMessages: Pick<
       dark: "Computeren er mørk nu.",
     },
     theme: "Tema",
-    themes: { lapis: "Lapis", murex: "Purpur", sepia: "Sepia" },
+    themes: { lapis: "Lapis", murex: "Murex", sepia: "Sepia" },
     hint: "Hvert tema findes i en lys og en mørk udgave.",
   },
   settings: {

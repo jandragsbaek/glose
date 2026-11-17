@@ -242,7 +242,7 @@ export function PassageMargin({
   return (
     <section
       className="panel margin__passage"
-      data-initial="lapis"
+      data-initial="accent"
       aria-labelledby={`${wordsId}-h`}
     >
       <div className="panel__head">

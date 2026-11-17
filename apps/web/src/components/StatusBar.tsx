@@ -260,7 +260,7 @@ function VersionsItem() {
         )}
       </button>
       <div id={panelId} popover="auto" className="status-panel">
-        <Panel title={t.versions.title} initial="lapis">
+        <Panel title={t.versions.title} initial="accent">
           {status._tag === "Off" ? (
             <div className="panel__body">
               <p className="status-panel__off">{t.versions.offReasons[status.reason]}</p>

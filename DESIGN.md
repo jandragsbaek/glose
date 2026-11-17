@@ -542,7 +542,7 @@ light; the other themes keep every job and change the pigments.
 
 - **Lapis** (default): ultramarine binding; the field, the primary button and the marks are all
   Lapis, as described above.
-- **Murex** ("Purpur"): a Tyrian purple binding; field, primary and marks are purple.
+- **Murex**: a Tyrian purple binding; field, primary and marks are purple.
 - **Sepia**: a brown leather binding with iron-gall ink. The field and the primary button are
   brown; the marks (links, focus, the current Reading mark, the trail) are a blue-black ink, so
   they never read as Gilt.
@@ -603,9 +603,12 @@ Wash and Rubric Wash; Mute, Accent, Rubric and Verdigris 4.5:1; labels on the fi
 
 **The Token Rule.** A color value lives only in `apps/web/src/styles/themes/`. Every other
 stylesheet and component reads a token (`var(--accent)`, or `color-mix()` of tokens for a
-tint); the same test fails on a color literal anywhere else (mask images, which use only alpha,
-are the exception). The Graph canvas reads the tokens from the page and redraws when the theme
-changes.
+tint; mask gradients use `--mask`). The same test fails on a color literal (hex, `%23` hex in a
+data URI, a color function or a named color) in any declaration outside the theme files, and on a
+`var(--…)` that nothing defines. In TypeScript the lint rule `jandragsbaek/no-raw-color` (the
+`theming` preset) does the same. The Graph canvas reads the tokens from the page and redraws when
+the theme changes. A panel's `initial="accent"` draws its Initial in Accent, so it follows the
+theme.
 
 **The Crossfade.** Changing the theme or the mode crossfades the whole window in 280ms on the
 shared ease-out (a view transition); under reduced motion it changes at once. A change of the
@@ -1012,7 +1015,7 @@ under a field legend:
 - **Light or dark** ("Lyst eller mørkt"): the Segmented control with three options, each a 16px
   Lucide icon and a label: Light (Sun), Dark (Moon), Same as the computer (Monitor). While the
   mode follows the computer, a Meta hint under it says which it is now ("The computer is dark
-  now."), in a polite live region.
+  now."); the hint is a polite live region that stays in place and is empty in the other modes.
 - **Theme** ("Tema"): one Binding per theme in a grid (184px at the least, 12px gaps), then the
   hint "Every theme comes in a light and a dark version." A Binding is a radio option drawn like
   a Kind Choice option: Paper, a Strong Hairline border, 4px corners; hover borders it Mute; the

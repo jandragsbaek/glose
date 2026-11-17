@@ -6,9 +6,12 @@ export type Mode = (typeof MODES)[number];
 
 export type Appearance = "light" | "dark";
 
-export interface Painted {
+export interface Choice {
   readonly theme: ThemeId;
   readonly mode: Mode;
+}
+
+export interface Painted extends Choice {
   readonly appearance: Appearance;
 }
 
@@ -16,7 +19,7 @@ export interface PaintConfig {
   readonly key: string;
   readonly themes: ReadonlyArray<string>;
   readonly modes: ReadonlyArray<string>;
-  readonly fallback: { readonly theme: ThemeId; readonly mode: Mode };
+  readonly fallback: Choice;
 }
 
 export const PAINT_CONFIG: PaintConfig = {
@@ -26,12 +29,14 @@ export const PAINT_CONFIG: PaintConfig = {
   fallback: { theme: "lapis", mode: "system" },
 };
 
-export function paint(config: PaintConfig): Painted {
-  let stored: unknown = null;
-  try {
-    stored = JSON.parse(window.localStorage.getItem(config.key) ?? "null");
-  } catch {
-    stored = null;
+export function paint(config: PaintConfig, choice?: Choice, systemDark?: boolean): Painted {
+  let stored: unknown = choice ?? null;
+  if (choice === undefined) {
+    try {
+      stored = JSON.parse(window.localStorage.getItem(config.key) ?? "null");
+    } catch {
+      stored = null;
+    }
   }
   const field = (name: "theme" | "mode", allowed: ReadonlyArray<string>) => {
     const value =
@@ -44,7 +49,7 @@ export function paint(config: PaintConfig): Painted {
   const mode = field("mode", config.modes) as Mode;
   const appearance: Appearance =
     mode === "system"
-      ? window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? (systemDark ?? window.matchMedia("(prefers-color-scheme: dark)").matches)
         ? "dark"
         : "light"
       : mode;

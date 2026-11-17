@@ -90,7 +90,7 @@ export function BackupPanel() {
   const t = useT();
   const status = useVersions();
   return (
-    <Panel title={t.backup.title} initial="lapis" level={3}>
+    <Panel title={t.backup.title} initial="accent" level={3}>
       <div className="panel__body">
         {status === null ? (
           <p className="status">{t.common.loading}</p>

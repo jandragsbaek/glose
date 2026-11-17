@@ -16,9 +16,59 @@ const cssFiles = (dir: string): ReadonlyArray<string> =>
     return entry.name.endsWith(".css") ? [path] : [];
   });
 
-const COLOR_LITERAL =
-  /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(|:\s*(?:[^;]*\s)?(?:white|black|red|green|blue|gray|grey|silver|navy|orange|yellow|purple|pink|brown)\s*(?:[;!)]|$)/i;
-const ALPHA_ONLY = /^\s*(?:-webkit-)?mask(?:-image)?\s*:|^\s*#000\b/;
+const NAMED_COLORS = new Set(
+  (
+    "aliceblue antiquewhite aqua aquamarine azure beige bisque black blanchedalmond blue " +
+    "blueviolet brown burlywood cadetblue chartreuse chocolate coral cornflowerblue cornsilk " +
+    "crimson cyan darkblue darkcyan darkgoldenrod darkgray darkgreen darkgrey darkkhaki " +
+    "darkmagenta darkolivegreen darkorange darkorchid darkred darksalmon darkseagreen " +
+    "darkslateblue darkslategray darkslategrey darkturquoise darkviolet deeppink deepskyblue " +
+    "dimgray dimgrey dodgerblue firebrick floralwhite forestgreen fuchsia gainsboro ghostwhite " +
+    "gold goldenrod gray green greenyellow grey honeydew hotpink indianred indigo ivory khaki " +
+    "lavender lavenderblush lawngreen lemonchiffon lightblue lightcoral lightcyan " +
+    "lightgoldenrodyellow lightgray lightgreen lightgrey lightpink lightsalmon lightseagreen " +
+    "lightskyblue lightslategray lightslategrey lightsteelblue lightyellow lime limegreen linen " +
+    "magenta maroon mediumaquamarine mediumblue mediumorchid mediumpurple mediumseagreen " +
+    "mediumslateblue mediumspringgreen mediumturquoise mediumvioletred midnightblue mintcream " +
+    "mistyrose moccasin navajowhite navy oldlace olive olivedrab orange orangered orchid " +
+    "palegoldenrod palegreen paleturquoise palevioletred papayawhip peachpuff peru pink plum " +
+    "powderblue purple rebeccapurple red rosybrown royalblue saddlebrown salmon sandybrown " +
+    "seagreen seashell sienna silver skyblue slateblue slategray slategrey snow springgreen " +
+    "steelblue tan teal thistle tomato turquoise violet wheat white whitesmoke yellow yellowgreen"
+  ).split(" "),
+);
+
+const COLOR_IN_VALUE =
+  /#[0-9a-f]{3,8}\b|%23[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(/i;
+const WORD = /(?<![\w-])[a-z]+(?![\w-])/gi;
+
+interface Declaration {
+  readonly property: string;
+  readonly value: string;
+  readonly line: number;
+}
+
+const declarations = (css: string): ReadonlyArray<Declaration> =>
+  Array.from(css.matchAll(/[^{};]+/g), (match) => {
+    const text = match[0];
+    const colon = text.indexOf(":");
+    const property = text.slice(0, colon).trim();
+    const line = css.slice(0, match.index + text.search(/\S|$/)).split("\n").length;
+    return { property, value: text.slice(colon + 1), line };
+  }).filter(({ property }) => /^(?:--)?[a-z-]+$/.test(property));
+
+const hasColor = (value: string) =>
+  COLOR_IN_VALUE.test(value) ||
+  Array.from(value.matchAll(WORD), ([word]) => word.toLowerCase()).some((word) =>
+    NAMED_COLORS.has(word),
+  );
+
+const codeFiles = (dir: string): ReadonlyArray<string> =>
+  NodeFS.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = NodePath.join(dir, entry.name);
+    if (entry.isDirectory()) return codeFiles(path);
+    return /\.tsx?$/.test(entry.name) && !entry.name.includes(".test.") ? [path] : [];
+  });
 
 const withoutComments = (css: string) =>
   css.replace(/\/\*[\s\S]*?\*\//g, (comment) => comment.replace(/[^\n]/g, " "));
@@ -96,15 +146,37 @@ describe("themes", () => {
     const strays = cssFiles(source)
       .filter((file) => !file.startsWith(themesDir + NodePath.sep))
       .flatMap((file) =>
-        withoutComments(NodeFS.readFileSync(file, "utf8"))
-          .split("\n")
-          .flatMap((line, index) =>
-            COLOR_LITERAL.test(line) && !ALPHA_ONLY.test(line)
-              ? [`${NodePath.relative(source, file)}:${index + 1}: ${line.trim()}`]
-              : [],
+        declarations(withoutComments(NodeFS.readFileSync(file, "utf8")))
+          .filter(({ value }) => hasColor(value))
+          .map(
+            ({ property, value, line }) =>
+              `${NodePath.relative(source, file)}:${line}: ${property}:${value.trim()}`,
           ),
       );
     expect(strays).toEqual([]);
+  });
+
+  it("defines every token a stylesheet reads", () => {
+    const css = cssFiles(source).map((file) => withoutComments(NodeFS.readFileSync(file, "utf8")));
+    const defined = new Set([
+      ...css.flatMap((text) =>
+        Array.from(text.matchAll(/(--[a-z-]+)\s*:/g), ([, name = ""]) => name),
+      ),
+      ...codeFiles(source).flatMap((file) =>
+        Array.from(
+          NodeFS.readFileSync(file, "utf8").matchAll(/["'](--[a-z-]+)["']\s*:/g),
+          ([, name = ""]) => name,
+        ),
+      ),
+    ]);
+    const missing = [
+      ...new Set(
+        css.flatMap((text) =>
+          Array.from(text.matchAll(/var\((--[a-z-]+)/g), ([, name = ""]) => name),
+        ),
+      ),
+    ].filter((name) => !defined.has(name));
+    expect(missing).toEqual([]);
   });
 
   it("gives every theme a light and a dark variant with the same tokens", () => {
