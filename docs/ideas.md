@@ -525,7 +525,8 @@ Decided, a Graph from GitHub at first start (November 2026):
   node is in the address (`/graph?node=…`), so Back returns to the Note read before.
 - A side panel reads the selected node: its text with working wikilinks, its Source, and its
   Links. Without a selection it lists the Sources. Search fades everything except matching names.
-- Double-clicking a Source opens its Reading Stage. A Note has no page of its own yet.
+- Double-clicking a Source opens its Reading Stage; double-clicking a Note opens it on the rewrite
+  desk (see "Decided, the AI mark on the Graph"). A Note has no page of its own yet.
 - `pnpm dev:demo` opens Glose on the demo Graph (`demo/Graph`): eleven Sources, two of them Danish
   and one a sample Article with Passages, with 104 linked Notes of clearly sample content.
   `demo/Course export (sample)` holds five sample lesson files to try Add Source → Course lessons. It runs on a copy in the temp folder with its
@@ -719,6 +720,32 @@ Decided, first version (November 2026):
   any AI text does; `ai-title: true` goes when the user writes the title.
 - Extraction keeps its own rule for now: a kept Point's text starts as the AI's draft, marked
   until "I rewrote it". Open question: should Extraction also write beside the draft?
+
+## Decided, the AI mark on the Graph (November 2026)
+
+Jan asked to browse the Graph, rewrite Notes in his own words from it, and see on the Graph
+itself which Notes the AI wrote. He had the options shaped with impeccable and left the picks to
+the agent; these are the picks.
+
+- A Note with AI text (an AI title counts) is a hollow node on the canvas: a Rubric ring round a
+  pale Rubric Wash, as ink not yet laid down. Every other node keeps its fill. Shape carries the
+  mark as well as colour, so red never says it alone. It shows wherever the Graph is drawn, beside
+  the Writing Desk too, in every theme, light and dark. Rejected:
+  a red filled node (reads as an error at a glance) and a ring that fills by the share still AI
+  (not readable at a node's size, and the mark is per run, not per word).
+- A key at the canvas's foot, right, says how many Notes hold AI text ("9 Notes hold AI text").
+  It is a toggle: pressed, it fades every other node, as Find does, and the two narrow together;
+  Find's count and Enter then use the Notes that pass both.
+  With none left it says "Every Note is in your words" with the check of done.
+- With no node selected, the side panel opens with "To rewrite": every Note with AI text, ordered
+  by Source, each with its Call Number. Sources follow under it. With none left the list goes.
+- Double-clicking a Note, or Enter on the canvas with a Note selected, opens it on the rewrite
+  desk; for a Source both open its Reading Stage, as before.
+- The Note's actions ("Rewrite in your words" or "Edit", Make Cards) sit under its title and
+  Source, above the text, so they stay in reach on a long Note.
+- In the side panel's Links, a Note with AI text wears the same small hollow ring after its name,
+  and screen readers hear "holds AI text".
+- After a save the node fills and the counts drop at once: the Graph reads the files again.
 
 ## Decided, the first page of a Source (November 2026)
 
