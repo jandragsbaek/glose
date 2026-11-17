@@ -1,4 +1,4 @@
-import { numbers, count, shortDate, longDate } from "./format.ts";
+import { numbers, count, list, shortDate, longDate } from "./format.ts";
 import type { Messages } from "../en.ts";
 
 export const writingMessages: Pick<Messages, "writing"> = {
@@ -189,6 +189,25 @@ export const writingMessages: Pick<Messages, "writing"> = {
     replace: "Erstat det",
     keep: "Behold det",
     publishFailed: "Glose kunne ikke skrive indlægget. Prøv igen.",
+    graphToggle: "Graf",
+    graphToggleTitle: "Læs grafen ved siden af din tekst",
+    graphPanel: "Grafen ved siden af din tekst",
+    graphCanvasLabel: (notes: number, links: number) =>
+      `Grafen: ${count(notes, "punkt", "punkter")} forbundet af ${count(links, "link", "links")}. Dit spor og de noter, teksten henviser til, er markeret. Listen under den viser de samme noter.`,
+    trailTitle: "Dit spor",
+    trailCount: (n: number) => count(n, "note", "noter"),
+    clearTrail: "Ryd sporet",
+    trailEmptyLead: "Læs dine noter ved siden af teksten",
+    trailEmptyBody:
+      "Klik på en note i grafen, eller på en, teksten henviser til, for at læse den her. Hver note, du åbner, kommer med i dit spor, så du kan finde tilbage.",
+    citedHere: "Henvist til i teksten",
+    noneCited: "Teksten henviser ikke til nogen note endnu.",
+    citedAs: (numbers: ReadonlyArray<number>) =>
+      numbers.length === 1
+        ? `Henvisning ${numbers[0]} i teksten`
+        : `Henvisning ${list.format(numbers.map(String))} i teksten`,
+    trailStop: (n: number, title: string) => `${n}. ${title}. Læs den igen`,
+    trailOpen: (n: number) => `Nummer ${n} i dit spor, åben`,
     notFound: "Skriveprojektet findes ikke. Filen kan være omdøbt eller slettet.",
     backToList: "Tilbage til skriveprojekter",
   },

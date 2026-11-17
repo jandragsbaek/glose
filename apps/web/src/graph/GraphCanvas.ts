@@ -54,6 +54,9 @@ const LABEL_WIDTH = 170;
 const LINE_HEIGHT = 15;
 const CALL_HEIGHT = 17;
 const FADED = 0.14;
+const MARKED = 0.6;
+const STOP_FONT = '700 11px "Courier Prime", ui-monospace, monospace';
+const STOP_HEIGHT = 17;
 const SCALE_EXTENT: [number, number] = [0.12, 6];
 const CLICK_SLOP = 4;
 const FADE_MS = 160;
@@ -76,6 +79,8 @@ export class GraphCanvas {
   #ratio = 1;
   #transform: ZoomTransform = zoomIdentity;
   #fitted = false;
+  #held = false;
+  #home: ReadonlyArray<string> | null = null;
 
   #view: GraphView | null = null;
   #simulation: GraphSimulation | null = null;
@@ -89,6 +94,8 @@ export class GraphCanvas {
   #hovered: string | null = null;
   #selected: string | null = null;
   #matches: ReadonlySet<string> | null = null;
+  #trail: ReadonlyArray<string> = [];
+  #cited: ReadonlySet<string> = new Set();
   #focus: string | null = null;
   #dim = 0;
   #lastFrame = 0;
@@ -121,8 +128,9 @@ export class GraphCanvas {
         const point = "touches" in event ? event.touches[0] : event;
         return point === undefined || this.#hit(this.#local(point)) === null;
       })
-      .on("zoom", (event: { transform: ZoomTransform }) => {
+      .on("zoom", (event: { transform: ZoomTransform; sourceEvent: unknown }) => {
         this.#transform = event.transform;
+        if (event.sourceEvent !== null && event.sourceEvent !== undefined) this.#held = true;
         if (this.#pointer !== null && this.#drag === null) {
           this.#hover(this.#hit(this.#pointer)?.id ?? null);
         }
@@ -178,8 +186,13 @@ export class GraphCanvas {
       settle(this.#simulation);
       this.#simulation.alpha(0);
     }
-    if (!this.#fitted && this.#width > 0) this.fit(false);
+    if (!this.#fitted && this.#width > 0) this.#fitHome(false);
     this.#request();
+  }
+
+  setHome(ids: ReadonlyArray<string> | null): void {
+    this.#home = ids;
+    if (!this.#held && this.#width > 0 && this.#nodes.length > 0) this.#fitHome(false);
   }
 
   setSelected(id: string | null): void {
@@ -192,6 +205,19 @@ export class GraphCanvas {
     this.#request();
   }
 
+  setTrail(ids: ReadonlyArray<string>): void {
+    if (ids === this.#trail) return;
+    this.#trail = ids;
+    this.#request();
+  }
+
+  setCited(ids: ReadonlyArray<string>): void {
+    const next = new Set(ids);
+    if (next.size === this.#cited.size && ids.every((id) => this.#cited.has(id))) return;
+    this.#cited = next;
+    this.#request();
+  }
+
   zoomBy(factor: number): void {
     const center: [number, number] = [this.#width / 2, this.#height / 2];
     const k = Math.min(SCALE_EXTENT[1], Math.max(SCALE_EXTENT[0], this.#transform.k * factor));
@@ -200,12 +226,29 @@ export class GraphCanvas {
   }
 
   fit(animate = true): void {
-    if (this.#nodes.length === 0 || this.#width === 0) return;
+    this.#home = null;
+    this.#held = false;
+    this.#frameNodes(this.#nodes, animate);
+  }
+
+  #fitHome(animate: boolean): void {
+    const home = this.#home;
+    if (home === null || home.length === 0) {
+      this.#frameNodes(this.#nodes, animate);
+      return;
+    }
+    const ids = new Set(home);
+    const framed = this.#nodes.filter((node) => ids.has(node.id));
+    this.#frameNodes(framed.length === 0 ? this.#nodes : framed, animate);
+  }
+
+  #frameNodes(nodes: ReadonlyArray<LayoutNode>, animate: boolean): void {
+    if (nodes.length === 0 || this.#width === 0) return;
     let minX = Infinity;
     let minY = Infinity;
     let maxX = -Infinity;
     let maxY = -Infinity;
-    for (const node of this.#nodes) {
+    for (const node of nodes) {
       minX = Math.min(minX, (node.x ?? 0) - node.radius);
       minY = Math.min(minY, (node.y ?? 0) - node.radius);
       maxX = Math.max(maxX, (node.x ?? 0) + node.radius);
@@ -235,6 +278,7 @@ export class GraphCanvas {
   centerOn(id: string): void {
     const node = this.#byId.get(id);
     if (node === undefined || this.#width === 0) return;
+    this.#held = true;
     const k = Math.max(this.#transform.k, 1.7);
     this.#moveCamera(
       zoomIdentity
@@ -381,7 +425,7 @@ export class GraphCanvas {
     this.#height = rect.height;
     this.#canvas.width = Math.round(rect.width * this.#ratio);
     this.#canvas.height = Math.round(rect.height * this.#ratio);
-    if (!this.#fitted && this.#nodes.length > 0 && rect.width > 0) this.fit(false);
+    if (!this.#held && this.#nodes.length > 0 && rect.width > 0) this.#fitHome(false);
     this.#dirty = true;
     this.#request();
   }
@@ -438,7 +482,11 @@ export class GraphCanvas {
     if (this.#focus !== null && this.#dim > 0 && !this.#inFocus(node.id)) {
       alpha *= 1 - (1 - FADED) * this.#dim;
     }
-    return alpha;
+    return this.#marked(node.id) ? Math.max(alpha, MARKED) : alpha;
+  }
+
+  #marked(id: string): boolean {
+    return this.#cited.has(id) || this.#trail.includes(id);
   }
 
   #inFocus(id: string): boolean {
@@ -481,6 +529,7 @@ export class GraphCanvas {
       }
       context.stroke();
     }
+    this.#drawTrail();
 
     for (const node of this.#nodes) {
       context.globalAlpha = this.#alpha(node);
@@ -489,17 +538,77 @@ export class GraphCanvas {
       context.beginPath();
       context.arc(node.x ?? 0, node.y ?? 0, node.radius, 0, Math.PI * 2);
       context.fill();
+      const cited = this.#cited.has(node.id);
+      if (cited) {
+        context.strokeStyle = palette.lapis;
+        context.lineWidth = 1.5 / k;
+        context.beginPath();
+        context.arc(node.x ?? 0, node.y ?? 0, node.radius + 3.5 / k, 0, Math.PI * 2);
+        context.stroke();
+      }
       if (node.id === this.#selected) {
         context.globalAlpha = 1;
         context.strokeStyle = palette.gold;
         context.lineWidth = 2.5 / k;
         context.beginPath();
-        context.arc(node.x ?? 0, node.y ?? 0, node.radius + 3.5 / k, 0, Math.PI * 2);
+        context.arc(node.x ?? 0, node.y ?? 0, node.radius + (cited ? 7 : 3.5) / k, 0, Math.PI * 2);
         context.stroke();
       }
     }
 
     this.#drawLabels();
+    this.#drawStops();
+  }
+
+  #drawTrail(): void {
+    const stops = this.#trail.flatMap((id) => this.#byId.get(id) ?? []);
+    if (stops.length < 2) return;
+    const context = this.#context;
+    context.globalAlpha = 0.85;
+    context.strokeStyle = this.#palette.lapis;
+    context.lineWidth = 3 / this.#transform.k;
+    context.lineJoin = "round";
+    context.lineCap = "round";
+    context.beginPath();
+    stops.forEach((node, index) => {
+      if (index === 0) context.moveTo(node.x ?? 0, node.y ?? 0);
+      else context.lineTo(node.x ?? 0, node.y ?? 0);
+    });
+    context.stroke();
+  }
+
+  #drawStops(): void {
+    if (this.#trail.length === 0) return;
+    const context = this.#context;
+    const { k, x, y } = this.#transform;
+    context.setTransform(this.#ratio, 0, 0, this.#ratio, 0, 0);
+    context.globalAlpha = 1;
+    context.font = STOP_FONT;
+    context.textAlign = "center";
+    context.textBaseline = "top";
+    this.#trail.forEach((id, index) => {
+      const node = this.#byId.get(id);
+      if (node === undefined) return;
+      const number = String(index + 1);
+      const width = Math.max(STOP_HEIGHT, context.measureText(number).width + 10);
+      const cx = (node.x ?? 0) * k + x;
+      const bottom = (node.y ?? 0) * k + y - node.radius * k - 9;
+      const left = Math.round(cx - width / 2) + 0.5;
+      const top = Math.round(bottom - STOP_HEIGHT) + 0.5;
+      context.fillStyle = this.#palette.paper;
+      context.strokeStyle = this.#palette.lapis;
+      context.lineWidth = 1;
+      context.beginPath();
+      context.roundRect(left, top, Math.round(width), STOP_HEIGHT - 1, 2);
+      context.fill();
+      context.stroke();
+      context.fillStyle = this.#palette.lapis;
+      context.fillText(number, cx, top + 2.5);
+      if (id === this.#selected) {
+        context.fillStyle = this.#palette.gold;
+        context.fillRect(left - 0.5, top + STOP_HEIGHT + 1, Math.round(width) + 1, 2);
+      }
+    });
   }
 
   #drawLabels(): void {
@@ -526,6 +635,7 @@ export class GraphCanvas {
       if (label === undefined) continue;
       const strong =
         node.id === this.#selected ||
+        this.#marked(node.id) ||
         (focused && this.#inFocus(node.id)) ||
         (showMatches && this.#matches?.has(node.id) === true);
       const base = this.#alpha(node);

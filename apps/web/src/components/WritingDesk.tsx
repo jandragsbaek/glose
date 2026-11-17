@@ -35,6 +35,14 @@ import {
   ReferenceGlosses,
   useMarginPlacement,
 } from "./WritingMargins.tsx";
+import {
+  followTrail,
+  graphWasOpen,
+  rememberGraph,
+  useGraphFits,
+  useGraphKey,
+  WritingGraph,
+} from "./WritingGraph.tsx";
 import { Proof } from "./WritingProof.tsx";
 import { useWritingSave } from "./WritingSave.ts";
 import { ReplaceSheet, SiteFolderSheet } from "./WritingSheets.tsx";
@@ -74,6 +82,10 @@ export function WritingDesk({
   const [cite, setCite] = useState<CiteTarget | null>(null);
   const [sheet, setSheet] = useState<"site" | { readonly replace: string } | null>(null);
   const [publish, setPublish] = useState<PublishState>({ kind: "idle" });
+  const [graphOpen, setGraphOpen] = useState(() => graphWasOpen(project.id));
+  const [trail, setTrail] = useState<ReadonlyArray<string>>([]);
+  const [reading, setReading] = useState<string | null>(null);
+  const graphFits = useGraphFits();
 
   const editor = useRef<ProseHandle | null>(null);
   const { leftMargin, rightMargin, editorBox, latestPlace } = useMarginPlacement(editor, mode);
@@ -206,6 +218,14 @@ export function WritingDesk({
 
   const addPage = (reference: ResolvedReference) => editReference(reference, true);
 
+  const toggleGraph = () => {
+    const next = !graphOpen;
+    setGraphOpen(next);
+    rememberGraph(savedId.current, next);
+  };
+  const besideOpen = graphFits && graphOpen && graph !== null;
+  useGraphKey(graphFits, toggleGraph, isMac());
+
   const words = proseWords(fields.body);
   const shortcut = isMac() ? "⌘K" : "Ctrl+K";
   const titleError = saveState === "taken" ? t.writing.titleTaken : null;
@@ -215,6 +235,7 @@ export function WritingDesk({
   return (
     <div
       className="desk-frame"
+      data-graph={besideOpen ? "open" : undefined}
       onKeyDown={(event) => {
         if (
           mode !== "write" ||
@@ -247,136 +268,161 @@ export function WritingDesk({
         postFile={postFile}
         publishing={publish.kind === "writing"}
         onPublish={() => void runPublish(false)}
+        graph={
+          graphFits ? { open: graphOpen, panelId: `${deskId}-graph`, onToggle: toggleGraph } : null
+        }
       />
       <DeskNote reviewState={reviewState} review={review} publish={publish} />
-      <div className="writing-desk" data-mode={mode}>
-        <article className="leaf" aria-label={t.writing.deskLabel}>
-          {mode === "write" ? (
-            <>
-              <label className="sr-only" htmlFor={`${deskId}-title`}>
-                {t.writing.titleLabel}
-              </label>
-              <input
-                id={`${deskId}-title`}
-                className="leaf__title-input"
-                value={titleInput}
-                autoFocus={fresh}
-                onFocus={(event) => {
-                  if (fresh) event.currentTarget.select();
-                }}
-                aria-invalid={titleError === null ? undefined : true}
-                onChange={(event) => {
-                  setTitleInput(event.target.value);
-                  if (event.target.value.trim() === "") setSaveState("empty");
-                  else update({ title: event.target.value.trim() });
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    editor.current?.focus();
-                  }
-                }}
-              />
-              {titleError !== null || saveState === "empty" ? (
-                <p className="field__error leaf__error">
-                  <TriangleAlert className="call__icon" aria-hidden="true" />
-                  {titleError ?? t.writing.titleEmpty}
-                </p>
-              ) : null}
-              <p className="leaf__meta">
-                <span>
-                  {t.writing.types[fields.type]} · {t.writing.meta(words, references.length)}
-                </span>
-                <span className="leaf__hint">
-                  {isMac()
-                    ? t.writing.formatHint("⌘B", "⌘I", "⌥⌘2")
-                    : t.writing.formatHint("Ctrl+B", "Ctrl+I", "Ctrl+Shift+2")}
-                </span>
-              </p>
-              <div ref={editorBox}>
-                <ProseEditor
-                  ref={editor}
-                  initial={fields.body}
-                  flagged={flagged}
-                  label={t.writing.bodyLabel}
-                  language={fields.language}
-                  placeholder={t.writing.placeholder(shortcut)}
-                  referenceLabel={t.writing.referenceMarkLabel}
-                  onChange={(body) => update({ body })}
-                  onLayout={() => window.requestAnimationFrame(() => latestPlace.current())}
-                  onCite={(from, to, typed) => openCite(from, to, null, false, typed)}
-                  onEditReference={(start) => {
-                    const reference = references.find((item) => item.start === start);
-                    if (reference !== undefined) editReference(reference);
-                  }}
-                />
-              </div>
-              {cite === null || graph === null ? null : (
-                <CiteSlip
-                  key={cite.opened}
-                  target={cite}
-                  nodes={graph.nodes}
-                  sources={sources ?? []}
-                  cited={references.map((reference) => reference.target)}
-                  onCite={insertReference}
-                  onRemove={removeReference}
-                  onClose={closeCite}
+      <div className="desk-body">
+        <div className="desk-body__desk">
+          <div className="writing-desk" data-mode={mode}>
+            <article className="leaf" aria-label={t.writing.deskLabel}>
+              {mode === "write" ? (
+                <>
+                  <label className="sr-only" htmlFor={`${deskId}-title`}>
+                    {t.writing.titleLabel}
+                  </label>
+                  <input
+                    id={`${deskId}-title`}
+                    className="leaf__title-input"
+                    value={titleInput}
+                    autoFocus={fresh}
+                    onFocus={(event) => {
+                      if (fresh) event.currentTarget.select();
+                    }}
+                    aria-invalid={titleError === null ? undefined : true}
+                    onChange={(event) => {
+                      setTitleInput(event.target.value);
+                      if (event.target.value.trim() === "") setSaveState("empty");
+                      else update({ title: event.target.value.trim() });
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        editor.current?.focus();
+                      }
+                    }}
+                  />
+                  {titleError !== null || saveState === "empty" ? (
+                    <p className="field__error leaf__error">
+                      <TriangleAlert className="call__icon" aria-hidden="true" />
+                      {titleError ?? t.writing.titleEmpty}
+                    </p>
+                  ) : null}
+                  <p className="leaf__meta">
+                    <span>
+                      {t.writing.types[fields.type]} · {t.writing.meta(words, references.length)}
+                    </span>
+                    <span className="leaf__hint">
+                      {isMac()
+                        ? t.writing.formatHint("⌘B", "⌘I", "⌥⌘2")
+                        : t.writing.formatHint("Ctrl+B", "Ctrl+I", "Ctrl+Shift+2")}
+                    </span>
+                  </p>
+                  <div ref={editorBox}>
+                    <ProseEditor
+                      ref={editor}
+                      initial={fields.body}
+                      flagged={flagged}
+                      label={t.writing.bodyLabel}
+                      language={fields.language}
+                      placeholder={t.writing.placeholder(shortcut)}
+                      referenceLabel={t.writing.referenceMarkLabel}
+                      onChange={(body) => update({ body })}
+                      onLayout={() => window.requestAnimationFrame(() => latestPlace.current())}
+                      onCite={(from, to, typed) => openCite(from, to, null, false, typed)}
+                      onEditReference={(start) => {
+                        const reference = references.find((item) => item.start === start);
+                        if (reference !== undefined) editReference(reference);
+                      }}
+                    />
+                  </div>
+                  {cite === null || graph === null ? null : (
+                    <CiteSlip
+                      key={cite.opened}
+                      target={cite}
+                      nodes={graph.nodes}
+                      sources={sources ?? []}
+                      cited={references.map((reference) => reference.target)}
+                      onCite={insertReference}
+                      onRemove={removeReference}
+                      onClose={closeCite}
+                    />
+                  )}
+                </>
+              ) : (
+                <Proof
+                  fields={fields}
+                  references={references}
+                  date={dayDate(published?.date ?? today())}
                 />
               )}
-            </>
-          ) : (
-            <Proof
-              fields={fields}
-              references={references}
-              date={dayDate(published?.date ?? today())}
-            />
-          )}
-        </article>
+            </article>
 
-        <aside className="writing-desk__margin writing-desk__margin--right" ref={rightMargin}>
-          {mode === "write" ? (
-            <ReferenceGlosses
-              references={references}
-              current={cite?.editing === null ? null : (cite?.from ?? null)}
-              onEdit={(reference) => editReference(reference)}
-              onAddPage={addPage}
-              onChoose={(reference) => editReference(reference)}
-            />
-          ) : (
-            <Questions
-              review={reviewFits ? review : null}
-              running={reviewState === "running"}
-              onAsk={() => void runReview()}
-            />
-          )}
-        </aside>
-        <aside className="writing-desk__margin writing-desk__margin--left" ref={leftMargin}>
-          {mode === "write" ? (
-            <ReviewFlags
-              claims={claims}
-              suggestions={suggestions}
-              body={fields.body}
-              onChoose={(at) => openCite(at, at)}
-              onReplace={(from, to, text) => editor.current?.replace(from, to, text)}
-            />
-          ) : (
-            <Checks
-              references={references}
-              claims={claims.length}
-              reviewed={reviewFits && reviewedBody === fields.body}
-              onFix={(reference) => {
-                setMode("write");
-                window.setTimeout(() => {
-                  editor.current?.select(reference.start, reference.start);
-                  window.requestAnimationFrame(() =>
-                    editReference(reference, reference.problems.includes("no-location")),
-                  );
-                }, 0);
-              }}
-              onAsk={() => void runReview()}
-            />
-          )}
-        </aside>
+            <aside className="writing-desk__margin writing-desk__margin--right" ref={rightMargin}>
+              {mode === "write" ? (
+                <ReferenceGlosses
+                  references={references}
+                  current={cite?.editing === null ? null : (cite?.from ?? null)}
+                  onEdit={(reference) => editReference(reference)}
+                  onAddPage={addPage}
+                  onChoose={(reference) => editReference(reference)}
+                />
+              ) : (
+                <Questions
+                  review={reviewFits ? review : null}
+                  running={reviewState === "running"}
+                  onAsk={() => void runReview()}
+                />
+              )}
+            </aside>
+            <aside className="writing-desk__margin writing-desk__margin--left" ref={leftMargin}>
+              {mode === "write" ? (
+                <ReviewFlags
+                  claims={claims}
+                  suggestions={suggestions}
+                  body={fields.body}
+                  onChoose={(at) => openCite(at, at)}
+                  onReplace={(from, to, text) => editor.current?.replace(from, to, text)}
+                />
+              ) : (
+                <Checks
+                  references={references}
+                  claims={claims.length}
+                  reviewed={reviewFits && reviewedBody === fields.body}
+                  onFix={(reference) => {
+                    setMode("write");
+                    window.setTimeout(() => {
+                      editor.current?.select(reference.start, reference.start);
+                      window.requestAnimationFrame(() =>
+                        editReference(reference, reference.problems.includes("no-location")),
+                      );
+                    }, 0);
+                  }}
+                  onAsk={() => void runReview()}
+                />
+              )}
+            </aside>
+          </div>
+        </div>
+        {besideOpen ? (
+          <WritingGraph
+            id={`${deskId}-graph`}
+            view={graph}
+            sources={sources ?? []}
+            references={references}
+            trail={trail}
+            open={reading}
+            onOpen={(id) => {
+              setTrail((now) => followTrail(now, id));
+              setReading(id);
+            }}
+            onClear={() => {
+              setTrail([]);
+              setReading(null);
+            }}
+          />
+        ) : null}
       </div>
 
       {sheet === "site" ? (

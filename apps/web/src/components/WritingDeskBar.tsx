@@ -1,6 +1,6 @@
 import { POSTS_FOLDER, type WritingProjectFields, type WritingReview } from "@glose/contracts";
 import { Link } from "@tanstack/react-router";
-import { Check, TriangleAlert } from "lucide-react";
+import { Check, TriangleAlert, Waypoints } from "lucide-react";
 
 import { useT } from "../i18n/I18n.tsx";
 import { OpenSettingsButton } from "./SettingsWindow.tsx";
@@ -31,6 +31,7 @@ export function DeskBar({
   postFile,
   publishing,
   onPublish,
+  graph,
 }: {
   readonly deskId: string;
   readonly fields: WritingProjectFields;
@@ -46,6 +47,11 @@ export function DeskBar({
   readonly postFile: string;
   readonly publishing: boolean;
   readonly onPublish: () => void;
+  readonly graph: {
+    readonly open: boolean;
+    readonly panelId: string;
+    readonly onToggle: () => void;
+  } | null;
 }) {
   const t = useT();
   const shortcut = isMac() ? "⌘K" : "Ctrl+K";
@@ -82,6 +88,23 @@ export function DeskBar({
             </label>
           ))}
         </fieldset>
+        {graph === null ? null : (
+          <button
+            type="button"
+            className="button desk-bar__graph"
+            aria-pressed={graph.open}
+            aria-controls={graph.open ? graph.panelId : undefined}
+            aria-keyshortcuts={isMac() ? "Meta+G" : "Control+G"}
+            title={t.writing.graphToggleTitle}
+            onClick={graph.onToggle}
+          >
+            <Waypoints className="button__icon" aria-hidden="true" />
+            {t.writing.graphToggle}
+            <kbd className="key" aria-hidden="true">
+              {isMac() ? "⌘G" : "Ctrl+G"}
+            </kbd>
+          </button>
+        )}
         {mode === "write" ? (
           <>
             <button

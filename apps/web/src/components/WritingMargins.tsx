@@ -10,10 +10,6 @@ import { CallNumber } from "./ui.tsx";
 
 const MARGIN_GAP = 12;
 
-const WIDE = "(min-width: 1200px)";
-
-const GLOSSES_BESIDE = "(min-width: 960px)";
-
 export function useMarginPlacement(editor: RefObject<ProseHandle | null>, mode: "write" | "proof") {
   const leftMargin = useRef<HTMLDivElement | null>(null);
   const rightMargin = useRef<HTMLDivElement | null>(null);
@@ -23,13 +19,12 @@ export function useMarginPlacement(editor: RefObject<ProseHandle | null>, mode: 
     const box = editorBox.current;
     const handle = editor.current;
     if (box === null || handle === null) return;
-    for (const [margin, query] of [
-      [leftMargin.current, WIDE],
-      [rightMargin.current, GLOSSES_BESIDE],
-    ] as const) {
+    for (const margin of [leftMargin.current, rightMargin.current]) {
       if (margin === null) continue;
-      const wide = window.matchMedia(query).matches && mode === "write";
       const items = Array.from(margin.querySelectorAll<HTMLElement>("[data-pos]"));
+      const first = items[0];
+      const wide =
+        mode === "write" && first !== undefined && getComputedStyle(first).position === "absolute";
       if (!wide) {
         for (const item of items) item.style.top = "";
         margin.style.minHeight = "";
@@ -54,11 +49,13 @@ export function useMarginPlacement(editor: RefObject<ProseHandle | null>, mode: 
     latestPlace.current = placeMargins;
     placeMargins();
   });
-  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- a resize listener, not state: the lines move when the window changes width.
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- a resize observer, not state: the lines move when the desk changes width (the window, or the Graph opening beside it).
   useEffect(() => {
-    const place = () => latestPlace.current();
-    window.addEventListener("resize", place);
-    return () => window.removeEventListener("resize", place);
+    const desk = rightMargin.current?.parentElement ?? null;
+    if (desk === null) return;
+    const observer = new ResizeObserver(() => latestPlace.current());
+    observer.observe(desk);
+    return () => observer.disconnect();
   }, []);
   return { leftMargin, rightMargin, editorBox, latestPlace };
 }

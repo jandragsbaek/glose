@@ -1,17 +1,17 @@
-/* oxlint-disable jandragsbaek/max-file-lines -- the /graph route with its stage, lists and node panel; move the panels to components next */
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
 import { type GraphNode, type GraphView, linkKey, type Source } from "@glose/contracts";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
-import { Maximize, Minus, Plus, Search, X } from "lucide-react";
-import { type ReactNode, type Ref, useEffect, useId, useRef, useState } from "react";
+import { Search, X } from "lucide-react";
+import { type ReactNode, type Ref, useId, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
 import { AiText, MissingLink, NoteText, type WikilinkPart } from "../components/NoteText.tsx";
 import { type Linking, RewriteNote } from "../components/RewriteNote.tsx";
+import { GraphStage } from "../components/GraphStage.tsx";
 import { CallNumber, Page, Panel, SkeletonPanel, StorageProblem } from "../components/ui.tsx";
-import { callNumber } from "../domain/source.ts";
-import { GraphCanvas, type GraphCanvasEvents, type NodeLabel } from "../graph/GraphCanvas.ts";
+import type { GraphCanvas, GraphCanvasEvents } from "../graph/GraphCanvas.ts";
+import { findNodes, type GraphIndex, indexGraph, labelOf } from "../graph/graphIndex.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { cardsAtom } from "../state/cards.ts";
 import { graphAtom, sourcesAtom } from "../state/graph.ts";
@@ -78,44 +78,6 @@ function GraphProblem({ onRetry }: { readonly onRetry: () => void }) {
   );
 }
 
-interface GraphIndex {
-  readonly byId: ReadonlyMap<string, GraphNode>;
-  readonly byKey: ReadonlyMap<string, GraphNode>;
-  readonly sources: ReadonlyMap<string, Source>;
-  readonly linked: ReadonlyMap<string, ReadonlyArray<GraphNode>>;
-}
-
-const indexGraph = (view: GraphView, sources: ReadonlyArray<Source>): GraphIndex => {
-  const byId = new Map(view.nodes.map((node) => [node.id, node]));
-  const linked = new Map<string, Set<GraphNode>>(view.nodes.map((node) => [node.id, new Set()]));
-  for (const link of view.links) {
-    const from = byId.get(link.from);
-    const to = byId.get(link.to);
-    if (from === undefined || to === undefined) continue;
-    linked.get(from.id)?.add(to);
-    linked.get(to.id)?.add(from);
-  }
-  return {
-    byId,
-    byKey: new Map(view.nodes.map((node) => [linkKey(node.id), node])),
-    sources: new Map(sources.map((source) => [source.id, source])),
-    linked: new Map(
-      Array.from(linked, ([id, nodes]) => [
-        id,
-        Array.from(nodes).sort((a, b) => a.title.localeCompare(b.title)),
-      ]),
-    ),
-  };
-};
-
-const labelOf = (node: GraphNode, index: GraphIndex): NodeLabel => {
-  const source = index.sources.get(node.id);
-  return {
-    text: node.title,
-    call: node.kind === "source" && source !== undefined ? callNumber(source) : null,
-  };
-};
-
 function GraphPage({
   view,
   sources,
@@ -139,15 +101,7 @@ function GraphPage({
   const selected = selectedId === undefined ? undefined : index.byId.get(selectedId);
   const rewritten = rewriting === null ? undefined : index.byId.get(rewriting);
 
-  const needle = query.trim().toLocaleLowerCase();
-  const found =
-    needle === ""
-      ? null
-      : view.nodes.filter((node) =>
-          [node.title, labels.get(node.id)?.call ?? ""].some((text) =>
-            text.toLocaleLowerCase().includes(needle),
-          ),
-        );
+  const found = findNodes(view, labels, query);
   const matches = found === null ? null : new Set(found.map((node) => node.id));
 
   const select = (id: string | null) =>
@@ -270,94 +224,6 @@ function GraphPage({
         </aside>
       </div>
     </Page>
-  );
-}
-
-function GraphStage({
-  view,
-  labels,
-  selectedId,
-  matches,
-  events,
-  canvas,
-  onCanvas,
-  covered,
-}: {
-  readonly view: GraphView;
-  readonly labels: ReadonlyMap<string, NodeLabel>;
-  readonly selectedId: string | null;
-  readonly matches: ReadonlySet<string> | null;
-  readonly events: GraphCanvasEvents;
-  readonly canvas: GraphCanvas | null;
-  readonly onCanvas: (canvas: GraphCanvas | null) => void;
-  readonly covered: boolean;
-}) {
-  const t = useT();
-  const element = useRef<HTMLCanvasElement>(null);
-  const opened = useRef(false);
-  const notes = view.nodes.length;
-
-  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- the canvas is an imperative renderer that owns DOM listeners and an animation loop; it lives exactly as long as this element.
-  useEffect(() => {
-    if (element.current === null) return;
-    const instance = new GraphCanvas(element.current);
-    onCanvas(instance);
-    return () => {
-      instance.destroy();
-      onCanvas(null);
-    };
-  }, [onCanvas]);
-
-  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- pushes React's data into the imperative canvas; it keeps node positions across updates.
-  useEffect(() => {
-    if (canvas === null) return;
-    canvas.setEvents(events);
-    canvas.setData(view, labels);
-    canvas.setSelected(selectedId);
-    canvas.setMatches(matches);
-    if (!opened.current && selectedId !== null) canvas.centerOn(selectedId);
-    opened.current = true;
-  }, [canvas, events, view, labels, selectedId, matches]);
-
-  return (
-    <div className="graph__stage" inert={covered}>
-      <canvas
-        ref={element}
-        className="graph__canvas"
-        tabIndex={0}
-        role="img"
-        aria-label={t.graph.canvasLabel(notes, view.links.length)}
-      />
-      <div className="graph__controls">
-        <button
-          type="button"
-          className="button graph__control"
-          aria-label={t.graph.zoomIn}
-          title={t.graph.zoomIn}
-          onClick={() => canvas?.zoomBy(1.5)}
-        >
-          <Plus size={16} aria-hidden="true" />
-        </button>
-        <button
-          type="button"
-          className="button graph__control"
-          aria-label={t.graph.zoomOut}
-          title={t.graph.zoomOut}
-          onClick={() => canvas?.zoomBy(1 / 1.5)}
-        >
-          <Minus size={16} aria-hidden="true" />
-        </button>
-        <button
-          type="button"
-          className="button graph__control"
-          aria-label={t.graph.fit}
-          title={t.graph.fit}
-          onClick={() => canvas?.fit()}
-        >
-          <Maximize size={16} aria-hidden="true" />
-        </button>
-      </div>
-    </div>
   );
 }
 
