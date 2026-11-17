@@ -11,15 +11,15 @@ export const graphMessages = {
         count(sources, "Source", "Sources"),
         count(links, "Link", "Links"),
       ].join(" · "),
-    canvasLabel: (notes: number, links: number) =>
-      `The Graph: ${count(notes, "node", "nodes")} joined by ${count(links, "Link", "Links")}. The panel beside it lists the same Sources and Notes.`,
+    canvasLabel: (notes: number, links: number, ai = 0) =>
+      `The Graph: ${count(notes, "node", "nodes")} joined by ${count(links, "Link", "Links")}.${ai === 0 ? "" : ` ${count(ai, "Note holds", "Notes hold")} AI text.`} The panel beside it lists the same Sources and Notes.`,
     findLabel: "Find in the Graph",
     findPlaceholder: "Find a Note or Source",
     found: (n: number) => (n === 0 ? "Nothing found" : `${numbers.format(n)} found`),
     zoomIn: "Zoom in",
     zoomOut: "Zoom out",
     fit: "Show the whole Graph",
-    help: "Scroll or pinch to zoom, and drag the background to move. Drag a node to pull on its Links. Click a node to read it here; double-click a Source to open it.",
+    help: "Scroll or pinch to zoom, and drag the background to move. Drag a node to pull on its Links. Click a node to read it here. Double-click a Note, or select it and press Enter on the Graph, to rewrite or edit it; a Source opens instead.",
     sources: "Sources",
     note: "Note",
     source: "Source",
@@ -34,6 +34,16 @@ export const graphMessages = {
     cardCount: (n: number) => (n === 0 ? "No Cards yet" : count(n, "Card", "Cards")),
     rewrite: "Rewrite in your words",
     edit: "Edit",
+    toRewrite: "To rewrite",
+    toRewriteHelp:
+      "These Notes still hold AI text. On the Graph they are hollow rings: double-click one to write it in your words.",
+    noteCount: (n: number) => count(n, "Note", "Notes"),
+    aiKey: (n: number) => `${count(n, "Note holds", "Notes hold")} AI text`,
+    aiKeyHint: "Show only the Notes with AI text",
+    aiKeyLabel: (n: number) =>
+      `${count(n, "Note holds", "Notes hold")} AI text. Show only the Notes with AI text`,
+    allYours: "Every Note is in your words",
+    holdsAi: "holds AI text",
   },
   rewrite: {
     titleAi: "Rewrite the Note",

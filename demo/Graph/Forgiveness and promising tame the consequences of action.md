@@ -1,6 +1,7 @@
 ---
 glose: note
 source: "[[Arendt 1958 The Human Condition]]"
+ai: true
 ---
 
 Arendt finds the remedies for action inside action itself. Against irreversibility there is forgiveness: it releases people from the consequences of what they did, so they can act again. Against unpredictability there is promising: it creates islands of reliability in an uncertain future. Both depend on other people, since nobody can forgive themselves or be bound by a promise made only to themselves.

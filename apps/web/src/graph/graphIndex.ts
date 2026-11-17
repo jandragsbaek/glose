@@ -54,3 +54,12 @@ export const findNodes = (
     ),
   );
 };
+
+export const holdsAiText = (node: GraphNode): boolean =>
+  node.kind === "note" && (node.aiText || node.aiTitle);
+
+export const narrowToAiText = (
+  found: ReadonlyArray<GraphNode> | null,
+  unwritten: ReadonlyArray<GraphNode>,
+  aiOnly: boolean,
+): ReadonlyArray<GraphNode> | null => (aiOnly ? (found ?? unwritten).filter(holdsAiText) : found);

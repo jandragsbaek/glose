@@ -9,9 +9,17 @@ import { flushSync } from "react-dom";
 import { AiText, MissingLink, NoteText, type WikilinkPart } from "../components/NoteText.tsx";
 import { type Linking, RewriteNote } from "../components/RewriteNote.tsx";
 import { GraphStage } from "../components/GraphStage.tsx";
+import { AiKey, NodeLink, NodeList, SourceList } from "../components/GraphLists.tsx";
 import { CallNumber, Page, Panel, SkeletonPanel, StorageProblem } from "../components/ui.tsx";
 import type { GraphCanvas, GraphCanvasEvents } from "../graph/GraphCanvas.ts";
-import { findNodes, type GraphIndex, indexGraph, labelOf } from "../graph/graphIndex.ts";
+import {
+  findNodes,
+  type GraphIndex,
+  indexGraph,
+  holdsAiText,
+  labelOf,
+  narrowToAiText,
+} from "../graph/graphIndex.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { cardsAtom } from "../state/cards.ts";
 import { graphAtom, sourcesAtom } from "../state/graph.ts";
@@ -93,7 +101,10 @@ function GraphPage({
   const [rewriting, setRewriting] = useState<string | null>(null);
   const [unsaved, setUnsaved] = useState(false);
   const [requested, setRequested] = useState<string | null>(null);
+  const [aiOnly, setAiOnly] = useState(false);
   const opener = useRef<HTMLButtonElement>(null);
+  const openedOnCanvas = useRef(false);
+  const requestedOnCanvas = useRef(false);
   const findId = useId();
 
   const index = indexGraph(view, sources);
@@ -102,7 +113,12 @@ function GraphPage({
   const rewritten = rewriting === null ? undefined : index.byId.get(rewriting);
 
   const found = findNodes(view, labels, query);
-  const matches = found === null ? null : new Set(found.map((node) => node.id));
+  const unwritten = view.nodes.filter(holdsAiText);
+  if (aiOnly && unwritten.length === 0) setAiOnly(false);
+  const showAi = aiOnly && unwritten.length > 0;
+  const shown = narrowToAiText(found, unwritten, showAi);
+  const matches = shown === null ? null : new Set(shown.map((node) => node.id));
+  const findings = found === null ? null : shown;
 
   const select = (id: string | null) =>
     navigate({ to: "/graph", search: id === null ? {} : { node: id } });
@@ -111,12 +127,18 @@ function GraphPage({
     setUnsaved(false);
     setRewriting(id);
   };
-  const rewrite = (id: string) => {
-    if (rewriting !== null && rewriting !== id && unsaved) setRequested(id);
-    else openDesk(id);
+  const rewrite = (id: string, onCanvas = false) => {
+    if (rewriting !== null && rewriting !== id && unsaved) {
+      requestedOnCanvas.current = onCanvas;
+      setRequested(id);
+      return;
+    }
+    openedOnCanvas.current = onCanvas;
+    openDesk(id);
   };
   const closeDesk = () => {
     if (requested !== null) {
+      openedOnCanvas.current = requestedOnCanvas.current;
       openDesk(requested);
       return;
     }
@@ -124,7 +146,11 @@ function GraphPage({
       setRewriting(null);
       setUnsaved(false);
     });
-    opener.current?.focus();
+    returnFocus();
+  };
+  const returnFocus = () => {
+    if (openedOnCanvas.current) canvas?.focus();
+    else opener.current?.focus();
   };
   const show = (id: string) => canvas?.centerOn(id);
   const events: GraphCanvasEvents = {
@@ -132,7 +158,10 @@ function GraphPage({
     onOpen: (id) => {
       if (index.byId.get(id)?.kind === "source") {
         void navigate({ to: "/sources/$sourceId", params: { sourceId: id } });
+        return;
       }
+      if (id !== selected?.id) void select(id);
+      rewrite(id, true);
     },
   };
 
@@ -148,7 +177,7 @@ function GraphPage({
           role="search"
           onSubmit={(event) => {
             event.preventDefault();
-            const first = found?.[0];
+            const first = findings?.[0];
             if (first === undefined) return;
             void select(first.id);
             show(first.id);
@@ -167,7 +196,7 @@ function GraphPage({
             onChange={(event) => setQuery(event.target.value)}
           />
           <span className="graph-find__count" aria-live="polite">
-            {found === null ? "" : t.graph.found(found.length)}
+            {findings === null ? "" : t.graph.found(findings.length)}
           </span>
         </form>
       }
@@ -183,7 +212,15 @@ function GraphPage({
             canvas={canvas}
             onCanvas={setCanvas}
             covered={rewritten !== undefined}
-          />
+            label={t.graph.canvasLabel(view.nodes.length, view.links.length, unwritten.length)}
+          >
+            <AiKey
+              count={unwritten.length}
+              notes={notes}
+              pressed={showAi}
+              onPress={() => setAiOnly(!showAi)}
+            />
+          </GraphStage>
           {rewritten === undefined ? null : (
             <div className="graph__desk">
               <RewriteNote
@@ -200,7 +237,7 @@ function GraphPage({
                   setRewriting(null);
                   setUnsaved(false);
                   await select(id);
-                  requestAnimationFrame(() => opener.current?.focus());
+                  requestAnimationFrame(returnFocus);
                 }}
               />
             </div>
@@ -208,7 +245,7 @@ function GraphPage({
         </div>
         <aside className="graph__side">
           {selected === undefined ? (
-            <SourceList index={index} view={view} onShow={show} />
+            <SourceList index={index} view={view} unwritten={unwritten} onShow={show} />
           ) : (
             <NodePanel
               key={selected.id}
@@ -224,41 +261,6 @@ function GraphPage({
         </aside>
       </div>
     </Page>
-  );
-}
-
-function SourceList({
-  index,
-  view,
-  onShow,
-}: {
-  readonly index: GraphIndex;
-  readonly view: GraphView;
-  readonly onShow: (id: string) => void;
-}) {
-  const t = useT();
-  const sources = view.nodes
-    .filter((node) => node.kind === "source")
-    .sort((a, b) => a.id.localeCompare(b.id));
-  return (
-    <Panel title={t.graph.sources} initial="rubric">
-      <div className="panel__body">
-        <p className="graph__help">{t.graph.help}</p>
-        <ul className="graph__list">
-          {sources.map((node) => {
-            const source = index.sources.get(node.id);
-            return (
-              <li key={node.id}>
-                {source === undefined ? null : <CallNumber source={source} />}
-                <NodeLink id={node.id} className="graph__link" onShow={onShow}>
-                  {node.title}
-                </NodeLink>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    </Panel>
   );
 }
 
@@ -326,21 +328,26 @@ function NodePanel({
             </NodeLink>
           </p>
         )}
+        {rewriting ? null : isSource ? (
+          <p className="graph__actions">
+            <Link to="/sources/$sourceId" params={{ sourceId: node.id }} className="button">
+              {t.graph.openSource}
+            </Link>
+          </p>
+        ) : (
+          <NoteCards
+            noteId={node.id}
+            aiText={holdsAiText(node)}
+            opener={opener}
+            onRewrite={onRewrite}
+          />
+        )}
         {rewriting ? null : (
           <NoteText
             markdown={node.body}
             aiText={node.aiText && !node.aiTitle}
             renderLink={wikilinks(index, onShow)}
           />
-        )}
-        {rewriting ? null : isSource ? (
-          <p>
-            <Link to="/sources/$sourceId" params={{ sourceId: node.id }} className="button">
-              {t.graph.openSource}
-            </Link>
-          </p>
-        ) : (
-          <NoteCards noteId={node.id} aiText={node.aiText} opener={opener} onRewrite={onRewrite} />
         )}
       </div>
       {isSource && fromSource.length > 0 ? (
@@ -358,26 +365,6 @@ function NodePanel({
         )}
       </div>
     </Panel>
-  );
-}
-
-function NodeList({
-  nodes,
-  onShow,
-}: {
-  readonly nodes: ReadonlyArray<GraphNode>;
-  readonly onShow: (id: string) => void;
-}) {
-  return (
-    <ul className="graph__list">
-      {nodes.map((other) => (
-        <li key={other.id}>
-          <NodeLink id={other.id} className="graph__link" kind={other.kind} onShow={onShow}>
-            {other.title}
-          </NodeLink>
-        </li>
-      ))}
-    </ul>
   );
 }
 
@@ -403,7 +390,7 @@ function NoteCards({
     () => null,
   );
   return (
-    <p className="button-row">
+    <p className="button-row graph__actions">
       <button
         ref={opener}
         type="button"
@@ -441,30 +428,4 @@ function linkingOf(node: GraphNode, view: GraphView, index: GraphIndex): Linking
     notes: from.filter((other) => other?.kind === "note").length,
     sources: from.filter((other) => other?.kind === "source").length,
   };
-}
-
-function NodeLink({
-  id,
-  kind,
-  className,
-  onShow,
-  children,
-}: {
-  readonly id: string;
-  readonly kind?: GraphNode["kind"];
-  readonly className: string;
-  readonly onShow: (id: string) => void;
-  readonly children: ReactNode;
-}) {
-  return (
-    <Link
-      to="/graph"
-      search={{ node: id }}
-      className={className}
-      data-kind={kind}
-      onClick={() => onShow(id)}
-    >
-      {children}
-    </Link>
-  );
 }

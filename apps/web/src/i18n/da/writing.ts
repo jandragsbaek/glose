@@ -193,8 +193,8 @@ export const writingMessages: Pick<Messages, "writing"> = {
     graphToggle: "Graf",
     graphToggleTitle: "Læs grafen ved siden af din tekst",
     graphPanel: "Grafen ved siden af din tekst",
-    graphCanvasLabel: (notes: number, links: number) =>
-      `Grafen: ${count(notes, "punkt", "punkter")} forbundet af ${count(links, "link", "links")}. Dit spor og de noter, teksten henviser til, er markeret. Brug søgningen over den for at åbne en note ved navn; den åbner i Dit spor nedenfor.`,
+    graphCanvasLabel: (notes: number, links: number, ai = 0) =>
+      `Grafen: ${count(notes, "punkt", "punkter")} forbundet af ${count(links, "link", "links")}.${ai === 0 ? "" : ` ${count(ai, "note", "noter")} har AI-tekst.`} Dit spor og de noter, teksten henviser til, er markeret. Brug søgningen over den for at åbne en note ved navn; den åbner i Dit spor nedenfor.`,
     trailTitle: "Dit spor",
     trailCount: (n: number) => count(n, "stop", "stop"),
     clearTrail: "Ryd sporet",
@@ -214,6 +214,7 @@ export const writingMessages: Pick<Messages, "writing"> = {
     legendCited: "Henvist til i teksten",
     legendOpen: "Åben",
     legendTrail: "Dit spor",
+    legendAi: "AI-tekst",
     findNone: "Ingen note eller kilde har det i navnet.",
     findMore: (n: number) => `${numbers.format(n)} mere. Skriv mere af navnet.`,
     notFound: "Skriveprojektet findes ikke. Filen kan være omdøbt eller slettet.",

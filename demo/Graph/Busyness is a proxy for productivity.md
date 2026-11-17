@@ -1,6 +1,7 @@
 ---
 glose: note
 source: "[[Newport 2016 Deep Work]]"
+ai: true
 ---
 
 In knowledge work, it is hard to measure what someone produces. Without a clear measure, people fall back on what is visible: answering email fast, attending meetings, being busy in public. Newport calls this busyness as a proxy for productivity.

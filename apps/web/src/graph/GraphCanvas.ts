@@ -15,6 +15,8 @@ import {
 import { type Box, frameTarget, labelCenter, overlaps, wrapWords } from "./canvasGeometry.ts";
 import { subscribePaint } from "../theme/appearance.ts";
 import { type Palette, readPalette } from "./canvasPalette.ts";
+import { drawCallLabel, drawNode } from "./canvasNode.ts";
+import { holdsAiText } from "./graphIndex.ts";
 import { drawStopTabs, drawTrailLine, layoutStopTabs, type StopTab } from "./canvasTrail.ts";
 
 export interface NodeLabel {
@@ -84,6 +86,7 @@ export class GraphCanvas {
   #matches: ReadonlySet<string> | null = null;
   #trail: ReadonlyArray<string> = [];
   #cited: ReadonlySet<string> = new Set();
+  #ai: ReadonlySet<string> = new Set();
   #focus: string | null = null;
   #dim = 0;
   #lastFrame = 0;
@@ -162,6 +165,7 @@ export class GraphCanvas {
     }
     if (view === this.#view) return;
     this.#view = view;
+    this.#ai = new Set(view.nodes.filter(holdsAiText).map((node) => node.id));
     const { nodes, links } = layoutData(view, this.#byId);
     const added = nodes.some((node) => !this.#byId.has(node.id));
     this.#simulation?.stop();
@@ -296,6 +300,10 @@ export class GraphCanvas {
     );
   }
 
+  focus(): void {
+    this.#canvas.focus();
+  }
+
   destroy(): void {
     cancelAnimationFrame(this.#frame);
     this.#stopRestyle();
@@ -404,6 +412,9 @@ export class GraphCanvas {
       ArrowUp: () => pan(0, 80),
       ArrowDown: () => pan(0, -80),
       Escape: () => this.#events.onSelect(null),
+      Enter: () => {
+        if (this.#selected !== null) this.#events.onOpen(this.#selected);
+      },
     };
     const action = actions[event.key];
     if (action === undefined || event.metaKey || event.ctrlKey || event.altKey) return;
@@ -492,7 +503,8 @@ export class GraphCanvas {
     if (this.#focus !== null && this.#dim > 0 && !this.#inFocus(node.id)) {
       alpha *= 1 - (1 - FADED) * this.#dim;
     }
-    return this.#marked(node.id) ? Math.max(alpha, MARKED) : alpha;
+    const kept = this.#marked(node.id) || this.#matches?.has(node.id) === true;
+    return kept ? Math.max(alpha, MARKED) : alpha;
   }
 
   #marked(id: string): boolean {
@@ -545,10 +557,7 @@ export class GraphCanvas {
     for (const node of this.#nodes) {
       context.globalAlpha = this.#alpha(node);
       const lit = node.kind === "source" || (focused && node.id === this.#focus);
-      context.fillStyle = lit ? palette.accent : palette.mute;
-      context.beginPath();
-      context.arc(node.x ?? 0, node.y ?? 0, node.radius, 0, Math.PI * 2);
-      context.fill();
+      drawNode(context, node, { lit, holdsAiText: this.#ai.has(node.id), zoom: k }, palette);
       const cited = this.#cited.has(node.id);
       if (cited) {
         context.strokeStyle = palette.accent;
@@ -666,7 +675,12 @@ export class GraphCanvas {
         draw: () => {
           if (call !== null) {
             context.globalAlpha = base;
-            this.#drawCall(call, cx, top);
+            drawCallLabel(
+              context,
+              call,
+              { cx, top, height: CALL_HEIGHT, font: CALL_FONT },
+              this.#palette,
+            );
           }
           if (!showText) return;
           context.globalAlpha = textAlpha;
@@ -697,22 +711,6 @@ export class GraphCanvas {
     const width = Math.max(0, ...lines.map((line) => this.#context.measureText(line).width));
     this.#widths.set(id, width);
     return width;
-  }
-
-  #drawCall(call: string, cx: number, top: number): void {
-    const context = this.#context;
-    context.font = CALL_FONT;
-    const width = context.measureText(call).width + 12;
-    const left = Math.round(cx - width / 2) + 0.5;
-    context.fillStyle = this.#palette.paper;
-    context.strokeStyle = this.#palette.ink;
-    context.lineWidth = 1;
-    context.beginPath();
-    context.roundRect(left, Math.round(top) + 0.5, Math.round(width), CALL_HEIGHT - 1, 2);
-    context.fill();
-    context.stroke();
-    context.fillStyle = this.#palette.ink;
-    context.fillText(call, cx, Math.round(top) + 3);
   }
 
   #drawText(

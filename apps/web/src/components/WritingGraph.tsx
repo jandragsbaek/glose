@@ -8,7 +8,13 @@ import { Search } from "lucide-react";
 import { useEffect, useId, useRef, useEffectEvent, useState, useSyncExternalStore } from "react";
 
 import type { GraphCanvas, GraphCanvasEvents } from "../graph/GraphCanvas.ts";
-import { findNodes, type GraphIndex, indexGraph, labelOf } from "../graph/graphIndex.ts";
+import {
+  findNodes,
+  type GraphIndex,
+  holdsAiText,
+  indexGraph,
+  labelOf,
+} from "../graph/graphIndex.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { GraphStage } from "./GraphStage.tsx";
 import { StopCall, Trail, type TrailOpened } from "./WritingTrail.tsx";
@@ -151,7 +157,11 @@ export function WritingGraph({
         fitLabel={trail.length > 0 ? t.writing.showTrail : t.writing.showCited}
         onFit={showHome}
         insetLeft={CONTROLS_INSET}
-        label={t.writing.graphCanvasLabel(view.nodes.length, view.links.length)}
+        label={t.writing.graphCanvasLabel(
+          view.nodes.length,
+          view.links.length,
+          view.nodes.filter(holdsAiText).length,
+        )}
       >
         <GraphFind
           index={index}
@@ -175,6 +185,9 @@ export function WritingGraph({
             <span className="graph-beside__key graph-beside__key--trail">
               {t.writing.legendTrail}
             </span>
+          ) : null}
+          {view.nodes.some(holdsAiText) ? (
+            <span className="graph-beside__key graph-beside__key--ai">{t.writing.legendAi}</span>
           ) : null}
         </p>
       </GraphStage>

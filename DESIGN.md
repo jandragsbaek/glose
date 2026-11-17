@@ -496,7 +496,8 @@ three small pigments (gold, rubric red, verdigris) each with one job.
 
 ### Named Rules
 
-**The Rubric Rule.** Rubric red marks the decorated initials, the pen flourish and AI text.
+**The Rubric Rule.** Rubric red marks the decorated initials, the pen flourish and AI text (on
+the Graph, the hollow ring of a Note with AI text, which says it by shape as well).
 When red marks an error or missing data, it always comes with a warning icon and words; red
 alone never carries a meaning. The Probe's faint highlight under the user's words follows the
 same rule: the gloss beside it gives the triangle and the words. The Reader Foot notice too: Rubric
@@ -1415,14 +1416,48 @@ Note headings in the side panel: 700 15px, 18px above when they follow other tex
 - **A title:** "¶ AI-written title" ("AI-skrevet titel") with the lighter 2px rule, above a
   Note's title in the Graph panel and above the title field of a Point the AI proposed.
 
+### AI Mark on the Graph (signature: Unwritten Ring)
+
+The AI Text mark carried onto the Graph canvas, where a node has no room for a gloss.
+
+- **Node:** a Note with AI text (or only an AI title) is drawn hollow: Rubric Wash inside a Rubric
+  ring, 1.75px at rest and 2.5px while it is the hovered or selected node, never more than 60% of the
+  radius,
+  laid inside the node so it keeps its size. Every other node keeps its fill (Mute, Lapis when lit).
+  Faded nodes fade the ring with them; the selected node's Gilt ring sits outside it as usual.
+- **Key:** at the stage's foot right (12px in), a toggle set like the desk bar's Graph toggle:
+  Paper, Strong Hairline, 4px, 600 13px, 36px tall, a 10px drawn ring (1.75px Rubric round Rubric
+  Wash)
+  before "9 Notes hold AI text". Hover fills Lapis Tint; pressed, Lapis Tint with a Lapis border and
+  label, `aria-pressed`. Pressed, every node without AI text fades as Find fades non-matches (a
+  match stays at 60% or more while another node is hovered or selected), and
+  their labels follow Find's rule (names show while 40 or fewer nodes match). Find and the key
+  narrow together: Find's count and Enter use the Notes that pass both. The key's accessible name
+  adds its action ("…, Show only the Notes with AI text"), and its cell is a status, so the count
+  and the done line are heard when they change. With no AI text left the key is a Mute 13px line
+  on a 90% Ground band with a 15px Verdigris check: "Every Note is in your words". Labels keep
+  clear of it.
+- **To rewrite:** with no node selected, the side panel's first panel (rubric Initial, the count as
+  Meta): a Mute 13px line that names the ring and says double-click opens one, then every Note with
+  AI text as a row of Call Number
+  and title link, ordered by Source then title. The Sources panel follows with a lapis Initial. With
+  none left the panel goes and Sources takes the rubric Initial again.
+- **Links:** in the side panel's Links list, a Note with AI text ends in a 9px ring 8px after its
+  name; screen readers hear "(holds AI text)".
+- **Beside the desk:** the Graph Beside the Desk legend gains "AI text" with the ring while the
+  Graph holds any.
+- The canvas's accessible name adds the count: "9 Notes hold AI text."
+
 ### Rewrite Desk (signature)
 
 A Note opened over the Graph's canvas to edit, with the AI's words beside the user's, like a gloss
 in the margin of a page. The side panel stays beside it and keeps reading other nodes; for the Note
 on the desk it shows only the title, the Source and the Links.
 
-- **Way in:** in the Note panel's button row, "Rewrite in your words" (primary) while the Note
-  holds AI text, else "Edit" (secondary), before Make Cards.
+- **Way in:** in the Note panel's button row, under the title and Source and above the text (18px
+  under it), "Rewrite in your words" (primary) while the Note holds AI text, else "Edit"
+  (secondary), before Make Cards. Double-clicking a Note on the canvas, or Enter on the canvas with
+  a Note selected, opens the desk too; closing it then returns focus to the canvas.
 - **Desk:** fills the canvas cell on Ground (24px 28px 28px padding, a Hairline border, its own
   scroll), the canvas inert under it. It fades in and rises 4px in 160ms on the shared ease-out.
   One panel leaf, up to 1120px, with a Strong Hairline border: "Rewrite the Note" ("Omskriv noten")
@@ -1731,7 +1766,8 @@ it never writes or cites (citing stays in the Cite Slip). From a 1200px window o
   The first row is Lapis Tint with a 2px Lapis inner edge while the field has focus (Enter opens it);
   ↓ enters the list, ↑ ↓ move, Esc clears. The list scrolls inside the stage and fades at its foot.
 - **Legend:** at the stage's foot right, Mute 12px on a 90% Ground band: "Cited in this piece", "Open"
-  and "Your trail", each only while that mark is on screen, with its mark drawn beside it.
+  and "Your trail", each only while that mark is on screen, with its mark drawn beside it, and "AI
+  text" with the hollow ring while the Graph holds any (see AI Mark on the Graph).
 - **Head:** "Your trail" in the panel-heading set with a lapis Initial, the count in Mute 13px
   ("4 stops"), and a quiet "Clear the trail" pushed right.
 - **Stop strip:** every stop as a one-line slip (number tab, title 600 14px, Call Number), 6px apart,
