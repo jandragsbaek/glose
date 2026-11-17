@@ -363,7 +363,9 @@ three small pigments (gold, rubric red, verdigris) each with one job.
   Lapis too. In the
   Sources register it is also the Links toggle, the ring of the current Reading mark, the checked
   segment's label, and the 3px edge on rows that share Links with the chosen Source. In the Probe
-  it is the question number and the head of each judgment gloss.
+  it is the question number and the head of each judgment gloss. Beside the Writing Desk it is the
+  trail: the one Lapis line on the Graph, its stop tabs, and the ring around Notes the piece cites;
+  while a trail shows, the open Note's other Links turn quiet ink so Lapis means the trail alone.
 - **Raised Lapis** (lapis-raised): the current rail item, and the section in view on the Settings
   window's spine; primary button hover. Hover on a rail item or a spine section is half a step,
   Lapis and Raised Lapis mixed half and half, so "here" stays the stronger mark.
@@ -423,7 +425,9 @@ same rule: the gloss beside it gives the triangle and the words.
 Settings window's spine, the current step (in the Step Bar and under a Reading mark), a spine's
 bands, focus on lapis. It has one more job: the triangle
 icon of a Check that warns on a Recall slip, always beside Ink words ("Could be better · …"). On
-the Writing Desk's Format Bar a 2px Gilt underline marks the style the selection already has.
+the Writing Desk's Format Bar a 2px Gilt underline marks the style the selection already has. Beside
+the desk, the open stop of the trail wears it: a ring around its node, a 2px underline under its stop
+tab on the Graph, and a 3px underline under its number in the stop strip.
 It is never used for text on paper or for decoration elsewhere.
 
 **The One Field Rule.** Lapis is the only large color field (rail, spine, the primary button).
@@ -546,9 +550,12 @@ pad 16px at the sides.
 Writing projects (`/writing`) is one column of two full-width panels: "Start a new piece" (the
 Specimen Leaves) above "Your pieces" (a register table). A Writing project (`/writing/<id>`) is the
 Writing Desk: a sticky 56px bar, then a five-track grid, `1fr | 180–250px | up to 680px |
-200–290px | 1fr`, that sets the leaf between two margins (32px top). Below 1200px the margins fold
-under the leaf in reading order (left margin, then right) and the desk pads 24px; below 720px it
-pads 16px.
+200–290px | 1fr`, that sets the leaf between two margins (32px top). The desk is a container
+(`container: desk`), so its margins fold by the desk's own width, not the window's: below 1104px of
+desk the margins fold under the leaf in reading order (left margin, then right) and the desk pads
+24px; below 625px it pads 16px. From a 1200px window the Graph can sit beside the desk (see Graph
+Beside the Desk): the window then splits in two equal columns under the bar, each with its own
+scroll, and the desk's margins fold under the leaf.
 
 A focus screen (today only Review, at `/review`) fills the window without the rail and the page
 header. A 64px bar (12px 32px padding) holds the title left, a centred progress line and the way
@@ -1156,7 +1163,8 @@ Reference's gloss in the right margin beside its line, and the AI review's flags
 
 - **Bar:** two groups that wrap as wholes. The first: "Writing projects /" in Mute 600 13px, the
   title in 600 15px (it wraps; never cut), the Settings Slip chip. The second, pushed right: the
-  save state in Mute 13px, Write | Proof as a Segmented control, then in Write "Cite a Note"
+  save state in Mute 13px, Write | Proof as a Segmented control, then the Graph toggle (from a 1200px window; see Graph
+  Beside the Desk), then in Write "Cite a Note"
   (secondary with a Key Cap, ⌘K or Ctrl+K) and "Ask the AI to check" (quiet); in Proof the post's
   path in Courier 12px Mute and "Write to site" (primary; "Choose your site" until a site folder is
   set). When the two do not fit on one row, the second drops under the first as one row. A
@@ -1198,9 +1206,11 @@ Reference's gloss in the right margin beside its line, and the AI review's flags
   Reference" in Rubric uppercase 12px with a triangle, the reason in Mute, and "Find a Note"; and
   Notes for a passage under the AI Text mark (a 2px Rubric rule on the margin side and a ¶ gloss),
   each with "Cite".
-- **Widths:** from 1200px the five tracks hold both margins. From 960px to 1199px the leaf (up to
-  680px) keeps the glosses beside it (200 to 260px) and the AI's flags fold under the leaf. Below
-  960px both margins fold under the leaf, which keeps its 680px measure.
+- **Widths:** measured on the desk, not the window (a container query, so the Graph beside the
+  desk folds the margins too). From 1104px of desk (a 1200px window) the five tracks hold both
+  margins. From 864px to 1103px the leaf (up to 680px) keeps the glosses beside it (200 to 260px) and
+  the AI's flags fold under the leaf. Below 864px both margins fold under the leaf, which keeps its
+  680px measure. The glosses' placement reads the CSS's choice, so the two never disagree.
 - **Proof:** the leaf shows the post as readers will see it, in its Reference form: raised
   numbers and a numbered note list under a Hairline (footnotes), the short Citation in brackets and
   a list of Sources (links + list), or notes under each paragraph (side notes). A flagged
@@ -1232,6 +1242,59 @@ shadow, up to 600px wide inside the leaf; the leaf grows under it so it never ha
   (quiet) when changing, and Cite or Save (primary with an ↵ Key Cap). Esc closes and returns to
   the text; `[[` then Esc gives back the two brackets; a click outside drops them, closes the slip
   and leaves focus where the click went.
+
+### Graph Beside the Desk (signature: Trail of Slips)
+
+The Graph laid beside the Writing Desk, to read Notes and follow their Links while writing. It reads;
+it never writes or cites (citing stays in the Cite Slip). From a 1200px window only.
+
+- **Toggle:** "Graph" in the desk bar after Write | Proof, in both modes: a secondary button with a
+  16px Lucide waypoints icon and a ⌘G (Ctrl+G) Key Cap (the cap hides under 1400px so the bar keeps
+  one row). Pressed, it is Lapis Tint with a Lapis border and label, `aria-pressed` and
+  `aria-controls`. It is off until the Graph has loaded. Each piece remembers whether its panel is
+  open (a setting of this computer, not of the file). ⌘G works anywhere on the desk except in the Cite
+  Slip and dialogs.
+- **Split:** the desk and the panel are two equal columns under the bar, a Hairline between, each
+  scrolling on its own. Opening or closing keeps the line the writer was at (the caret if in view,
+  else the top line) at the same height; closing from inside the panel returns focus to the text
+  (Write) or the toggle (Proof).
+- **Stage:** the top 40% of the panel (at least 200px; 34% and 170px under an 800px-tall window) on
+  Ground, a Hairline under it. The Graph canvas as on the Graph page, with three marks: Notes the
+  piece cites wear a 1.5px Lapis ring; the open Note a 2.5px Gilt ring; the trail is one 3px Lapis
+  line through its stops, each with a typed number tab (Paper, 1px Lapis, Courier 700 11px Lapis)
+  12px above its node, the open one with a 2px Gilt underline. Tabs that would meet rise above each
+  other. While cited or trail marks show, all Links are quieter (55%) and the open Note's Links are
+  ink, not Lapis. Labels keep clear of each other, of the tabs, the open Note's ring and the controls
+  laid over the canvas (open Note first, then the trail, then cited Notes); the open Note's label goes
+  above its tab when the space below is taken.
+- **Framing:** the panel opens on the Notes the piece cites. A Note opened from the reader frames
+  itself with up to two stops before it; reopening a stop pans only when it is near the edge. The fit
+  control (and the 0 key) frames the trail and cited Notes ("Show your trail and the Notes this piece
+  cites"). Framing keeps clear of the Find field above and the controls at the left, and its padding
+  scales with the stage.
+- **Find:** the Graph's find field at the stage's top left (280px), its count on a Ground chip. Up
+  to 8 matches drop under it as a Paper list (Strong Hairline, 4px): title and Call Number per row,
+  "N more. Type more of the name." under them, "No Note or Source has this in its name." when none.
+  The first row is Lapis Tint with a 2px Lapis inner edge while the field has focus (Enter opens it);
+  ↓ enters the list, ↑ ↓ move, Esc clears. The list scrolls inside the stage and fades at its foot.
+- **Legend:** at the stage's foot right, Mute 12px on a 90% Ground band: "Cited in this piece", "Open"
+  and "Your trail", each only while that mark is on screen, with its mark drawn beside it.
+- **Head:** "Your trail" in the panel-heading set with a lapis Initial, the count in Mute 13px
+  ("4 stops"), and a quiet "Clear the trail" pushed right.
+- **Stop strip:** every stop as a one-line slip (number tab, title 600 14px, Call Number), 6px apart,
+  in a strip up to about three and a half slips tall (`min(170px, 22vh)`) that scrolls on its own and
+  fades at its scrolling edges. The open stop is Lapis Tint with a Lapis border, its number with the
+  3px Gilt underline and `aria-current="step"`; the others are buttons that open their Note again in
+  place. The trail lasts while the piece is open and is not saved.
+- **Reader:** the open Note under the strip, in its own scroll (18px 24px 32px): the Call Number with
+  page and the Source as a Lapis link, the title (700 18px; the AI Text title mark when the AI wrote
+  it), "Reference 2 in this piece" in Lapis 600 13px when cited, the Note text with its Links as
+  inline Lapis links that open in the trail, then its Links as rows with Call Numbers. The heading
+  takes focus when the reader or Find opened the Note (the 2px Lapis outline, 4px off, fitted to the
+  title).
+- **Empty:** before the first Note, the reader holds the lead "Read your Notes beside the text", a
+  Mute sentence on how the trail works, and "Cited in this piece": the cited Notes as rows with their
+  Call Numbers and "Reference 1 in this piece".
 
 ### Settings Slip
 
