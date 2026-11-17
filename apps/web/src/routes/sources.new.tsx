@@ -7,6 +7,8 @@ import * as Option from "effect/Option";
 import { CircleAlert } from "lucide-react";
 import { type FormEvent, type RefObject, useId, useRef, useState } from "react";
 
+import { AddArticle } from "../components/AddArticle.tsx";
+import { AddLessons } from "../components/AddLessons.tsx";
 import { CallNumber, Notice, Page, Panel } from "../components/ui.tsx";
 import {
   EMPTY_FORM,
@@ -18,7 +20,52 @@ import {
 import { useT } from "../i18n/I18n.tsx";
 import { createSourceAtom, KEYS, searchCatalogAtom } from "../state/graph.ts";
 
-export const Route = createFileRoute("/sources/new")({ component: AddSource });
+type AddKind = "book" | "article" | "lesson";
+const KINDS = ["book", "article", "lesson"] as const satisfies ReadonlyArray<AddKind>;
+
+export const Route = createFileRoute("/sources/new")({
+  component: AddSource,
+  validateSearch: (search: Record<string, unknown>): { readonly kind?: AddKind } =>
+    search.kind === "article" || search.kind === "lesson" ? { kind: search.kind } : {},
+});
+
+function AddSource() {
+  const t = useT();
+  const navigate = useNavigate();
+  const kind = Route.useSearch().kind ?? "book";
+  const legendId = useId();
+  return (
+    <Page title={t.addSource.title}>
+      <div className="add-kind">
+        <fieldset className="kind-choice" aria-labelledby={legendId}>
+          <legend className="kind-choice__legend" id={legendId}>
+            {t.kinds.label}
+          </legend>
+          {KINDS.map((option) => (
+            <label key={option} className="kind-choice__option">
+              <input
+                type="radio"
+                name="add-kind"
+                value={option}
+                checked={kind === option}
+                onChange={() =>
+                  void navigate({
+                    to: "/sources/new",
+                    search: option === "book" ? {} : { kind: option },
+                    replace: true,
+                  })
+                }
+              />
+              <span className="kind-choice__name">{t.kinds.names[option]}</span>
+              <span className="kind-choice__hint">{t.kinds.hints[option]}</span>
+            </label>
+          ))}
+        </fieldset>
+      </div>
+      {kind === "book" ? <AddBook /> : kind === "article" ? <AddArticle /> : <AddLessons />}
+    </Page>
+  );
+}
 
 const YEAR = /^-?\d{1,4}$/;
 const YEAR_FIELDS = ["firstPublished", "editionYear"] as const;
@@ -46,7 +93,7 @@ type Search =
   | { readonly _tag: "Found"; readonly records: ReadonlyArray<CatalogRecord> }
   | { readonly _tag: "Unavailable" };
 
-function AddSource() {
+function AddBook() {
   const t = useT();
   const navigate = useNavigate();
   const createSource = useAtomSet(createSourceAtom, { mode: "promiseExit" });
@@ -140,73 +187,71 @@ function AddSource() {
   );
 
   return (
-    <Page title={t.addSource.title}>
-      <div className="narrow">
-        <p className="empty" style={{ marginBottom: 20 }}>
-          {t.addSource.intro}
-        </p>
-        <FindBook chosen={fill?.record.id ?? null} onChoose={choose} />
-        <div role="status" className="fill-status">
-          {fill === null ? null : (
-            <Notice tone="info" title={t.addSource.filledTitle(fill.record.details.title)}>
-              <p>
-                {t.addSource.filled}
-                {fill.kept.length === 0 ? null : ` ${t.addSource.keptTyped}`}
-              </p>
-              <div className="button-row" style={{ marginTop: 8 }}>
-                <button type="button" className="button" onClick={undoFill}>
-                  {t.addSource.undoFill}
-                </button>
-              </div>
-            </Notice>
-          )}
-        </div>
-        <form className="form" onSubmit={submit} style={{ marginTop: 24 }}>
-          <Panel title={t.addSource.author} initial="lapis">
-            <div className="panel__body">
-              <fieldset className="fieldset">
-                <legend className="sr-only">{t.addSource.author}</legend>
-                {field("familyName", t.addSource.familyName, { required: true })}
-                {field("givenName", t.addSource.givenName)}
-              </fieldset>
+    <div className="narrow">
+      <p className="empty" style={{ marginBottom: 20 }}>
+        {t.addSource.intro}
+      </p>
+      <FindBook chosen={fill?.record.id ?? null} onChoose={choose} />
+      <div role="status" className="fill-status">
+        {fill === null ? null : (
+          <Notice tone="info" title={t.addSource.filledTitle(fill.record.details.title)}>
+            <p>
+              {t.addSource.filled}
+              {fill.kept.length === 0 ? null : ` ${t.addSource.keptTyped}`}
+            </p>
+            <div className="button-row" style={{ marginTop: 8 }}>
+              <button type="button" className="button" onClick={undoFill}>
+                {t.addSource.undoFill}
+              </button>
             </div>
-          </Panel>
-          <Panel title={t.addSource.work} initial="rubric">
-            <div className="panel__body">
-              <fieldset className="fieldset">
-                <legend className="sr-only">{t.addSource.work}</legend>
-                {field("title", t.addSource.titleField, { required: true, wide: true })}
-                {field("firstPublished", t.addSource.firstPublished, {
-                  hint: t.addSource.firstPublishedHint,
-                  year: true,
-                })}
-                {field("publisher", t.addSource.publisher)}
-                {field("edition", t.addSource.edition, { hint: t.addSource.editionHint })}
-                {field("editionYear", t.addSource.editionYear, { year: true })}
-                {field("translator", t.addSource.translator)}
-              </fieldset>
-            </div>
-          </Panel>
-          {failure === null ? null : (
-            <Notice tone="error" title={failure === "storage" ? t.errors.storage : undefined}>
-              <p>
-                {failure === "storage"
-                  ? t.errors.storageRecovery
-                  : t.addSource.nameTaken(failure.nameTaken)}
-              </p>
-            </Notice>
-          )}
-          <div className="button-row">
-            <button type="submit" className="button button--primary" disabled={busy}>
-              {t.addSource.submit}
-            </button>
-            <Link to="/" className="button">
-              {t.addSource.cancel}
-            </Link>
-          </div>
-        </form>
+          </Notice>
+        )}
       </div>
-    </Page>
+      <form className="form" onSubmit={submit} style={{ marginTop: 24 }}>
+        <Panel title={t.addSource.author} initial="lapis">
+          <div className="panel__body">
+            <fieldset className="fieldset">
+              <legend className="sr-only">{t.addSource.author}</legend>
+              {field("familyName", t.addSource.familyName, { required: true })}
+              {field("givenName", t.addSource.givenName)}
+            </fieldset>
+          </div>
+        </Panel>
+        <Panel title={t.addSource.work} initial="rubric">
+          <div className="panel__body">
+            <fieldset className="fieldset">
+              <legend className="sr-only">{t.addSource.work}</legend>
+              {field("title", t.addSource.titleField, { required: true, wide: true })}
+              {field("firstPublished", t.addSource.firstPublished, {
+                hint: t.addSource.firstPublishedHint,
+                year: true,
+              })}
+              {field("publisher", t.addSource.publisher)}
+              {field("edition", t.addSource.edition, { hint: t.addSource.editionHint })}
+              {field("editionYear", t.addSource.editionYear, { year: true })}
+              {field("translator", t.addSource.translator)}
+            </fieldset>
+          </div>
+        </Panel>
+        {failure === null ? null : (
+          <Notice tone="error" title={failure === "storage" ? t.errors.storage : undefined}>
+            <p>
+              {failure === "storage"
+                ? t.errors.storageRecovery
+                : t.addSource.nameTaken(failure.nameTaken)}
+            </p>
+          </Notice>
+        )}
+        <div className="button-row">
+          <button type="submit" className="button button--primary" disabled={busy}>
+            {t.addSource.submit}
+          </button>
+          <Link to="/" className="button">
+            {t.addSource.cancel}
+          </Link>
+        </div>
+      </form>
+    </div>
   );
 }
 

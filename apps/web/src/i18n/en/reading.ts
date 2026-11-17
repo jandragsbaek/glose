@@ -44,6 +44,7 @@ export const readingMessages = {
     chooseFirst: "Choose an answer to see the steps that follow.",
     stepNotes: {
       "free-text": "your own words",
+      read: "the text, in Glose",
       extraction: "core points as Notes",
       probe: "questions and answers",
     },
@@ -105,6 +106,7 @@ export const readingMessages = {
       "search-graph": "The AI searched your Graph.",
       "list-notes": "The AI looked at the Notes you made from this Source.",
       "read-probe": "The AI read your Probe.",
+      "read-article": "The AI read the text and your Passages.",
     } satisfies Record<SessionTool, string>,
     trail: {
       readSource: "Read the Source and your Free text",
@@ -114,6 +116,7 @@ export const readingMessages = {
       searchGraph: (query: string) => `Searched your Graph for “${query}”`,
       listNotes: "Looked at your Notes from this Source",
       readProbe: "Read your Probe",
+      readArticle: "Read the text and your Passages",
     },
     trailSummary: (read: {
       readonly freeText: boolean;
@@ -123,8 +126,10 @@ export const readingMessages = {
       readonly cards: boolean;
       readonly sourceNotes: boolean;
       readonly probe: boolean;
+      readonly article: boolean;
     }) => {
       const things = [
+        ...(read.article ? ["the text"] : []),
         ...(read.freeText ? ["your Free text"] : []),
         ...(read.probe ? ["your Probe"] : []),
         ...(read.sourceNotes ? ["your Notes from this Source"] : []),
@@ -161,6 +166,8 @@ export const readingMessages = {
           return "Looking at your Notes from this Source";
         case "read-probe":
           return "Reading your Probe";
+        case "read-article":
+          return "Reading the text";
         case null:
           return "Thinking";
       }
@@ -224,6 +231,10 @@ export const readingMessages = {
     fromFreeText: "From your Free text:",
     fromProbe: "From your words in the Probe:",
     notInFreeText: "Not in your Free text. Check it against your copy.",
+    fromText: (paragraph: string | null) =>
+      paragraph === null ? "From the text:" : `From the text, ${paragraph}:`,
+    fromPassage: (paragraph: string | null) =>
+      paragraph === null ? "Your Passage:" : `Your Passage, ${paragraph}:`,
     ownWords: "Your own point",
     repeats: "You have this Note:",
     pullsAgainst: "Pulls against",

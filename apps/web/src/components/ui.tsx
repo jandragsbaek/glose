@@ -2,7 +2,7 @@ import type { Source } from "@glose/contracts";
 import { CircleAlert, Info, TriangleAlert } from "lucide-react";
 import { type ReactNode, useId } from "react";
 
-import { callNumber, MISSING_YEAR } from "../domain/source.ts";
+import { type CallNumbered, callNumber } from "../domain/source.ts";
 import { useT } from "../i18n/I18n.tsx";
 
 export function Page({
@@ -88,12 +88,12 @@ export function CallNumber({
   source,
   page = null,
 }: {
-  readonly source: Pick<Source, "familyName" | "firstPublished">;
+  readonly source: CallNumbered;
   readonly page?: string | null;
 }) {
   const t = useT();
   const label = callNumber(source);
-  const missing = label.endsWith(MISSING_YEAR);
+  const missing = source.firstPublished === null;
   return (
     <span
       className={missing ? "call call--missing" : "call"}

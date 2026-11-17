@@ -38,6 +38,7 @@ export const readingMessages: Pick<
     chooseFirst: "Vælg et svar for at se de trin, der følger.",
     stepNotes: {
       "free-text": "dine egne ord",
+      read: "teksten, i Glose",
       extraction: "kernepunkter som noter",
       probe: "spørgsmål og svar",
     },
@@ -100,6 +101,7 @@ export const readingMessages: Pick<
       "search-graph": "AI'en søgte i din graf.",
       "list-notes": "AI'en så på de noter, du har lavet fra denne kilde.",
       "read-probe": "AI'en læste din sondering.",
+      "read-article": "AI'en læste teksten og dine passager.",
     },
     trail: {
       readSource: "Læste kilden og din frie tekst",
@@ -109,9 +111,11 @@ export const readingMessages: Pick<
       searchGraph: (query: string) => `Søgte i din graf efter »${query}«`,
       listNotes: "Så på dine noter fra denne kilde",
       readProbe: "Læste din sondering",
+      readArticle: "Læste teksten og dine passager",
     },
     trailSummary: (read) => {
       const things = [
+        ...(read.article ? ["teksten"] : []),
         ...(read.freeText ? ["din frie tekst"] : []),
         ...(read.probe ? ["din sondering"] : []),
         ...(read.sourceNotes ? ["dine noter fra denne kilde"] : []),
@@ -146,6 +150,8 @@ export const readingMessages: Pick<
           return "Ser på dine noter fra denne kilde";
         case "read-probe":
           return "Læser din sondering";
+        case "read-article":
+          return "Læser teksten";
         case null:
           return "Tænker";
       }
@@ -209,6 +215,10 @@ export const readingMessages: Pick<
     fromFreeText: "Fra din frie tekst:",
     fromProbe: "Fra dine ord i sonderingen:",
     notInFreeText: "Ikke i din frie tekst. Tjek det i dit eget eksemplar.",
+    fromText: (paragraph: string | null) =>
+      paragraph === null ? "Fra teksten:" : `Fra teksten, ${paragraph}:`,
+    fromPassage: (paragraph: string | null) =>
+      paragraph === null ? "Din passage:" : `Din passage, ${paragraph}:`,
     ownWords: "Dit eget punkt",
     repeats: "Du har denne note:",
     pullsAgainst: "Trækker imod",

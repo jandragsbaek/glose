@@ -5,6 +5,7 @@ import { graphMessages } from "./en/graph.ts";
 import { writingMessages } from "./en/writing.ts";
 import { recallMessages } from "./en/recall.ts";
 import { settingsMessages } from "./en/settings.ts";
+import { articleMessages } from "./en/article.ts";
 
 export const en = {
   ...coreMessages,
@@ -14,6 +15,7 @@ export const en = {
   ...writingMessages,
   ...recallMessages,
   ...settingsMessages,
+  ...articleMessages,
 };
 
 export type Messages = typeof en;

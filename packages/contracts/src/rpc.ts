@@ -18,10 +18,12 @@ import { GraphView, NoteNameTaken, NoteNotFound, SaveNote } from "./graph.ts";
 import { RecordReview, ReviewQueue } from "./recall.ts";
 import { ServerInfo } from "./server.ts";
 import {
+  AddPassagePoint,
   AddPoint,
   AnswerProbe,
   DropProposal,
   FindSession,
+  GoDeeper,
   KeepPoint,
   KeepProposal,
   PointNotFound,
@@ -48,8 +50,16 @@ import {
   StorageError,
 } from "./settings.ts";
 import {
+  ArticleText,
   ChooseReadingStart,
   AdvanceReading,
+  ImportText,
+  MarkedPassage,
+  MarkPassage,
+  PassageRef,
+  PassageRefused,
+  SetPassageWords,
+  SetReadingPlace,
   SaveFreeText,
   Source,
   SourceDetails,
@@ -88,6 +98,12 @@ export const RPC_METHODS = {
   sourcesSaveFreeText: "sources.saveFreeText",
   sourcesChooseStart: "sources.chooseStart",
   sourcesAdvance: "sources.advance",
+  sourcesImportText: "sources.importText",
+  sourcesSetPlace: "sources.setPlace",
+  articlesGet: "articles.get",
+  articlesMarkPassage: "articles.markPassage",
+  articlesRemovePassage: "articles.removePassage",
+  articlesSetPassageWords: "articles.setPassageWords",
   graphRead: "graph.read",
   notesSave: "notes.save",
   catalogSearch: "catalog.search",
@@ -117,6 +133,9 @@ export const RPC_METHODS = {
   sessionsWritePoint: "sessions.writePoint",
   sessionsAnswerProbe: "sessions.answerProbe",
   sessionsFinishProbe: "sessions.finishProbe",
+  sessionsGoDeeper: "sessions.goDeeper",
+  sessionsContinueProbe: "sessions.continueProbe",
+  sessionsAddPassagePoint: "sessions.addPassagePoint",
   cardsList: "cards.list",
   cardsJudge: "cards.judge",
   cardsCreate: "cards.create",
@@ -184,6 +203,36 @@ export const GloseRpcGroup = RpcGroup.make(
     payload: AdvanceReading,
     success: Source,
     error: Schema.Union([SourceNotFound, GraphFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.sourcesImportText, {
+    payload: ImportText,
+    success: Source,
+    error: Schema.Union([SourceNameTaken, GraphFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.sourcesSetPlace, {
+    payload: SetReadingPlace,
+    success: Source,
+    error: Schema.Union([SourceNotFound, GraphFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.articlesGet, {
+    payload: SourceRef,
+    success: ArticleText,
+    error: Schema.Union([SourceNotFound, PassageRefused, GraphFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.articlesMarkPassage, {
+    payload: MarkPassage,
+    success: MarkedPassage,
+    error: Schema.Union([SourceNotFound, PassageRefused, GraphFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.articlesRemovePassage, {
+    payload: PassageRef,
+    success: MarkedPassage,
+    error: Schema.Union([SourceNotFound, PassageRefused, GraphFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.articlesSetPassageWords, {
+    payload: SetPassageWords,
+    success: MarkedPassage,
+    error: Schema.Union([SourceNotFound, PassageRefused, GraphFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.graphRead, { success: GraphView, error: GraphErrors }),
   Rpc.make(RPC_METHODS.notesSave, {
@@ -283,6 +332,26 @@ export const GloseRpcGroup = RpcGroup.make(
       GraphFolderNotSet,
       StorageError,
     ]),
+  }),
+  Rpc.make(RPC_METHODS.sessionsGoDeeper, {
+    payload: GoDeeper,
+    success: Session,
+    error: Schema.Union([
+      SourceNotFound,
+      PassageRefused,
+      SessionNotFound,
+      SessionBusy,
+      GraphFolderNotSet,
+      StorageError,
+    ]),
+  }),
+  Rpc.make(RPC_METHODS.sessionsContinueProbe, {
+    payload: SessionRef,
+    error: Schema.Union([SessionNotFound, SessionBusy, GraphFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.sessionsAddPassagePoint, {
+    payload: AddPassagePoint,
+    error: Schema.Union([SourceNotFound, PassageRefused, GraphFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.sessionsFinishProbe, {
     payload: SessionRef,

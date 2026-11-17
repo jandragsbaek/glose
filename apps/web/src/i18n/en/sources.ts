@@ -6,15 +6,17 @@ export const sourceMessages = {
   source: {
     firstPublished: (year: number) => `first published ${year}`,
     callNumberLabel: (callNumber: string) => `Call number ${callNumber}`,
-    page: (page: string) => `p. ${page}`,
+    page: (page: string) => (page.startsWith("¶") ? page : `p. ${page}`),
     missingTitle: "Missing for a correct Citation",
     missing: {
       firstPublished: "The year of first publication",
       publisher: "The publisher",
+      container: "Where it appeared: the journal, website or course",
     },
     missingInline: {
       firstPublished: "the year of first publication",
       publisher: "the publisher",
+      container: "where it appeared",
     },
     missingLine: (missing: ReadonlyArray<string>) =>
       `Missing for a correct Citation: ${list.format(missing)}.`,
@@ -46,6 +48,7 @@ export const sourceMessages = {
     state: (step: Exclude<ReadingStep, "done">, words: number, notes: number) =>
       ({
         "free-text": `Free text · ${count(words, "word", "words")}`,
+        read: "Reading",
         extraction: `Extraction · ${count(notes, "Note", "Notes")} written`,
         probe: `Probe · ${count(notes, "Note", "Notes")}`,
       })[step],
@@ -90,6 +93,7 @@ export const sourceMessages = {
     letterGroup: (letter: string, n: number) => `${letter} · ${count(n, "Source", "Sources")}`,
     steps: {
       "free-text": "In Free text",
+      read: "Reading",
       extraction: "In Extraction",
       probe: "In Probe",
       done: "Read",
@@ -105,10 +109,14 @@ export const sourceMessages = {
     ready: "Ready",
     missing: (missing: ReadonlyArray<MissingDetail>): string =>
       missing.length > 1
-        ? "No year or publisher"
+        ? missing.includes("container")
+          ? "No year or place"
+          : "No year or publisher"
         : missing[0] === "firstPublished"
           ? "No year"
-          : "No publisher",
+          : missing[0] === "container"
+            ? "No journal, site or course"
+            : "No publisher",
     matching: (shown: number, total: number) =>
       `${numbers.format(shown)} of ${count(total, "Source", "Sources")}`,
     nothingFound: "No Source matches.",

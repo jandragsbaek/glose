@@ -1,5 +1,7 @@
 import {
   NoteNotFound,
+  parseArticle,
+  PassageRefused,
   type Card,
   type NoteNameTaken,
   openQuestion,
@@ -31,7 +33,7 @@ import * as CardDecisions from "./cardDecisions.ts";
 import * as CardExtraction from "./cardExtraction.ts";
 import * as CardJudging from "./cardJudging.ts";
 import * as Extraction from "./extraction.ts";
-import type { Live } from "./liveSession.ts";
+import { addPoints, type Live } from "./liveSession.ts";
 import * as PointDecisions from "./pointDecisions.ts";
 import * as Probe from "./probe.ts";
 import { pointsOf } from "./sessionEntries.ts";
@@ -105,6 +107,21 @@ export class Sessions extends Context.Service<
     readonly finishProbe: (
       id: string,
     ) => Effect.Effect<void, SessionNotFound | SessionBusy | GraphError>;
+    readonly goDeeper: (input: {
+      readonly source: string;
+      readonly passage: string;
+    }) => Effect.Effect<
+      Session,
+      SourceNotFound | PassageRefused | SessionNotFound | SessionBusy | GraphError
+    >;
+    readonly continueProbe: (
+      id: string,
+    ) => Effect.Effect<void, SessionNotFound | SessionBusy | GraphError>;
+    readonly addPassagePoint: (input: {
+      readonly source: string;
+      readonly passage: string;
+      readonly title: string;
+    }) => Effect.Effect<void, SourceNotFound | PassageRefused | GraphError>;
   }
 >()("glose/sessions/Sessions") {}
 
@@ -166,31 +183,64 @@ export const make = Effect.gen(function* () {
     }
   });
 
+  const latestRecord = Effect.fn("Sessions.latestRecord")(function* (
+    kind: SessionKind,
+    subject: string,
+  ) {
+    const [latest] = (yield* readRecords)
+      .filter((record) => record.kind === kind && linkKey(record.subject) === linkKey(subject))
+      .sort((a, b) => b.created - a.created);
+    return latest ?? null;
+  });
+
+  const newSession = Effect.fn("Sessions.newSession")(function* (
+    kind: SessionKind,
+    subject: string,
+  ) {
+    const created = yield* Clock.currentTimeMillis;
+    const stamp = new Date(created).toISOString().replace(/[:.]/g, "-");
+    const record: SessionRecord = {
+      version: 2,
+      id: `${stamp}-${NodeCrypto.randomBytes(3).toString("hex")}`,
+      kind,
+      subject,
+      model: null,
+      created,
+      entries: [],
+      items: [],
+    };
+    return yield* adopt(record);
+  });
+
+  const passageOf = Effect.fn("Sessions.passageOf")(function* (source: string, id: string) {
+    const article = parseArticle(yield* sources.articleText(source));
+    const passage = article.passages.find((other) => other.id === id);
+    if (passage === undefined) return yield* new PassageRefused({ reason: "not-found" });
+    return passage;
+  });
+
   return Sessions.of({
     find: Effect.fn("Sessions.find")(function* ({ kind, subject }) {
-      const [latest] = (yield* readRecords)
-        .filter((record) => record.kind === kind && linkKey(record.subject) === linkKey(subject))
-        .sort((a, b) => b.created - a.created);
-      if (latest === undefined) return null;
+      const latest = yield* latestRecord(kind, subject);
+      if (latest === null) return null;
       return yield* SubscriptionRef.get((yield* adopt(latest)).view);
     }),
 
     start: Effect.fn("Sessions.start")(function* ({ kind, subject: asked, passage }) {
       const subject = yield* subjectOf(kind, asked);
       const { language } = (yield* settings.get).settings;
-      const created = yield* Clock.currentTimeMillis;
-      const stamp = new Date(created).toISOString().replace(/[:.]/g, "-");
-      const record: SessionRecord = {
-        version: 2,
-        id: `${stamp}-${NodeCrypto.randomBytes(3).toString("hex")}`,
-        kind,
-        subject,
-        model: null,
-        created,
-        entries: [],
-        items: [],
-      };
-      const session = yield* adopt(record);
+      if (kind === "extraction") {
+        const waiting = yield* latestRecord(kind, subject);
+        if (waiting !== null && waiting.items.length === 0) {
+          const session = yield* adopt(waiting);
+          yield* beginTurn(session, [], [Extraction.kickoff(language ?? "en")]).pipe(
+            Effect.catchTags({ SessionBusy: () => Effect.void }),
+          );
+          return yield* SubscriptionRef.get(session.view);
+        }
+      }
+      const session = yield* newSession(kind, subject);
+      const source = kind === "card-extraction" ? null : yield* sources.get(subject);
       const opening =
         kind === "extraction"
           ? { entries: [], items: [Extraction.kickoff(language ?? "en")] }
@@ -200,7 +250,8 @@ export const make = Effect.gen(function* () {
                 items: [
                   Probe.kickoff(
                     language ?? "en",
-                    (yield* sources.get(subject)).readingStart ?? "write",
+                    source?.readingStart ?? "write",
+                    source?.kind ?? "book",
                   ),
                 ],
               }
@@ -293,6 +344,75 @@ export const make = Effect.gen(function* () {
         });
         if (finished === "busy") return yield* new SessionBusy({ id });
         if (finished === "now") yield* save(session);
+      },
+      (effect) => deciding.withPermit(effect),
+    ),
+
+    goDeeper: Effect.fn("Sessions.goDeeper")(function* ({ source: asked, passage: id }) {
+      const source = yield* sources.get(asked);
+      const passage = yield* passageOf(source.id, id);
+      const { language } = (yield* settings.get).settings;
+      const existing = yield* latestRecord("probe", source.id);
+      const session =
+        existing === null ? yield* newSession("probe", source.id) : yield* adopt(existing);
+      const view = yield* SubscriptionRef.get(session.view);
+      if (view.working) return yield* new SessionBusy({ id: view.id });
+      const focus = { _tag: "ProbeFocus" as const, paragraph: passage.n, text: passage.text };
+      if (openQuestion(view.entries) !== null) return yield* new SessionBusy({ id: view.id });
+      yield* beginTurn(
+        session,
+        [focus],
+        [
+          ...(existing === null ? [Probe.readingKickoff(language ?? "en")] : []),
+          {
+            type: "message",
+            role: "user",
+            content: Probe.focusMessage({
+              paragraph: passage.n,
+              text: passage.text,
+              words: passage.words,
+            }),
+          },
+        ],
+      );
+      return yield* SubscriptionRef.get(session.view);
+    }),
+
+    continueProbe: Effect.fn("Sessions.continueProbe")(function* (id) {
+      yield* beginTurn(
+        yield* load(id),
+        [{ _tag: "ProbeFocusDone", paragraph: 0 }],
+        [Probe.continueMessage],
+      );
+    }),
+
+    addPassagePoint: Effect.fn("Sessions.addPassagePoint")(
+      function* ({ source: asked, passage: id, title }) {
+        const source = yield* sources.get(asked);
+        const passage = yield* passageOf(source.id, id);
+        const existing = yield* latestRecord("extraction", source.id);
+        const session =
+          existing === null ? yield* newSession("extraction", source.id) : yield* adopt(existing);
+        const [point] = yield* addPoints(session, [
+          {
+            title,
+            origin: "passage",
+            quote: passage.text,
+            repeats: null,
+            pullsAgainst: null,
+            links: [],
+            draft: null,
+            state: "kept",
+            note: null,
+            page: `¶ ${passage.n}`,
+          },
+        ]);
+        if (point !== undefined) {
+          session.decisions.push(
+            `Made point ${point.id.slice(1)} ("${point.title}") from a Passage they marked while reading, ¶ ${passage.n}: "${passage.text}". It is theirs to write.`,
+          );
+        }
+        yield* save(session);
       },
       (effect) => deciding.withPermit(effect),
     ),

@@ -124,6 +124,7 @@ export const writingMessages: Pick<Messages, "writing"> = {
       "no-location": "Ingen side",
       "no-year": "Kilden har intet årstal",
       "no-publisher": "Kilden har intet forlag",
+      "no-container": "Kilden siger ikke, hvor den udkom",
       "quote-mismatch": "Citatet står ikke ordret i noten",
     },
     addPage: "Tilføj siden",

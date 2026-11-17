@@ -7,15 +7,17 @@ export const sourceMessages: Pick<Messages, "source" | "sources" | "addSource"> 
   source: {
     firstPublished: (year: number) => `først udgivet ${year}`,
     callNumberLabel: (callNumber: string) => `Opstillingssignatur ${callNumber}`,
-    page: (page: string) => `s. ${page}`,
+    page: (page: string) => (page.startsWith("¶") ? page : `s. ${page}`),
     missingTitle: "Mangler for en korrekt kildehenvisning",
     missing: {
       firstPublished: "Året for første udgivelse",
       publisher: "Forlaget",
+      container: "Hvor den udkom: tidsskriftet, webstedet eller kurset",
     },
     missingInline: {
       firstPublished: "året for første udgivelse",
       publisher: "forlaget",
+      container: "hvor den udkom",
     },
     missingLine: (missing: ReadonlyArray<string>) =>
       `Mangler for en korrekt kildehenvisning: ${list.format(missing)}.`,
@@ -48,6 +50,7 @@ export const sourceMessages: Pick<Messages, "source" | "sources" | "addSource"> 
     state: (step: Exclude<ReadingStep, "done">, words: number, notes: number) =>
       ({
         "free-text": `Fri tekst · ${count(words, "ord", "ord")}`,
+        read: "Læser",
         extraction: `Udtræk · ${count(notes, "note", "noter")} skrevet`,
         probe: `Sondering · ${count(notes, "note", "noter")}`,
       })[step],
@@ -92,6 +95,7 @@ export const sourceMessages: Pick<Messages, "source" | "sources" | "addSource"> 
     letterGroup: (letter: string, n: number) => `${letter} · ${count(n, "kilde", "kilder")}`,
     steps: {
       "free-text": "I fri tekst",
+      read: "Læses",
       extraction: "I udtræk",
       probe: "I sondering",
       done: "Læst",
@@ -107,10 +111,14 @@ export const sourceMessages: Pick<Messages, "source" | "sources" | "addSource"> 
     ready: "Klar",
     missing: (missing: ReadonlyArray<MissingDetail>) =>
       missing.length > 1
-        ? "Intet år eller forlag"
+        ? missing.includes("container")
+          ? "Intet år eller sted"
+          : "Intet år eller forlag"
         : missing[0] === "firstPublished"
           ? "Intet år"
-          : "Intet forlag",
+          : missing[0] === "container"
+            ? "Intet tidsskrift, websted eller kursus"
+            : "Intet forlag",
     matching: (shown: number, total: number) =>
       `${numbers.format(shown)} af ${count(total, "kilde", "kilder")}`,
     nothingFound: "Ingen kilde passer.",

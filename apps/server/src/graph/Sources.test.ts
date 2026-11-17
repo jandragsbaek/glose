@@ -1,6 +1,6 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
-import type { SourceDetails } from "@glose/contracts";
+import { BOOK_TEXT_DETAILS, type SourceDetails } from "@glose/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Option from "effect/Option";
@@ -110,6 +110,9 @@ it.layer(NodeServices.layer)("Sources", (it) => {
               editionYear: null,
               publisher: null,
               translator: null,
+              ...BOOK_TEXT_DETAILS,
+              hasText: false,
+              readingPlace: null,
               readingStep: "probe",
               readingStart: "catch-up",
               freeText: "Abraham tier.",
@@ -249,6 +252,126 @@ it.layer(NodeServices.layer)("Sources", (it) => {
         yield* sources.saveFreeText({ id: writer.id, freeText: "", finish: true });
         const probe = yield* sources.advance({ id: writer.id, from: "extraction" });
         assert.strictEqual(probe.readingStep, "probe");
+      }),
+    ),
+  );
+
+  it.effect("imports a Course lesson with its text, and marks a Passage in that text", () =>
+    withGraph(({ folder, sources }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* TestClock.setTime(new Date(2026, 10, 17, 9, 0).getTime());
+        const lesson = yield* sources.importText({
+          ...BOOK_TEXT_DETAILS,
+          kind: "lesson",
+          familyName: "Lindqvist",
+          givenName: "Anna",
+          title: "Retrieval before generation",
+          firstPublished: 2026,
+          edition: null,
+          editionYear: null,
+          publisher: null,
+          translator: null,
+          container: "Practical AI Engineering",
+          part: "2.3",
+          markdown: "# Retrieval\r\n\r\nA model answers from training.\r\n",
+        });
+
+        assert.strictEqual(lesson.id, "Lindqvist 2026 2.3 Retrieval before generation");
+        assert.deepStrictEqual(
+          [lesson.kind, lesson.readingStep, lesson.hasText],
+          ["lesson", "read", true],
+        );
+        const sourceFile = yield* fs.readFileString(path.join(folder, `${lesson.id}.md`));
+        assert.include(sourceFile, "kind: lesson\n");
+        assert.include(sourceFile, 'container: Practical AI Engineering\npart: "2.3"\n');
+        assert.strictEqual(
+          yield* sources.articleText(lesson.id),
+          "# Retrieval\n\nA model answers from training.\n",
+        );
+
+        const marked = yield* sources.markPassage({
+          id: lesson.id,
+          paragraph: 1,
+          start: 2,
+          end: 7,
+        });
+        assert.strictEqual(marked.passage, "1.1");
+        assert.include(
+          yield* fs.readFileString(path.join(folder, "Articles", `${lesson.id}.md`)),
+          "A ==model== answers",
+        );
+        const overlap = yield* sources
+          .markPassage({ id: lesson.id, paragraph: 1, start: 0, end: 10 })
+          .pipe(Effect.flip);
+        assert.strictEqual(
+          overlap._tag === "PassageRefused" ? overlap.reason : overlap._tag,
+          "overlap",
+        );
+
+        const stale = yield* sources
+          .setPassageWords({ id: lesson.id, passage: "1.1", words: "Mine.", text: "another word" })
+          .pipe(Effect.flip);
+        assert.strictEqual(stale._tag, "PassageRefused", "a save for words that moved is refused");
+        const twin = yield* sources
+          .setPassageWords({ id: lesson.id, passage: "1.1", words: "Mine.", text: "model", at: 9 })
+          .pipe(Effect.flip);
+        assert.strictEqual(
+          twin._tag,
+          "PassageRefused",
+          "the same words elsewhere are another Passage",
+        );
+        const worded = yield* sources.setPassageWords({
+          id: lesson.id,
+          passage: "1.1",
+          words: "Mine.",
+          text: "model",
+        });
+        assert.include(worded.markdown, "==model==[^glose-1]");
+
+        yield* Effect.all(
+          [
+            sources.setPlace({ id: lesson.id, place: 1 }),
+            sources.saveFreeText({ id: lesson.id, freeText: "Notes kept.", finish: false }),
+          ],
+          { concurrency: "unbounded" },
+        );
+        const both = yield* sources.get(lesson.id);
+        assert.deepStrictEqual(
+          [both.readingPlace, both.freeText],
+          [1, "Notes kept."],
+          "two saves at once both land",
+        );
+        const placed = yield* sources.setPlace({ id: lesson.id, place: 1 });
+        assert.strictEqual(placed.readingPlace, 1);
+        const listed = yield* sources.list;
+        assert.deepStrictEqual(
+          listed.map((source) => source.id),
+          [lesson.id],
+          "the text in Articles/ is not a Source",
+        );
+      }),
+    ),
+  );
+
+  it.effect("moves an Article from reading to the step the user chooses", () =>
+    withGraph(({ sources }) =>
+      Effect.gen(function* () {
+        const article = yield* sources.importText({
+          ...ARENDT,
+          ...BOOK_TEXT_DETAILS,
+          kind: "article",
+          title: "Reflections on Little Rock",
+          markdown: "Text.",
+        });
+        const probed = yield* sources.chooseStart({ id: article.id, start: "probe" });
+        assert.strictEqual(probed.readingStep, "probe");
+        const extraction = yield* sources.advance({ id: probed.id, from: "probe" });
+        assert.strictEqual(extraction.readingStep, "extraction");
+        const book = yield* sources.create(ARENDT);
+        const refused = yield* sources.articleText(book.id).pipe(Effect.flip);
+        assert.strictEqual(refused._tag, "PassageRefused");
       }),
     ),
   );

@@ -34,6 +34,8 @@ const LABELS = {
     taught: "Taught",
     intro: "Before the question",
     checkCopy: "From the AI's knowledge of the book, not your copy. Check it there.",
+    fromText: (paragraph: number) => `From the text, ¶ ${paragraph}.`,
+    focus: (paragraph: number) => `Went deeper on ¶ ${paragraph} while reading:`,
     found: "What the Probe found",
     states: {
       asking: "Asked",
@@ -65,6 +67,8 @@ const LABELS = {
     taught: "Undervist",
     intro: "Før spørgsmålet",
     checkCopy: "Fra AI'ens viden om bogen, ikke dit eksemplar. Tjek det dér.",
+    fromText: (paragraph: number) => `Fra teksten, ¶ ${paragraph}.`,
+    focus: (paragraph: number) => `Gik i dybden med ¶ ${paragraph} under læsningen:`,
     found: "Hvad sonderingen fandt",
     states: {
       asking: "Spurgt",
@@ -105,7 +109,7 @@ export const renderRecord = (input: {
     switch (entry._tag) {
       case "ProbeQuestion":
         blocks.push(
-          `## ${labels.question}${entry.number} · ${entry.topic}${entry.again === null ? "" : ` (${labels.again(entry.again)})`}`,
+          `## ${labels.question}${entry.number} · ${entry.topic}${entry.paragraph === undefined ? "" : ` · ¶ ${entry.paragraph}`}${entry.again === null ? "" : ` (${labels.again(entry.again)})`}`,
           entry.text,
         );
         break;
@@ -130,9 +134,12 @@ export const renderRecord = (input: {
         blocks.push(
           callout(
             `> [!ai] ${entry.kind === "gap" ? labels.taught : labels.intro} · ${entry.topic}`,
-            `${entry.text}\n\n*${labels.checkCopy}*`,
+            `${entry.text}\n\n*${entry.paragraph === undefined ? labels.checkCopy : labels.fromText(entry.paragraph)}*`,
           ),
         );
+        break;
+      case "ProbeFocus":
+        blocks.push(`*${labels.focus(entry.paragraph)}*`, `> ${entry.text}`);
         break;
       default:
         break;

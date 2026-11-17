@@ -1,4 +1,5 @@
 import {
+  findInArticle,
   type Language,
   linkKey,
   type Point,
@@ -13,6 +14,7 @@ import * as Schema from "effect/Schema";
 import type * as Graph from "../graph/Graph.ts";
 import type * as Sources from "../graph/Sources.ts";
 import type { AgentTool, InputItem } from "./agent.ts";
+import { articleOf, readArticleTool } from "./articleTools.ts";
 import { readNoteTool, searchGraphTool } from "./graphTools.ts";
 
 const NO_ARGUMENTS = {
@@ -35,6 +37,7 @@ Goal: help the user pull out the core points of the Source. Each Point becomes a
 How to work:
 - Start with read_source: the Source's bibliographic data and the user's Free text, what they wrote freely about it. When its readingStart is "probe" or "catch-up", the user began with a Probe: call read_probe, which gives every question, the user's Reasoning and answers, how each was judged, and what the Probe found per topic. Propose Points first on what the Probe found: the topics the user knows, and the gaps it taught. Then use search_graph a few times, with different words for the Source's main ideas, and read_note on the Notes that matter, so you know what the user's Graph already holds. Call list_sources when other Sources may matter.
 - Propose Points only through propose_points, a few at a time (at most ${MAX_POINTS}), the ones that matter most first. list_points shows the Points already in the Session; do not propose one again.
+- An Article or a Course lesson (read_source gives its kind) brings its text: call read_article. Read it all; propose the Source's core points from the text, and first the points the user's Passages mark (what they highlighted while reading, with their own words on it). Use origin "article" for a Point the text states: give the quote, the exact words of the text, copied character for character, and Glose sets its Location from the paragraph. The text is the user's own copy, so do not use origin "ai" for what the text says.
 - Say where each Point comes from. Origin "free-text" when the user's Free text holds it: give the quote, the exact words of the Free text, copied character for character. Origin "probe" when the user's own Reasoning or answers in the Probe hold it: give the quote, their exact words, copied character for character. Origin "ai" when it comes from your knowledge of the Source and not from the Free text. Never present your knowledge as something the user wrote. If you are unsure what the Source says, say so.
 - Use the Graph. When a Note already says the Point, name it in repeats. When a Note disagrees with the Point or pulls against it, name it in pulls_against_note and say how. Propose links to the Notes the Point's Note should link to, each with a short reason. Name only Notes that search_graph or read_note showed you, by their exact names.
 - Give each Point a draft of its Note: one to three short paragraphs that state the claim, explain it and stay true to the Source. The user's form starts with it. Glose marks it as AI text, edited or not, until the user says they rewrote it in their own words.
@@ -65,8 +68,13 @@ export const numberOf = (point: Pick<Point, "id">): number => Number(point.id.sl
 
 const describe = (source: Source) => ({
   id: source.id,
+  kind: source.kind,
   author: { family: source.familyName, given: source.givenName },
+  otherAuthors: source.otherAuthors,
   title: source.title,
+  appearedIn: source.container,
+  published: source.published,
+  lesson: source.part,
   firstPublished: source.firstPublished,
   edition: source.edition,
   editionYear: source.editionYear,
@@ -76,14 +84,14 @@ const describe = (source: Source) => ({
   readingStart: source.readingStart,
 });
 
-export type ProposedPoint = Omit<Point, "id" | "state" | "note" | "page">;
+export type ProposedPoint = Omit<Point, "id" | "state" | "note">;
 
 const NullableString = Schema.NullOr(Schema.String);
 const ProposeArguments = Schema.Struct({
   points: Schema.Array(
     Schema.Struct({
       title: Schema.String,
-      origin: Schema.Literals(["free-text", "probe", "ai"]),
+      origin: Schema.Literals(["free-text", "probe", "article", "ai"]),
       quote: NullableString,
       repeats: NullableString,
       pulls_against_note: NullableString,
@@ -207,6 +215,7 @@ export const tools = ({
     },
     searchGraphTool(graph),
     readNoteTool(graph),
+    readArticleTool(sources, source),
     {
       name: "read_probe",
       entry: "read-probe",
@@ -256,9 +265,9 @@ export const tools = ({
                   type: "string",
                   description: "The claim, as a full sentence: the Note's title.",
                 },
-                origin: { type: "string", enum: ["free-text", "probe", "ai"] },
+                origin: { type: "string", enum: ["free-text", "probe", "article", "ai"] },
                 quote: nullable(
-                  "The user's exact words the Point comes from: in the Free text, or in their Reasoning or answers in the Probe.",
+                  "The exact words the Point comes from: the user's in the Free text or in their Reasoning or answers in the Probe, or the text's own words for origin article.",
                 ),
                 repeats: nullable("A Note that already says this Point."),
                 pulls_against_note: nullable("A Note that disagrees with this Point."),
@@ -296,6 +305,7 @@ export const tools = ({
         );
         const probeEntries = yield* probe;
         const probeText = probeEntries === null ? "" : probeWords(probeEntries);
+        const article = yield* articleOf(sources, source);
         const existing = new Set((yield* points).map((point) => linkKey(point.title)));
         const proposed: Array<ProposedPoint> = [];
         const unquoted: Array<boolean> = [];
@@ -304,15 +314,22 @@ export const tools = ({
           if (title === "" || existing.has(linkKey(title))) continue;
           existing.add(linkKey(title));
           const against = resolve(point.pulls_against_note);
+          const inArticle =
+            point.origin === "article" && point.quote !== null && article !== null
+              ? findInArticle(article, point.quote)
+              : null;
           const quote =
             point.quote === null
               ? null
-              : findQuote(point.origin === "probe" ? probeText : freeText, point.quote);
+              : point.origin === "article"
+                ? (inArticle?.text.replace(/\s+/g, " ") ?? null)
+                : findQuote(point.origin === "probe" ? probeText : freeText, point.quote);
           unquoted.push(point.quote !== null && quote === null);
           proposed.push({
             title,
-            origin: point.origin,
+            origin: point.origin === "article" && article === null ? "ai" : point.origin,
             quote,
+            page: inArticle === null ? null : `¶ ${inArticle.n}`,
             repeats: resolve(point.repeats),
             pullsAgainst:
               against === null
@@ -330,7 +347,7 @@ export const tools = ({
         const dropped = shown.flatMap((_, index) =>
           unquoted[index] === true
             ? [
-                `The quote for point ${numbers[index]} is not in the user's words, so it is not shown.`,
+                `The quote for point ${numbers[index]} is not word for word in its origin, so it is not shown.`,
               ]
             : [],
         );

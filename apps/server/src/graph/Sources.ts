@@ -1,5 +1,14 @@
 import {
+  BOOK_TEXT_DETAILS,
   GraphFolderNotSet,
+  hasOwnText,
+  type ImportText,
+  markPassage,
+  parseArticle,
+  PassageRefused,
+  type PassageEdit,
+  removePassage,
+  setPassageWords,
   type ReadingStart,
   nextReadingStep,
   type ReadingStep,
@@ -16,6 +25,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Path from "effect/Path";
+import * as Semaphore from "effect/Semaphore";
 
 import * as Settings from "../settings/Settings.ts";
 import { writeFileAtomic } from "../storage.ts";
@@ -45,10 +55,57 @@ export class Sources extends Context.Service<
       readonly id: string;
       readonly from: ReadingStep;
     }) => Effect.Effect<Source, SourceNotFound | GraphError>;
+    readonly importText: (input: ImportText) => Effect.Effect<Source, SourceNameTaken | GraphError>;
+    readonly setPlace: (input: {
+      readonly id: string;
+      readonly place: number;
+    }) => Effect.Effect<Source, SourceNotFound | GraphError>;
+    readonly articleText: (
+      id: string,
+    ) => Effect.Effect<string, SourceNotFound | PassageRefused | GraphError>;
+    readonly markPassage: (input: {
+      readonly id: string;
+      readonly paragraph: number;
+      readonly start: number;
+      readonly end: number;
+    }) => Effect.Effect<Marked, SourceNotFound | PassageRefused | GraphError>;
+    readonly removePassage: (input: {
+      readonly id: string;
+      readonly passage: string;
+      readonly text?: string;
+      readonly at?: number;
+    }) => Effect.Effect<Marked, SourceNotFound | PassageRefused | GraphError>;
+    readonly setPassageWords: (input: {
+      readonly id: string;
+      readonly passage: string;
+      readonly words: string;
+      readonly text?: string;
+      readonly at?: number;
+    }) => Effect.Effect<Marked, SourceNotFound | PassageRefused | GraphError>;
   }
 >()("glose/Sources") {}
 
+interface Marked {
+  readonly markdown: string;
+  readonly passage: string | null;
+}
+
 const MARKDOWN = ".md";
+
+const NOT_FOUND: PassageEdit = { _tag: "Refused", reason: "not-found" };
+
+const stillThere = (
+  markdown: string,
+  passage: string,
+  text: string | undefined,
+  at: number | undefined,
+) =>
+  text === undefined ||
+  parseArticle(markdown).passages.some(
+    (other) => other.id === passage && other.text === text && (at === undefined || other.at === at),
+  );
+
+export const ARTICLES_DIR = "Articles";
 
 const storageError = (cause: unknown) => new StorageError({ detail: String(cause) });
 
@@ -57,6 +114,8 @@ export const make = Effect.gen(function* () {
   const path = yield* Path.Path;
   const settings = yield* Settings.Settings;
 
+  const writing = yield* Semaphore.make(1);
+
   const graphFolder = settings.get.pipe(
     Effect.flatMap(({ settings: { graphFolder } }) =>
       graphFolder === null ? Effect.fail(new GraphFolderNotSet()) : Effect.succeed(graphFolder),
@@ -64,6 +123,8 @@ export const make = Effect.gen(function* () {
   );
 
   const fileOf = (folder: string, id: string) => path.join(folder, `${id}${MARKDOWN}`);
+  const articleOf = (folder: string, id: string) =>
+    path.join(folder, ARTICLES_DIR, `${id}${MARKDOWN}`);
 
   const readSource = Effect.fn("Sources.readSource")(function* (folder: string, id: string) {
     const file = fileOf(folder, id);
@@ -71,12 +132,18 @@ export const make = Effect.gen(function* () {
     const info = yield* fs.stat(file);
     const modified = Option.getOrElse(info.mtime, () => new Date(0)).getTime();
     const created = Option.getOrNull(info.birthtime)?.getTime() ?? 0;
-    return parseSourceFile(markdown).pipe(
-      Option.map((content): Source => ({
+    const content = parseSourceFile(markdown);
+    const hasText =
+      Option.isSome(content) && hasOwnText(content.value.kind)
+        ? yield* fs.exists(articleOf(folder, id))
+        : false;
+    return content.pipe(
+      Option.map((found): Source => ({
         id,
-        ...content,
+        ...found,
+        hasText,
         modified,
-        added: content.added ?? (created > 0 ? created : modified),
+        added: found.added ?? (created > 0 ? created : modified),
       })),
     );
   });
@@ -113,6 +180,50 @@ export const make = Effect.gen(function* () {
     });
   });
 
+  const newId = Effect.fn("Sources.newId")(function* (
+    folder: string,
+    details: {
+      readonly familyName: string;
+      readonly firstPublished: number | null;
+      readonly title: string;
+    },
+    part: string | null = null,
+  ) {
+    const id = toFileName(
+      [details.familyName, details.firstPublished, part, details.title]
+        .filter((piece) => piece !== null)
+        .join(" "),
+    );
+    const existing = yield* fs.readDirectory(folder).pipe(Effect.mapError(storageError));
+    if (id === "" || existing.some((entry) => sameFileName(entry, `${id}${MARKDOWN}`))) {
+      return yield* new SourceNameTaken({ fileName: `${id}${MARKDOWN}` });
+    }
+    return id;
+  });
+
+  const articleText = Effect.fn("Sources.articleText")(function* (id: string) {
+    const source = yield* get(id);
+    const folder = yield* graphFolder;
+    if (!source.hasText) return yield* new PassageRefused({ reason: "no-text" });
+    return yield* fs.readFileString(articleOf(folder, id)).pipe(Effect.mapError(storageError));
+  });
+
+  const editArticle = Effect.fn("Sources.editArticle")(
+    function* (id: string, edit: (markdown: string) => PassageEdit) {
+      const markdown = yield* articleText(id);
+      const folder = yield* graphFolder;
+      const result = edit(markdown);
+      if (result._tag === "Refused") return yield* new PassageRefused({ reason: result.reason });
+      if (result.markdown !== markdown) {
+        yield* writeFileAtomic(fs, articleOf(folder, id), result.markdown).pipe(
+          Effect.mapError(storageError),
+        );
+      }
+      return { markdown: result.markdown, passage: result.passage };
+    },
+    (effect) => writing.withPermit(effect),
+  );
+
   return Sources.of({
     list: Effect.gen(function* () {
       const folder = yield* graphFolder;
@@ -129,17 +240,11 @@ export const make = Effect.gen(function* () {
 
     create: Effect.fn("Sources.create")(function* (details) {
       const folder = yield* graphFolder;
-      const id = toFileName(
-        [details.familyName, details.firstPublished, details.title]
-          .filter((part) => part !== null)
-          .join(" "),
-      );
-      const existing = yield* fs.readDirectory(folder).pipe(Effect.mapError(storageError));
-      if (id === "" || existing.some((entry) => sameFileName(entry, `${id}${MARKDOWN}`))) {
-        return yield* new SourceNameTaken({ fileName: `${id}${MARKDOWN}` });
-      }
+      const id = yield* newId(folder, details);
       return yield* writeSource(folder, id, {
         ...details,
+        ...BOOK_TEXT_DETAILS,
+        readingPlace: null,
         readingStep: "free-text",
         readingStart: null,
         freeText: "",
@@ -147,37 +252,101 @@ export const make = Effect.gen(function* () {
       }).pipe(Effect.mapError(storageError));
     }),
 
-    saveFreeText: Effect.fn("Sources.saveFreeText")(function* ({ id, freeText, finish }) {
-      const source = yield* get(id);
+    saveFreeText: Effect.fn("Sources.saveFreeText")(
+      function* ({ id, freeText, finish }) {
+        const source = yield* get(id);
+        const folder = yield* graphFolder;
+        const readingStep =
+          finish && source.readingStep === "free-text"
+            ? nextReadingStep(source.readingStart, "free-text")
+            : source.readingStep;
+        return yield* writeSource(folder, id, { ...source, freeText, readingStep }).pipe(
+          Effect.mapError(storageError),
+        );
+      },
+      (effect) => writing.withPermit(effect),
+    ),
+
+    chooseStart: Effect.fn("Sources.chooseStart")(
+      function* ({ id, start }) {
+        const source = yield* get(id);
+        const folder = yield* graphFolder;
+        const readingStep =
+          source.readingStep === "read"
+            ? nextReadingStep(start, "read", source.kind)
+            : start !== "write" && source.readingStep === "free-text"
+              ? "probe"
+              : source.readingStep;
+        return yield* writeSource(folder, id, { ...source, readingStart: start, readingStep }).pipe(
+          Effect.mapError(storageError),
+        );
+      },
+      (effect) => writing.withPermit(effect),
+    ),
+
+    advance: Effect.fn("Sources.advance")(
+      function* ({ id, from }) {
+        const source = yield* get(id);
+        if (source.readingStep !== from) return source;
+        const folder = yield* graphFolder;
+        return yield* writeSource(folder, id, {
+          ...source,
+          readingStep: nextReadingStep(source.readingStart, from, source.kind),
+        }).pipe(Effect.mapError(storageError));
+      },
+      (effect) => writing.withPermit(effect),
+    ),
+
+    importText: Effect.fn("Sources.importText")(function* ({ markdown, ...details }) {
       const folder = yield* graphFolder;
-      const readingStep =
-        finish && source.readingStep === "free-text"
-          ? nextReadingStep(source.readingStart, "free-text")
-          : source.readingStep;
-      return yield* writeSource(folder, id, { ...source, freeText, readingStep }).pipe(
+      const id = yield* newId(folder, details, details.kind === "lesson" ? details.part : null);
+      const articles = path.join(folder, ARTICLES_DIR);
+      if (yield* fs.exists(articleOf(folder, id)).pipe(Effect.mapError(storageError))) {
+        return yield* new SourceNameTaken({ fileName: `${ARTICLES_DIR}/${id}${MARKDOWN}` });
+      }
+      yield* fs.makeDirectory(articles, { recursive: true }).pipe(Effect.mapError(storageError));
+      yield* writeFileAtomic(fs, articleOf(folder, id), markdown.replace(/\r\n/g, "\n")).pipe(
         Effect.mapError(storageError),
       );
-    }),
-
-    chooseStart: Effect.fn("Sources.chooseStart")(function* ({ id, start }) {
-      const source = yield* get(id);
-      const folder = yield* graphFolder;
-      const readingStep =
-        start !== "write" && source.readingStep === "free-text" ? "probe" : source.readingStep;
-      return yield* writeSource(folder, id, { ...source, readingStart: start, readingStep }).pipe(
-        Effect.mapError(storageError),
-      );
-    }),
-
-    advance: Effect.fn("Sources.advance")(function* ({ id, from }) {
-      const source = yield* get(id);
-      if (source.readingStep !== from) return source;
-      const folder = yield* graphFolder;
       return yield* writeSource(folder, id, {
-        ...source,
-        readingStep: nextReadingStep(source.readingStart, from),
+        ...details,
+        kind: details.kind === "book" ? "article" : details.kind,
+        readingPlace: null,
+        readingStep: "read",
+        readingStart: null,
+        freeText: "",
+        added: yield* Clock.currentTimeMillis,
       }).pipe(Effect.mapError(storageError));
     }),
+
+    setPlace: Effect.fn("Sources.setPlace")(
+      function* ({ id, place }) {
+        const source = yield* get(id);
+        if (source.readingPlace === place) return source;
+        const folder = yield* graphFolder;
+        return yield* writeSource(folder, id, { ...source, readingPlace: place }).pipe(
+          Effect.mapError(storageError),
+        );
+      },
+      (effect) => writing.withPermit(effect),
+    ),
+
+    articleText,
+
+    markPassage: ({ id, paragraph, start, end }) =>
+      editArticle(id, (markdown) => markPassage(markdown, paragraph, start, end)),
+
+    removePassage: ({ id, passage, text, at }) =>
+      editArticle(id, (markdown) =>
+        stillThere(markdown, passage, text, at) ? removePassage(markdown, passage) : NOT_FOUND,
+      ),
+
+    setPassageWords: ({ id, passage, words, text, at }) =>
+      editArticle(id, (markdown) =>
+        stillThere(markdown, passage, text, at)
+          ? setPassageWords(markdown, passage, words)
+          : NOT_FOUND,
+      ),
   });
 });
 

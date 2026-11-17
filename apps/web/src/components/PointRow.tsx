@@ -28,6 +28,17 @@ export function PointSource({ point }: { readonly point: Point }) {
           </span>
         </p>
       ) : null}
+      {(point.origin === "article" || point.origin === "passage") && point.quote !== null ? (
+        <p className="point__from">
+          <Quote className="point__icon" aria-hidden="true" />
+          <span>
+            {point.origin === "article"
+              ? t.extraction.fromText(point.page)
+              : t.extraction.fromPassage(point.page)}{" "}
+            <q>{point.quote}</q>
+          </span>
+        </p>
+      ) : null}
       {point.origin === "ai" ? (
         <p className="point__from">
           <BookOpen className="point__icon" aria-hidden="true" />

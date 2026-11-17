@@ -125,10 +125,12 @@ export const coreMessages = {
     inProgress: "Source in progress",
     continue: {
       "free-text": "Continue Free text",
+      read: "Continue reading",
       extraction: "Continue Extraction",
       probe: "Continue Probe",
       done: "Open Source",
     } satisfies Record<ReadingStep, string>,
+    startReading: "Start reading",
     alsoInProgress: "Also in progress",
     open: "Open",
     noSourceTitle: "Add the book you are reading",
@@ -158,6 +160,7 @@ export const coreMessages = {
     label: "Reading Stage",
     names: {
       "free-text": "Free text",
+      read: "Read",
       extraction: "Extraction",
       probe: "Probe",
     },

@@ -221,7 +221,10 @@ function FlagAction({
       </button>
     );
   }
-  if ((problem === "no-year" || problem === "no-publisher") && sourceId !== null) {
+  if (
+    (problem === "no-year" || problem === "no-publisher" || problem === "no-container") &&
+    sourceId !== null
+  ) {
     return (
       <Link className="link-button" to="/sources/$sourceId" params={{ sourceId }}>
         {t.writing.openSource}

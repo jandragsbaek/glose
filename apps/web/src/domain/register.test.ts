@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import type { GraphNode, GraphView, Source } from "@glose/contracts";
+import { BOOK_TEXT_DETAILS, type GraphNode, type GraphView, type Source } from "@glose/contracts";
 
 import { filterRecords, groupRecords, sourceRecords } from "./register.ts";
 
@@ -19,6 +19,9 @@ const source = (
   editionYear: null,
   publisher: "A publisher",
   translator: null,
+  ...BOOK_TEXT_DETAILS,
+  hasText: false,
+  readingPlace: null,
   readingStep: "done",
   readingStart: null,
   freeText: "",

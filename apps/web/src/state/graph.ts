@@ -34,3 +34,19 @@ export const saveNoteAtom = GloseClient.mutation(RPC_METHODS.notesSave);
 export const advanceReadingAtom = GloseClient.mutation(RPC_METHODS.sourcesAdvance);
 
 export const searchCatalogAtom = GloseClient.mutation(RPC_METHODS.catalogSearch);
+
+export const ARTICLE_KEYS = { articles: ["articles"] } as const;
+
+export const articleAtom = Atom.family((id: string) =>
+  GloseClient.query(RPC_METHODS.articlesGet, { id }, { reactivityKeys: ARTICLE_KEYS.articles }),
+);
+
+export const importTextAtom = GloseClient.mutation(RPC_METHODS.sourcesImportText);
+export const setPlaceAtom = GloseClient.mutation(RPC_METHODS.sourcesSetPlace);
+export const markPassageAtom = GloseClient.mutation(RPC_METHODS.articlesMarkPassage);
+export const removePassageAtom = GloseClient.mutation(RPC_METHODS.articlesRemovePassage);
+export const setPassageWordsAtom = GloseClient.mutation(RPC_METHODS.articlesSetPassageWords);
+
+export const unsavedWordsAtom = Atom.make<ReadonlyMap<string, string>>(new Map()).pipe(
+  Atom.keepAlive,
+);

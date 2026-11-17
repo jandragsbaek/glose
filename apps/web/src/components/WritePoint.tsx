@@ -44,7 +44,7 @@ export function WritePoint({
       setAiText(true);
     }
   }
-  const [page, setPage] = useState("");
+  const [page, setPage] = useState(point.page ?? "");
   const [added, setAdded] = useState<ReadonlyArray<string>>([]);
   const [dropped, setDropped] = useState<ReadonlyArray<string>>([]);
   const [busy, setBusy] = useState(false);
@@ -115,7 +115,11 @@ export function WritePoint({
         {pointNumber(point)}
       </span>
       <div className="write__body">
-        {point.origin === "user" ? titleInput : <AiText scope="title">{titleInput}</AiText>}
+        {point.origin === "user" || point.origin === "passage" ? (
+          titleInput
+        ) : (
+          <AiText scope="title">{titleInput}</AiText>
+        )}
         <PointSource point={point} />
         <label className="sr-only" htmlFor={textId}>
           {aiText ? t.extraction.draftLabel : t.extraction.textLabel}
