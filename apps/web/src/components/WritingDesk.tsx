@@ -15,7 +15,7 @@ import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { TriangleAlert } from "lucide-react";
 import { useId, useRef, useState } from "react";
 
-import { proseWords } from "../domain/writing.ts";
+import { hugWord, proseWords, referenceLead } from "../domain/writing.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { graphAtom, settingsAtom, sourcesAtom } from "../state/graph.ts";
 import { publishWritingAtom, reviewWritingAtom, WRITING_KEYS } from "../state/writing.ts";
@@ -27,16 +27,17 @@ import {
   type PublishState,
   type ReviewState,
 } from "./WritingDeskBar.tsx";
+import { CiteSlip, type CiteTarget, type CloseReason } from "./WritingCite.tsx";
 import {
   Checks,
   Questions,
-  ReferenceFlags,
+  ReviewFlags,
   ReferenceGlosses,
   useMarginPlacement,
 } from "./WritingMargins.tsx";
 import { Proof } from "./WritingProof.tsx";
 import { useWritingSave } from "./WritingSave.ts";
-import { CiteSheet, ReplaceSheet, SiteFolderSheet } from "./WritingSheets.tsx";
+import { ReplaceSheet, SiteFolderSheet } from "./WritingSheets.tsx";
 
 const fileNameOf = (file: string) => file.split(/[\\/]/).pop() ?? file;
 
@@ -70,7 +71,7 @@ export function WritingDesk({
   const [review, setReview] = useState<WritingReview | null>(null);
   const [reviewedBody, setReviewedBody] = useState<string | null>(null);
   const [reviewState, setReviewState] = useState<ReviewState>("idle");
-  const [cite, setCite] = useState<{ readonly from: number; readonly to: number } | null>(null);
+  const [cite, setCite] = useState<CiteTarget | null>(null);
   const [sheet, setSheet] = useState<"site" | { readonly replace: string } | null>(null);
   const [publish, setPublish] = useState<PublishState>({ kind: "idle" });
 
@@ -154,20 +155,56 @@ export function WritingDesk({
     }
   };
 
+  const openCite = (
+    from: number,
+    to: number,
+    editing: CiteTarget["editing"] = null,
+    focusPage = false,
+    typed = false,
+  ) => {
+    const line = editor.current?.bottomOf(from) ?? 0;
+    const box = editorBox.current?.offsetTop ?? 0;
+    setCite({ from, to, top: box + line + 8, editing, focusPage, typed, opened: Date.now() });
+  };
+
+  const editReference = (
+    reference: Pick<ResolvedReference, "start" | "end" | "target" | "location">,
+    focusPage = false,
+  ) =>
+    openCite(
+      reference.start,
+      reference.end,
+      { target: reference.target, location: reference.location },
+      focusPage,
+    );
+
+  const closeCite = (reason: CloseReason) => {
+    const closing = cite;
+    setCite(null);
+    if (closing?.typed === true && reason === "escape") {
+      editor.current?.replace(closing.from, closing.from, "[[");
+    } else if (reason === "escape") {
+      window.requestAnimationFrame(() => editor.current?.focus());
+    }
+  };
+
   const insertReference = (target: string, page: string | null) => {
+    if (cite === null) return;
+    const { from, to, editing } = cite;
+    setCite(null);
+    const token = referenceToken(target, page);
+    const at = editing !== null || from === to ? hugWord(fields.body, from) : from;
+    editor.current?.replace(at, to, at < from && editing === null ? `${token} ` : token);
+  };
+
+  const removeReference = () => {
     if (cite === null) return;
     const { from, to } = cite;
     setCite(null);
-    window.requestAnimationFrame(() =>
-      editor.current?.replace(from, to, referenceToken(target, page)),
-    );
+    editor.current?.replace(referenceLead(fields.body, from), to, "");
   };
 
-  const addPage = (reference: ResolvedReference) => {
-    const token = `[[${reference.target}]]{p. }`;
-    editor.current?.replace(reference.start, reference.end, token);
-    editor.current?.select(reference.start + token.length - 1, reference.start + token.length - 1);
-  };
+  const addPage = (reference: ResolvedReference) => editReference(reference, true);
 
   const words = proseWords(fields.body);
   const shortcut = isMac() ? "⌘K" : "Ctrl+K";
@@ -176,7 +213,22 @@ export function WritingDesk({
   const postFile = postFileName(published?.date ?? today(), fields.title);
 
   return (
-    <div className="desk-frame">
+    <div
+      className="desk-frame"
+      onKeyDown={(event) => {
+        if (
+          mode !== "write" ||
+          event.key.toLowerCase() !== "k" ||
+          !(isMac() ? event.metaKey : event.ctrlKey) ||
+          (event.target instanceof Element && event.target.closest(".cm-editor, .cite-slip"))
+        ) {
+          return;
+        }
+        event.preventDefault();
+        const at = editor.current?.citePoint() ?? fields.body.length;
+        openCite(at, at);
+      }}
+    >
       <DeskBar
         deskId={deskId}
         fields={fields}
@@ -186,8 +238,8 @@ export function WritingDesk({
         mode={mode}
         onMode={setMode}
         onCite={() => {
-          const at = editor.current?.cursor() ?? fields.body.length;
-          setCite({ from: at, to: at });
+          const at = editor.current?.citePoint() ?? fields.body.length;
+          openCite(at, at);
         }}
         reviewing={reviewState === "running"}
         onReview={() => void runReview()}
@@ -198,33 +250,6 @@ export function WritingDesk({
       />
       <DeskNote reviewState={reviewState} review={review} publish={publish} />
       <div className="writing-desk" data-mode={mode}>
-        <aside className="writing-desk__margin writing-desk__margin--left" ref={leftMargin}>
-          {mode === "write" ? (
-            <ReferenceFlags
-              references={references}
-              claims={claims}
-              suggestions={suggestions}
-              body={fields.body}
-              onAddPage={addPage}
-              onChoose={setCite}
-              onReplace={(from, to, text) => editor.current?.replace(from, to, text)}
-            />
-          ) : (
-            <Checks
-              references={references}
-              claims={claims.length}
-              reviewed={reviewFits && reviewedBody === fields.body}
-              onFix={(reference) => {
-                setMode("write");
-                if (reference.problems.includes("no-location")) {
-                  window.setTimeout(() => addPage(reference), 0);
-                }
-              }}
-              onAsk={() => void runReview()}
-            />
-          )}
-        </aside>
-
         <article className="leaf" aria-label={t.writing.deskLabel}>
           {mode === "write" ? (
             <>
@@ -259,7 +284,14 @@ export function WritingDesk({
                 </p>
               ) : null}
               <p className="leaf__meta">
-                {t.writing.types[fields.type]} · {t.writing.meta(words, references.length)}
+                <span>
+                  {t.writing.types[fields.type]} · {t.writing.meta(words, references.length)}
+                </span>
+                <span className="leaf__hint">
+                  {isMac()
+                    ? t.writing.formatHint("⌘B", "⌘I", "⌥⌘2")
+                    : t.writing.formatHint("Ctrl+B", "Ctrl+I", "Ctrl+Shift+2")}
+                </span>
               </p>
               <div ref={editorBox}>
                 <ProseEditor
@@ -267,13 +299,30 @@ export function WritingDesk({
                   initial={fields.body}
                   flagged={flagged}
                   label={t.writing.bodyLabel}
+                  language={fields.language}
                   placeholder={t.writing.placeholder(shortcut)}
-                  referenceLabel={t.writing.referenceLabel}
+                  referenceLabel={t.writing.referenceMarkLabel}
                   onChange={(body) => update({ body })}
                   onLayout={() => window.requestAnimationFrame(() => latestPlace.current())}
-                  onCite={(at) => setCite({ from: at, to: at })}
+                  onCite={(from, to, typed) => openCite(from, to, null, false, typed)}
+                  onEditReference={(start) => {
+                    const reference = references.find((item) => item.start === start);
+                    if (reference !== undefined) editReference(reference);
+                  }}
                 />
               </div>
+              {cite === null || graph === null ? null : (
+                <CiteSlip
+                  key={cite.opened}
+                  target={cite}
+                  nodes={graph.nodes}
+                  sources={sources ?? []}
+                  cited={references.map((reference) => reference.target)}
+                  onCite={insertReference}
+                  onRemove={removeReference}
+                  onClose={closeCite}
+                />
+              )}
             </>
           ) : (
             <Proof
@@ -286,7 +335,13 @@ export function WritingDesk({
 
         <aside className="writing-desk__margin writing-desk__margin--right" ref={rightMargin}>
           {mode === "write" ? (
-            <ReferenceGlosses references={references} fields={fields} />
+            <ReferenceGlosses
+              references={references}
+              current={cite?.editing === null ? null : (cite?.from ?? null)}
+              onEdit={(reference) => editReference(reference)}
+              onAddPage={addPage}
+              onChoose={(reference) => editReference(reference)}
+            />
           ) : (
             <Questions
               review={reviewFits ? review : null}
@@ -295,19 +350,35 @@ export function WritingDesk({
             />
           )}
         </aside>
+        <aside className="writing-desk__margin writing-desk__margin--left" ref={leftMargin}>
+          {mode === "write" ? (
+            <ReviewFlags
+              claims={claims}
+              suggestions={suggestions}
+              body={fields.body}
+              onChoose={(at) => openCite(at, at)}
+              onReplace={(from, to, text) => editor.current?.replace(from, to, text)}
+            />
+          ) : (
+            <Checks
+              references={references}
+              claims={claims.length}
+              reviewed={reviewFits && reviewedBody === fields.body}
+              onFix={(reference) => {
+                setMode("write");
+                window.setTimeout(() => {
+                  editor.current?.select(reference.start, reference.start);
+                  window.requestAnimationFrame(() =>
+                    editReference(reference, reference.problems.includes("no-location")),
+                  );
+                }, 0);
+              }}
+              onAsk={() => void runReview()}
+            />
+          )}
+        </aside>
       </div>
 
-      {cite === null || graph === null ? null : (
-        <CiteSheet
-          nodes={graph.nodes}
-          sources={sources ?? []}
-          onCite={insertReference}
-          onClose={() => {
-            setCite(null);
-            window.requestAnimationFrame(() => editor.current?.focus());
-          }}
-        />
-      )}
       {sheet === "site" ? (
         <SiteFolderSheet
           initial={siteFolder ?? ""}

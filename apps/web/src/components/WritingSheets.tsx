@@ -1,16 +1,16 @@
 import { useAtomSet } from "@effect/atom-react";
-import { type GraphNode, linkKey, type Source, type SiteFolderUnavailable } from "@glose/contracts";
+import type { SiteFolderUnavailable } from "@glose/contracts";
 import * as Cause from "effect/Cause";
 import * as Exit from "effect/Exit";
 import * as Option from "effect/Option";
-import { CircleAlert, Search } from "lucide-react";
+import { CircleAlert } from "lucide-react";
 import { type ReactNode, useId, useState } from "react";
 
 import { useT } from "../i18n/I18n.tsx";
 import { KEYS } from "../state/graph.ts";
 import { setSiteFolderAtom } from "../state/writing.ts";
 import { SheetFoot } from "./Backup.tsx";
-import { CallNumber, Flourish } from "./ui.tsx";
+import { Flourish } from "./ui.tsx";
 
 function Sheet({
   title,
@@ -48,139 +48,6 @@ function Sheet({
         <div className="panel__body sheet__body">{children}</div>
       </div>
     </dialog>
-  );
-}
-
-const MAX_MATCHES = 40;
-
-export function CiteSheet({
-  nodes,
-  sources,
-  onCite,
-  onClose,
-}: {
-  readonly nodes: ReadonlyArray<GraphNode>;
-  readonly sources: ReadonlyArray<Source>;
-  readonly onCite: (target: string, page: string | null) => void;
-  readonly onClose: () => void;
-}) {
-  const t = useT();
-  const searchId = useId();
-  const pageId = useId();
-  const pageHintId = useId();
-  const [query, setQuery] = useState("");
-  const [chosen, setChosen] = useState<string | null>(null);
-  const [page, setPage] = useState("");
-  const sourceById = new Map(sources.map((source) => [linkKey(source.id), source]));
-  const words = query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
-  const matches = nodes
-    .filter((node) => {
-      const text = `${node.id} ${node.title}`.toLocaleLowerCase();
-      return words.every((word) => text.includes(word));
-    })
-    .sort(
-      (a, b) =>
-        Number(a.kind === "source") - Number(b.kind === "source") || a.id.localeCompare(b.id),
-    )
-    .slice(0, MAX_MATCHES);
-  const choice = chosen ?? matches[0]?.id ?? null;
-
-  const cite = () => {
-    if (choice === null) return;
-    onCite(choice, page.trim() === "" ? null : page.trim());
-  };
-
-  return (
-    <Sheet title={t.writing.citeTitle} onClose={onClose}>
-      <form
-        className="sheet__form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          cite();
-        }}
-      >
-        <div className="field">
-          <label className="field__label" htmlFor={searchId}>
-            {t.writing.citeSearch}
-          </label>
-          <span className="register-tools__find">
-            <Search className="register-tools__icon" aria-hidden="true" />
-            <input
-              id={searchId}
-              className="input"
-              type="search"
-              autoComplete="off"
-              data-autofocus
-              value={query}
-              onChange={(event) => {
-                setQuery(event.target.value);
-                setChosen(null);
-              }}
-            />
-          </span>
-        </div>
-        {matches.length === 0 ? (
-          <p className="empty">{t.writing.citeEmpty}</p>
-        ) : (
-          <fieldset className="cite-list">
-            <legend className="sr-only">{t.writing.citeSearch}</legend>
-            {matches.map((node) => {
-              const source =
-                node.kind === "source"
-                  ? (sourceById.get(linkKey(node.id)) ?? null)
-                  : node.sourceId === null
-                    ? null
-                    : (sourceById.get(linkKey(node.sourceId)) ?? null);
-              return (
-                <label key={node.id} className="cite-list__row">
-                  <input
-                    type="radio"
-                    name="cite"
-                    checked={choice === node.id}
-                    onChange={() => setChosen(node.id)}
-                  />
-                  <span className="cite-list__text">
-                    <span className="cite-list__title">
-                      {node.kind === "source" ? node.title : node.id}
-                    </span>
-                    <span className="cite-list__kind">
-                      {node.kind === "source" ? t.writing.citeSource : t.writing.citeNote}
-                    </span>
-                  </span>
-                  {source === null ? null : (
-                    <CallNumber source={source} page={node.kind === "note" ? node.page : null} />
-                  )}
-                </label>
-              );
-            })}
-          </fieldset>
-        )}
-        <div className="field cite-page">
-          <label className="field__label" htmlFor={pageId}>
-            {t.writing.citePage} <span className="field__optional">({t.common.optional})</span>
-          </label>
-          <input
-            id={pageId}
-            className="input"
-            inputMode="text"
-            aria-describedby={pageHintId}
-            value={page}
-            onChange={(event) => setPage(event.target.value)}
-          />
-          <p className="field__hint" id={pageHintId}>
-            {t.writing.citePageHint}
-          </p>
-        </div>
-        <SheetFoot>
-          <button type="submit" className="button button--primary" disabled={choice === null}>
-            {t.writing.citeAction}
-          </button>
-          <button type="button" className="button button--quiet sheet__cancel" onClick={onClose}>
-            {t.writing.cancel}
-          </button>
-        </SheetFoot>
-      </form>
-    </Sheet>
   );
 }
 

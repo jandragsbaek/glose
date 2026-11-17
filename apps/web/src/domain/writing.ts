@@ -1,12 +1,18 @@
 import { REFERENCE, type ResolvedReference } from "@glose/contracts";
 
+import { emphasisSpans, REFERENCE_MASK, textBlocks } from "./emphasis.ts";
 import { wordCount } from "./source.ts";
 
 export const proseWords = (body: string): number => wordCount(body.replace(REFERENCE, " "));
 
 export type ProofInline =
-  | { readonly kind: "text"; readonly at: number; readonly text: string }
-  | { readonly kind: "em" | "strong"; readonly at: number; readonly text: string }
+  | {
+      readonly kind: "text";
+      readonly at: number;
+      readonly text: string;
+      readonly strong: boolean;
+      readonly em: boolean;
+    }
   | { readonly kind: "reference"; readonly at: number; readonly reference: ResolvedReference };
 
 export type ProofBlock =
@@ -31,51 +37,71 @@ export type ProofBlock =
       readonly references: ReadonlyArray<ResolvedReference>;
     };
 
-const EMPHASIS = /\*\*([^*\n]+)\*\*|\*([^*\n]+)\*|_([^_\n]+)_/g;
-
-const emphasis = (text: string, at: number): ReadonlyArray<ProofInline> => {
-  const out: Array<ProofInline> = [];
-  let last = 0;
-  for (const match of text.matchAll(EMPHASIS)) {
-    if (match.index > last) {
-      out.push({ kind: "text", at: at + last, text: text.slice(last, match.index) });
-    }
-    out.push(
-      match[1] === undefined
-        ? { kind: "em", at: at + match.index, text: match[2] ?? match[3] ?? "" }
-        : { kind: "strong", at: at + match.index, text: match[1] },
-    );
-    last = match.index + match[0].length;
-  }
-  if (last < text.length) out.push({ kind: "text", at: at + last, text: text.slice(last) });
-  return out;
-};
-
 const inlines = (
   body: string,
   start: number,
   end: number,
   references: ReadonlyArray<ResolvedReference>,
-  strip: (line: string) => string = (line) => line,
+  prefix: RegExp | null = null,
 ): ReadonlyArray<ProofInline> => {
-  const out: Array<ProofInline> = [];
-  let cursor = start;
-  const text = (from: number, to: number) => {
-    if (to <= from) return;
-    const raw = body
-      .slice(from, to)
-      .split("\n")
-      .map((line, index) => (index === 0 && from !== start ? line : strip(line)))
-      .join(" ");
-    out.push(...emphasis(raw, from));
-  };
-  for (const reference of references) {
-    if (reference.start < start || reference.end > end) continue;
-    text(cursor, reference.start);
-    out.push({ kind: "reference", at: reference.start, reference });
-    cursor = reference.end;
+  const inside = references.filter((reference) => reference.start >= start && reference.end <= end);
+  const chars = body.slice(start, end).split("");
+  const length = end - start;
+  const hidden = new Uint8Array(length);
+  for (const reference of inside) {
+    for (let i = reference.start - start; i < reference.end - start; i++) {
+      chars[i] = REFERENCE_MASK;
+    }
   }
-  text(cursor, end);
+  if (prefix !== null) {
+    let lineStart = 0;
+    for (const line of body.slice(start, end).split("\n")) {
+      const marker = prefix.exec(line)?.[0].length ?? 0;
+      for (let i = lineStart; i < lineStart + marker; i++) {
+        hidden[i] = 1;
+        chars[i] = " ";
+      }
+      lineStart += line.length + 1;
+    }
+  }
+  const strong = new Uint8Array(length);
+  const em = new Uint8Array(length);
+  for (const span of emphasisSpans(chars.join(""))) {
+    for (let i = 0; i < span.size; i++) {
+      hidden[span.open + i] = 1;
+      hidden[span.close + i] = 1;
+    }
+    const depth = span.kind === "strong" ? strong : em;
+    for (let i = span.open + span.size; i < span.close; i++) depth[i] = 1;
+  }
+  const out: Array<ProofInline> = [];
+  let text = "";
+  let textAt = start;
+  let style = { strong: false, em: false };
+  const flush = () => {
+    if (text !== "") out.push({ kind: "text", at: textAt, text, ...style });
+    text = "";
+  };
+  for (let i = 0; i < length; i++) {
+    const reference = inside.find((item) => item.start - start === i);
+    if (reference !== undefined) {
+      text = text.replace(/[ \t]+$/, "");
+      flush();
+      out.push({ kind: "reference", at: reference.start, reference });
+      i = reference.end - start - 1;
+      continue;
+    }
+    if (hidden[i] === 1) continue;
+    const next = { strong: strong[i] === 1, em: em[i] === 1 };
+    if (next.strong !== style.strong || next.em !== style.em) {
+      flush();
+      style = next;
+    }
+    if (text === "") textAt = start + i;
+    const char = body[start + i] ?? "";
+    text += char === "\n" ? " " : char;
+  }
+  flush();
   return out;
 };
 
@@ -88,16 +114,13 @@ export const proofBlocks = (
   references: ReadonlyArray<ResolvedReference>,
 ): ReadonlyArray<ProofBlock> => {
   const blocks: Array<ProofBlock> = [];
-  for (const match of body.matchAll(/[^\n]+(?:\n(?!\s*\n)[^\n]*)*/g)) {
-    const raw = match[0];
-    if (raw.trim() === "") continue;
-    const start = match.index;
-    const end = start + raw.length;
+  for (const { start, end } of textBlocks(body)) {
+    const raw = body.slice(start, end);
     const inside = references.filter(
       (reference) => reference.start >= start && reference.end <= end,
     );
     const heading = HEADING.exec(raw);
-    if (heading && !raw.includes("\n")) {
+    if (heading) {
       const offset = heading[0].length;
       blocks.push({
         kind: "heading",
@@ -110,12 +133,7 @@ export const proofBlocks = (
       blocks.push({
         kind: "quote",
         at: start,
-        inlines: inlines(body, start, end, inside, (line) => line.replace(QUOTE, "")).map(
-          (part, index) =>
-            index === 0 && part.kind === "text"
-              ? { ...part, text: part.text.replace(QUOTE, "") }
-              : part,
-        ),
+        inlines: inlines(body, start, end, inside, QUOTE),
         references: inside,
       });
     } else if (raw.split("\n").every((line) => BULLET.test(line))) {
@@ -164,4 +182,51 @@ export const insertionAfter = (body: string, excerpt: string): number | null => 
   const rest = body.slice(at + excerpt.length);
   const sentence = /^[^.!?\n]*[.!?]?/.exec(rest)?.[0] ?? "";
   return at + excerpt.length + sentence.length;
+};
+
+const HEADING_LINE = /^(#{1,6})[ \t]+/;
+
+export const headingOf = (
+  line: string,
+): { readonly level: number; readonly marker: number } | null => {
+  const match = HEADING_LINE.exec(line);
+  return match === null ? null : { level: match[1]?.length ?? 1, marker: match[0].length };
+};
+
+export const withHeading = (line: string, level: number): string => {
+  const text = line.replace(HEADING_LINE, "");
+  return level === 0 ? text : `${"#".repeat(level)} ${text}`;
+};
+
+export const hugWord = (body: string, at: number): number =>
+  at > 1 && body[at - 1] === " " && /\S/.test(body[at - 2] ?? "") ? at - 1 : at;
+
+export const noteExcerpt = (body: string, words: ReadonlyArray<string> = [], max = 140): string => {
+  const text = body
+    .replace(/^---[\s\S]*?---\s*/, "")
+    .replace(/\[!ai(?:-part)?\][-+]?/gi, "")
+    .replace(/\[\[([^[\]|]+)\|([^[\]]+)\]\]/g, "$2")
+    .replace(/\[\[([^[\]]+)\]\]/g, "$1")
+    .replace(/^#+\s+/gm, "")
+    .replace(/[*>`]/g, "")
+    .replace(/(^|[^\p{L}\p{N}])_+|_+(?=[^\p{L}\p{N}]|$)/gu, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+  const sentences = text.match(/[^.!?]+[.!?]*(?=\s|$)/g) ?? [text];
+  const lower = words.map((word) => word.toLocaleLowerCase());
+  const sentence =
+    (lower.length === 0
+      ? undefined
+      : (sentences.find((item) => lower.every((word) => item.toLocaleLowerCase().includes(word))) ??
+        sentences.find((item) => lower.some((word) => item.toLocaleLowerCase().includes(word))))) ??
+    sentences[0] ??
+    text;
+  const trimmed = sentence.trim();
+  return trimmed.length <= max ? trimmed : `${trimmed.slice(0, max - 1).trimEnd()}…`;
+};
+
+export const referenceLead = (body: string, start: number): number => {
+  let lead = start;
+  while (lead > 0 && (body[lead - 1] === " " || body[lead - 1] === "\t")) lead -= 1;
+  return lead > 0 && body[lead - 1] !== "\n" ? lead : start;
 };

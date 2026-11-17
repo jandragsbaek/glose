@@ -159,7 +159,7 @@ Decided, the Blog post flow (November 2026), chosen with impeccable:
   once as "Untitled blog post"; a new title renames the file.
 - A Reference in the prose is a wikilink to a Note or a Source, then its Location in braces:
   `[[Busyness is a proxy for productivity]]{p. 64}`. Without braces it takes the Note's own page.
-  `[[` or ⌘K in the text opens "Cite a Note".
+  `[[` or ⌘K in the text opens "Cite a Note" (see "Decided, writing and citing on the desk").
 - The Bridgetown post has `layout: post`, `title` and `date`; footnotes and side notes are kramdown
   footnotes (a theme sets side notes in the margin), links are short Citations linked to a list of
   Sources at the end. The post keeps its first date, so publishing again names the same file, and
@@ -168,6 +168,20 @@ Decided, the Blog post flow (November 2026), chosen with impeccable:
 - Code checks each Reference at once: a missing file, a Note without a Source, no page, a Source
   without year or publisher, and a quote the Note does not hold word for word. The AI review runs
   on request.
+  Decided, writing and citing on the desk (November 2026), after an impeccable critique and a
+  three-model council:
+
+- Write shows basic formatting as it will read: headings (`##`, `###`), bold and italic. The
+  Markdown marks stay in the file and show faintly only where the caret is. Keys: ⌘B, ⌘I, ⌥⌘2 and
+  ⌥⌘3 (Ctrl+B, Ctrl+I, Ctrl+Shift+2 and 3 on Windows), and a small format bar over a selection.
+- Citing opens a slip under the line being written instead of a sheet: find by title, author or
+  Note text, arrow keys and Enter, the Page field in the same slip. A Reference in the text is
+  changed or removed from the same slip (click its number or its gloss, or ⌘K on it).
+- The right margin holds each Reference's Note, call number and its problem with the fix ("No
+  page · Add the page"). The left margin holds only the AI review's flags.
+- A new Reference sits against the word before it, after end punctuation (`word.[[Note]]`), as
+  footnote numbers do in Chicago.
+
 - Not yet: the University assignment's own flow and PDF, a Writing project of several files,
   publishing straight into the site's git repository, removing the old post file when a published
   title changes, and the AI's suggestions shown while typing (today the writer asks for a review).

@@ -422,12 +422,15 @@ same rule: the gloss beside it gives the triangle and the words.
 **The Gilt Marker Rule.** Gold says "here": the current Section, the section in view on the
 Settings window's spine, the current step (in the Step Bar and under a Reading mark), a spine's
 bands, focus on lapis. It has one more job: the triangle
-icon of a Check that warns on a Recall slip, always beside Ink words ("Could be better · …").
+icon of a Check that warns on a Recall slip, always beside Ink words ("Could be better · …"). On
+the Writing Desk's Format Bar a 2px Gilt underline marks the style the selection already has.
 It is never used for text on paper or for decoration elsewhere.
 
 **The One Field Rule.** Lapis is the only large color field (rail, spine, the primary button).
 The Settings window's spine is a second lapis field, and the only one: it shows only while the
-window is open, over the veil, and holds navigation as the rail does. Panels and the page stay
+window is open, over the veil, and holds navigation as the rail does. The Writing Desk's Format
+Bar is lapis as a small tool strip, not a field, and shows only while text is selected. Panels
+and the page stay
 paper and ground; the one other surface is the neutral Tray well under Recall's slips.
 
 **The Ribbon Edge Rule.** A 3px Lapis edge on the left of a register row says "this Source shares
@@ -1148,35 +1151,87 @@ title selected.
 
 ### Writing Desk (signature: The Glossed Manuscript)
 
-One Paper leaf in the middle (44px 56px 64px padding, Hairline border, lower edge open), its
-Citations in the right margin beside their lines and its checks in the left.
+One Paper leaf in the middle (44px 56px 64px padding, Hairline border, lower edge open), each
+Reference's gloss in the right margin beside its line, and the AI review's flags in the left.
 
-- **Bar:** "Writing projects /" in Mute 600 13px, the title in 600 15px, the Settings Slip chip,
-  the save state in Mute 13px pushed right, Write | Proof as a Segmented control, then in Write
-  "Cite a Note" (secondary with a Key Cap, ⌘K or Ctrl+K) and "Ask the AI to check" (quiet); in Proof
-  the post's path in Courier 12px Mute and "Write to site" (primary; "Choose your site" until a
-  site folder is set). A one-line note under the bar reports the AI review or the Publication.
+- **Bar:** two groups that wrap as wholes. The first: "Writing projects /" in Mute 600 13px, the
+  title in 600 15px (it wraps; never cut), the Settings Slip chip. The second, pushed right: the
+  save state in Mute 13px, Write | Proof as a Segmented control, then in Write "Cite a Note"
+  (secondary with a Key Cap, ⌘K or Ctrl+K) and "Ask the AI to check" (quiet); in Proof the post's
+  path in Courier 12px Mute and "Write to site" (primary; "Choose your site" until a site folder is
+  set). When the two do not fit on one row, the second drops under the first as one row. A
+  one-line note under the bar reports the AI review or the Publication.
 - **Leaf:** the title as a borderless 700 30px field over a Strong Hairline (Lapis on focus,
-  Rubric with the field error when taken), a Mute meta line ("Blog post · 83 words · 3
-  References"), then the prose at 16px/1.65 in CodeMirror with no chrome; Gilt Wash selection,
-  Lapis caret. A Reference shows as its number, raised, Courier 700 12px Lapis (Rubric when a check
-  flags it); with the cursor in it, it shows its token (`[[Note]]{p. 64}`) on Lapis Tint (Rubric
-  Wash when flagged).
-- **Right margin (glosses):** per Reference, beside its line: a Hairline above, the number in
-  Courier Lapis, the full note Citation (title in italic), the Note in Ink 600, and its Call Number
-  with the page. Glosses never overlap; a later one moves down 12px past the one above.
-- **Left margin (flags):** right-aligned beside the line, each problem as a Rubric uppercase
-  12px line with a 14px triangle ("No page", "The quote is not in the Note word for word"), the
-  Reference in Mute, and the fix as a link button ("Add the page", "Choose a Note", "Open the
-  Source", "Show the Note"). After an AI review: "No Reference" flags with "Find a Note", and Notes
-  for a passage under the AI Text mark (a 2px Rubric rule on the margin side and a ¶ gloss), each
-  with "Cite".
+  Rubric with the field error when taken), a meta line in Mute 13px with the type, words and
+  References on the left and the format keys on the right ("Format: ⌘B bold · ⌘I italic · ⌥⌘2
+  heading"; Ctrl+B, Ctrl+I, Ctrl+Shift+2 off the Mac), then the prose at 16px/1.65 in CodeMirror
+  with no chrome; Gilt Wash selection, Lapis caret, spellcheck on, `lang` from the piece.
+- **Formatting in Write:** the text shows as it will read. `## ` is a heading (700 22px/1.3, 18px
+  above), `### ` a subheading (700 18px), `**bold**` 700, `*italic*` italic; one parser serves
+  Write and Proof. The marks are hidden and come back in Strong Hairline grey on the line or span
+  the caret is in. ⌘B and ⌘I work on the words chosen, not on
+  the marks: the style comes on, or off when every chosen word has it, only for those words, and
+  Glose writes the marks again so other styles stay whole (`**one** two **three**` after taking
+  bold off "two"). Each paragraph is styled apart, and a heading's `##` stays outside. Keys: ⌘B, ⌘I, ⌥⌘2, ⌥⌘3 and ⌥⌘0 for plain text (Ctrl+B, Ctrl+I, Ctrl+Shift+2,
+  3, 0 off the Mac, since Ctrl+Alt is AltGr on Danish keyboards). Making a line a heading sets
+  blank lines around it.
+- **Format Bar:** over a selection, a small Lapis strip (2px padding, 4px corners): H2, H3, Bold,
+  Italic as 28px icon buttons in Lapis Mist, a Lapis Rule, then "Cite" in On-Lapis White. Hover is
+  half a step to Raised Lapis; a style the selection has is Raised Lapis with a 2px Gilt
+  underline (gilt marks "here"). It sits 4px off the selection and stays inside the text column:
+  above when the gap to the text line above (as wrapped on screen) has room and the desk bar does
+  not cover it, else under when the gap below has room, else above. Each button names its key in
+  its tooltip and `aria-keyshortcuts`. ⌘K cites from anywhere on the desk in Write.
+- **References in the text:** a Reference is its number, raised, Courier 700 12px Lapis (Rubric
+  when a check flags it); it is one atom, deleted whole. Two side by side read "⁶,⁷". A space typed
+  before it is not shown in Write nor printed in Proof or the post. A click on the number, or ⌘K
+  with the caret just before it, opens the Cite Slip to change or remove it; ⌘K just after it
+  cites anew. A new
+  Reference sets against the word before it ("obvious⁶"), after end punctuation ("word.⁶").
+- **Right margin (glosses):** per Reference, beside its line: a Hairline above (Lapis while its
+  Cite Slip is open), the number in Courier, the Note title in Ink 600 as a button that opens the
+  Cite Slip, and under it one wrapping row: the Call Number with the page, then any problem in
+  Rubric 600 13px with its triangle ("No page"), then the fix as a link button ("Add the page"
+  opens the Cite Slip on its Page field; "Choose a Note", "Open the Source", "Show the Note").
+  Glosses never overlap; a later one moves down 12px past the one above.
+- **Left margin (the AI's flags):** after an AI review only: right-aligned beside the line, "No
+  Reference" in Rubric uppercase 12px with a triangle, the reason in Mute, and "Find a Note"; and
+  Notes for a passage under the AI Text mark (a 2px Rubric rule on the margin side and a ¶ gloss),
+  each with "Cite".
+- **Widths:** from 1200px the five tracks hold both margins. From 960px to 1199px the leaf (up to
+  680px) keeps the glosses beside it (200 to 260px) and the AI's flags fold under the leaf. Below
+  960px both margins fold under the leaf, which keeps its 680px measure.
 - **Proof:** the leaf shows the post as readers will see it, in its Reference form: raised
   numbers and a numbered note list under a Hairline (footnotes), the short Citation in brackets and
-  a list of Sources (links + list), or notes under each paragraph (side notes). A flagged Citation
-  is Rubric with a triangle and words. The left margin becomes "Before you publish" (Verdigris
+  a list of Sources (links + list), or notes under each paragraph (side notes). A flagged
+  Reference's number is Rubric; the note text stays as the site will print it, and the problem
+  with its fix is in "Before you publish". A space before a Reference is not printed. The left margin becomes "Before you publish" (Verdigris
   check lines and Rubric problem lines, each with its fix); the right margin "Questions from the
   AI", each question beside a Strong Hairline under a Mute "AI · About …" line.
+
+### Cite Slip
+
+Citing happens in a slip under the line being written, not in a sheet, so the sentence stays in
+view. `[[`, ⌘K, "Cite a Note" or the Format Bar's "Cite" open it at the caret; a Reference's
+number or gloss opens it to change that Reference. Paper, 1px Lapis border, 4px corners, no
+shadow, up to 600px wide inside the leaf; the leaf grows under it so it never hangs off the page.
+
+- **Find:** a 44px borderless field with a search icon ("Find a Note, a Source or an author"),
+  a Hairline under it. It searches the Note title, the Source's author and title, then the Note's
+  text.
+- **Matches:** a listbox up to 264px tall. Each row: the title in 600 14px, the Call Number with
+  the Note's page on the right, and one line in Mute 13px: the sentence of the Note that matched
+  (else its first). The chosen row is Lapis Tint with a 2px Lapis inner edge. Before anything is
+  typed, the Reference being changed comes first; Notes already cited in the piece rank before
+  others of the same match. ↑ ↓ move, Enter cites, a double click cites. A single click cites at
+  once when citing anew and the Note has its own page or Page is filled; otherwise (no page yet,
+  or changing a Reference) it chooses the row and moves to Page, and Save commits. Choosing
+  another Note while changing a Reference clears the old page.
+- **Foot** (Ground, a Hairline above): "Page" and a 72px field, a hint (the Note's own page; "The
+  Note has no page. Add it here." in Ink; for a Source, that it has no page of its own), "Remove"
+  (quiet) when changing, and Cite or Save (primary with an ↵ Key Cap). Esc closes and returns to
+  the text; `[[` then Esc gives back the two brackets; a click outside drops them, closes the slip
+  and leaves focus where the click went.
 
 ### Settings Slip
 
@@ -1188,12 +1243,9 @@ outside or Esc closes it.
 
 ### Writing Sheets
 
-Three sheets on the Sheet pattern. **Cite a Note:** the find field, matches as choice rows (title,
-Note or Source in Mute 12px, the Call Number with the Note's page), an optional Page field (160px)
-with its hint, Cite (primary) and Cancel; `[[` in the prose or ⌘K opens it at the cursor.
-**Your Bridgetown site:** a sentence, the Site folder field with its hint and the field error
-line, "Use this folder" (primary) and Cancel. **Replace the post in your site?:** what is lost,
-"Replace it" (secondary) and "Keep it" (quiet, focused).
+Two sheets on the Sheet pattern. **Your Bridgetown site:** a sentence, the Site folder field with
+its hint and the field error line, "Use this folder" (primary) and Cancel. **Replace the post in
+your site?:** what is lost, "Replace it" (secondary) and "Keep it" (quiet, focused).
 
 ### Key Cap
 

@@ -77,7 +77,8 @@ export const writingMessages = {
     titleTaken: "Another Writing project has this title. Choose another title.",
     titleEmpty: "A piece needs a title. Glose keeps the last one until you type a new one.",
     bodyLabel: "Text",
-    placeholder: (key: string) => `Start writing. To cite a Note, type [[ or press ${key}.`,
+    placeholder: (key: string) =>
+      `Start writing. To cite a Note, type [[ or press ${key}. Select words to format them.`,
     meta: (words: number, references: number) =>
       `${count(words, "word", "words")} · ${count(references, "Reference", "References")}`,
     saving: "Saving…",
@@ -109,6 +110,20 @@ export const writingMessages = {
     languageLabel: "Language of the text",
     sample: "… busyness as a proxy for productivity.",
     referenceLabel: (n: number) => `Reference ${n}`,
+    referenceMarkLabel: (n: number, flagged: boolean) =>
+      flagged ? `Reference ${n}, needs a fix` : `Reference ${n}`,
+    editReference: (n: number) => `Change or remove Reference ${n}`,
+    formatHint: (bold: string, italic: string, heading: string) =>
+      `Format: ${bold} bold · ${italic} italic · ${heading} heading`,
+    formatLabel: "Format the text",
+    format: { h2: "Heading", h3: "Subheading", strong: "Bold", em: "Italic" },
+    citeShort: "Cite",
+    citeFind: "Find a Note, a Source or an author",
+    citePageFromNote: (page: string) => `Empty uses p. ${page} from the Note.`,
+    citePageMissing: "The Note has no page. Add it here.",
+    citePageSource: "A Source has no page of its own. Add the page you cite.",
+    citeSave: "Save",
+    citeRemove: "Remove",
     problems: {
       "not-found": "No Note or Source has this name",
       "no-source": "This Note names no Source",
@@ -135,7 +150,6 @@ export const writingMessages = {
     citeSearch: "Find a Note or a Source",
     citeEmpty: "No Note or Source matches.",
     citePage: "Page",
-    citePageHint: "Leave it empty to use the Note's own page.",
     citeAction: "Cite",
     cancel: "Cancel",
     citeNote: "Note",
