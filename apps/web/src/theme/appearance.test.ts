@@ -2,8 +2,17 @@ import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 const KEY = "glose:appearance";
 
-const browser = (options: { readonly refuseWrites?: boolean } = {}) => {
-  const stored = new Map<string, string>();
+const browser = (
+  options: {
+    readonly refuseWrites?: boolean;
+    readonly stored?: string;
+    readonly desktopDark?: boolean;
+  } = {},
+) => {
+  const stored = new Map<string, string>(
+    options.stored === undefined ? [] : [[KEY, options.stored]],
+  );
+  const mediaListeners: Array<() => void> = [];
   const pending: Array<() => void> = [];
   const root = { dataset: {} as Record<string, string> };
   vi.stubGlobal("window", {
@@ -14,11 +23,19 @@ const browser = (options: { readonly refuseWrites?: boolean } = {}) => {
         stored.set(key, value);
       },
     },
-    matchMedia: () => ({ matches: false, addEventListener: () => undefined }),
+    matchMedia: () => ({
+      matches: false,
+      addEventListener: (_type: string, listener: () => void) => mediaListeners.push(listener),
+    }),
     addEventListener: () => undefined,
+    ...(options.desktopDark === undefined
+      ? {}
+      : { gloseDesktop: { appearance: { set: () => Promise.resolve(options.desktopDark) } } }),
   });
   vi.stubGlobal("document", {
     documentElement: root,
+    body: { append: () => undefined },
+    createElement: () => ({ dataset: {}, remove: () => undefined }),
     startViewTransition: (change: () => void) => {
       pending.push(change);
       return {
@@ -28,9 +45,14 @@ const browser = (options: { readonly refuseWrites?: boolean } = {}) => {
       };
     },
   });
+  vi.stubGlobal("getComputedStyle", () => ({ getPropertyValue: () => "#0d0f17" }));
   return {
     stored,
     root,
+    transitions: () => pending.length,
+    changeComputerMode: () => {
+      for (const listener of mediaListeners) listener();
+    },
     finishTransitions: () => {
       for (const change of pending.splice(0)) change();
     },
@@ -68,5 +90,20 @@ describe("chooseAppearance", () => {
     page.finishTransitions();
 
     expect(page.root.dataset).toEqual({ theme: "murex", appearance: "dark" });
+  });
+
+  it("crossfades once when the desktop answer and the computer's mode change both arrive", async () => {
+    const page = browser({
+      stored: JSON.stringify({ theme: "lapis", mode: "dark" }),
+      desktopDark: false,
+    });
+    const { chooseAppearance } = await import("./appearance.ts");
+
+    await chooseAppearance({ mode: "system" });
+    page.changeComputerMode();
+
+    expect(page.transitions()).toBe(1);
+    page.finishTransitions();
+    expect(page.root.dataset).toEqual({ theme: "lapis", appearance: "light" });
   });
 });

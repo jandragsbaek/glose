@@ -52,15 +52,25 @@ const appearanceOf = (choice: Choice, systemDark?: boolean): Appearance => {
   return (systemDark ?? darkQuery.matches) ? "dark" : "light";
 };
 
+let heading: { readonly theme: ThemeId; readonly appearance: Appearance } | null = null;
+
 const show = (systemDark?: boolean) => {
-  const apply = () => settle(paint(PAINT_CONFIG, chosen, systemDark));
-  const unchanged =
-    chosen.theme === painted.theme && appearanceOf(chosen, systemDark) === painted.appearance;
+  const target = { theme: chosen.theme, appearance: appearanceOf(chosen, systemDark) };
+  const shown = heading ?? painted;
+  if (target.theme === shown.theme && target.appearance === shown.appearance) {
+    if (heading === null) settle(paint(PAINT_CONFIG, chosen, systemDark));
+    return;
+  }
+  const apply = () => {
+    heading = null;
+    settle(paint(PAINT_CONFIG, chosen, systemDark));
+  };
   const quiet = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (unchanged || quiet || document.startViewTransition === undefined) {
+  if (quiet || document.startViewTransition === undefined) {
     apply();
     return;
   }
+  heading = target;
   const transition = document.startViewTransition(apply);
   for (const done of [transition.ready, transition.finished, transition.updateCallbackDone]) {
     done.catch(() => undefined);
@@ -117,7 +127,7 @@ window.addEventListener("storage", (event) => {
   show();
 });
 
-void tellDesktop(chosen);
+window.addEventListener("load", () => void tellDesktop(chosen), { once: true });
 
 export async function chooseAppearance(choice: Partial<Choice>) {
   const next = { theme: choice.theme ?? chosen.theme, mode: choice.mode ?? chosen.mode };
