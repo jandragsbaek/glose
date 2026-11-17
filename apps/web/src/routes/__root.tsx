@@ -6,6 +6,7 @@ import { PlanNotice } from "../components/PlanNotice.tsx";
 import { Rail } from "../components/Rail.tsx";
 import { Setup } from "../components/Setup.tsx";
 import { BackupSheet } from "../components/Backup.tsx";
+import { SettingsWindow, validateSettingsSearch } from "../components/SettingsWindow.tsx";
 import { StatusBar } from "../components/StatusBar.tsx";
 import { Notice, Page } from "../components/ui.tsx";
 import { I18nProvider, systemLanguage, useT } from "../i18n/I18n.tsx";
@@ -20,7 +21,11 @@ import "@fontsource/courier-prime/700.css";
 import "@fontsource/cinzel-decorative/700.css";
 import "../styles/app.css";
 
-export const Route = createRootRoute({ component: Root, notFoundComponent: NotFound });
+export const Route = createRootRoute({
+  component: Root,
+  notFoundComponent: NotFound,
+  validateSearch: validateSettingsSearch,
+});
 
 const FOCUS_SCREENS: ReadonlySet<string> = new Set(["/review"]);
 
@@ -62,6 +67,7 @@ function Root() {
               <StatusBar />
             </div>
           </div>
+          <SettingsWindow />
           <PlanNotice />
           <BackupSheet />
         </I18nProvider>

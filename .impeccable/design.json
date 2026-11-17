@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-13T22:30:00+00:00",
+  "generatedAt": "2026-11-16T12:00:00+00:00",
   "title": "Design System: Glose",
   "extensions": {
     "colorMeta": {
@@ -373,7 +373,7 @@
       {
         "name": "state-duration",
         "value": "160ms",
-        "purpose": "Hover and focus transitions on buttons, inputs, rail items and segments; the register row tint and lapis edge."
+        "purpose": "Hover and focus transitions on buttons, inputs, rail items, Settings spine sections and segments; the register row tint and lapis edge."
       },
       {
         "name": "shimmer",
@@ -414,6 +414,16 @@
         "name": "disclosure-chevron",
         "value": "160ms ease-out, rotate(90deg)",
         "purpose": "The drawn chevron of a quiet Mute disclosure (passed Checks) turns when open."
+      },
+      {
+        "name": "settings-window-enter",
+        "value": "160ms ease-out, from scale 0.985 and opacity 0; backdrop fades in from rgb(20 20 20 / 0%) to 32%",
+        "purpose": "The Settings window opens over the dimmed page."
+      },
+      {
+        "name": "settings-window-leave",
+        "value": "140ms ease-out, to scale 0.985 and opacity 0; backdrop fades to rgb(20 20 20 / 0%)",
+        "purpose": "The Settings window closes; under reduced motion it closes at once."
       }
     ],
     "breakpoints": [
@@ -440,7 +450,8 @@
       "recallReviewLeaf": "min(980px, 100%), centred, grid auto 1fr auto, gap 12px 32px, padding 22px 28px (one column, 18px 20px at 720px); up to 3 paper edges",
       "cardDesk": "gap 16px; find row flex-wrap, gap 8px 16px, AI-Checks-off line pushed right",
       "trays": "minmax(0,1fr) minmax(0,1fr) minmax(260px,300px), gap 20px, align start; 2 columns with Good across at 1080px; 1 column at 720px",
-      "tray": "padding 14px 12px 12px, gap 10px; head min 36px, padding 0 6px 10px; slips 10px gaps, 50 at a time"
+      "tray": "padding 14px 12px 12px, gap 10px; head min 36px, padding 0 6px 10px; slips 10px gaps, 50 at a time",
+      "settingsWindow": "min(1040px, 100vw - 64px) x min(720px, 100vh - 64px), centred; grid 220px spine | leaf; head min 56px, padding 8px 12px 8px 32px; body padding 24px 32px 40px, column max 760px, gap 20px; at 720px it fills the screen, the spine a wrapping band on top, body padding 16px 16px 32px"
     },
     "focus": {
       "onPaper": "2px solid lapis, offset 2px",
@@ -493,9 +504,9 @@
       "name": "Rail",
       "kind": "nav",
       "refersTo": "rail",
-      "description": "Lapis rail: 32px icons over labels; Today and Sources above a short rule, the Sections under it; current item raised with a gilt icon.",
+      "description": "Lapis rail: 32px icons over labels; Today and Sources above a short rule, the Sections under it; current item raised with a gilt icon. Settings in the foot is a button that opens the Settings window; while it is open, Settings is the only lit item.",
       "html": "<nav class=\"ds-rail\" aria-label=\"Sections\"><span class=\"ds-mark\">GLO</span><a class=\"ds-rail-link\" href=\"#\"><svg class=\"ds-rail-ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M8 2v4\"/><path d=\"M16 2v4\"/><rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\"/><path d=\"M3 10h18\"/><path d=\"M8 14h.01\"/><path d=\"M12 14h.01\"/><path d=\"M16 14h.01\"/><path d=\"M8 18h.01\"/><path d=\"M12 18h.01\"/><path d=\"M16 18h.01\"/></svg>Today</a><a class=\"ds-rail-link\" href=\"#\" aria-current=\"page\"><svg class=\"ds-rail-ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m16 6 4 14\"/><path d=\"M12 6v14\"/><path d=\"M8 8v12\"/><path d=\"M4 4v16\"/></svg>Sources</a><span class=\"ds-rail-rule\"></span><a class=\"ds-rail-link\" href=\"#\"><svg class=\"ds-rail-ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z\"/><path d=\"m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65\"/><path d=\"m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65\"/></svg>Recall</a></nav>",
-      "css": ".ds-rail { display:flex; flex-direction:column; gap:4px; width:96px; padding:16px 8px; background:var(--lapis,#1e2f7a); color:var(--on-lapis-mute,#c3cbec); } .ds-mark { align-self:center; margin-bottom:18px; padding:1px 7px; background:var(--paper,#fff); border:1px solid var(--ink,#141414); border-radius:2px; font:700 12px/18px 'Courier Prime',ui-monospace,monospace; color:var(--ink,#141414); } .ds-rail-link { display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 4px 10px; border-radius:4px; color:inherit; font:500 12px/1.25 'Public Sans',system-ui,sans-serif; text-align:center; text-decoration:none; hyphens:auto; overflow-wrap:anywhere; transition:background-color 160ms cubic-bezier(0.22, 1, 0.36, 1),color 160ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-rail-link:hover, .ds-rail-link[aria-current=page] { background:var(--lapis-raised,#2b3e92); color:var(--on-lapis,#fff); } .ds-rail-link[aria-current=page] .ds-rail-ico { color:var(--gold,#c8a040); } .ds-rail-link:focus-visible { outline:2px solid var(--gold,#c8a040); outline-offset:2px; } .ds-rail-ico { width:32px; height:32px; } .ds-rail-rule { height:1px; margin:6px 12px; background:var(--lapis-line,#3a4c9c); }"
+      "css": ".ds-rail { display:flex; flex-direction:column; gap:4px; width:96px; padding:16px 8px; background:var(--lapis,#1e2f7a); color:var(--on-lapis-mute,#c3cbec); } .ds-mark { align-self:center; margin-bottom:18px; padding:1px 7px; background:var(--paper,#fff); border:1px solid var(--ink,#141414); border-radius:2px; font:700 12px/18px 'Courier Prime',ui-monospace,monospace; color:var(--ink,#141414); } .ds-rail-link { display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 4px 10px; border-radius:4px; color:inherit; font:500 12px/1.25 'Public Sans',system-ui,sans-serif; text-align:center; text-decoration:none; hyphens:auto; overflow-wrap:anywhere; transition:background-color 160ms cubic-bezier(0.22, 1, 0.36, 1),color 160ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-rail-link:hover { background:color-mix(in srgb, var(--lapis,#1e2f7a) 50%, var(--lapis-raised,#2b3e92)); color:var(--on-lapis,#fff); } .ds-rail-link[aria-current=page] { background:var(--lapis-raised,#2b3e92); color:var(--on-lapis,#fff); } .ds-rail-link[aria-current=page] .ds-rail-ico { color:var(--gold,#c8a040); } .ds-rail-link:focus-visible { outline:2px solid var(--gold,#c8a040); outline-offset:2px; } .ds-rail-ico { width:32px; height:32px; } .ds-rail-rule { height:1px; margin:6px 12px; background:var(--lapis-line,#3a4c9c); }"
     },
     {
       "name": "Call Number",
@@ -560,6 +571,14 @@
       "description": "AI text in a Note or Card keeps ink and body type; its mark sits at the edge: a rubric rule and a rubric gloss above it that says how much the AI wrote. Paragraphs: 2px rule and a ¶ gloss. A whole Part, Note or Card: 3px rule and a § gloss. The block is a group named by its gloss.",
       "html": "<div class=\"ds-ai\" role=\"group\" aria-labelledby=\"ds-ai-gloss\"><p class=\"ds-ai-gloss\" id=\"ds-ai-gloss\">AI-written Note</p><p>Newport draws on research by Sophie Leroy: after a switch, part of the attention stays with the last task.</p></div><div class=\"ds-ai ds-ai--paragraphs\" role=\"group\" aria-labelledby=\"ds-ai-gloss-2\"><p class=\"ds-ai-gloss\" id=\"ds-ai-gloss-2\">AI paragraph</p><p>One paragraph the AI wrote.</p></div>",
       "css": ".ds-ai { margin:0 0 16px; padding-left:11px; border-left:3px solid var(--rubric,#b3261e); color:var(--ink,#141414); font:400 15px/1.5 'Public Sans',system-ui,sans-serif; } .ds-ai--paragraphs { padding-left:12px; border-left-width:2px; } .ds-ai p { margin:0; } .ds-ai > * + * { margin-top:2px; } .ds-ai-gloss { display:flex; align-items:baseline; gap:6px; color:var(--rubric,#b3261e); font-size:12px; font-weight:600; line-height:1.3; letter-spacing:0.06em; text-transform:uppercase; } .ds-ai-gloss::before { content:'\\00A7'; font-size:15px; letter-spacing:0; } .ds-ai--paragraphs .ds-ai-gloss::before { content:'\\00B6'; }"
+    },
+    {
+      "name": "Settings Window",
+      "kind": "custom",
+      "refersTo": "settings-window",
+      "description": "All settings in one modal window over the current page (?settings=<section>): Paper, 1px Lapis border, no shadow, over the Ink 32% veil. A 220px Lapis spine with gilt bands lists the sections in the rail's vocabulary (the section in view fills Raised Lapis with a Gilt icon; hover is half a step, Lapis and Raised Lapis mixed); a 56px Paper head with Settings and a quiet Close with an Esc key cap; the panels on Ground in one 760px column.",
+      "html": "<div class=\"ds-sw-veil\"><div class=\"ds-sw\" role=\"dialog\" aria-labelledby=\"ds-sw-t\"><nav class=\"ds-sw-spine\" aria-label=\"Parts of Settings\"><ul><li><button type=\"button\" class=\"ds-sw-section\"><svg class=\"ds-sw-ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m5 8 6 6\"/><path d=\"m4 14 6-6 2-3\"/><path d=\"M2 5h12\"/><path d=\"M7 2h1\"/><path d=\"m22 22-5-10-5 10\"/><path d=\"M14 18h6\"/></svg>Interface language</button></li><li><button type=\"button\" class=\"ds-sw-section\"><svg class=\"ds-sw-ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z\"/></svg>Graph folder</button></li><li><button type=\"button\" class=\"ds-sw-section\" aria-current=\"true\"><svg class=\"ds-sw-ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 13v8\"/><path d=\"M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2\"/><path d=\"m8 17 4-4 4 4\"/></svg>Backup</button></li><li><button type=\"button\" class=\"ds-sw-section\"><svg class=\"ds-sw-ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z\"/><path d=\"M13 8H7\"/><path d=\"M17 12H7\"/></svg>ChatGPT</button></li><li><button type=\"button\" class=\"ds-sw-section\"><svg class=\"ds-sw-ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20\"/><path d=\"M2 12h20\"/></svg>Your website</button></li></ul></nav><div class=\"ds-sw-leaf\"><header class=\"ds-sw-head\"><h2 id=\"ds-sw-t\">Settings</h2><button type=\"button\" class=\"ds-sw-close\" aria-label=\"Close Settings\" aria-keyshortcuts=\"Escape\"><kbd class=\"ds-key\" aria-hidden=\"true\">Esc</kbd><svg class=\"ds-sw-x\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M18 6 6 18\"/><path d=\"m6 6 12 12\"/></svg></button></header><div class=\"ds-sw-body\"><section class=\"ds-sw-panel\"><h3 class=\"ds-sw-panel-title\">Backup</h3><p class=\"ds-sw-hint\">Versions: Only on this computer</p></section></div></div></div></div>",
+      "css": ".ds-sw-veil { padding:32px; background:rgb(20 20 20 / 32%); } .ds-sw { display:grid; grid-template-columns:220px minmax(0,1fr); max-width:1040px; height:420px; margin:auto; background:var(--paper,#fff); border:1px solid var(--lapis,#1e2f7a); border-radius:4px; overflow:hidden; color:var(--ink,#141414); font:400 15px/1.5 'Public Sans',system-ui,sans-serif; animation:ds-sw-in 160ms cubic-bezier(0.22,1,0.36,1); } @keyframes ds-sw-in { from { opacity:0; scale:0.985; } } .ds-sw-spine { padding:76px 10px 26px; overflow-y:auto; background-color:var(--lapis,#1e2f7a); color:var(--on-lapis-mute,#c3cbec); background-image:linear-gradient(var(--gold,#c8a040),var(--gold,#c8a040)),linear-gradient(var(--gold,#c8a040),var(--gold,#c8a040)),linear-gradient(var(--gold,#c8a040),var(--gold,#c8a040)),linear-gradient(var(--gold,#c8a040),var(--gold,#c8a040)); background-repeat:no-repeat; background-size:100% 2px; background-position:0 8px,0 14px,0 calc(100% - 14px),0 calc(100% - 8px); } .ds-sw-spine ul { display:flex; flex-direction:column; gap:4px; margin:0; padding:0; list-style:none; } .ds-sw-section { display:flex; align-items:center; gap:12px; width:100%; min-height:42px; padding:9px 12px; border:0; border-radius:4px; background:none; color:inherit; font:500 14px/1.3 'Public Sans',system-ui,sans-serif; text-align:left; hyphens:auto; overflow-wrap:anywhere; cursor:pointer; transition:background-color 160ms cubic-bezier(0.22,1,0.36,1),color 160ms cubic-bezier(0.22,1,0.36,1); } .ds-sw-section:hover { background:color-mix(in srgb, var(--lapis,#1e2f7a) 50%, var(--lapis-raised,#2b3e92)); color:var(--on-lapis,#fff); } .ds-sw-section[aria-current=true] { background:var(--lapis-raised,#2b3e92); color:var(--on-lapis,#fff); } .ds-sw-section[aria-current=true] .ds-sw-ico { color:var(--gold,#c8a040); } .ds-sw-section:focus-visible { outline:2px solid var(--gold,#c8a040); outline-offset:2px; } .ds-sw-ico { flex:none; width:20px; height:20px; } .ds-sw-leaf { display:flex; flex-direction:column; min-width:0; min-height:0; } .ds-sw-head { display:flex; align-items:center; gap:12px; min-height:56px; padding:8px 12px 8px 32px; border-bottom:1px solid var(--line,#dedde3); background:var(--paper,#fff); } .ds-sw-head h2 { margin:0 auto 0 0; font-size:22px; font-weight:700; letter-spacing:-0.01em; } .ds-sw-close { display:inline-flex; align-items:center; gap:10px; min-height:36px; padding:0 10px; border:1px solid transparent; border-radius:4px; background:none; color:var(--ink,#141414); cursor:pointer; transition:background-color 160ms cubic-bezier(0.22,1,0.36,1); } .ds-sw-close:hover { background:var(--tint,#eef0f8); } .ds-sw-close:focus-visible { outline:2px solid var(--lapis,#1e2f7a); outline-offset:2px; } .ds-sw-x { width:20px; height:20px; } .ds-key { display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px; padding:0 6px; background:var(--paper,#fff); border:1px solid var(--line-strong,#c9c8d1); border-bottom-width:2px; border-radius:4px; color:var(--mute,#5c5f6a); font:600 12px/1 'Public Sans',system-ui,sans-serif; } .ds-sw-body { flex:1; min-height:0; padding:20px 32px 40px; overflow-y:auto; background:var(--ground,#fbfaf7); } .ds-sw-panel { max-width:760px; padding:14px 20px 20px; background:var(--paper,#fff); border:1px solid var(--line,#dedde3); border-radius:4px; } .ds-sw-panel-title { margin:0 0 12px; font-size:13px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; line-height:1.3; } .ds-sw-panel-title::first-letter { font-family:'Cinzel Decorative','Cinzel',serif; font-weight:700; font-size:2em; letter-spacing:0; line-height:.9; color:var(--rubric,#b3261e); } .ds-sw-hint { margin:0; color:var(--mute,#5c5f6a); font-size:13px; }"
     },
     {
       "name": "Sheet",
@@ -678,12 +697,12 @@
       },
       {
         "name": "The Gilt Marker Rule",
-        "body": "Gold says \"here\": the current Section, the current step (in the Step Bar and under a Reading mark), a spine's bands, focus on lapis. It has one more job: the triangle icon of a Check that warns on a Recall slip, always beside Ink words (\"Could be better · …\"). It is never used for text on paper or for decoration elsewhere.",
+        "body": "Gold says \"here\": the current Section, the section in view on the Settings window's spine, the current step (in the Step Bar and under a Reading mark), a spine's bands, focus on lapis. It has one more job: the triangle icon of a Check that warns on a Recall slip, always beside Ink words (\"Could be better · …\"). It is never used for text on paper or for decoration elsewhere.",
         "section": "colors"
       },
       {
         "name": "The One Field Rule",
-        "body": "Lapis is the only large color field (rail, spine, the primary button). Panels and the page stay paper and ground; the one other surface is the neutral Tray well under Recall's slips.",
+        "body": "Lapis is the only large color field (rail, spine, the primary button). The Settings window's spine is a second lapis field, and the only one: it shows only while the window is open, over the veil, and holds navigation as the rail does. Panels and the page stay paper and ground; the one other surface is the neutral Tray well under Recall's slips.",
         "section": "colors"
       },
       {
@@ -730,7 +749,7 @@
     "donts": [
       "Don't decorate data, Note text, inputs or buttons (no initials, flourishes or gilt there).",
       "Don't use red alone to mean anything; color never carries a message by itself.",
-      "Don't add resting shadows or new fields of color beyond the lapis rail, spine and primary.",
+      "Don't add resting shadows or new fields of color beyond the lapis rail, spine, primary and the Settings window's spine.",
       "Don't use Cinzel Decorative beyond a single heading initial, or Courier Prime beyond call numbers, step numbers, repository names and a code the user types elsewhere.",
       "Don't fix widths to English text, truncate labels, or block wrapping.",
       "Don't build a file-tree-plus-editor arrangement in neutral grey, a busy dashboard, or gamification."

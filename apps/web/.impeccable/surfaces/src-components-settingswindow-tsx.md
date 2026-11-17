@@ -1,14 +1,16 @@
 ---
 version: 1
-slug: "src-routes-settings-tsx"
-primary_target: "src/routes/settings.tsx"
-related_targets: ["src/components/Backup.tsx", "src/components/StatusBar.tsx"]
+slug: "src-components-settingswindow-tsx"
+primary_target: "src/components/SettingsWindow.tsx"
+related_targets:
+  ["src/components/Backup.tsx", "src/components/StatusBar.tsx", "src/components/Rail.tsx"]
 ---
 
-# Settings and the Backup sheet
+# Settings window and the Backup sheet
 
-Mode: Operate. Settings (interface language, Graph folder, Backup, ChatGPT) and the Backup sheet,
-which Settings and the status bar's Versions panel both open.
+Mode: Operate. The Settings window (interface language, Graph folder, Backup, ChatGPT, your
+website) that floats over any page, and the Backup sheet, which Settings and the status bar's
+Versions panel both open.
 
 ## Audience and job
 
@@ -23,8 +25,11 @@ that the backup works, and where it is.
 - Chosen on the decision page (November 2026): "Ledger and sheet" over "The ladder" and "Choose,
   then the step bar".
 - Glose never pushes the Graph to a public repository.
+- Settings is a floating window, not a page (Jan, November 2026, after T3 Code's settings
+  window). Chosen on the decision page: "The spine window" over "The turned-out leaf" and "The
+  bound window".
 
-## Direction contract
+## Backup sheet direction contract (November 2026)
 
 THESIS: Backup is a fact about the Graph, not a wizard on the page. Settings states where the
 Versions are; the setup happens once, in a sheet, and leaves. It refuses an always-open
@@ -48,5 +53,30 @@ a 28px code do not fit the 560px sheet, and the Danish labels wrapped it onto a 
 
 FORM: Ledger and sheet, third of three structures on the decision page, chosen by Jan.
 seed: none (no roll: an extension of an existing surface; the three structures were authored for the decision page)
+
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+
+## Direction contract
+
+THESIS: Settings is a small bound volume laid over the page you were on, not a page you leave
+for. It refuses a full-page settings route and T3's neutral grey sidebar.
+
+OWN-WORLD: A Paper window with a 1px Lapis border and 4px corners, no shadow, over the Ink veil.
+A Lapis spine on its left with two gilt bands, the rail's own item vocabulary (Mist at rest,
+Raised Lapis and a gilt icon for the section in view). A Paper head; the panels unchanged on
+Ground.
+
+STORY: The user presses Settings on the rail (or Open Settings where the AI needs ChatGPT), the
+window opens at that section over the page, they change one thing, and Esc, the close button or
+a click on the veil puts them back where they were.
+
+FIRST VIEWPORT: Centred 1040 x 720 at most (32px clear of the window edges). Left a 220px spine:
+gilt band, the five sections (20px icon and label), gilt band at the foot. Right: a 56px Paper
+head with "Settings" (22px 700), an Esc key cap and the close button; under it all five panels
+in one 760px column that scrolls inside the window; the spine marks the panel in view. Below
+720px it fills the window and the spine becomes a band of sections over the leaf.
+
+FORM: The spine window, second dealt structure of three on the decision page, chosen by Jan.
+seed:bc5d18c7632d2395
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance

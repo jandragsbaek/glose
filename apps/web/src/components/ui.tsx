@@ -57,20 +57,23 @@ export function Panel({
   title,
   initial,
   meta,
+  level = 2,
   children,
 }: {
   readonly title: string;
   readonly initial: "rubric" | "lapis";
   readonly meta?: ReactNode;
+  readonly level?: 2 | 3;
   readonly children: ReactNode;
 }) {
   const headingId = useId();
+  const Heading = level === 3 ? "h3" : "h2";
   return (
     <section className="panel" data-initial={initial} aria-labelledby={headingId}>
       <div className="panel__head">
-        <h2 className="panel__title" id={headingId}>
+        <Heading className="panel__title" id={headingId}>
           {title}
-        </h2>
+        </Heading>
         {meta === undefined ? null : <span className="panel__meta">{meta}</span>}
       </div>
       <div className="panel__rule" aria-hidden="true">

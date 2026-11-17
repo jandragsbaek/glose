@@ -165,6 +165,9 @@ export const settingsMessages = {
     graphFolderHint: "Changing the folder comes in a later version.",
     site: "Your website",
     siteNotChosen: "Not chosen yet.",
+    sections: "Parts of Settings",
+    close: "Close Settings",
+    closeKey: "Esc",
     siteHint: "Glose writes Blog posts into src/_posts in this folder.",
   },
 };

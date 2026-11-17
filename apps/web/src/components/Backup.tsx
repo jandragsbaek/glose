@@ -13,7 +13,7 @@ import * as Exit from "effect/Exit";
 import * as Option from "effect/Option";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { Check, CircleAlert, Copy, ExternalLink, TriangleAlert } from "lucide-react";
-import { type FormEvent, type ReactNode, useId, useState } from "react";
+import { type FormEvent, type ReactNode, useId, useRef, useState } from "react";
 
 import { useT } from "../i18n/I18n.tsx";
 import {
@@ -90,7 +90,7 @@ export function BackupPanel() {
   const t = useT();
   const status = useVersions();
   return (
-    <Panel title={t.backup.title} initial="rubric">
+    <Panel title={t.backup.title} initial="rubric" level={3}>
       <div className="panel__body">
         {status === null ? (
           <p className="status">{t.common.loading}</p>
@@ -255,9 +255,16 @@ function Sheet({
   const reconnected = mode === "github" && hadGitHubRemote && github?._tag === "Connected";
   const done = chosenDone || reconnected;
 
+  const dialog = useRef<HTMLDialogElement | null>(null);
+
+  const leave = () => {
+    dialog.current?.close();
+    onClose();
+  };
+
   const close = () => {
     if (github?._tag === "Connecting") cancel({ payload: undefined });
-    onClose();
+    leave();
   };
 
   const step = mode === "github" && !done ? (github?._tag === "Connected" ? 2 : 1) : null;
@@ -267,6 +274,7 @@ function Sheet({
       className="sheet"
       aria-labelledby={titleId}
       ref={(node) => {
+        dialog.current = node;
         if (node && !node.open) node.showModal();
       }}
       onCancel={(event) => {
@@ -286,7 +294,7 @@ function Sheet({
         </div>
         <div className="panel__body sheet__body">
           {done ? (
-            <Done mode={mode} onClose={onClose} />
+            <Done mode={mode} onClose={leave} />
           ) : mode === "remote" ? (
             <RemoteForm onDone={() => setDone(true)} onCancel={close} />
           ) : github === null ? (

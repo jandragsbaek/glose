@@ -285,6 +285,23 @@ components:
     textColor: "{colors.ink}"
     rounded: "{rounded.base}"
     padding: "16px"
+  settings-window:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.base}"
+    width: "min(1040px, calc(100vw - 64px))"
+    height: "min(720px, calc(100vh - 64px))"
+  settings-window-spine:
+    backgroundColor: "{colors.lapis}"
+    textColor: "{colors.on-lapis-mute}"
+    width: "220px"
+    padding: "26px 10px"
+  settings-section-current:
+    backgroundColor: "{colors.lapis-raised}"
+    textColor: "{colors.on-lapis}"
+    rounded: "{rounded.base}"
+    padding: "9px 12px"
+    height: "42px"
 ---
 
 # Design System: Glose
@@ -341,21 +358,26 @@ three small pigments (gold, rubric red, verdigris) each with one job.
 ### Primary
 
 - **Lapis** (lapis): the rail, the Source spine, the primary button, links and link buttons, focus outlines on
-  paper, the caret and native accent color. The one large field of color on any screen. In the
+  paper, the caret and native accent color. The one large field of color on any screen, with the
+  Settings window's spine as the second while that window is open; the window's 1px border is
+  Lapis too. In the
   Sources register it is also the Links toggle, the ring of the current Reading mark, the checked
   segment's label, and the 3px edge on rows that share Links with the chosen Source. In the Probe
   it is the question number and the head of each judgment gloss.
-- **Raised Lapis** (lapis-raised): rail item hover and current state; primary button hover.
+- **Raised Lapis** (lapis-raised): the current rail item, and the section in view on the Settings
+  window's spine; primary button hover. Hover on a rail item or a spine section is half a step,
+  Lapis and Raised Lapis mixed half and half, so "here" stays the stronger mark.
 - **Lapis Rule** (lapis-line): hairlines and outlines on the lapis field (rail divider, the
   language switch border).
 - **On-Lapis White** (on-lapis) and **Lapis Mist** (on-lapis-mute): text and icons on lapis;
-  white for current and hover, mist for resting rail labels.
+  white for current and hover, mist for resting rail labels and spine sections.
 
 ### Secondary
 
 - **Gilt** (gold): the "you are here" marker. The current rail icon, the current step's 3px
-  underline, the 2px underline under the current Reading mark, the two gilt bands on a spine, and
-  the focus outline on lapis. Also the triangle of a Check that warns on a Recall slip, beside
+  underline, the 2px underline under the current Reading mark, the two gilt bands on a spine (a
+  Source's, and the top and foot of the Settings window's spine), the icon of the section in view
+  on that spine, and the focus outline on lapis. Also the triangle of a Check that warns on a Recall slip, beside
   Ink words. Never text on paper.
 - **Gilt Wash** (gold-wash): text selection only.
 
@@ -375,10 +397,10 @@ three small pigments (gold, rubric red, verdigris) each with one job.
 ### Neutral
 
 - **Ground** (ground): the page behind panels and the setup body; the group rows of the register;
-  the band over the Probe and the user's turns in a transcript.
+  the band over the Probe and the user's turns in a transcript; the Settings window's body.
 - **Paper** (paper): panels, the page header, inputs, buttons, call-number labels.
 - **Ink** (ink): text, secondary button border, call-number and typed-code border; at 32%
-  (`rgb(20 20 20 / 32%)`) the veil behind a sheet.
+  (`rgb(20 20 20 / 32%)`) the veil behind a sheet and the Settings window.
 - **Mute** (mute): secondary text, hints, meta, empty-state copy, field legends, fact labels,
   the Review progress line, rating intervals and key-cap letters.
 - **Hairline** (line): panel borders, header rule, row and step dividers, the flourish rule.
@@ -386,7 +408,7 @@ three small pigments (gold, rubric red, verdigris) each with one job.
   dividers, key-cap borders, the ring of a Reading mark not reached yet, the border of a leaf over
   the page (the Versions panel, a sheet), the left rule of a Probe judgment gloss, scrollbar thumb.
 - **Lapis Tint** (tint): secondary button hover, the current step, a selected choice, a hovered or
-  checked segment, the register row whose Links are shown.
+  checked segment, the register row whose Links are shown, the Settings window's Close on hover.
 - **Tray** (tray): a warm well a step darker than Ground, behind the Recall Trays only, so the
   Paper slips in it read as lying in a tray. A neutral, not a field of color.
 
@@ -397,14 +419,16 @@ When red marks an error or missing data, it always comes with a warning icon and
 alone never carries a meaning. The Probe's faint highlight under the user's words follows the
 same rule: the gloss beside it gives the triangle and the words.
 
-**The Gilt Marker Rule.** Gold says "here": the current Section, the current step (in the Step
-Bar and under a Reading mark), a spine's bands, focus on lapis. It has one more job: the triangle
+**The Gilt Marker Rule.** Gold says "here": the current Section, the section in view on the
+Settings window's spine, the current step (in the Step Bar and under a Reading mark), a spine's
+bands, focus on lapis. It has one more job: the triangle
 icon of a Check that warns on a Recall slip, always beside Ink words ("Could be better · …").
 It is never used for text on paper or for decoration elsewhere.
 
 **The One Field Rule.** Lapis is the only large color field (rail, spine, the primary button).
-Panels and the page stay paper and ground; the one other surface is the neutral Tray well under
-Recall's slips.
+The Settings window's spine is a second lapis field, and the only one: it shows only while the
+window is open, over the veil, and holds navigation as the rail does. Panels and the page stay
+paper and ground; the one other surface is the neutral Tray well under Recall's slips.
 
 **The Ribbon Edge Rule.** A 3px Lapis edge on the left of a register row says "this Source shares
 Links with the one you chose", like a ribbon marker in a book. It is the one place a side edge
@@ -425,7 +449,8 @@ heading like an illuminated initial.
 
 - **Display** (700, 30px, 1.2, -0.015em): the first-start title only, with a Cinzel initial
   at 1.35em.
-- **Headline** (700, 22px, -0.01em): the page title in the white header.
+- **Headline** (700, 22px, -0.01em): the page title in the white header, and "Settings" in the
+  Settings window's head.
 - **Title** (700, 21px, 1.25): the current Source's title on Today.
 - **Panel heading** (600, 13px, 1.3, 0.06em tracking, uppercase): every panel's `h2`; its first
   letter is the Initial. Fieldset legends use the same set in Mute. The Review bar title uses
@@ -528,6 +553,10 @@ out right; the desk below centres one 720px column (68px top, 32px sides, 48px b
 720px the bar pads 16px, the progress line drops under the title, the desk pads 24px 16px 32px
 and button rows stack full width.
 
+There is no Settings page. Settings is the Settings window, laid over whatever page is open
+(`?settings=<section>` on any page with the rail); the page under it keeps its layout and its place, and closing
+the window leaves the user there.
+
 **The Danish Length Rule.** No layout depends on the length of English text. Heads, rows and
 button rows wrap; rail labels hyphenate and break anywhere; nothing truncates a label.
 Check every new screen in Danish.
@@ -551,6 +580,9 @@ leaf, each narrower, with hairline borders and no shadow.
 A sheet lifts off the page without a shadow: the page behind it dims under an Ink veil at 32%,
 and the leaf takes a Strong Hairline border.
 
+The Settings window lifts the same way, under the same Ink veil at 32%, with no shadow. Its edge
+is a 1px Lapis border; on phones it fills the screen and has none.
+
 Recall stacks the same way. The Recall Review leaf has up to three paper edges under it, and
 the folded Good pile up to two. The Trays sink one step below Ground (Tray), with a Hairline
 border, so their Paper slips lie in them; nothing casts a shadow.
@@ -566,7 +598,8 @@ resting shadows.
 ## Shapes
 
 Quiet, nearly square corners: 4px on panels, buttons, inputs, choices, notices, the step bar and
-rail items, key caps, the Review leaf and a sheet; 2px on call-number labels, the typed code
+rail items, key caps, the Review leaf, a sheet, the Settings window and its spine's sections
+(the window is square on phones, where it fills the screen); 2px on call-number labels, the typed code
 and skeleton bars; 3px on the spine. Review leaf edges round only their two lower corners (4px). The one curve is the
 pen flourish (a 64 by 10px stroked SVG with a center dot) set between two hairlines. The one circle
 is the Reading mark (9px, 1.5px ring). The register's lapis edge is a straight 3px band. The one dashed line is the folded Good pile's
@@ -645,10 +678,14 @@ and the Backup panel.
   a 32px Lucide icon (1.6 stroke) over its rail label. Today (calendar) and Sources (library) are
   places and sit above a short Lapis Rule; the three Sections (Graph, Writing projects, Recall)
   sit under it.
-- **States:** resting Lapis Mist; hover and current fill Raised Lapis with white text; the current
-  icon turns Gilt. 160ms transitions.
+- **States:** resting Lapis Mist; current fills Raised Lapis with white text and turns its icon
+  Gilt; hover is half a step (Lapis and Raised Lapis mixed half and half) with white text. 160ms
+  transitions.
 - **Foot:** the EN/DA switch (a stacked segmented control, checked segment white with lapis text)
-  and Settings.
+  and Settings. Settings is not a link to a page: it is a button that opens the Settings window
+  (`aria-haspopup="dialog"`, `aria-expanded`). While the window is open, Settings wears the current
+  state (Raised Lapis, Gilt icon) and is the only lit rail item; the page's own item under the veil
+  goes back to rest.
 
 ### Status Bar
 
@@ -686,6 +723,59 @@ form: a field label, the input, a Meta hint, and the primary End the day button 
 status beside it (a Verdigris check after the day is saved). It fades in and rises 4px in
 160ms on the shared ease-out; Esc and a click outside close it.
 
+### Settings Window
+
+All settings in one window over the page the user is on, like a small bound volume laid on the
+desk. A native `<dialog>` opened with `showModal`, `min(1040px, 100vw - 64px)` by
+`min(720px, 100vh - 64px)`, centred, so the page shows 32px around it at the least. The address
+holds it: `?settings=<section>` on any page with the rail (not the Review focus screen) opens it at that section (`language`,
+`graph-folder`, `backup`, `chatgpt`, `site`).
+
+- **Window:** Paper, a 1px Lapis border, 4px corners, no shadow. Two columns: the 220px spine, then
+  the leaf.
+- **Spine:** a Lapis field (76px 10px 26px padding, so its first section lines up with the first
+  panel under the head; its own scroll), closed at the top and the foot by
+  two 2px Gilt bands, 6px apart (8px and 14px from the end). It lists the five sections in the
+  rail's vocabulary: a 20px Lucide icon (1.6 stroke) and the name in 500 14px/1.3, 12px apart, in
+  a 42px row (9px 12px padding, 4px corners, 4px gaps). Names hyphenate and break anywhere.
+  Resting sections are Lapis Mist. The section in view fills Raised Lapis with white text, turns its
+  icon Gilt and carries `aria-current`; hover is half a step (Lapis and Raised Lapis mixed half and
+  half) with white text. Focus is the Gilt outline. 160ms on the shared ease-out.
+- **Head:** a 56px Paper band (8px 16px 8px 32px padding, so the close glyph ends on the panels'
+  right edge), a Hairline under it. "Settings"
+  ("Indstillinger") in the Headline set, then the Close button pushed right: a quiet Ink button
+  (10px side padding, 10px gap) with an Esc Key Cap and a 20px X icon (1.8 stroke), named "Close
+  Settings" ("Luk Indstillinger"), with `aria-keyshortcuts="Escape"`. Hover fills it Lapis Tint,
+  without an underline.
+- **Body:** Ground, its own scroll (20px 32px 40px; the top padding equals the 20px gap, so a
+  section that lands at the top shows nothing of the panel before it). The panels as on any page, in one column up to
+  760px with 20px gaps, their Initials alternating rubric and lapis, their titles `h3` under the
+  window's `h2`: Interface language (choice
+  rows), Graph folder (the path as a Call Number label that wraps, and a Meta hint), Backup (the
+  Backup Panel), ChatGPT and Your website. A sheet opened from a panel opens over the window.
+- **Spine and scroll:** the last section is at least as tall as the body, so every section can reach
+  the top. The window opens with the asked section 20px under the head and keeps it there while
+  panels load, until the user scrolls; that section takes focus, so the first Tab goes to its first
+  control. Each section is a `role="group"` named by its title, `tabindex="-1"`, without an outline.
+  The spine marks the last section whose top is within 96px of the top of the body. A click on a
+  section scrolls the body to it, smoothly (at once under reduced motion), moves focus to it (the
+  spine section points to it with `aria-controls`) and puts it in the address; a key press during
+  that scroll finishes it at once. Focus entering a section marks it. A sheet opened from a panel
+  gives focus back to the button that opened it when it closes.
+- **Veil and motion:** the page dims under Ink at 32%, as under a sheet. The window fades in from
+  98.5% scale in 160ms on the shared ease-out while the veil fades in. Closing runs a 140ms out
+  animation, back to 98.5% and clear with the veil, then the dialog closes. Under reduced motion
+  the window closes at once.
+- **Leaving:** Esc, the Close button, or a press and release on the veil closes it and takes
+  `?settings` out of the address (replacing the history entry), so the user is on the same page.
+- **Ways in:** the rail's Settings opens it at Interface language. Every "Open Settings" where the AI
+  needs ChatGPT (a button in the info notice and in a Session problem, a link button in the Writing
+  Desk's note) opens it at ChatGPT. Each is a button with `aria-haspopup="dialog"`.
+- **Narrow:** below 720px the window fills the screen, without border or corners. The spine lies
+  across the top as a band: the sections wrap in rows (36px tall, 6px 10px padding), with two Gilt
+  bands at the top (6px and 12px down) and one at the foot. The head pads 16px at the left; the body
+  pads 16px 16px 32px.
+
 ### Sheet
 
 A modal leaf for a one-time task: it opens over the page, does the task, and leaves. A native
@@ -702,7 +792,7 @@ less 32px, scrolling inside when taller.
   the shared ease-out while the veil fades in. No shadow.
 - **Leaving:** Esc cancels, as Cancel does. The task's first control takes focus.
 
-**Backup sheet.** Opened from Settings (Back up to GitHub, Use another git remote) and from the
+**Backup sheet.** Opened from the Backup Panel (Back up to GitHub, Use another git remote) and from the
 Versions panel's link button. Titled "Back up to GitHub" ("Tag backup på GitHub") with a rubric
 Initial.
 
@@ -773,7 +863,8 @@ code (12px 16px gaps).
 
 ### Backup Panel
 
-The third Settings panel, rubric Initial (ChatGPT below it turned lapis to keep the alternation).
+The third panel in the Settings window, rubric Initial (ChatGPT below it turned lapis to keep the
+alternation).
 A ledger, not a form; setting up happens in the Backup sheet.
 
 - **Not backed up:** Facts ("Versions: Only on this computer", "Last saved: Today 14:37"), the
@@ -1110,7 +1201,8 @@ A small hairline box that names the key doing the same as the button it sits in:
 Strong Hairline with a 2px bottom border, 4px corners, 22px tall (22px minimum width, 6px side
 padding), Mute 600 12px. On a primary button it turns transparent with a 45% white border and
 white text. It is hidden from screen readers; the button carries `aria-keyshortcuts`. Every button
-on the Review screen that a key presses has one (Stop, Show answer, each rating, Back).
+on the Review screen that a key presses has one (Stop, Show answer, each rating, Back), and so
+does the Settings window's Close (Esc).
 
 ### Review Leaf (signature)
 
@@ -1233,7 +1325,8 @@ Skeleton bars (14px, 2px corners) shimmer Tint to Ground over 1.4s inside a pane
 
 - **Don't** decorate data, Note text, inputs or buttons (no initials, flourishes or gilt there).
 - **Don't** use red alone to mean anything; color never carries a message by itself.
-- **Don't** add resting shadows or new fields of color beyond the lapis rail, spine and primary.
+- **Don't** add resting shadows or new fields of color beyond the lapis rail, spine, primary and
+  the Settings window's spine.
 - **Don't** use Cinzel Decorative beyond a single heading initial, or Courier Prime beyond call
   numbers, step numbers, question numbers, repository names and a code the user types elsewhere.
 - **Don't** fix widths to English text, truncate labels, or block wrapping.
