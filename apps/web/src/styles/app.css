@@ -5972,9 +5972,29 @@ a.written__title:hover {
 .graph-beside__find {
   position: absolute;
   top: 12px;
-  left: 16px;
   right: 16px;
+  bottom: 12px;
+  left: 16px;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  pointer-events: none;
+}
+
+.graph-beside__find > * {
+  pointer-events: auto;
+}
+
+.graph-beside__find > .graph-find {
+  flex-wrap: nowrap;
+  width: 100%;
+}
+
+.graph-beside__find .graph-find__count {
+  padding: 1px 6px;
+  border-radius: 2px;
+  background: rgb(251 250 247 / 90%);
 }
 
 .graph-beside__find .graph-find__input {
@@ -6186,6 +6206,7 @@ a.written__title:hover {
 }
 
 .trail__title {
+  width: fit-content;
   font-size: 18px;
   font-weight: 700;
   line-height: 1.3;
@@ -6227,6 +6248,9 @@ a.written__title:hover {
 
 /* Find's matches drop under the field, over the Graph, as a short list to choose from. */
 .graph-beside__results {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   width: min(420px, 100%);
   margin-top: 6px;
   padding: 6px 0;
@@ -6236,6 +6260,7 @@ a.written__title:hover {
 }
 
 .graph-beside__results ul {
+  min-height: 0;
   max-height: 248px;
   overflow-y: auto;
 }

@@ -249,10 +249,10 @@ export class GraphCanvas {
     if (node === undefined || this.#width === 0) return;
     const [sx, sy] = this.#transform.apply([node.x ?? 0, node.y ?? 0]);
     const inside =
-      sx > this.#insetLeft + 40 &&
-      sx < this.#width - 40 &&
-      sy > this.#insetTop + 30 &&
-      sy < this.#height - 60;
+      sx > this.#insetLeft + 80 &&
+      sx < this.#width - 100 &&
+      sy > this.#insetTop + 40 &&
+      sy < this.#height - 70;
     if (!inside) this.#centerAt(node, this.#transform.k);
   }
 
@@ -273,8 +273,8 @@ export class GraphCanvas {
     const target = frameTarget(nodes, this.#width, this.#height, {
       left: (few ? LABEL_WIDTH / 2 + 8 : 40) + this.#insetLeft,
       right: few ? LABEL_WIDTH / 2 + 8 : 40,
-      top: 40 + this.#insetTop,
-      bottom: few ? 40 + LINE_HEIGHT * 3 : 40 + CALL_HEIGHT,
+      top: this.#insetTop + Math.min(40, this.#height * 0.06),
+      bottom: Math.min(few ? 40 + LINE_HEIGHT * 3 : 40 + CALL_HEIGHT, this.#height * 0.18),
       maxScale: few ? 1.6 : 1.4,
       minScale: SCALE_EXTENT[0],
     });
@@ -590,9 +590,21 @@ export class GraphCanvas {
   #drawStops(): void {
     if (this.#trail.length === 0) return;
     this.#context.setTransform(this.#ratio, 0, 0, this.#ratio, 0, 0);
+    const placed: Array<Box> = [];
     const tabs = this.#trail.flatMap((id, index) => {
-      const box = this.#stopBox(id, index);
-      return box === null ? [] : [{ box, number: index + 1, here: id === this.#selected }];
+      const first = this.#stopBox(id, index);
+      if (first === null) return [];
+      const step = first.right - first.left + 2;
+      const shifted = (by: number): Box => ({
+        ...first,
+        left: first.left + by,
+        right: first.right + by,
+      });
+      let by = 0;
+      while (placed.some((other) => overlaps(other, shifted(by)))) by += step;
+      const box = shifted(by);
+      placed.push(box);
+      return [{ box, number: index + 1, here: id === this.#selected }];
     });
     drawStopTabs(this.#context, tabs, STOP_HEIGHT, STOP_FONT, this.#palette);
   }
@@ -638,9 +650,12 @@ export class GraphCanvas {
       const lines = showText ? this.#lines(node.id, label.text, font) : [];
       const callWidth = call === null ? 0 : this.#callWidth(call);
       const width = Math.max(callWidth, showText ? this.#textWidth(node.id, lines, font) : 0);
-      const top = sy + node.radius * k + 4;
+      const below = sy + node.radius * k + 4;
       const callSpace = call === null ? 0 : CALL_HEIGHT + 3;
-      const bottom = top + callSpace + lines.length * LINE_HEIGHT;
+      const height = callSpace + lines.length * LINE_HEIGHT;
+      const flip = node.id === this.#selected && below + height > this.#height - 2;
+      const top = flip ? sy - node.radius * k - 30 - height : below;
+      const bottom = top + height;
       const cx = labelCenter(sx, width, top, bottom, this.#keepClear, this.#width);
       const box: Box = { left: cx - width / 2 - 2, right: cx + width / 2 + 2, top, bottom };
       const order = [
@@ -666,7 +681,10 @@ export class GraphCanvas {
     }
     items.sort((a, b) => a.rank - b.rank);
     for (const item of items) {
-      if (item.rank > 0 && placed.some((other) => overlaps(other, item.box))) continue;
+      const offCanvas = item.box.top < 0 || item.box.bottom > this.#height - 2;
+      if (item.rank > 0 && (offCanvas || placed.some((other) => overlaps(other, item.box)))) {
+        continue;
+      }
       placed.push(item.box);
       item.draw();
     }
