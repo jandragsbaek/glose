@@ -7,6 +7,7 @@ import {
   Globe,
   Languages,
   MessageSquareText,
+  Palette,
   CloudUpload,
   X,
 } from "lucide-react";
@@ -14,17 +15,26 @@ import { type ReactNode, useId, useRef, useState } from "react";
 
 import { LANGUAGES, useT } from "../i18n/I18n.tsx";
 import { KEYS, setLanguageAtom, settingsAtom } from "../state/graph.ts";
+import { AppearancePanel } from "./AppearancePanel.tsx";
 import { BackupPanel } from "./Backup.tsx";
 import { ChatGptConnection } from "./ChatGptConnection.tsx";
 import { Panel } from "./ui.tsx";
 import { SiteFolderSheet } from "./WritingSheets.tsx";
 
-export const SETTINGS_SECTIONS = ["language", "graph-folder", "backup", "chatgpt", "site"] as const;
+export const SETTINGS_SECTIONS = [
+  "language",
+  "appearance",
+  "graph-folder",
+  "backup",
+  "chatgpt",
+  "site",
+] as const;
 
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number];
 
 const SECTION_ICONS: Record<SettingsSection, LucideIcon> = {
   language: Languages,
+  appearance: Palette,
   "graph-folder": Folder,
   backup: CloudUpload,
   chatgpt: MessageSquareText,
@@ -277,6 +287,8 @@ function sectionTitle(t: ReturnType<typeof useT>, section: SettingsSection) {
   switch (section) {
     case "language":
       return t.settings.language;
+    case "appearance":
+      return t.appearance.title;
     case "graph-folder":
       return t.settings.graphFolder;
     case "backup":
@@ -330,13 +342,22 @@ function SettingsPanels({ idPrefix }: { readonly idPrefix: string }) {
         </Panel>
       </div>
       <div
+        data-section="appearance"
+        id={`${idPrefix}-appearance`}
+        tabIndex={-1}
+        role="group"
+        aria-label={sectionTitle(t, "appearance")}
+      >
+        <AppearancePanel />
+      </div>
+      <div
         data-section="graph-folder"
         id={`${idPrefix}-graph-folder`}
         tabIndex={-1}
         role="group"
         aria-label={sectionTitle(t, "graph-folder")}
       >
-        <Panel title={t.settings.graphFolder} initial="lapis" level={3}>
+        <Panel title={t.settings.graphFolder} initial="rubric" level={3}>
           <div className="panel__body field">
             <code className="call settings-window__path">{current?.graphFolder}</code>
             <p className="field__hint">{t.settings.graphFolderHint}</p>
@@ -359,7 +380,7 @@ function SettingsPanels({ idPrefix }: { readonly idPrefix: string }) {
         role="group"
         aria-label={sectionTitle(t, "chatgpt")}
       >
-        <Panel title={t.chatgpt.title} initial="lapis" level={3}>
+        <Panel title={t.chatgpt.title} initial="rubric" level={3}>
           <div className="panel__body stack">
             <p className="field__hint">{t.chatgpt.intro}</p>
             <ChatGptConnection />
@@ -388,7 +409,7 @@ function SitePanel({ folder }: { readonly folder: string | null }) {
     requestAnimationFrame(() => opener.current?.focus());
   };
   return (
-    <Panel title={t.settings.site} initial="rubric" level={3}>
+    <Panel title={t.settings.site} initial="accent" level={3}>
       <div className="panel__body field">
         {folder === null ? (
           <p className="empty">{t.settings.siteNotChosen}</p>

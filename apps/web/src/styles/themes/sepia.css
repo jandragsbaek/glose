@@ -1,0 +1,53 @@
+[data-theme="sepia"][data-appearance="light"] {
+  color-scheme: light;
+  --field: #3b2a1e;
+  --field-raised: #4d3828;
+  --field-line: #604735;
+  --on-field: #ffffff;
+  --on-field-mute: #e0cfbd;
+  --primary: #3b2a1e;
+  --primary-raised: #4d3828;
+  --on-primary: #ffffff;
+  --accent: #283a57;
+  --tint: #eef1f5;
+  --gold: #c8a040;
+  --gold-wash: #f6efdc;
+  --rubric: #b3261e;
+  --rubric-wash: #fbeceb;
+  --rubric-line: #e7c9c6;
+  --verdigris: #3e7c5a;
+  --ground: #faf8f4;
+  --paper: #ffffff;
+  --ink: #18150f;
+  --mute: #635b50;
+  --line: #e3ddd3;
+  --line-strong: #d0c7b9;
+  --tray: #f2eee6;
+}
+
+[data-theme="sepia"][data-appearance="dark"] {
+  color-scheme: dark;
+  --field: #3b2b1f;
+  --field-raised: #4e3929;
+  --field-line: #614734;
+  --on-field: #ffffff;
+  --on-field-mute: #dcc8b2;
+  --primary: #8a6040;
+  --primary-raised: #986c4b;
+  --on-primary: #ffffff;
+  --accent: #a8bde0;
+  --tint: #1d2534;
+  --gold: #d8b55e;
+  --gold-wash: #3b3220;
+  --rubric: #f2836f;
+  --rubric-wash: #2c1715;
+  --rubric-line: #5c2d27;
+  --verdigris: #6dc494;
+  --ground: #100e0b;
+  --paper: #1a1712;
+  --ink: #ebe5da;
+  --mute: #a99f90;
+  --line: #2e2920;
+  --line-strong: #40392d;
+  --tray: #0b0a07;
+}

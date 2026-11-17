@@ -255,7 +255,7 @@ function Details({ source }: { readonly source: Source }) {
     [t.source.fields.file, t.source.fileName(source.id)],
   ];
   return (
-    <Panel title={t.source.details} initial="lapis">
+    <Panel title={t.source.details} initial="accent">
       <div className="panel__body">
         <div style={{ display: "flex", gap: 18, alignItems: "flex-start" }}>
           <Spine source={source} />

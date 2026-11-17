@@ -29,7 +29,7 @@ export function ReviewStart() {
       const left = leftToday(value.counts);
       return (
         <section className="review-start" aria-labelledby={headingId}>
-          <div className="panel review-start__leaf" data-initial="lapis">
+          <div className="panel review-start__leaf" data-initial="accent">
             <h2 className="panel__title" id={headingId}>
               {t.review.title}
             </h2>

@@ -3,6 +3,9 @@ import { DESKTOP_IPC, type DesktopBridge } from "@glose/contracts/desktop";
 import * as Electron from "electron";
 
 const bridge: DesktopBridge = {
+  appearance: {
+    set: (mode, grounds) => Electron.ipcRenderer.invoke(DESKTOP_IPC.appearanceSet, mode, grounds),
+  },
   updates: {
     status: () => Electron.ipcRenderer.invoke(DESKTOP_IPC.updatesStatus),
     watch: (listener) => {

@@ -5,6 +5,7 @@ import {
   reactCompiler,
   recommended,
   tests,
+  theming,
   uiText,
 } from "@jandragsbaek/oxlint-plugin/presets";
 import "vite-plus/test/config";
@@ -69,6 +70,11 @@ export default defineConfig({
       react,
       reactCompiler({ files: tsx(REACT_SOURCES) }),
       productCopy({ files: ["apps/*/src/**", "packages/*/src/**"] }),
+      theming({
+        files: ["apps/*/src/**"],
+        message:
+          "Colors come from the theme. Read a token from apps/web/src/styles/themes (var(--accent), or the Graph's palette) instead of a color literal.",
+      }),
       uiText({
         files: REACT_SOURCES,
         message:

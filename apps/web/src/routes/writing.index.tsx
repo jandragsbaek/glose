@@ -158,7 +158,7 @@ function Pieces({ projects }: { readonly projects: ReadonlyArray<WritingProject>
   const graph = AsyncResult.getOrElse(useAtomValue(graphAtom), () => null);
   const sources = AsyncResult.getOrElse(useAtomValue(sourcesAtom), () => null);
   return (
-    <Panel title={t.writing.pieces} initial="lapis" meta={String(projects.length)}>
+    <Panel title={t.writing.pieces} initial="accent" meta={String(projects.length)}>
       {projects.length === 0 ? (
         <div className="panel__body">
           <p className="empty">{t.writing.piecesEmpty}</p>

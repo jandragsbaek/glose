@@ -3,7 +3,10 @@ import { nightlyOf } from "../../domain/appVersion.ts";
 import { numbers, count, clockTime, shortDate } from "./format.ts";
 import type { Messages } from "../en.ts";
 
-export const settingsMessages: Pick<Messages, "updates" | "versions" | "backup" | "settings"> = {
+export const settingsMessages: Pick<
+  Messages,
+  "updates" | "versions" | "backup" | "appearance" | "settings"
+> = {
   updates: {
     version: (version: string) => {
       const nightly = nightlyOf(version);
@@ -151,6 +154,18 @@ export const settingsMessages: Pick<Messages, "updates" | "versions" | "backup" 
       "other-graph":
         "Det remote indeholder en anden graf. Glose blander ikke to grafer. Brug et tomt remote eller grafens eget.",
     },
+  },
+  appearance: {
+    title: "Udseende",
+    mode: "Lyst eller mørkt",
+    modes: { light: "Lyst", dark: "Mørkt", system: "Som computeren" },
+    systemNow: {
+      light: "Computeren er lys nu.",
+      dark: "Computeren er mørk nu.",
+    },
+    theme: "Tema",
+    themes: { lapis: "Lapis", murex: "Murex", sepia: "Sepia" },
+    hint: "Hvert tema findes i en lys og en mørk udgave.",
   },
   settings: {
     title: "Indstillinger",

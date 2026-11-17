@@ -284,7 +284,7 @@ export function AddLessons() {
           </div>
         )}
       </Panel>
-      <Panel title={t.lessons.course} initial="lapis">
+      <Panel title={t.lessons.course} initial="accent">
         <div className="panel__body">
           <fieldset className="fieldset">
             <legend className="sr-only">{t.lessons.course}</legend>

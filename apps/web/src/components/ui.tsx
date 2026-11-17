@@ -61,7 +61,7 @@ export function Panel({
   children,
 }: {
   readonly title: string;
-  readonly initial: "rubric" | "lapis";
+  readonly initial: "rubric" | "accent";
   readonly meta?: ReactNode;
   readonly level?: 2 | 3;
   readonly children: ReactNode;

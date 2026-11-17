@@ -2,6 +2,8 @@ import * as Effect from "effect/Effect";
 import * as Electron from "electron";
 import * as NodePath from "node:path";
 
+import * as Appearance from "./Appearance.ts";
+
 const isWebUrl = (url: string) => url.startsWith("https://") || url.startsWith("http://");
 
 const addDevShortcuts = (window: Electron.BrowserWindow) => {
@@ -26,7 +28,9 @@ const addDevShortcuts = (window: Electron.BrowserWindow) => {
 
 const create = (url: string) => {
   const appOrigin = new URL(url).origin;
+  const background = Appearance.restore();
   const window = new Electron.BrowserWindow({
+    ...(background === undefined ? {} : { backgroundColor: background }),
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
@@ -66,6 +70,7 @@ const setMenu = () => {
 export const open = Effect.fn("MainWindow.open")(function* (url: string) {
   yield* Effect.sync(() => {
     setMenu();
+    Appearance.follow(new URL(url).origin);
     create(url);
 
     Electron.app.on("second-instance", () => {

@@ -4,7 +4,7 @@ export interface Palette {
   readonly ink: string;
   readonly mute: string;
   readonly lineStrong: string;
-  readonly lapis: string;
+  readonly accent: string;
   readonly gold: string;
 }
 
@@ -17,7 +17,7 @@ export const readPalette = (): Palette => {
     ink: token("ink"),
     mute: token("mute"),
     lineStrong: token("line-strong"),
-    lapis: token("lapis"),
+    accent: token("accent"),
     gold: token("gold"),
   };
 };

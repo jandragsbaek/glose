@@ -288,7 +288,7 @@ function NodePanel({
   return (
     <Panel
       title={isSource ? t.graph.source : t.graph.note}
-      initial={isSource ? "lapis" : "rubric"}
+      initial={isSource ? "accent" : "rubric"}
       meta={
         <button
           type="button"

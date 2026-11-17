@@ -119,7 +119,7 @@ function ExtractionView({
 
   const headingId = useId();
   const margin = (
-    <aside className="extraction__margin" data-initial="lapis" aria-labelledby={headingId}>
+    <aside className="extraction__margin" data-initial="accent" aria-labelledby={headingId}>
       <div className="panel__head">
         <h2 className="panel__title" id={headingId}>
           {t.session.transcript}

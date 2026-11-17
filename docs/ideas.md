@@ -73,12 +73,25 @@ The core loop depends on the stage the user is in. Stages known so far:
   window in T3 Code. The rail's Settings item opens it, and so does every "Open Settings" where
   the AI needs ChatGPT. Esc, the close button or a click beside the window puts the user back on
   the same page.
-- The window holds all settings in one scrolling column (Interface language, Graph folder,
-  Backup, ChatGPT, Your website). A list of the sections at its side marks the one in view and
+- The window holds all settings in one scrolling column (Interface language, Appearance, Graph
+  folder, Backup, ChatGPT, Your website). A list of the sections at its side marks the one in view and
   jumps to a section on a click. Chosen by Jan from three designs on the Impeccable decision page.
 - The address keeps the window: `?settings=<section>` on any page with the rail (not the Review
-  focus screen) opens it at that section (`language`, `graph-folder`, `backup`, `chatgpt`,
-  `site`). There is no `/settings` page.
+  focus screen) opens it at that section (`language`, `appearance`, `graph-folder`, `backup`,
+  `chatgpt`, `site`). There is no `/settings` page.
+
+## Decided, themes with light and dark (November 2026)
+
+- Glose has themes, after T3 Code: every theme comes in a light and a dark variant, and the user
+  picks the theme and the mode (Light, Dark, or Same as the computer) in Settings, under
+  Appearance. Jan uses dark.
+- Three themes, each a book binding: Lapis (the default, the design so far), Murex (purple) and
+  Sepia (brown leather with blue-black ink). The default mode follows the computer.
+- The choice belongs to the computer, not the Graph: it is kept in the app's local storage, and
+  the desktop app remembers it so the window opens in the right colors.
+- Every color is a theme token. A test fails on a color value outside the theme files, on a theme
+  without both variants, and on text that loses its contrast; the shared lint plugin gets a rule
+  (`no-raw-color`) for colors in code.
 
 ## Sources
 

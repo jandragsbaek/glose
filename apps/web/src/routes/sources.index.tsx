@@ -238,7 +238,7 @@ function Register({ records }: { readonly records: ReadonlyArray<SourceRecord> }
   return (
     <Panel
       title={t.sources.register}
-      initial="lapis"
+      initial="accent"
       meta={
         matching.length === records.length
           ? t.sources.counts(records.length, 0)
