@@ -6,6 +6,8 @@ export interface Palette {
   readonly lineStrong: string;
   readonly accent: string;
   readonly gold: string;
+  readonly rubric: string;
+  readonly rubricWash: string;
 }
 
 export const readPalette = (): Palette => {
@@ -19,5 +21,7 @@ export const readPalette = (): Palette => {
     lineStrong: token("line-strong"),
     accent: token("accent"),
     gold: token("gold"),
+    rubric: token("rubric"),
+    rubricWash: token("rubric-wash"),
   };
 };

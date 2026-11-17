@@ -198,8 +198,8 @@ export const writingMessages = {
     graphToggle: "Graph",
     graphToggleTitle: "Read the Graph beside your text",
     graphPanel: "The Graph beside your text",
-    graphCanvasLabel: (notes: number, links: number) =>
-      `The Graph: ${count(notes, "node", "nodes")} joined by ${count(links, "Link", "Links")}. Your trail and the Notes this piece cites are marked. Use Find above it to open a Note by name; it opens in Your trail below.`,
+    graphCanvasLabel: (notes: number, links: number, ai = 0) =>
+      `The Graph: ${count(notes, "node", "nodes")} joined by ${count(links, "Link", "Links")}.${ai === 0 ? "" : ` ${count(ai, "Note holds", "Notes hold")} AI text.`} Your trail and the Notes this piece cites are marked. Use Find above it to open a Note by name; it opens in Your trail below.`,
     trailTitle: "Your trail",
     trailCount: (n: number) => count(n, "stop", "stops"),
     clearTrail: "Clear the trail",
@@ -219,6 +219,7 @@ export const writingMessages = {
     legendCited: "Cited in this piece",
     legendOpen: "Open",
     legendTrail: "Your trail",
+    legendAi: "AI text",
     findNone: "No Note or Source has this in its name.",
     findMore: (n: number) => `${numbers.format(n)} more. Type more of the name.`,
     notFound: "This Writing project does not exist. Its file may have been renamed or deleted.",

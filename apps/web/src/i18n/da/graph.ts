@@ -12,15 +12,15 @@ export const graphMessages: Pick<Messages, "graph" | "rewrite"> = {
         count(sources, "kilde", "kilder"),
         count(links, "link", "links"),
       ].join(" · "),
-    canvasLabel: (notes: number, links: number) =>
-      `Grafen: ${count(notes, "punkt", "punkter")} forbundet af ${count(links, "link", "links")}. Panelet ved siden af viser de samme kilder og noter.`,
+    canvasLabel: (notes: number, links: number, ai = 0) =>
+      `Grafen: ${count(notes, "punkt", "punkter")} forbundet af ${count(links, "link", "links")}.${ai === 0 ? "" : ` ${count(ai, "note", "noter")} har AI-tekst.`} Panelet ved siden af viser de samme kilder og noter.`,
     findLabel: "Søg i grafen",
     findPlaceholder: "Find en note eller kilde",
     found: (n: number) => (n === 0 ? "Intet fundet" : `${numbers.format(n)} fundet`),
     zoomIn: "Zoom ind",
     zoomOut: "Zoom ud",
     fit: "Vis hele grafen",
-    help: "Rul eller knib for at zoome, og træk i baggrunden for at flytte rundt. Træk i et punkt for at trække i dets links. Klik på et punkt for at læse det her; dobbeltklik på en kilde for at åbne den.",
+    help: "Rul eller knib for at zoome, og træk i baggrunden for at flytte rundt. Træk i et punkt for at trække i dets links. Klik på et punkt for at læse det her. Dobbeltklik på en note, eller vælg den og tryk Enter på grafen, for at omskrive eller redigere den; en kilde åbnes i stedet.",
     sources: "Kilder",
     note: "Note",
     source: "Kilde",
@@ -35,6 +35,16 @@ export const graphMessages: Pick<Messages, "graph" | "rewrite"> = {
     cardCount: (n: number) => (n === 0 ? "Ingen kort endnu" : count(n, "kort", "kort")),
     rewrite: "Omskriv med dine ord",
     edit: "Redigér",
+    toRewrite: "Til omskrivning",
+    toRewriteHelp:
+      "Disse noter har stadig AI-tekst. På grafen er de hule ringe: dobbeltklik på en for at skrive den med dine ord.",
+    noteCount: (n: number) => count(n, "note", "noter"),
+    aiKey: (n: number) => `${count(n, "note", "noter")} har AI-tekst`,
+    aiKeyHint: "Vis kun noterne med AI-tekst",
+    aiKeyLabel: (n: number) =>
+      `${count(n, "note", "noter")} har AI-tekst. Vis kun noterne med AI-tekst`,
+    allYours: "Alle noter er skrevet med dine ord",
+    holdsAi: "har AI-tekst",
   },
   rewrite: {
     titleAi: "Omskriv noten",

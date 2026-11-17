@@ -1,6 +1,7 @@
 ---
 glose: note
 source: "[[Ahrens 2017 How to Take Smart Notes]]"
+ai: true
 ---
 
 Ahrens leans on learning research here: elaboration, meaning actively connecting new information to what you already know, beats rereading or highlighting for understanding and memory. You ask what the idea means, how it fits, what it contradicts, and where else it applies.

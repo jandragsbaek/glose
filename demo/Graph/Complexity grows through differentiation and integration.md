@@ -1,6 +1,7 @@
 ---
 glose: note
 source: "[[Csikszentmihalyi 1990 Flow]]"
+ai: true
 ---
 
 For Csikszentmihalyi, a complex self has two features. Differentiation: it is unique, with its own skills and goals. Integration: it is connected to other people and to ideas larger than itself. Too much differentiation makes a person self-centered; too much integration makes them lose themselves. Growth needs both at once.
