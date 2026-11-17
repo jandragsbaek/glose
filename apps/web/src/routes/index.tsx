@@ -13,7 +13,7 @@ import {
   Spine,
   StorageProblem,
 } from "../components/ui.tsx";
-import { missingDetails } from "../domain/source.ts";
+import { missingDetails, onDesk } from "../domain/source.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { cardsAtom } from "../state/cards.ts";
 import { graphAtom, sourcesAtom } from "../state/graph.ts";
@@ -66,7 +66,7 @@ function SourcesInProgress() {
     onError: () => <StorageProblem onRetry={refresh} />,
     onDefect: () => <StorageProblem onRetry={refresh} />,
     onSuccess: ({ value }) => {
-      const [current, ...others] = value.filter((source) => source.readingStep !== "done");
+      const [current, ...others] = onDesk(value, (source) => source);
       return (
         <Panel title={t.today.inProgress} initial="rubric">
           {current === undefined ? <NoSource /> : <CurrentSource source={current} />}
@@ -195,7 +195,9 @@ function CurrentSource({ source }: { readonly source: Source }) {
           params={{ sourceId: source.id }}
           className="button button--primary source__action"
         >
-          {t.today.continue[source.readingStep]}
+          {source.readingStep === "read" && source.readingPlace === null
+            ? t.today.startReading
+            : t.today.continue[source.readingStep]}
         </Link>
         <p className="source__line">
           {[

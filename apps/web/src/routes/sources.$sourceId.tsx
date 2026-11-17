@@ -7,6 +7,7 @@ import { useId, useState } from "react";
 
 import { Extraction } from "../components/Extraction.tsx";
 import { Probe } from "../components/Probe.tsx";
+import { Reader } from "../components/Reader.tsx";
 import { ReadingStart } from "../components/ReadingStart.tsx";
 import { StepBar } from "../components/StepBar.tsx";
 import {
@@ -22,7 +23,21 @@ import { asksWhereToStart, missingDetails, wordCount } from "../domain/source.ts
 import { useT } from "../i18n/I18n.tsx";
 import { KEYS, saveFreeTextAtom, sourceAtom } from "../state/graph.ts";
 
-export const Route = createFileRoute("/sources/$sourceId")({ component: ReadingStage });
+interface SourceSearch {
+  readonly text?: 1;
+  readonly p?: number;
+}
+
+export const Route = createFileRoute("/sources/$sourceId")({
+  component: ReadingStage,
+  validateSearch: (search: Record<string, unknown>): SourceSearch => {
+    const p = Number(search.p);
+    return {
+      ...(search.text === 1 || search.text === "1" ? { text: 1 as const } : {}),
+      ...(Number.isInteger(p) && p > 0 ? { p } : {}),
+    };
+  },
+});
 
 function ReadingStage() {
   const t = useT();
@@ -60,13 +75,27 @@ function ReadingStage() {
 }
 
 function SourceView({ source }: { readonly source: Source }) {
+  const t = useT();
+  const search = Route.useSearch();
   const author = [source.givenName, source.familyName].filter(Boolean).join(" ");
+  const where =
+    source.kind === "lesson"
+      ? [source.container, source.part === null ? null : t.lessonPart(source.part)]
+          .filter(Boolean)
+          .join(", ")
+      : source.kind === "article"
+        ? (source.container ?? t.kinds.one.article)
+        : null;
   const sub = (
     <span className="button-row">
       {author}
+      {where === null || where === "" ? null : <span className="page-head__where">{where}</span>}
       <CallNumber source={source} />
     </span>
   );
+  if (source.hasText && (source.readingStep === "read" || search.text === 1)) {
+    return <Reader source={source} sub={sub} focus={search.p ?? null} />;
+  }
   const sourcePanels = (
     <div className="columns">
       <FreeText source={source} />
@@ -78,7 +107,24 @@ function SourceView({ source }: { readonly source: Source }) {
   }
   if (source.readingStep !== "free-text") {
     return (
-      <Page title={source.title} sub={sub} fill flush>
+      <Page
+        title={source.title}
+        sub={sub}
+        fill
+        flush
+        actions={
+          source.hasText ? (
+            <Link
+              to="/sources/$sourceId"
+              params={{ sourceId: source.id }}
+              search={{ text: 1 }}
+              className="button button--quiet"
+            >
+              {t.reader.readText}
+            </Link>
+          ) : undefined
+        }
+      >
         <Extraction source={source} sourcePanels={sourcePanels} />
       </Page>
     );

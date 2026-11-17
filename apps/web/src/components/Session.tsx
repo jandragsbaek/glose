@@ -365,6 +365,7 @@ export function ToolUses({
     cards: count("list-cards") > 0,
     sourceNotes: count("list-notes") > 0,
     probe: count("read-probe") > 0,
+    article: count("read-article") > 0,
   });
   return (
     <details className="aside">
@@ -397,6 +398,8 @@ function ToolUseLine({ use }: { readonly use: Extract<SessionEntry, { _tag: "Too
       return t.session.trail.listNotes;
     case "read-probe":
       return t.session.trail.readProbe;
+    case "read-article":
+      return t.session.trail.readArticle;
     case "search-graph":
       return use.detail === undefined
         ? t.session.tools["search-graph"]

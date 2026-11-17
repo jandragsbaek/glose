@@ -15,9 +15,61 @@ import {
   setUp,
   toolCall,
 } from "../testkit/sessions.ts";
+import { BOOK_TEXT_DETAILS } from "@glose/contracts";
+
+import * as Sources from "../graph/Sources.ts";
 import { Sessions } from "./Sessions.ts";
 
 it.layer(NodeServices.layer)("Sessions", (it) => {
+  it.effect("goes deeper on one Passage of an Article, and not while a question is open", () =>
+    Effect.gen(function* () {
+      const { fake, layer } = yield* setUp;
+      fake.answer(MODELS, MODEL_LIST, MODEL_LIST);
+      fake.answer(
+        RESPONSES,
+        toolCall("ask_question", {
+          topic: "Residue",
+          question: "Why does the next task suffer?",
+          again_of: null,
+        }),
+        answer("Over to you."),
+      );
+
+      const { question, refused } = yield* Effect.gen(function* () {
+        const sources = yield* Sources.Sources;
+        const sessions = yield* Sessions;
+        const article = yield* sources.importText({
+          ...BOOK_TEXT_DETAILS,
+          kind: "article",
+          familyName: "Leroy",
+          givenName: null,
+          title: "Attention residue",
+          firstPublished: 2009,
+          edition: null,
+          editionYear: null,
+          publisher: null,
+          translator: null,
+          container: "A journal",
+          markdown:
+            "Part of the mind ==stays on the old task== after a switch, and ==the next task suffers==.\n",
+        });
+        const { id } = yield* sessions.goDeeper({ source: article.id, passage: "1.1" });
+        yield* afterTurn(id);
+        const refused = yield* sessions
+          .goDeeper({ source: article.id, passage: "1.2" })
+          .pipe(Effect.flip);
+        const view = yield* sessions.watch(id).pipe(Stream.runHead, Effect.map(Option.getOrThrow));
+        return {
+          question: view.entries.find((entry) => entry._tag === "ProbeQuestion"),
+          refused: refused._tag,
+        };
+      }).pipe(Effect.provide(layer));
+
+      assert.deepInclude(question, { paragraph: 1, passage: "stays on the old task" });
+      assert.strictEqual(refused, "SessionBusy", "a second Passage waits for the open question");
+    }),
+  );
+
   it.effect(
     "runs a Probe: asks, judges Reasoning and result apart, teaches the gap, asks again, and keeps a record",
     () =>

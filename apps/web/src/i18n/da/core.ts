@@ -122,10 +122,12 @@ export const coreMessages: Pick<
     inProgress: "Kilde i gang",
     continue: {
       "free-text": "Fortsæt fri tekst",
+      read: "Læs videre",
       extraction: "Fortsæt udtræk",
       probe: "Fortsæt sondering",
       done: "Åbn kilde",
     },
+    startReading: "Begynd at læse",
     alsoInProgress: "Også i gang",
     open: "Åbn",
     noSourceTitle: "Tilføj den bog, du læser",
@@ -155,6 +157,7 @@ export const coreMessages: Pick<
     label: "Læsning",
     names: {
       "free-text": "Fri tekst",
+      read: "Læs",
       extraction: "Udtræk",
       probe: "Sondering",
     },

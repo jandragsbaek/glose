@@ -240,7 +240,8 @@ function NextStep({ source }: { readonly source: Source }) {
   const [failed, setFailed] = useState(false);
   const [busy, setBusy] = useState(false);
   const advance = useAtomSet(advanceReadingAtom, { mode: "promiseExit" });
-  const next = nextReadingStep(source.readingStart, "extraction") === "probe" ? "probe" : "done";
+  const next =
+    nextReadingStep(source.readingStart, "extraction", source.kind) === "probe" ? "probe" : "done";
   const hintId = useId();
 
   const go = async () => {

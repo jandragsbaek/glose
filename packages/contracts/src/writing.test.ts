@@ -3,6 +3,7 @@ import { assert, describe, it } from "@effect/vitest";
 import {
   type CitedSource,
   findReferences,
+  bibliographyEntry,
   noteCitation,
   postFileName,
   renderBlogPost,
@@ -106,6 +107,48 @@ describe("Citations", () => {
       shortCitation({ ...NEWPORT, firstPublished: null }, null, "harvard"),
       "Newport n.d.",
     );
+  });
+});
+
+describe("Citations of an Article or a Course lesson", () => {
+  const HOLM: CitedSource = {
+    id: "Holm 2026 Notes that answer back",
+    familyName: "Holm",
+    givenName: "Ida",
+    title: "Notes that answer back",
+    firstPublished: 2026,
+    edition: null,
+    editionYear: null,
+    publisher: null,
+    translator: null,
+    kind: "article",
+    container: "Sample Essays",
+    url: "https://example.com/notes",
+  };
+
+  it("cites the paragraph and where the text appeared, not a publisher", () => {
+    assert.strictEqual(
+      noteCitation(HOLM, "¶ 4"),
+      "Ida Holm, “Notes that answer back,” *Sample Essays* (2026), par. 4.",
+    );
+    assert.strictEqual(shortCitation(HOLM, "¶ 4", "apa"), "Holm, 2026, para. 4");
+    assert.strictEqual(
+      bibliographyEntry(HOLM, "apa"),
+      "Holm, I. (2026). Notes that answer back. *Sample Essays*. https://example.com/notes",
+    );
+    assert.strictEqual(
+      bibliographyEntry(HOLM, "chicago"),
+      "Holm, Ida. “Notes that answer back.” *Sample Essays*, 2026. https://example.com/notes",
+    );
+  });
+
+  it("asks for where the text appeared instead of a publisher", () => {
+    const [reference] = resolveReferences(
+      "A claim.[[Holm 2026 Notes that answer back]]{¶ 4}",
+      [],
+      [{ ...HOLM, container: null }],
+    );
+    assert.deepStrictEqual(reference?.problems, ["no-container"]);
   });
 });
 

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-16T12:00:00+00:00",
+  "generatedAt": "2026-11-17T12:00:00+00:00",
   "title": "Design System: Glose",
   "extensions": {
     "colorMeta": {
@@ -333,7 +333,7 @@
       },
       "call": {
         "displayName": "Call",
-        "purpose": "Call numbers and step numbers."
+        "purpose": "Call numbers (a Course lesson's ends in its week·day, LIN 2026 1.3), step numbers, the Probe's question numbers, the ¶ numbers in the Reader's apparatus and note numbers in a read text."
       },
       "review-question": {
         "displayName": "Review question",
@@ -350,6 +350,14 @@
       "review-start-count": {
         "displayName": "Review count",
         "purpose": "The one headline on Recall's Review leaf (\"12 Cards to review today\"); balanced wrap, no full stop."
+      },
+      "body-reading": {
+        "displayName": "Body for reading",
+        "purpose": "The text of an Article or Course lesson in the Reader, at 66ch; one step above writing, for long reading."
+      },
+      "paragraph-number": {
+        "displayName": "Paragraph number",
+        "purpose": "The Location of each paragraph, list item and quote in the Reader's 88px gutter (¶ 8), Mute; Lapis 700 where a Passage sits."
       }
     },
     "shadows": [
@@ -424,6 +432,11 @@
         "name": "settings-window-leave",
         "value": "140ms ease-out, to scale 0.985 and opacity 0; backdrop fades to rgb(20 20 20 / 0%)",
         "purpose": "The Settings window closes; under reduced motion it closes at once."
+      },
+      {
+        "name": "markbar-in",
+        "value": "140ms ease-out, from 4px off and opacity 0",
+        "purpose": "The Mark Bar appearing over (or under) a selection in the Reader; none under prefers-reduced-motion."
       }
     ],
     "breakpoints": [
@@ -434,6 +447,14 @@
       {
         "name": "focus-stack",
         "value": "720px"
+      },
+      {
+        "name": "reader-strip",
+        "value": "1240px"
+      },
+      {
+        "name": "reader-one-column",
+        "value": "900px"
       }
     ],
     "layout": {
@@ -451,7 +472,9 @@
       "cardDesk": "gap 16px; find row flex-wrap, gap 8px 16px, AI-Checks-off line pushed right",
       "trays": "minmax(0,1fr) minmax(0,1fr) minmax(260px,300px), gap 20px, align start; 2 columns with Good across at 1080px; 1 column at 720px",
       "tray": "padding 14px 12px 12px, gap 10px; head min 36px, padding 0 6px 10px; slips 10px gaps, 50 at a time",
-      "settingsWindow": "min(1040px, 100vw - 64px) x min(720px, 100vh - 64px), centred; grid 220px spine | leaf; head min 56px, padding 8px 12px 8px 32px; body padding 24px 32px 40px, column max 760px, gap 20px; at 720px it fills the screen, the spine a wrapping band on top, body padding 16px 16px 32px"
+      "settingsWindow": "min(1040px, 100vw - 64px) x min(720px, 100vh - 64px), centred; grid 220px spine | leaf; head min 56px, padding 8px 12px 8px 32px; body padding 24px 32px 40px, column max 760px, gap 20px; at 720px it fills the screen, the spine a wrapping band on top, body padding 16px 16px 32px",
+      "reader": "band 14px 32px on Ground (Step Bar up to 560px, keys line); desk grid minmax(190px,240px) | minmax(0,780px) | minmax(300px,360px), gap 32px, padding 0 32px, each column its own scroll; leaf padding 44px 56px 56px 88px, text 66ch; at 1240px Contents becomes a strip above leaf + margin (280-340px) with a 48px edge fade; at 900px one column, the desk scrolls, the foot sticks, gutter 64px",
+      "addSourceKind": "kind choice up to 760px, 3 equal columns, gap 12px, 24px below; one column at 720px"
     },
     "focus": {
       "onPaper": "2px solid lapis, offset 2px",
@@ -674,6 +697,46 @@
       "description": "A Tray well holding Cards by the work they need: panel-heading head with a count, slips inside; Good folds into a dashed Paper pile with paper edges.",
       "html": "<section class=\"ds-tray\"><div class=\"ds-tray-head\"><h2 class=\"ds-tray-title\">Good</h2><span class=\"ds-tray-count\">6 Cards</span></div><div><div class=\"ds-folded\"><p class=\"ds-lead\">6 good Cards in your own words</p><p class=\"ds-empty\">Nothing to do here. Show them to read or edit one.</p><button type=\"button\" class=\"ds-btn\">Show the good Cards</button></div><span class=\"ds-edge\" style=\"--depth:1\"></span><span class=\"ds-edge\" style=\"--depth:2\"></span></div></section>",
       "css": ".ds-tray { display:flex; flex-direction:column; gap:10px; max-width:300px; padding:14px 12px 12px; background:var(--tray,#f3f2ee); border:1px solid var(--line,#dedde3); border-radius:4px; font-family:'Public Sans',system-ui,sans-serif; color:var(--ink,#141414); } .ds-tray-head { display:flex; flex-wrap:wrap; align-items:center; gap:4px 12px; min-height:36px; padding:0 6px 10px; border-bottom:1px solid var(--line,#dedde3); } .ds-tray-title { flex:1 1 0; margin:0; font-size:13px; font-weight:600; line-height:1.3; letter-spacing:0.06em; text-transform:uppercase; } .ds-tray-title::first-letter { font-family:'Cinzel Decorative',Cinzel,serif; font-size:2em; font-weight:700; line-height:0.9; color:var(--rubric,#b3261e); } .ds-tray-count { margin-left:auto; color:var(--mute,#5c5f6a); font-size:13px; font-variant-numeric:tabular-nums; white-space:nowrap; } .ds-folded { position:relative; z-index:1; display:flex; flex-direction:column; align-items:flex-start; gap:4px; padding:16px; background:var(--paper,#fff); border:1px dashed var(--line-strong,#c9c8d1); border-radius:4px; } .ds-lead { margin:0 0 6px; font-size:16px; font-weight:600; } .ds-empty { margin:0; color:var(--mute,#5c5f6a); font-size:15px; line-height:1.5; } .ds-btn { margin-top:12px; min-height:36px; padding:0 16px; background:var(--paper,#fff); color:var(--ink,#141414); border:1px solid var(--ink,#141414); border-radius:4px; font:inherit; font-size:14px; font-weight:600; cursor:pointer; transition:background 160ms cubic-bezier(0.22,1,0.36,1); } .ds-btn:hover { background:var(--tint,#eef0f8); } .ds-btn:focus-visible { outline:2px solid var(--lapis,#1e2f7a); outline-offset:2px; } .ds-edge { display:block; width:calc(100% - var(--depth) * 16px); height:8px; margin:0 auto; background:var(--paper,#fff); border:1px solid var(--line,#dedde3); border-top:0; border-radius:0 0 4px 4px; }"
+    },
+    {
+      "name": "Passage",
+      "kind": "custom",
+      "refersTo": "passage",
+      "description": "Words the reader marked: a kept selection in Gilt Wash, its 1px underline saying its work (Gilt marked, Lapis taken deeper, Verdigris a Point); the open one wears the 2px Gilt underline.",
+      "html": "<p class=\"ds-article\">Attention is a budget. <mark class=\"ds-passage\" role=\"button\" tabindex=\"0\">Every switch leaves a residue</mark> that lasts for minutes, and <mark class=\"ds-passage\" data-tone=\"deeper\" role=\"button\" tabindex=\"0\">the cost compounds</mark> through the day. <mark class=\"ds-passage\" data-tone=\"point\" data-current role=\"button\" tabindex=\"0\" aria-pressed=\"true\">Deep work needs long blocks</mark>.</p>",
+      "css": ".ds-article { max-width:66ch; margin:0; font-family:'Public Sans',system-ui,sans-serif; font-size:17px; line-height:1.7; color:var(--ink,#141414); } .ds-passage { border-radius:2px; background:var(--gold-wash,#f6efdc); box-shadow:inset 0 -1px 0 rgb(200 160 64 / 70%); color:inherit; cursor:pointer; transition:box-shadow 160ms cubic-bezier(0.22,1,0.36,1), background-color 160ms cubic-bezier(0.22,1,0.36,1); } .ds-passage[data-tone=deeper] { box-shadow:inset 0 -1px 0 var(--lapis,#1e2f7a); } .ds-passage[data-tone=point] { box-shadow:inset 0 -1px 0 var(--verdigris,#3e7c5a); } .ds-passage:hover { background:color-mix(in srgb, #f6efdc 70%, #c8a040 30%); } .ds-passage[data-current] { background:color-mix(in srgb, #f6efdc 70%, #c8a040 30%); box-shadow:inset 0 -2px 0 var(--gold,#c8a040); } .ds-passage:focus-visible { outline:2px solid var(--lapis,#1e2f7a); outline-offset:1px; }"
+    },
+    {
+      "name": "Mark Bar",
+      "kind": "custom",
+      "refersTo": "mark-bar",
+      "description": "A small Lapis strip over a selection in the Reader: Mark Passage (M) and Mark and go deeper (D); flips below after a heading or near the top.",
+      "html": "<div class=\"ds-markbar\" role=\"toolbar\" aria-label=\"Passage\"><button type=\"button\" class=\"ds-markbar-btn\" aria-keyshortcuts=\"M\">Mark Passage<kbd class=\"ds-markbar-key\">M</kbd></button><span class=\"ds-markbar-rule\"></span><button type=\"button\" class=\"ds-markbar-btn\" aria-keyshortcuts=\"D\">Mark and go deeper<kbd class=\"ds-markbar-key\">D</kbd></button></div>",
+      "css": ".ds-markbar { display:inline-flex; align-items:stretch; padding:2px; border-radius:4px; background:var(--lapis,#1e2f7a); white-space:nowrap; } .ds-markbar-btn { display:inline-flex; align-items:center; gap:8px; min-height:30px; padding:0 10px; border:0; border-radius:2px; background:none; color:var(--on-lapis,#fff); font-family:'Public Sans',system-ui,sans-serif; font-size:13px; font-weight:600; line-height:1; cursor:pointer; transition:background-color 160ms cubic-bezier(0.22,1,0.36,1); } .ds-markbar-btn:hover { background:color-mix(in srgb, #1e2f7a 50%, #2b3e92); } .ds-markbar-btn:focus-visible { outline:2px solid var(--gold,#c8a040); outline-offset:-2px; } .ds-markbar-key { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 4px; border:1px solid rgb(255 255 255 / 45%); border-radius:2px; color:var(--on-lapis-mute,#c3cbec); font:600 11px/1 'Public Sans',system-ui,sans-serif; } .ds-markbar-rule { width:1px; margin:4px 2px; background:var(--lapis-line,#3a4c9c); }"
+    },
+    {
+      "name": "Apparatus",
+      "kind": "custom",
+      "refersTo": "apparatus",
+      "description": "Passages in view, under the text behind a 2px Ink rule like an edition's critical notes; three rows, then a show-more link.",
+      "html": "<section class=\"ds-app\"><h2 class=\"ds-app-title\">Passages in view</h2><ol class=\"ds-app-rows\"><li class=\"ds-app-row\" data-current><span class=\"ds-app-n\">¶ 8</span><q class=\"ds-app-q\">Every switch leaves a residue that lasts for minutes</q><span class=\"ds-app-state\">Taken deeper · Q3</span><button type=\"button\" class=\"ds-btn-small\" aria-pressed=\"true\">Open</button></li><li class=\"ds-app-row\"><span class=\"ds-app-n\">¶ 12</span><q class=\"ds-app-q\">Deep work needs long blocks</q><span class=\"ds-app-state\">Point made</span><button type=\"button\" class=\"ds-btn-small\" aria-pressed=\"false\">Open</button></li></ol><button type=\"button\" class=\"ds-link\">Show 4 more Passages</button></section>",
+      "css": ".ds-app { padding:10px 24px 12px 88px; border:1px solid var(--line,#dedde3); border-top:2px solid var(--ink,#141414); background:var(--paper,#fff); font-family:'Public Sans',system-ui,sans-serif; color:var(--ink,#141414); } .ds-app-title { margin:0 0 4px; color:var(--mute,#5c5f6a); font-size:12px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; } .ds-app-rows { margin:0; padding:0; list-style:none; } .ds-app-row { display:grid; grid-template-columns:48px minmax(0,1fr) auto auto; align-items:center; gap:12px; padding:6px 0; border-top:1px solid var(--line,#dedde3); font-size:14px; } .ds-app-n { justify-self:start; color:var(--lapis,#1e2f7a); font:700 12px/1.4 'Courier Prime',ui-monospace,monospace; font-variant-numeric:tabular-nums; } .ds-app-row[data-current] .ds-app-n { box-shadow:0 2px 0 var(--gold,#c8a040); } .ds-app-q { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .ds-app-state { color:var(--mute,#5c5f6a); font-size:13px; white-space:nowrap; } .ds-btn-small { min-height:30px; padding:0 12px; border:1px solid var(--ink,#141414); border-radius:4px; background:var(--paper,#fff); font:600 13px 'Public Sans',system-ui,sans-serif; cursor:pointer; } .ds-btn-small:hover { background:var(--tint,#eef0f8); } .ds-link { margin-top:4px; padding:0; border:0; background:none; color:var(--lapis,#1e2f7a); font:inherit; font-size:13px; text-decoration:underline; text-underline-offset:3px; cursor:pointer; } .ds-link:hover { text-decoration-thickness:2px; }"
+    },
+    {
+      "name": "Kind Choice",
+      "kind": "custom",
+      "refersTo": "kind-choice",
+      "description": "Add Source's first question: Book, Article, Course lessons as three boxes; checked is Lapis on Lapis Tint with a 3px Gilt underline.",
+      "html": "<fieldset class=\"ds-kind\"><legend class=\"ds-kind-legend\">What are you adding?</legend><label class=\"ds-kind-opt\"><input type=\"radio\" name=\"ds-kind\"><span class=\"ds-kind-name\">Book</span><span class=\"ds-kind-hint\">You read it elsewhere. Glose keeps your Free text and Notes.</span></label><label class=\"ds-kind-opt\"><input type=\"radio\" name=\"ds-kind\" checked><span class=\"ds-kind-name\">Article</span><span class=\"ds-kind-hint\">One Markdown file or pasted text. You read it in Glose.</span></label><label class=\"ds-kind-opt\"><input type=\"radio\" name=\"ds-kind\"><span class=\"ds-kind-name\">Course lessons</span><span class=\"ds-kind-hint\">A folder of lesson files from a course. Each lesson is a Source.</span></label></fieldset>",
+      "css": ".ds-kind { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; max-width:760px; margin:0; padding:0; border:0; font-family:'Public Sans',system-ui,sans-serif; color:var(--ink,#141414); } .ds-kind-legend { margin-bottom:10px; padding:0; color:var(--mute,#5c5f6a); font-size:13px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; } .ds-kind-opt { position:relative; display:flex; flex-direction:column; gap:4px; padding:14px 16px; border:1px solid var(--line-strong,#c9c8d1); border-radius:4px; background:var(--paper,#fff); cursor:pointer; transition:border-color 160ms cubic-bezier(0.22,1,0.36,1), background-color 160ms cubic-bezier(0.22,1,0.36,1); } .ds-kind-opt:hover { border-color:var(--mute,#5c5f6a); } .ds-kind-opt:has(input:checked) { border-color:var(--lapis,#1e2f7a); background:var(--tint,#eef0f8); box-shadow:inset 0 -3px 0 var(--gold,#c8a040); } .ds-kind-opt:has(input:focus-visible) { outline:2px solid var(--lapis,#1e2f7a); outline-offset:2px; } .ds-kind-opt input { position:absolute; inset:0; margin:0; opacity:0; cursor:pointer; } .ds-kind-name { font-size:15px; font-weight:600; } .ds-kind-opt:has(input:checked) .ds-kind-name { color:var(--lapis,#1e2f7a); } .ds-kind-hint { color:var(--mute,#5c5f6a); font-size:13px; line-height:1.4; }"
+    },
+    {
+      "name": "Drop Zone",
+      "kind": "custom",
+      "refersTo": "drop-zone",
+      "description": "Where a Markdown file or a course folder is chosen or dropped: Strong Hairline on Ground; Lapis on Lapis Tint while a file is dragged over.",
+      "html": "<div class=\"ds-drop\"><div class=\"ds-drop-actions\"><button type=\"button\" class=\"ds-btn-primary\">Choose a Markdown file</button><button type=\"button\" class=\"ds-btn-quiet\">Paste the text instead</button></div><p class=\"ds-drop-hint\">or drop it here. Glose copies it into Articles in your Graph folder.</p></div>",
+      "css": ".ds-drop { display:flex; flex-direction:column; gap:10px; padding:22px 20px; border:1px solid var(--line-strong,#c9c8d1); border-radius:4px; background:var(--ground,#fbfaf7); font-family:'Public Sans',system-ui,sans-serif; transition:border-color 160ms cubic-bezier(0.22,1,0.36,1), background-color 160ms cubic-bezier(0.22,1,0.36,1); } .ds-drop:hover, .ds-drop[data-over] { border-color:var(--lapis,#1e2f7a); background:var(--tint,#eef0f8); } .ds-drop-actions { display:flex; flex-wrap:wrap; align-items:center; gap:10px; } .ds-drop-hint { margin:0; color:var(--mute,#5c5f6a); font-size:13px; } .ds-btn-primary { min-height:36px; padding:0 16px; border:1px solid var(--lapis,#1e2f7a); border-radius:4px; background:var(--lapis,#1e2f7a); color:#fff; font:600 14px 'Public Sans',system-ui,sans-serif; cursor:pointer; } .ds-btn-primary:hover { background:var(--lapis-raised,#2b3e92); box-shadow:0 2px 6px rgb(30 47 122 / 22%); } .ds-btn-quiet { min-height:36px; padding:0 12px; border:0; background:none; color:var(--mute,#5c5f6a); font:600 13px 'Public Sans',system-ui,sans-serif; cursor:pointer; } .ds-btn-quiet:hover { color:var(--ink,#141414); text-decoration:underline; text-underline-offset:3px; }"
     }
   ],
   "narrative": {
@@ -687,27 +750,33 @@
       "Red is a signal with fixed jobs, never a decoration of data.",
       "State is a small mark in a fixed cell (Reading marks, a Citation check or triangle); rank comes from weight, never from bigger type.",
       "A focus screen (Review) drops the rail and the page header: one Paper leaf on Ground.",
-      "Recall is a desk: today's Review leaf on top, and under it Trays (a well a step darker than Ground) that hold the Cards as Paper slips, sorted by the work they need."
+      "Recall is a desk: today's Review leaf on top, and under it Trays (a well a step darker than Ground) that hold the Cards as Paper slips, sorted by the work they need.",
+      "An Article or a Course lesson is read in Glose, set like a critical edition: Contents at the left, each paragraph numbered in the gutter as its Location, the Passages in an apparatus under the text, and the work on one Passage in the margin."
     ],
     "rules": [
       {
         "name": "The Rubric Rule",
-        "body": "Rubric red marks the decorated initials, the pen flourish and AI text. When red marks an error or missing data, it always comes with a warning icon and words; red alone never carries a meaning.",
+        "body": "Rubric red marks the decorated initials, the pen flourish and AI text. When red marks an error or missing data, it always comes with a warning icon and words; red alone never carries a meaning. The Probe's faint highlight under the user's words follows the same rule: the gloss beside it gives the triangle and the words. The Reader Foot notice too: Rubric Wash and Rubric Line, a Rubric triangle and Ink words.",
         "section": "colors"
       },
       {
         "name": "The Gilt Marker Rule",
-        "body": "Gold says \"here\": the current Section, the section in view on the Settings window's spine, the current step (in the Step Bar and under a Reading mark), a spine's bands, focus on lapis. It has one more job: the triangle icon of a Check that warns on a Recall slip, always beside Ink words (\"Could be better · …\"). It is never used for text on paper or for decoration elsewhere.",
+        "body": "Gold says \"here\": the current Section, the section in view on the Settings window's spine, the current step (in the Step Bar and under a Reading mark), a spine's bands, focus on lapis. It has one more job: the triangle icon of a Check that warns on a Recall slip, always beside Ink words (\"Could be better · …\"). On the Writing Desk's Format Bar a 2px Gilt underline marks the style the selection already has. Beside the desk, the open stop of the trail wears it: a ring around its node, a 2px underline under its stop tab on the Graph, and a 3px underline under its number in the stop strip. In the Reader, the current section in Contents wears a 3px Gilt edge (a 2px underline when Contents is a strip), and the open Passage and its ¶ number in the apparatus a 2px Gilt underline. On Add Source the checked kind wears a 3px Gilt underline, as the current step does. A marked Passage's 1px underline is Gilt at 70%: the Passage Rule gives it that job. It is never used for text on paper or for decoration elsewhere.",
         "section": "colors"
       },
       {
         "name": "The One Field Rule",
-        "body": "Lapis is the only large color field (rail, spine, the primary button). The Settings window's spine is a second lapis field, and the only one: it shows only while the window is open, over the veil, and holds navigation as the rail does. Panels and the page stay paper and ground; the one other surface is the neutral Tray well under Recall's slips.",
+        "body": "Lapis is the only large color field (rail, spine, the primary button). The Settings window's spine is a second lapis field, and the only one: it shows only while the window is open, over the veil, and holds navigation as the rail does. The Writing Desk's Format Bar is lapis as a small tool strip, not a field, and shows only while text is selected. Panels and the page stay paper and ground; the one other surface is the neutral Tray well under Recall's slips.",
         "section": "colors"
       },
       {
         "name": "The Ribbon Edge Rule",
-        "body": "A 3px Lapis edge on the left of a register row says \"this Source shares Links with the one you chose\", like a ribbon marker in a book. It is the one place a side edge marks rows, and it never comes alone: the row's Links cell reads \"N shared\" in Lapis 700, and the hint above the table repeats the same edge beside a sentence that names the Source.",
+        "body": "A 3px Lapis edge on the left of a register row says \"this Source shares Links with the one you chose\", like a ribbon marker in a book. It is the one place a Lapis side edge marks rows (the Reader's Contents uses a Gilt side edge, which says \"here\"), and it never comes alone: the row's Links cell reads \"N shared\" in Lapis 700, and the hint above the table repeats the same edge beside a sentence that names the Source.",
+        "section": "colors"
+      },
+      {
+        "name": "The Passage Rule",
+        "body": "A Passage is a kept selection, so it keeps the Gilt Wash of the selection it came from. A 1px underline at its foot says its work: Gilt (at 70%) marked, Lapis taken deeper, Verdigris a Point. The open Passage alone wears the 2px Gilt \"here\" underline. The paragraph number beside it turns Lapis 700, so the gutter also shows where Passages sit. Gilt Wash marks only the user's own selections and Passages, never AI text.",
         "section": "colors"
       },
       {
@@ -717,7 +786,7 @@
       },
       {
         "name": "The Typed Label Rule",
-        "body": "Courier Prime is for call numbers, step numbers, repository names in the Repository Rows (a repository is the Graph's shelf mark on GitHub) and a code the user types elsewhere (the GitHub sign-in code) only.",
+        "body": "Courier Prime is for call numbers, step numbers, the Probe's question numbers (\"Q6\"), repository names in the Repository Rows (a repository is the Graph's shelf mark on GitHub), a code the user types elsewhere (the GitHub sign-in code), the paragraph numbers that are Locations (\"¶ 8\", in the Reader's gutter and apparatus), note numbers in a read text, and a Course lesson's week·day (in its call number and in the Week · Day field of the lesson table) only. Code in an Article is not a label: it takes the system monospace stack.",
         "section": "typography"
       },
       {
@@ -744,13 +813,20 @@
       "Do show a Source's state as a mark in a fixed cell (Reading marks, the Citation check or triangle), and rank by weight, not by bigger type.",
       "Do keep the 3px Lapis edge for rows that share Links with a chosen Source, with \"N shared\" and the hint saying it in words.",
       "Do sort Recall's Cards into the Trays by the work they need (To fix, To rewrite, Good), as Paper slips in the Tray well, with Good folded to its count until asked for or searched.",
-      "Do let a slip that leaves its Tray finish its lift and the closing of its slot before the list reads again; under reduced motion it goes at once."
+      "Do let a slip that leaves its Tray finish its lift and the closing of its slot before the list reads again; under reduced motion it goes at once.",
+      "Do keep a Passage inside one paragraph, so its Location is one exact \"¶ 8\"; cut a selection that runs on, and say so in the Reader Foot.",
+      "Do say a Passage's work with its 1px underline (Gilt marked, Lapis taken deeper, Verdigris a Point) and keep the 2px Gilt underline for the open Passage only.",
+      "Do number every paragraph, list item and quote of a read text in the gutter, in Courier, as its Location.",
+      "Do keep the reader's words where they are when a save fails, and give the way back to them."
     ],
     "donts": [
       "Don't decorate data, Note text, inputs or buttons (no initials, flourishes or gilt there).",
       "Don't use red alone to mean anything; color never carries a message by itself.",
       "Don't add resting shadows or new fields of color beyond the lapis rail, spine, primary and the Settings window's spine.",
-      "Don't use Cinzel Decorative beyond a single heading initial, or Courier Prime beyond call numbers, step numbers, repository names and a code the user types elsewhere.",
+      "Don't use Cinzel Decorative beyond a single heading initial, or Courier Prime beyond call numbers, step numbers, question numbers, repository names, a code the user types elsewhere, paragraph and note numbers, and a lesson's week·day.",
+      "Don't set code in an Article in Courier Prime; it is text, in the system monospace stack.",
+      "Don't mark AI text with Gilt Wash; Gilt Wash is the reader's own selection and Passages.",
+      "Don't cover the heading or the line the reader is selecting with the Mark Bar; flip it below.",
       "Don't fix widths to English text, truncate labels, or block wrapping.",
       "Don't build a file-tree-plus-editor arrangement in neutral grey, a busy dashboard, or gamification."
     ]

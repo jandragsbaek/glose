@@ -130,6 +130,7 @@ export const writingMessages = {
       "no-location": "No page",
       "no-year": "The Source has no year",
       "no-publisher": "The Source has no publisher",
+      "no-container": "The Source does not say where it appeared",
       "quote-mismatch": "The quote is not in the Note word for word",
     } satisfies Record<ReferenceProblem, string>,
     addPage: "Add the page",

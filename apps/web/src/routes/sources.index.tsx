@@ -1,5 +1,10 @@
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
-import { type ReadingStart, type ReadingStep, readingStepsOf } from "@glose/contracts";
+import {
+  type ReadingStart,
+  type ReadingStep,
+  readingStepsOf,
+  type SourceKind,
+} from "@glose/contracts";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { Check, ChevronDown, Plus, Search, TriangleAlert } from "lucide-react";
@@ -23,7 +28,7 @@ import {
   type SourceRecord,
   sourceRecords,
 } from "../domain/register.ts";
-import { wordCount } from "../domain/source.ts";
+import { wordCount, onDesk } from "../domain/source.ts";
 import { useLanguage, useT } from "../i18n/I18n.tsx";
 import { graphAtom, sourcesAtom } from "../state/graph.ts";
 
@@ -73,7 +78,7 @@ function SourcesPage() {
     );
   }
   const records = sourceRecords(...result.value);
-  const desk = records.filter((record) => record.source.readingStep !== "done");
+  const desk = onDesk(records, (record) => record.source);
   return (
     <Page
       title={t.sources.title}
@@ -91,14 +96,16 @@ function SourcesPage() {
 function ReadingMarks({
   step,
   start,
+  kind,
   labelled,
 }: {
   readonly step: ReadingStep;
   readonly start: ReadingStart | null;
+  readonly kind: SourceKind;
   readonly labelled: boolean;
 }) {
   const t = useT();
-  const steps = readingStepsOf(start);
+  const steps = readingStepsOf(start, kind);
   const at = step === "done" ? steps.length : steps.indexOf(step);
   const label = t.sources.steps[step];
   return (
@@ -170,7 +177,12 @@ function DeskItem({ record }: { readonly record: SourceRecord }) {
         </h3>
         <p className="desk__author">{authorOf(record)}</p>
         <p className="desk__state">
-          <ReadingMarks step={source.readingStep} start={source.readingStart} labelled={false} />
+          <ReadingMarks
+            step={source.readingStep}
+            start={source.readingStart}
+            kind={source.kind}
+            labelled={false}
+          />
           {t.sources.state(source.readingStep, wordCount(source.freeText), record.notes)}
         </p>
         {record.missing.length === 0 ? null : (
@@ -187,7 +199,9 @@ function DeskItem({ record }: { readonly record: SourceRecord }) {
             params={params}
             className="button button--primary button--small"
           >
-            {t.today.continue[source.readingStep]}
+            {source.readingStep === "read" && source.readingPlace === null
+              ? t.today.startReading
+              : t.today.continue[source.readingStep]}
           </Link>
         </p>
       </div>
@@ -400,7 +414,12 @@ function RegisterRow({
         <span className="register__author">{authorOf(record)}</span>
       </th>
       <td>
-        <ReadingMarks step={source.readingStep} start={source.readingStart} labelled />
+        <ReadingMarks
+          step={source.readingStep}
+          start={source.readingStart}
+          kind={source.kind}
+          labelled
+        />
       </td>
       <td className="register__num">{record.notes}</td>
       <td className="register__num">

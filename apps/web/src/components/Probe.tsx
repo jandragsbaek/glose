@@ -1,7 +1,6 @@
 /* oxlint-disable jandragsbaek/max-file-lines -- the Probe page, its rows, answer box and findings; move AnswerBox and Findings out next */
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import {
-  nextReadingStep,
   openQuestion,
   probeFindings,
   probeTally,
@@ -10,15 +9,14 @@ import {
   type Session,
   type SessionEntry,
   type Source,
-  type TopicState,
 } from "@glose/contracts";
+import { Link } from "@tanstack/react-router";
 import * as Exit from "effect/Exit";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { BookOpen, Check, Minus, TriangleAlert } from "lucide-react";
 import { type FormEvent, type KeyboardEvent, type ReactNode, useId, useState } from "react";
 
 import { useT } from "../i18n/I18n.tsx";
-import { advanceReadingAtom, KEYS } from "../state/graph.ts";
 import {
   answerProbeAtom,
   finishProbeAtom,
@@ -41,7 +39,9 @@ import {
   useChatGptReady,
 } from "./Session.tsx";
 import { StepBar } from "./StepBar.tsx";
-import { Flourish, Notice, Page, SkeletonPanel, StorageProblem } from "./ui.tsx";
+import { Findings } from "./ProbeFindings.tsx";
+import { followRow, waitsForWhole, WholeProbe } from "./ProbeWhole.tsx";
+import { Notice, Page, SkeletonPanel, StorageProblem } from "./ui.tsx";
 
 type Entry<T extends SessionEntry["_tag"]> = Extract<SessionEntry, { _tag: T }>;
 
@@ -139,6 +139,16 @@ function ProbePage({
 
   const actions = (
     <>
+      {source.hasText ? (
+        <Link
+          to="/sources/$sourceId"
+          params={{ sourceId: source.id }}
+          search={{ text: 1 }}
+          className="button button--quiet"
+        >
+          {t.reader.readText}
+        </Link>
+      ) : null}
       <button
         type="button"
         className="button button--quiet"
@@ -229,13 +239,6 @@ function StartProbe({ source }: { readonly source: Source }) {
   );
 }
 
-const prefersReducedMotion = () =>
-  typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-const followRow = (node: HTMLElement | null) => {
-  node?.scrollIntoView({ block: "end", behavior: prefersReducedMotion() ? "auto" : "smooth" });
-};
-
 function ProbeView({ session, ...frame }: Frame & { readonly session: Session }) {
   const t = useT();
   const finished = isFinished(session);
@@ -276,6 +279,9 @@ function ProbeView({ session, ...frame }: Frame & { readonly session: Session })
           </li>
         )}
       </ol>
+      {!finished && frame.source.hasText && waitsForWhole(session) ? (
+        <WholeProbe session={session} />
+      ) : null}
       {finished ? <Findings session={session} source={frame.source} /> : null}
     </ProbePage>
   );
@@ -365,6 +371,9 @@ function EntryRow({
               <span className="probe__topic">
                 {entry.topic}
                 {entry.again === null ? null : ` · ${t.probe.again(entry.again)}`}
+                {entry.paragraph === undefined
+                  ? null
+                  : ` · ${t.reader.probe.onParagraph(entry.paragraph)}`}
               </span>
             </p>
             <p className="probe__ask">
@@ -390,8 +399,43 @@ function EntryRow({
             <MessageText text={entry.text} points={[]} onPoint={undefined} />
             <p className="probe__check">
               <BookOpen className="probe__icon" aria-hidden="true" />
-              {t.probe.checkCopy}
+              {entry.paragraph === undefined ? (
+                t.probe.checkCopy
+              ) : (
+                <Link
+                  to="/sources/$sourceId"
+                  params={{ sourceId: session.subject }}
+                  search={{ text: 1, p: entry.paragraph }}
+                >
+                  {t.reader.margin.fromText(entry.paragraph)}
+                </Link>
+              )}
             </p>
+          </div>
+        </li>
+      );
+    case "ProbeFocus":
+      return (
+        <li className="probe__row" ref={follow}>
+          <div className="probe__main you probe__focus">
+            <p className="you__who">{t.reader.probe.focus(entry.paragraph)}</p>
+            <blockquote className="probe__focus-quote">
+              <Link
+                to="/sources/$sourceId"
+                params={{ sourceId: session.subject }}
+                search={{ text: 1, p: entry.paragraph }}
+              >
+                {entry.text}
+              </Link>
+            </blockquote>
+          </div>
+        </li>
+      );
+    case "ProbeFocusDone":
+      return entry.paragraph === 0 ? null : (
+        <li className="probe__row" ref={follow}>
+          <div className="probe__main">
+            <p className="probe__covered">{t.reader.probe.focusDone(entry.paragraph)}</p>
           </div>
         </li>
       );
@@ -439,7 +483,7 @@ function withQuote(text: string, quote: string | null): ReactNode {
   );
 }
 
-function AnswerView({
+export function AnswerView({
   answer,
   quote,
 }: {
@@ -470,7 +514,7 @@ const reasoningTone = (verdict: ReasoningVerdict) =>
   verdict === "sound" ? "good" : verdict === "none" ? "none" : "gap";
 const resultTone = (verdict: ResultVerdict) => (verdict === "right" ? "good" : "gap");
 
-function VerdictIcon({ tone }: { readonly tone: "good" | "gap" | "none" }) {
+export function VerdictIcon({ tone }: { readonly tone: "good" | "gap" | "none" }) {
   switch (tone) {
     case "good":
       return <Check className="verdict__icon" aria-hidden="true" />;
@@ -481,7 +525,7 @@ function VerdictIcon({ tone }: { readonly tone: "good" | "gap" | "none" }) {
   }
 }
 
-function Judgment({ judgment }: { readonly judgment: Entry<"ProbeJudgment"> }) {
+export function Judgment({ judgment }: { readonly judgment: Entry<"ProbeJudgment"> }) {
   const t = useT();
   const headingId = useId();
   return (
@@ -641,87 +685,5 @@ function AnswerBox({ session }: { readonly session: Session }) {
         </div>
       </div>
     </form>
-  );
-}
-
-const STATE_ORDER: ReadonlyArray<TopicState> = [
-  "known",
-  "known-after-teaching",
-  "taught",
-  "gap",
-  "asking",
-];
-
-function Findings({ session, source }: { readonly session: Session; readonly source: Source }) {
-  const t = useT();
-  const headingId = useId();
-  const [failed, setFailed] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const advance = useAtomSet(advanceReadingAtom, { mode: "promiseExit" });
-  const findings = probeFindings(session.entries);
-  const next =
-    nextReadingStep(source.readingStart, "probe") === "extraction" ? "extraction" : "done";
-
-  const go = async () => {
-    setBusy(true);
-    const exit = await advance({
-      payload: { id: source.id, from: "probe" },
-      reactivityKeys: KEYS.sources,
-    });
-    setBusy(false);
-    setFailed(Exit.isFailure(exit));
-  };
-
-  return (
-    <section className="probe__found" aria-labelledby={headingId} ref={followRow}>
-      <div className="panel__head">
-        <h2 className="panel__title" id={headingId}>
-          {t.probe.found}
-        </h2>
-      </div>
-      <div className="panel__rule" aria-hidden="true">
-        <Flourish />
-      </div>
-      {findings.length === 0 ? (
-        <p className="empty">{t.probe.foundEmpty}</p>
-      ) : (
-        <dl className="probe__found-list">
-          {STATE_ORDER.map((state) => {
-            const topics = findings.filter((finding) => finding.state === state);
-            if (topics.length === 0) return null;
-            const tone = state === "known" || state === "known-after-teaching" ? "good" : "gap";
-            return (
-              <div key={state} className="verdict" data-tone={state === "asking" ? "none" : tone}>
-                <VerdictIcon tone={state === "asking" ? "none" : tone} />
-                <div>
-                  <dt className="verdict__name">{t.probe.states[state]}</dt>
-                  <dd className="verdict__why">
-                    {topics.map((finding) => finding.topic).join(" · ")}
-                  </dd>
-                </div>
-              </div>
-            );
-          })}
-        </dl>
-      )}
-      <p className="field__hint">{t.probe.keptIn(`Probes/${source.id}.md`)}</p>
-      {source.readingStep === "probe" ? (
-        <>
-          {failed ? (
-            <Notice tone="error">
-              <p>{t.extraction.nextFailed}</p>
-            </Notice>
-          ) : null}
-          <div className="button-row">
-            <button type="button" className="button button--primary" disabled={busy} onClick={go}>
-              {next === "extraction" ? t.probe.continueExtraction : t.probe.doneRead(source.title)}
-            </button>
-            <span className="status">
-              {next === "extraction" ? t.probe.continueHint : t.probe.doneHint}
-            </span>
-          </div>
-        </>
-      ) : null}
-    </section>
   );
 }

@@ -163,7 +163,11 @@ export type CitedSource = Pick<
   | "editionYear"
   | "publisher"
   | "translator"
->;
+> &
+  Partial<Pick<Source, "kind" | "container" | "url">>;
+
+const hasOwnTextKind = (source: CitedSource) =>
+  source.kind === "article" || source.kind === "lesson";
 
 export type ReferenceProblem =
   | "not-found"
@@ -171,6 +175,7 @@ export type ReferenceProblem =
   | "no-location"
   | "no-year"
   | "no-publisher"
+  | "no-container"
   | "quote-mismatch";
 
 export interface ResolvedReference extends ReferenceToken {
@@ -224,7 +229,9 @@ export const resolveReferences = (
     if (problems.length === 0 && source !== null) {
       if (page === null) problems.push("no-location");
       if (source.firstPublished === null && source.editionYear === null) problems.push("no-year");
-      if (source.publisher === null) problems.push("no-publisher");
+      if (hasOwnTextKind(source)) {
+        if ((source.container ?? null) === null) problems.push("no-container");
+      } else if (source.publisher === null) problems.push("no-publisher");
     }
     if (quote !== null && isNote && !normalizeQuote(node.body).includes(normalizeQuote(quote))) {
       problems.push("quote-mismatch");
@@ -258,7 +265,22 @@ const initials = (given: string | null) =>
 
 const yearText = (source: CitedSource) => String(citedYear(source) ?? "n.d.");
 
+const PARAGRAPH = /^¶\s*(.+)$/;
+
+const locationText = (page: string, style: CitationStyle | "note") => {
+  const paragraph = PARAGRAPH.exec(page)?.[1];
+  if (paragraph === undefined) return style === "apa" || style === "harvard" ? `p. ${page}` : page;
+  return style === "apa" || style === "harvard" ? `para. ${paragraph}` : `par. ${paragraph}`;
+};
+
+const textCitation = (source: CitedSource, page: string | null) => {
+  const container = source.container == null ? "" : ` *${source.container}*`;
+  const location = page === null ? "" : `, ${locationText(page, "note")}`;
+  return `${authorName(source)}, “${source.title},”${container} (${yearText(source)})${location}.`;
+};
+
 export const noteCitation = (source: CitedSource, page: string | null): string => {
+  if (hasOwnTextKind(source)) return textCitation(source, page);
   const translated = source.translator === null ? "" : `, trans. ${source.translator}`;
   const edition = source.edition === null ? "" : `, ${source.edition} ed.`;
   const facts = [source.publisher, yearText(source)].filter((part) => part !== null).join(", ");
@@ -273,15 +295,31 @@ export const shortCitation = (
 ): string => {
   switch (style) {
     case "apa":
-      return `${source.familyName}, ${yearText(source)}${page === null ? "" : `, p. ${page}`}`;
+      return `${source.familyName}, ${yearText(source)}${page === null ? "" : `, ${locationText(page, style)}`}`;
     case "harvard":
-      return `${source.familyName} ${yearText(source)}${page === null ? "" : `, p. ${page}`}`;
+      return `${source.familyName} ${yearText(source)}${page === null ? "" : `, ${locationText(page, style)}`}`;
     case "chicago":
-      return `${source.familyName} ${yearText(source)}${page === null ? "" : `, ${page}`}`;
+      return `${source.familyName} ${yearText(source)}${page === null ? "" : `, ${locationText(page, style)}`}`;
   }
 };
 
+const textEntry = (source: CitedSource, style: CitationStyle): string => {
+  const container = source.container == null ? "" : ` *${source.container}*.`;
+  const url = source.url == null ? "" : ` ${source.url}`;
+  if (style === "chicago") {
+    const name =
+      source.givenName === null ? source.familyName : `${source.familyName}, ${source.givenName}`;
+    const where = source.container == null ? "" : ` *${source.container}*,`;
+    return `${name}. “${source.title}.”${where} ${yearText(source)}.${url}`;
+  }
+  const given = initials(source.givenName);
+  const name = given === null ? source.familyName : `${source.familyName}, ${given}`;
+  const year = style === "apa" ? ` (${yearText(source)}).` : ` (${yearText(source)})`;
+  return `${name}${year} ${source.title}.${container}${url}`;
+};
+
 export const bibliographyEntry = (source: CitedSource, style: CitationStyle): string => {
+  if (hasOwnTextKind(source)) return textEntry(source, style);
   const publisher = source.publisher === null ? "" : ` ${source.publisher}.`;
   switch (style) {
     case "apa":

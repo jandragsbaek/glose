@@ -13,6 +13,7 @@ export const SessionTool = Schema.Literals([
   "search-graph",
   "list-notes",
   "read-probe",
+  "read-article",
 ]);
 export type SessionTool = typeof SessionTool.Type;
 
@@ -29,7 +30,14 @@ export const CardProposal = Schema.Struct({
 });
 export type CardProposal = typeof CardProposal.Type;
 
-export const PointOrigin = Schema.Literals(["free-text", "probe", "ai", "user"]);
+export const PointOrigin = Schema.Literals([
+  "free-text",
+  "probe",
+  "article",
+  "passage",
+  "ai",
+  "user",
+]);
 export type PointOrigin = typeof PointOrigin.Type;
 
 export const PointState = Schema.Literals(["open", "kept", "written", "dropped"]);
@@ -85,6 +93,8 @@ export const SessionEntry = Schema.Union([
     topic: Schema.String,
     text: Schema.String,
     again: Schema.NullOr(Schema.Number),
+    paragraph: Schema.optionalKey(Schema.Number),
+    passage: Schema.optionalKey(Schema.String),
   }),
   Schema.TaggedStruct("ProbeAnswer", {
     question: Schema.Number,
@@ -105,6 +115,12 @@ export const SessionEntry = Schema.Union([
     topic: Schema.String,
     question: Schema.NullOr(Schema.Number),
     text: Schema.String,
+    paragraph: Schema.optionalKey(Schema.Number),
+  }),
+  Schema.TaggedStruct("ProbeFocus", { paragraph: Schema.Number, text: Schema.String }),
+  Schema.TaggedStruct("ProbeFocusDone", {
+    paragraph: Schema.Number,
+    text: Schema.optionalKey(Schema.String),
   }),
   Schema.TaggedStruct("ProbeCovered", {}),
   Schema.TaggedStruct("ProbeFinished", { at: Schema.Number }),
@@ -173,6 +189,14 @@ export const AnswerProbe = Schema.Struct({
 });
 
 export const PointRef = Schema.Struct({ id: Schema.String, point: Schema.String });
+
+export const GoDeeper = Schema.Struct({ source: Schema.String, passage: Schema.String });
+
+export const AddPassagePoint = Schema.Struct({
+  source: Schema.String,
+  passage: Schema.String,
+  title: Schema.Trim.pipe(Schema.check(Schema.isNonEmpty())),
+});
 
 export const KeepPoint = Schema.Struct({ ...PointRef.fields, title: Words });
 

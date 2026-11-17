@@ -5,6 +5,7 @@ import { graphMessages } from "./da/graph.ts";
 import { writingMessages } from "./da/writing.ts";
 import { recallMessages } from "./da/recall.ts";
 import { settingsMessages } from "./da/settings.ts";
+import { articleMessages } from "./da/article.ts";
 import type { Messages } from "./en.ts";
 
 export const da: Messages = {
@@ -15,4 +16,5 @@ export const da: Messages = {
   ...writingMessages,
   ...recallMessages,
   ...settingsMessages,
+  ...articleMessages,
 };

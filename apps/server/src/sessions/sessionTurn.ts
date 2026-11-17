@@ -93,12 +93,7 @@ export const make = Effect.fn("Sessions.makeSessionTurn")(function* ({
             propose: (proposed) =>
               addPoints(
                 session,
-                proposed.map((point) => ({
-                  ...point,
-                  state: "open" as const,
-                  note: null,
-                  page: null,
-                })),
+                proposed.map((point) => ({ ...point, state: "open" as const, note: null })),
               ).pipe(Effect.map((points) => points.map(Extraction.numberOf))),
             addLinks: (number, links) =>
               changeNumbered(session, number, ["open", "kept"], (point) => {

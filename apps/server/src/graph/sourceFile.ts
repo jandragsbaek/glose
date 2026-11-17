@@ -1,4 +1,12 @@
-import { ReadingStart, ReadingStep, type Source, SourceDetails } from "@glose/contracts";
+import {
+  ArticleType,
+  ReadingStart,
+  ReadingStep,
+  type Source,
+  SourceDetails,
+  SourceKind,
+  type TextDetails,
+} from "@glose/contracts";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as Yaml from "yaml";
@@ -20,6 +28,21 @@ const SourceFrontmatter = Schema.Struct({
   translator: MaybeText,
   "reading-step": Schema.optionalKey(ReadingStep),
   "reading-start": Schema.optionalKey(ReadingStart),
+  "reading-place": Schema.optionalKey(Schema.NullOr(Schema.Int)),
+  kind: Schema.optionalKey(SourceKind),
+  "article-type": Schema.optionalKey(Schema.NullOr(ArticleType)),
+  "other-authors": Schema.optionalKey(
+    Schema.NullOr(Schema.Array(Schema.Union([Schema.String, Schema.Number]))),
+  ),
+  container: MaybeText,
+  published: MaybeText,
+  volume: MaybeText,
+  issue: MaybeText,
+  pages: MaybeText,
+  url: MaybeText,
+  doi: MaybeText,
+  accessed: MaybeText,
+  part: MaybeText,
   added: Schema.optionalKey(Schema.Unknown),
 });
 const decodeFrontmatter = Schema.decodeUnknownOption(SourceFrontmatter);
@@ -48,7 +71,7 @@ const localDate = (time: number): string => {
   return `${date.getFullYear()}-${twoDigits(date.getMonth() + 1)}-${twoDigits(date.getDate())}`;
 };
 
-export type SourceFileContent = Omit<Source, "id" | "modified" | "added"> & {
+export type SourceFileContent = Omit<Source, "id" | "modified" | "added" | "hasText"> & {
   readonly added: number | null;
 };
 
@@ -77,7 +100,23 @@ export const parseSourceFile = (markdown: string): Option.Option<SourceFileConte
       }).pipe(
         Option.map((details) => ({
           ...details,
-          readingStep: data["reading-step"] ?? "free-text",
+          kind: data.kind ?? "book",
+          articleType: data["article-type"] ?? null,
+          otherAuthors: (data["other-authors"] ?? [])
+            .map((name) => String(name).trim())
+            .filter((name) => name !== ""),
+          container: text(data.container),
+          published: text(data.published),
+          volume: text(data.volume),
+          issue: text(data.issue),
+          pages: text(data.pages),
+          url: text(data.url),
+          doi: text(data.doi),
+          accessed: text(data.accessed),
+          part: text(data.part),
+          readingPlace: data["reading-place"] ?? null,
+          readingStep:
+            data["reading-step"] ?? ((data.kind ?? "book") === "book" ? "free-text" : "read"),
           readingStart: data["reading-start"] ?? null,
           added: addedTime(data.added),
           freeText: (match[2] ?? "").replace(/^\r?\n/, "").trimEnd(),
@@ -89,9 +128,13 @@ export const parseSourceFile = (markdown: string): Option.Option<SourceFileConte
 
 export const renderSourceFile = (source: SourceFileContent): string => {
   const details: SourceDetails = source;
+  const textDetails: TextDetails = source;
+  const book = textDetails.kind === "book";
   const frontmatter = Object.fromEntries(
     Object.entries({
       glose: "source",
+      kind: book ? null : textDetails.kind,
+      "article-type": textDetails.articleType,
       "author-family": details.familyName,
       "author-given": details.givenName,
       title: details.title,
@@ -100,8 +143,19 @@ export const renderSourceFile = (source: SourceFileContent): string => {
       "edition-year": details.editionYear,
       publisher: details.publisher,
       translator: details.translator,
+      "other-authors": textDetails.otherAuthors.length === 0 ? null : textDetails.otherAuthors,
+      container: textDetails.container,
+      published: textDetails.published,
+      volume: textDetails.volume,
+      issue: textDetails.issue,
+      pages: textDetails.pages,
+      url: textDetails.url,
+      doi: textDetails.doi,
+      accessed: textDetails.accessed,
+      part: textDetails.part,
       "reading-step": source.readingStep,
       "reading-start": source.readingStart,
+      "reading-place": source.readingPlace,
       added: source.added === null ? null : localDate(source.added),
     }).filter(([, value]) => value !== null),
   );

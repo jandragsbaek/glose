@@ -1,6 +1,6 @@
 import * as Schema from "effect/Schema";
 
-export const ReadingStep = Schema.Literals(["free-text", "extraction", "probe", "done"]);
+export const ReadingStep = Schema.Literals(["free-text", "read", "extraction", "probe", "done"]);
 export type ReadingStep = typeof ReadingStep.Type;
 
 export const ReadingStart = Schema.Literals(["write", "probe", "catch-up"]);
@@ -8,13 +8,32 @@ export type ReadingStart = typeof ReadingStart.Type;
 
 export type WorkStep = Exclude<ReadingStep, "done">;
 
-export const readingStepsOf = (start: ReadingStart | null): ReadonlyArray<WorkStep> =>
-  start === "probe" || start === "catch-up"
-    ? ["probe", "extraction"]
-    : ["free-text", "extraction", "probe"];
+export const SourceKind = Schema.Literals(["book", "article", "lesson"]);
+export type SourceKind = typeof SourceKind.Type;
 
-export const nextReadingStep = (start: ReadingStart | null, step: ReadingStep): ReadingStep => {
-  const steps = readingStepsOf(start);
+export const ArticleType = Schema.Literals(["paper", "web", "press"]);
+export type ArticleType = typeof ArticleType.Type;
+
+export const hasOwnText = (kind: SourceKind): boolean => kind !== "book";
+
+export const readingStepsOf = (
+  start: ReadingStart | null,
+  kind: SourceKind = "book",
+): ReadonlyArray<WorkStep> =>
+  hasOwnText(kind)
+    ? start === "probe" || start === "catch-up"
+      ? ["read", "probe", "extraction"]
+      : ["read", "extraction", "probe"]
+    : start === "probe" || start === "catch-up"
+      ? ["probe", "extraction"]
+      : ["free-text", "extraction", "probe"];
+
+export const nextReadingStep = (
+  start: ReadingStart | null,
+  step: ReadingStep,
+  kind: SourceKind = "book",
+): ReadingStep => {
+  const steps = readingStepsOf(start, kind);
   if (step === "done") return "done";
   const index = steps.indexOf(step);
   return index === -1 ? (steps[0] ?? "done") : (steps[index + 1] ?? "done");
@@ -38,9 +57,43 @@ export const SourceDetails = Schema.Struct({
 });
 export type SourceDetails = typeof SourceDetails.Type;
 
+export const TextDetails = Schema.Struct({
+  kind: SourceKind,
+  articleType: Schema.NullOr(ArticleType),
+  otherAuthors: Schema.Array(Text),
+  container: OptionalText,
+  published: OptionalText,
+  volume: OptionalText,
+  issue: OptionalText,
+  pages: OptionalText,
+  url: OptionalText,
+  doi: OptionalText,
+  accessed: OptionalText,
+  part: OptionalText,
+});
+export type TextDetails = typeof TextDetails.Type;
+
+export const BOOK_TEXT_DETAILS: TextDetails = {
+  kind: "book",
+  articleType: null,
+  otherAuthors: [],
+  container: null,
+  published: null,
+  volume: null,
+  issue: null,
+  pages: null,
+  url: null,
+  doi: null,
+  accessed: null,
+  part: null,
+};
+
 export const Source = Schema.Struct({
   id: Schema.String,
   ...SourceDetails.fields,
+  ...TextDetails.fields,
+  hasText: Schema.Boolean,
+  readingPlace: Schema.NullOr(Schema.Int),
   readingStep: ReadingStep,
   readingStart: Schema.NullOr(ReadingStart),
   freeText: Schema.String,
@@ -63,6 +116,46 @@ export const ChooseReadingStart = Schema.Struct({
 });
 
 export const AdvanceReading = Schema.Struct({ id: Schema.String, from: ReadingStep });
+
+export const SetReadingPlace = Schema.Struct({ id: Schema.String, place: Schema.Int });
+
+export const ImportText = Schema.Struct({
+  ...SourceDetails.fields,
+  ...TextDetails.fields,
+  markdown: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
+});
+export type ImportText = typeof ImportText.Type;
+
+export const ArticleText = Schema.Struct({ markdown: Schema.String });
+export type ArticleText = typeof ArticleText.Type;
+
+export const MarkPassage = Schema.Struct({
+  id: Schema.String,
+  paragraph: Schema.Int,
+  start: Schema.Int,
+  end: Schema.Int,
+});
+
+export const PassageRef = Schema.Struct({
+  id: Schema.String,
+  passage: Schema.String,
+  text: Schema.optionalKey(Schema.String),
+  at: Schema.optionalKey(Schema.Int),
+});
+
+export const SetPassageWords = Schema.Struct({
+  ...PassageRef.fields,
+  words: Schema.String,
+});
+
+export const MarkedPassage = Schema.Struct({
+  markdown: Schema.String,
+  passage: Schema.NullOr(Schema.String),
+});
+
+export class PassageRefused extends Schema.TaggedError<PassageRefused>()("PassageRefused", {
+  reason: Schema.Literals(["not-found", "empty", "overlap", "no-text"]),
+}) {}
 
 export class SourceNotFound extends Schema.TaggedError<SourceNotFound>()("SourceNotFound", {
   id: Schema.String,

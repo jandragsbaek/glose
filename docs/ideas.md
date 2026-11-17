@@ -105,8 +105,8 @@ Decided, the Sources page (November 2026):
 - A Source file holds `added` (a date, `2026-11-13`), written when Glose creates the Source. A
   Source without it counts from the file's creation time, else its last change; Glose writes that
   date into the file the next time it saves the Source.
-- Not yet: a Kind (book, video, article) column and filter, which wait for video Sources to be
-  designed.
+- Not yet: a Kind (book, video, article, lesson) column and filter. Articles and Course lessons
+  exist now (see "Decided, Articles and Course lessons").
 
 ## Writing projects
 
@@ -513,8 +513,9 @@ Decided, a Graph from GitHub at first start (November 2026):
 - A side panel reads the selected node: its text with working wikilinks, its Source, and its
   Links. Without a selection it lists the Sources. Search fades everything except matching names.
 - Double-clicking a Source opens its Reading Stage. A Note has no page of its own yet.
-- `pnpm dev:demo` opens Glose on the demo Graph (`demo/Graph`): ten Sources, two of them Danish,
-  with 104 linked Notes of clearly sample content. It runs on a copy in the temp folder with its
+- `pnpm dev:demo` opens Glose on the demo Graph (`demo/Graph`): eleven Sources, two of them Danish
+  and one a sample Article with Passages, with 104 linked Notes of clearly sample content.
+  `demo/Course export (sample)` holds five sample lesson files to try Add Source → Course lessons. It runs on a copy in the temp folder with its
   own computer settings, so the user's Graph and settings stay untouched.
 
 ## References in writing
@@ -723,6 +724,57 @@ Decided, first version (November 2026):
 - Under the answers, "What follows" shows the steps of the checked answer, then one button that
   names the first step. Choosing "write" opens the Free text with the cursor in it.
 - The two Probe answers can be chosen since the Probe is built (see "Decided, the Probe").
+
+## Decided, Articles and Course lessons (November 2026)
+
+- Two new kinds of Source bring their own text as Markdown: an Article (an academic paper, a web
+  essay, or a magazine or newspaper piece) and a Course lesson. PDF comes later. The Source file
+  holds `kind: article` or `kind: lesson`; a Source without `kind` is a book.
+- The text is copied into `Articles/<Source file name>.md` in the Graph folder, as imported. It is
+  in a folder because Glose reads every file at the top of the Graph folder as a Note.
+- Add Source asks first what is added: Book, Article or Course lessons. An Article comes from one
+  `.md` file (chosen or dropped) or from pasted text; a web clipper's frontmatter (title, author,
+  source, published, site) fills the form, marked "From the file". Its data follows its type: a
+  paper has journal, volume, issue, pages and DOI; a web essay has site, URL and the date it was
+  read; a magazine or newspaper piece has publication, pages and URL.
+- Course lessons come as a folder of files, one per lesson (Jan's AI course exports 4 weeks of 5
+  days, 20 files). Each lesson is its own Source, so each has one Reading and one Probe. Week and
+  day come from the file names ("Week 2 - Day 3", "W2D3", "2.3"), else from the order with a
+  number of lessons a week; the user checks them in a table before adding. The course name and
+  the teacher are shared. The call number adds week and day: `LIN 2026 2.3`. A lesson page links
+  the lesson before and after it.
+- The Reading Stage of an Article or lesson is Read → Extraction → Probe. Reading happens in Glose;
+  the AI reads the text too (`read_article`), so a quote can be checked word for word and a
+  Location is a paragraph number (`¶ 8`). This answers, for these Sources, "Does the AI see the
+  book text?" and "How does the tool check a quote without the full text?".
+- Jan chose "The Critical Edition" with impeccable over facing pages (the text beside a reading
+  notebook) and a tray of Passage slips. The text is set like a scholarly edition: the headings as
+  contents at the left with the Passages counted, each paragraph numbered in the gutter, the
+  Passages in view in an apparatus under the text, and the work on one Passage in the margin at
+  the right. With no Passage open, the margin holds the reading notes, which are the Free text.
+- A Passage is kept in the text file as `==words==`, as Obsidian highlights; the user's own words on
+  it are a footnote right after it, `==words==[^glose-1]`. Selecting words shows a small Lapis bar:
+  Mark Passage (M) and Mark and go deeper (D). A selection is widened to whole words, and two
+  Passages never overlap.
+- Go deeper on a Passage asks a Probe question about it in the margin, beside the text. It is the
+  same Probe Session as the Probe step: the Probe record shows which paragraph each question is
+  about. When the user understands the Passage, the AI closes it and does not move on; the Probe of
+  the whole text starts in the Probe step ("Start the Probe of the whole text"). Teaching on an
+  Article or lesson names the paragraph it rests on ("From the text, ¶ 9").
+- Make a Point on a Passage saves the user's claim as a kept Point with the Passage as its quote and
+  its paragraph as the Location. It waits in Extraction to be written as a Note; the AI is not
+  started for it. Extraction proposes Points from the text (origin "From the text, ¶ 8"), the
+  Passages first.
+- The reading place (`reading-place`, the top paragraph in view) is kept in the Source file, so it
+  syncs to other computers.
+- At the end of the text, "Done reading" asks what comes next: Make Points from the text
+  (Extraction, then the Probe) or Question me first (the Probe, then Extraction). The text stays
+  open from the later steps through "Read the text".
+- Citations of an Article or lesson name where it appeared (journal, site or course) in place of a
+  publisher, and a paragraph as "para. 8" (APA, Harvard) or "par. 8" (Chicago). A missing journal,
+  site or course warns, as a missing publisher does for a book.
+- Not yet: PDF, copying a course's images (an image the file names but Glose did not copy shows as a
+  line saying so), the Kind column on the Sources page, Cards from Passages, and editing the text.
 
 ## Decided, the Probe (November 2026)
 

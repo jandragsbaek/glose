@@ -153,7 +153,7 @@ export const make = Effect.fn("Sessions.makePointDecisions")(function* ({
         page,
         text: own,
         draft,
-        aiTitle: point.origin !== "user",
+        aiTitle: point.origin !== "user" && point.origin !== "passage",
         related,
         language: language ?? "en",
       });

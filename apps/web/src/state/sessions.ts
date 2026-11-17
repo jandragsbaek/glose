@@ -1,5 +1,6 @@
 import { RPC_METHODS } from "@glose/contracts";
 import * as Effect from "effect/Effect";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as Atom from "effect/reactivity/Atom";
 import * as Stream from "effect/Stream";
 
@@ -39,6 +40,12 @@ export const sessionAtom = Atom.family((id: string) =>
   ),
 );
 
+type SessionResult = ReturnType<typeof sessionAtom> extends Atom.Atom<infer R> ? R : never;
+
+export const noSessionAtom: Atom.Atom<SessionResult> = Atom.make(
+  AsyncResult.initial() as SessionResult,
+);
+
 export const startSessionAtom = GloseClient.mutation(RPC_METHODS.sessionsStart);
 export const sendMessageAtom = GloseClient.mutation(RPC_METHODS.sessionsSend);
 export const retrySessionAtom = GloseClient.mutation(RPC_METHODS.sessionsRetry);
@@ -53,3 +60,6 @@ export const addPointAtom = GloseClient.mutation(RPC_METHODS.sessionsAddPoint);
 export const writePointAtom = GloseClient.mutation(RPC_METHODS.sessionsWritePoint);
 export const answerProbeAtom = GloseClient.mutation(RPC_METHODS.sessionsAnswerProbe);
 export const finishProbeAtom = GloseClient.mutation(RPC_METHODS.sessionsFinishProbe);
+export const goDeeperAtom = GloseClient.mutation(RPC_METHODS.sessionsGoDeeper);
+export const continueProbeAtom = GloseClient.mutation(RPC_METHODS.sessionsContinueProbe);
+export const addPassagePointAtom = GloseClient.mutation(RPC_METHODS.sessionsAddPassagePoint);

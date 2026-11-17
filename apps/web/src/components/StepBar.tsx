@@ -9,15 +9,17 @@ export function StepBar({
   source,
   extractionNote,
   probeNote,
+  readNote,
   freeTextAction,
 }: {
   readonly source: Source;
   readonly extractionNote?: string;
   readonly probeNote?: string;
+  readonly readNote?: string;
   readonly freeTextAction?: ReactNode;
 }) {
   const t = useT();
-  const steps = readingStepsOf(source.readingStart);
+  const steps = readingStepsOf(source.readingStart, source.kind);
   const current = source.readingStep === "done" ? -1 : steps.indexOf(source.readingStep);
   const position = current === -1 ? steps.length : current;
   const words = wordCount(source.freeText);
@@ -27,6 +29,7 @@ export function StepBar({
       return words === 0 ? t.steps.noFreeText : t.steps.words(words);
     }
     if (step === "free-text") return t.steps.words(words);
+    if (step === "read") return readNote ?? t.start.stepNotes.read;
     const given = step === "extraction" ? extractionNote : probeNote;
     if (given !== undefined) return given;
     return t.steps.withChatGpt;
