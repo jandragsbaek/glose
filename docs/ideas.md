@@ -182,6 +182,25 @@ Decided, the Blog post flow (November 2026), chosen with impeccable:
 - A new Reference sits against the word before it, after end punctuation (`word.[[Note]]`), as
   footnote numbers do in Chicago.
 
+Decided, the Graph beside the desk (November 2026), chosen with impeccable ("Trail of Slips"):
+
+- A "Graph" toggle in the desk bar (⌘G, Ctrl+G off the Mac) splits the window down the middle:
+  the leaf on the left, a Graph panel on the right. Each piece remembers whether it is open. Wide
+  windows only; there is no panel on a narrow window or a phone.
+- The panel is the Graph on top and a Note reader under it. Every Note the user opens (a node, or
+  a Link in the open Note) joins a numbered trail: the Notes before it fold to one-line slips
+  (number, title, call number) above the open Note, and the trail is drawn on the Graph as a Lapis
+  line with numbered stops. A slip opens its Note again. Notes cited in the piece carry a ring.
+- The panel is for reading only. Citing stays in the Cite Slip (⌘K).
+- The panel shows in Write and in Proof. The trail lasts while the piece is open and is not saved.
+- While the panel is open, the References' glosses fold under the leaf, as on a narrow window.
+- Built and reviewed by a three-model council (Claude Opus, GPT Sol, Muse Wonder Full; five rounds,
+  all at 9.0 or more). From the review: the stops sit in their own strip above the open Note so the
+  way back stays in view; the Graph frames the newest stops after each Note; only the trail is Lapis;
+  Find lists its matches to choose from; a small legend names the marks; and ⌘G keeps the writer's
+  line and focus. A Note opened from the Graph, a Link or Find joins the trail; reopening a stop does
+  not add it again.
+
 - Not yet: the University assignment's own flow and PDF, a Writing project of several files,
   publishing straight into the site's git repository, removing the old post file when a published
   title changes, and the AI's suggestions shown while typing (today the writer asks for a review).

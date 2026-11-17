@@ -34,6 +34,8 @@ export interface ProseHandle {
   readonly select: (from: number, to: number) => void;
   readonly citePoint: () => number;
   readonly topOf: (pos: number) => number | null;
+  readonly focusedCaret: () => number | null;
+  readonly posAtHeight: (clientY: number) => number | null;
   readonly bottomOf: (pos: number) => number | null;
   readonly focus: () => void;
   readonly format: (command: FormatCommand) => void;
@@ -387,6 +389,16 @@ export function ProseEditor({
       if (editor === null || node === null) return null;
       const coords = editor.coordsAtPos(Math.min(pos, editor.state.doc.length));
       return coords === null ? null : coords.top - node.getBoundingClientRect().top;
+    },
+    focusedCaret: () => {
+      const editor = view.current;
+      return editor !== null && editor.hasFocus ? editor.state.selection.main.head : null;
+    },
+    posAtHeight: (clientY) => {
+      const editor = view.current;
+      if (editor === null) return null;
+      const box = editor.contentDOM.getBoundingClientRect();
+      return editor.posAtCoords({ x: box.left + 4, y: clientY }, false);
     },
     bottomOf: (pos) => {
       const editor = view.current;

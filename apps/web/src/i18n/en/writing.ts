@@ -5,7 +5,7 @@ import type {
   SiteFolderUnavailable,
   WritingProjectType,
 } from "@glose/contracts";
-import { numbers, count, shortDate, longDate } from "./format.ts";
+import { numbers, count, list, shortDate, longDate } from "./format.ts";
 
 export const writingMessages = {
   writing: {
@@ -194,6 +194,32 @@ export const writingMessages = {
     replace: "Replace it",
     keep: "Keep it",
     publishFailed: "Glose could not write the post. Try again.",
+    graphToggle: "Graph",
+    graphToggleTitle: "Read the Graph beside your text",
+    graphPanel: "The Graph beside your text",
+    graphCanvasLabel: (notes: number, links: number) =>
+      `The Graph: ${count(notes, "node", "nodes")} joined by ${count(links, "Link", "Links")}. Your trail and the Notes this piece cites are marked. Use Find above it to open a Note by name; it opens in Your trail below.`,
+    trailTitle: "Your trail",
+    trailCount: (n: number) => count(n, "stop", "stops"),
+    clearTrail: "Clear the trail",
+    trailEmptyLead: "Read your Notes beside the text",
+    trailEmptyBody:
+      "Click a Note in the Graph, or one this piece cites, to read it here. Each Note you open joins your trail, so you can find your way back.",
+    citedHere: "Cited in this piece",
+    noneCited: "This piece cites no Note yet.",
+    citedAs: (numbers: ReadonlyArray<number>) =>
+      numbers.length === 1
+        ? `Reference ${numbers[0]} in this piece`
+        : `References ${list.format(numbers.map(String))} in this piece`,
+    trailStop: (n: number, title: string) => `${n}. ${title}. Read it again`,
+    trailOpen: (n: number) => `Stop ${n}, open below:`,
+    showTrail: "Show your trail and the Notes this piece cites",
+    showCited: "Show the Notes this piece cites",
+    legendCited: "Cited in this piece",
+    legendOpen: "Open",
+    legendTrail: "Your trail",
+    findNone: "No Note or Source has this in its name.",
+    findMore: (n: number) => `${numbers.format(n)} more. Type more of the name.`,
     notFound: "This Writing project does not exist. Its file may have been renamed or deleted.",
     backToList: "Back to Writing projects",
   },

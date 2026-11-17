@@ -12,6 +12,9 @@ import {
   makeSimulation,
   settle,
 } from "./layout.ts";
+import { type Box, frameTarget, labelCenter, overlaps, wrapWords } from "./canvasGeometry.ts";
+import { type Palette, readPalette } from "./canvasPalette.ts";
+import { drawStopTabs, drawTrailLine, layoutStopTabs, type StopTab } from "./canvasTrail.ts";
 
 export interface NodeLabel {
   readonly text: string;
@@ -21,31 +24,8 @@ export interface NodeLabel {
 export interface GraphCanvasEvents {
   readonly onSelect: (id: string | null) => void;
   readonly onOpen: (id: string) => void;
+  readonly onFit?: () => void;
 }
-
-interface Palette {
-  readonly ground: string;
-  readonly paper: string;
-  readonly ink: string;
-  readonly mute: string;
-  readonly lineStrong: string;
-  readonly lapis: string;
-  readonly gold: string;
-}
-
-const readPalette = (): Palette => {
-  const style = getComputedStyle(document.documentElement);
-  const token = (name: string) => style.getPropertyValue(`--${name}`).trim();
-  return {
-    ground: token("ground"),
-    paper: token("paper"),
-    ink: token("ink"),
-    mute: token("mute"),
-    lineStrong: token("line-strong"),
-    lapis: token("lapis"),
-    gold: token("gold"),
-  };
-};
 
 const NOTE_FONT = '500 12px "Public Sans", system-ui, sans-serif';
 const SOURCE_FONT = '600 12.5px "Public Sans", system-ui, sans-serif';
@@ -54,6 +34,11 @@ const LABEL_WIDTH = 170;
 const LINE_HEIGHT = 15;
 const CALL_HEIGHT = 17;
 const FADED = 0.14;
+const MARKED = 0.6;
+const GHOST = 0.5;
+
+const STOP_FONT = '700 11px "Courier Prime", ui-monospace, monospace';
+const STOP_HEIGHT = 17;
 const SCALE_EXTENT: [number, number] = [0.12, 6];
 const CLICK_SLOP = 4;
 const FADE_MS = 160;
@@ -76,6 +61,11 @@ export class GraphCanvas {
   #ratio = 1;
   #transform: ZoomTransform = zoomIdentity;
   #fitted = false;
+  #held = false;
+  #home: ReadonlyArray<string> | null = null;
+  #insetTop = 0;
+  #insetLeft = 0;
+  #keepClear: ReadonlyArray<Box> = [];
 
   #view: GraphView | null = null;
   #simulation: GraphSimulation | null = null;
@@ -85,10 +75,13 @@ export class GraphCanvas {
   #neighbours = new Map<string, Set<string>>();
   #labels: ReadonlyMap<string, NodeLabel> = new Map();
   #wrapped = new Map<string, ReadonlyArray<string>>();
+  #widths = new Map<string, number>();
 
   #hovered: string | null = null;
   #selected: string | null = null;
   #matches: ReadonlySet<string> | null = null;
+  #trail: ReadonlyArray<string> = [];
+  #cited: ReadonlySet<string> = new Set();
   #focus: string | null = null;
   #dim = 0;
   #lastFrame = 0;
@@ -121,8 +114,9 @@ export class GraphCanvas {
         const point = "touches" in event ? event.touches[0] : event;
         return point === undefined || this.#hit(this.#local(point)) === null;
       })
-      .on("zoom", (event: { transform: ZoomTransform }) => {
+      .on("zoom", (event: { transform: ZoomTransform; sourceEvent: unknown }) => {
         this.#transform = event.transform;
+        if (event.sourceEvent !== null && event.sourceEvent !== undefined) this.#held = true;
         if (this.#pointer !== null && this.#drag === null) {
           this.#hover(this.#hit(this.#pointer)?.id ?? null);
         }
@@ -144,6 +138,7 @@ export class GraphCanvas {
     this.#measure();
     void document.fonts.ready.then(() => {
       this.#wrapped.clear();
+      this.#widths.clear();
       this.#request();
     });
   }
@@ -156,6 +151,7 @@ export class GraphCanvas {
     if (this.#labels !== labels) {
       this.#labels = labels;
       this.#wrapped.clear();
+      this.#widths.clear();
       this.#request();
     }
     if (view === this.#view) return;
@@ -178,8 +174,13 @@ export class GraphCanvas {
       settle(this.#simulation);
       this.#simulation.alpha(0);
     }
-    if (!this.#fitted && this.#width > 0) this.fit(false);
+    if (!this.#fitted && this.#width > 0) this.#fitHome(false);
     this.#request();
+  }
+
+  setHome(ids: ReadonlyArray<string> | null): void {
+    this.#home = ids;
+    if (!this.#held && this.#width > 0 && this.#nodes.length > 0) this.#fitHome(false);
   }
 
   setSelected(id: string | null): void {
@@ -192,6 +193,19 @@ export class GraphCanvas {
     this.#request();
   }
 
+  setTrail(ids: ReadonlyArray<string>): void {
+    if (ids === this.#trail) return;
+    this.#trail = ids;
+    this.#request();
+  }
+
+  setCited(ids: ReadonlyArray<string>): void {
+    const next = new Set(ids);
+    if (next.size === this.#cited.size && ids.every((id) => this.#cited.has(id))) return;
+    this.#cited = next;
+    this.#request();
+  }
+
   zoomBy(factor: number): void {
     const center: [number, number] = [this.#width / 2, this.#height / 2];
     const k = Math.min(SCALE_EXTENT[1], Math.max(SCALE_EXTENT[0], this.#transform.k * factor));
@@ -200,34 +214,63 @@ export class GraphCanvas {
   }
 
   fit(animate = true): void {
-    if (this.#nodes.length === 0 || this.#width === 0) return;
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-    for (const node of this.#nodes) {
-      minX = Math.min(minX, (node.x ?? 0) - node.radius);
-      minY = Math.min(minY, (node.y ?? 0) - node.radius);
-      maxX = Math.max(maxX, (node.x ?? 0) + node.radius);
-      maxY = Math.max(maxY, (node.y ?? 0) + node.radius);
+    this.#home = null;
+    this.#held = false;
+    this.#frameNodes(this.#nodes, animate);
+  }
+
+  frame(ids: ReadonlyArray<string>, animate = true): void {
+    const wanted = new Set(ids);
+    const nodes = this.#nodes.filter((node) => wanted.has(node.id));
+    if (nodes.length === 0) return;
+    this.#held = true;
+    this.#frameNodes(nodes, animate);
+  }
+
+  setInsets(top: number, left: number): void {
+    this.#insetTop = top;
+    this.#insetLeft = left;
+  }
+
+  setKeepClear(boxes: ReadonlyArray<Box>): void {
+    this.#keepClear = boxes;
+    this.#request();
+  }
+
+  reveal(id: string): void {
+    const node = this.#byId.get(id);
+    if (node === undefined || this.#width === 0) return;
+    const [sx, sy] = this.#transform.apply([node.x ?? 0, node.y ?? 0]);
+    const inside =
+      sx > this.#insetLeft + Math.min(80, this.#width * 0.12) &&
+      sx < this.#width - Math.min(100, this.#width * 0.15) &&
+      sy > this.#insetTop + Math.min(40, this.#height * 0.1) &&
+      sy < this.#height - Math.min(110, this.#height * 0.25);
+    if (!inside) this.#centerAt(node, this.#transform.k);
+  }
+
+  #fitHome(animate: boolean): void {
+    const home = this.#home;
+    if (home === null || home.length === 0) {
+      this.#frameNodes(this.#nodes, animate);
+      return;
     }
-    const pad = 40;
-    const k = Math.min(
-      1.4,
-      Math.max(
-        SCALE_EXTENT[0],
-        Math.min(
-          (this.#width - pad * 2) / Math.max(1, maxX - minX),
-          (this.#height - pad * 2 - CALL_HEIGHT) / Math.max(1, maxY - minY),
-        ),
-      ),
-    );
-    const target = zoomIdentity
-      .translate(
-        this.#width / 2 - ((minX + maxX) / 2) * k,
-        this.#height / 2 - ((minY + maxY) / 2) * k,
-      )
-      .scale(k);
+    const ids = new Set(home);
+    const framed = this.#nodes.filter((node) => ids.has(node.id));
+    this.#frameNodes(framed.length === 0 ? this.#nodes : framed, animate);
+  }
+
+  #frameNodes(nodes: ReadonlyArray<LayoutNode>, animate: boolean): void {
+    if (nodes.length === 0 || this.#width === 0) return;
+    const few = nodes.length < this.#nodes.length;
+    const target = frameTarget(nodes, this.#width, this.#height, {
+      left: (few ? LABEL_WIDTH / 2 + 8 : 40) + this.#insetLeft,
+      right: few ? LABEL_WIDTH / 2 + 8 : 40,
+      top: this.#insetTop + Math.min(40, this.#height * 0.06),
+      bottom: Math.min(few ? 40 + LINE_HEIGHT * 3 : 40 + CALL_HEIGHT, this.#height * 0.18),
+      maxScale: few ? 1.6 : 1.4,
+      minScale: SCALE_EXTENT[0],
+    });
     this.#fitted = true;
     this.#moveCamera(target, animate);
   }
@@ -235,11 +278,15 @@ export class GraphCanvas {
   centerOn(id: string): void {
     const node = this.#byId.get(id);
     if (node === undefined || this.#width === 0) return;
-    const k = Math.max(this.#transform.k, 1.7);
+    this.#centerAt(node, Math.max(this.#transform.k, 1.7));
+  }
+
+  #centerAt(node: LayoutNode, k: number): void {
+    this.#held = true;
+    const cx = this.#insetLeft + (this.#width - this.#insetLeft) / 2;
+    const cy = this.#insetTop + (this.#height - this.#insetTop) / 2;
     this.#moveCamera(
-      zoomIdentity
-        .translate(this.#width / 2 - (node.x ?? 0) * k, this.#height / 2 - (node.y ?? 0) * k)
-        .scale(k),
+      zoomIdentity.translate(cx - (node.x ?? 0) * k, cy - (node.y ?? 0) * k).scale(k),
     );
   }
 
@@ -344,7 +391,7 @@ export class GraphCanvas {
       "+": () => this.zoomBy(1.4),
       "=": () => this.zoomBy(1.4),
       "-": () => this.zoomBy(1 / 1.4),
-      "0": () => this.fit(),
+      "0": () => (this.#events.onFit === undefined ? this.fit() : this.#events.onFit()),
       ArrowLeft: () => pan(80, 0),
       ArrowRight: () => pan(-80, 0),
       ArrowUp: () => pan(0, 80),
@@ -381,7 +428,7 @@ export class GraphCanvas {
     this.#height = rect.height;
     this.#canvas.width = Math.round(rect.width * this.#ratio);
     this.#canvas.height = Math.round(rect.height * this.#ratio);
-    if (!this.#fitted && this.#nodes.length > 0 && rect.width > 0) this.fit(false);
+    if (!this.#held && this.#nodes.length > 0 && rect.width > 0) this.#fitHome(false);
     this.#dirty = true;
     this.#request();
   }
@@ -438,7 +485,11 @@ export class GraphCanvas {
     if (this.#focus !== null && this.#dim > 0 && !this.#inFocus(node.id)) {
       alpha *= 1 - (1 - FADED) * this.#dim;
     }
-    return alpha;
+    return this.#marked(node.id) ? Math.max(alpha, MARKED) : alpha;
+  }
+
+  #marked(id: string): boolean {
+    return this.#cited.has(id) || this.#trail.includes(id);
   }
 
   #inFocus(id: string): boolean {
@@ -461,8 +512,9 @@ export class GraphCanvas {
     const focused = this.#focus !== null && this.#dim > 0;
     context.lineWidth = 1 / k;
     context.strokeStyle = palette.lineStrong;
+    const quiet = this.#trail.length > 0 || this.#cited.size > 0 ? 0.55 : 1;
     context.globalAlpha =
-      (this.#matches === null ? 1 : 0.35) * (focused ? 1 - (1 - FADED) * this.#dim : 1);
+      quiet * (this.#matches === null ? 1 : 0.35) * (focused ? 1 - (1 - FADED) * this.#dim : 1);
     context.beginPath();
     for (const link of this.#links) {
       context.moveTo(link.source.x ?? 0, link.source.y ?? 0);
@@ -470,8 +522,8 @@ export class GraphCanvas {
     }
     context.stroke();
     if (focused) {
-      context.globalAlpha = this.#dim;
-      context.strokeStyle = palette.lapis;
+      context.globalAlpha = this.#dim * (this.#trail.length > 0 ? 0.6 : 1);
+      context.strokeStyle = this.#trail.length > 0 ? palette.ink : palette.lapis;
       context.lineWidth = 1.4 / k;
       context.beginPath();
       for (const link of this.#links) {
@@ -481,6 +533,7 @@ export class GraphCanvas {
       }
       context.stroke();
     }
+    this.#drawTrail();
 
     for (const node of this.#nodes) {
       context.globalAlpha = this.#alpha(node);
@@ -489,20 +542,51 @@ export class GraphCanvas {
       context.beginPath();
       context.arc(node.x ?? 0, node.y ?? 0, node.radius, 0, Math.PI * 2);
       context.fill();
+      const cited = this.#cited.has(node.id);
+      if (cited) {
+        context.strokeStyle = palette.lapis;
+        context.lineWidth = 1.5 / k;
+        context.beginPath();
+        context.arc(node.x ?? 0, node.y ?? 0, node.radius + 3.5 / k, 0, Math.PI * 2);
+        context.stroke();
+      }
       if (node.id === this.#selected) {
         context.globalAlpha = 1;
         context.strokeStyle = palette.gold;
         context.lineWidth = 2.5 / k;
         context.beginPath();
-        context.arc(node.x ?? 0, node.y ?? 0, node.radius + 3.5 / k, 0, Math.PI * 2);
+        context.arc(node.x ?? 0, node.y ?? 0, node.radius + (cited ? 7 : 3.5) / k, 0, Math.PI * 2);
         context.stroke();
       }
     }
 
-    this.#drawLabels();
+    this.#context.setTransform(this.#ratio, 0, 0, this.#ratio, 0, 0);
+    const tabs = this.#stopTabs();
+    this.#drawLabels(tabs);
+    drawStopTabs(this.#context, tabs, STOP_HEIGHT, STOP_FONT, this.#palette);
   }
 
-  #drawLabels(): void {
+  #drawTrail(): void {
+    const stops = this.#trail.flatMap((id) => this.#byId.get(id) ?? []);
+    const points = stops.map((node): [number, number] => [node.x ?? 0, node.y ?? 0]);
+    drawTrailLine(this.#context, points, 3 / this.#transform.k, this.#palette.lapis);
+  }
+
+  #stopTabs(): ReadonlyArray<StopTab> {
+    const { k, x, y } = this.#transform;
+    this.#context.font = STOP_FONT;
+    const stops = this.#trail.flatMap((id, index) => {
+      const node = this.#byId.get(id);
+      if (node === undefined) return [];
+      const number = index + 1;
+      const width = Math.max(STOP_HEIGHT, this.#context.measureText(String(number)).width + 10);
+      const nodeTop = (node.y ?? 0) * k + y - node.radius * k;
+      return [{ cx: (node.x ?? 0) * k + x, nodeTop, width, number, here: id === this.#selected }];
+    });
+    return layoutStopTabs(stops, STOP_HEIGHT, this.#height);
+  }
+
+  #drawLabels(tabs: ReadonlyArray<StopTab>): void {
     const context = this.#context;
     const { k, x, y } = this.#transform;
     context.setTransform(this.#ratio, 0, 0, this.#ratio, 0, 0);
@@ -513,8 +597,18 @@ export class GraphCanvas {
     const fade = labelAlpha(k);
     const focused = this.#focus !== null && this.#dim > 0;
     const showMatches = this.#matches !== null && this.#matches.size <= 40;
-    const late: Array<() => void> = [];
     const margin = 220;
+    const taken: ReadonlyArray<Box> = [...this.#keepClear, ...tabs.map((tab) => tab.box)];
+    const open = this.#byId.get(this.#selected ?? "");
+    const ring = open === undefined ? 0 : open.radius * k + 8;
+    const [ox, oy] =
+      open === undefined ? [0, 0] : this.#transform.apply([open.x ?? 0, open.y ?? 0]);
+    const placed: Array<Box> = [...taken];
+    if (open !== undefined) {
+      placed.push({ left: ox - ring, right: ox + ring, top: oy - ring, bottom: oy + ring });
+    }
+    const items: Array<{ readonly rank: number; readonly box: Box; readonly draw: () => void }> =
+      [];
 
     for (const node of this.#nodes) {
       const sx = (node.x ?? 0) * k + x;
@@ -526,26 +620,76 @@ export class GraphCanvas {
       if (label === undefined) continue;
       const strong =
         node.id === this.#selected ||
+        this.#marked(node.id) ||
         (focused && this.#inFocus(node.id)) ||
         (showMatches && this.#matches?.has(node.id) === true);
       const base = this.#alpha(node);
-      const top = sy + node.radius * k + 4;
-      const draw = () => {
-        let textTop = top;
-        if (label.call !== null) {
-          context.globalAlpha = base;
-          this.#drawCall(label.call, sx, top);
-          textTop += CALL_HEIGHT + 3;
-        }
-        const alpha = Math.max(fade, strong ? (focused ? this.#dim : 1) : 0) * base;
-        if (alpha < 0.02) return;
-        context.globalAlpha = alpha;
-        this.#drawText(node, label, sx, textTop, strong);
+      const textAlpha = Math.max(fade, strong ? (focused ? this.#dim : 1) : 0) * base;
+      const showText = textAlpha >= 0.02 && (strong || base >= GHOST);
+      const call = strong || base >= GHOST ? label.call : null;
+      if (!showText && call === null) continue;
+      const font = node.kind === "source" ? SOURCE_FONT : NOTE_FONT;
+      const lines = showText ? this.#lines(node.id, label.text, font) : [];
+      const callWidth = call === null ? 0 : this.#callWidth(call);
+      const width = Math.max(callWidth, showText ? this.#textWidth(node.id, lines, font) : 0);
+      const below = sy + node.radius * k + 4;
+      const callSpace = call === null ? 0 : CALL_HEIGHT + 3;
+      const height = callSpace + lines.length * LINE_HEIGHT;
+      const fits = (at: number) => {
+        const cx = labelCenter(sx, width, at, at + height, this.#keepClear, this.#width);
+        const box = { left: cx - width / 2, right: cx + width / 2, top: at, bottom: at + height };
+        return at + height <= this.#height - 2 && !taken.some((other) => overlaps(other, box));
       };
-      if (strong) late.push(draw);
-      else draw();
+      const above = Math.max(2, sy - node.radius * k - 16 - STOP_HEIGHT - height);
+      const flip = node.id === this.#selected && !fits(below) && fits(above);
+      const top = flip ? above : below;
+      const bottom = top + height;
+      const cx = labelCenter(sx, width, top, bottom, this.#keepClear, this.#width);
+      const box: Box = { left: cx - width / 2 - 2, right: cx + width / 2 + 2, top, bottom };
+      const order = [
+        node.id === this.#selected,
+        this.#trail.includes(node.id),
+        this.#cited.has(node.id),
+        strong,
+      ].indexOf(true);
+      const rank = order === -1 ? 4 : order;
+      items.push({
+        rank,
+        box,
+        draw: () => {
+          if (call !== null) {
+            context.globalAlpha = base;
+            this.#drawCall(call, cx, top);
+          }
+          if (!showText) return;
+          context.globalAlpha = textAlpha;
+          this.#drawText(node, lines, cx, top + callSpace, strong);
+        },
+      });
     }
-    for (const draw of late) draw();
+    items.sort((a, b) => a.rank - b.rank);
+    for (const item of items) {
+      const offCanvas = item.box.top < 0 || item.box.bottom > this.#height - 2;
+      if (item.rank > 0 && (offCanvas || placed.some((other) => overlaps(other, item.box)))) {
+        continue;
+      }
+      placed.push(item.box);
+      item.draw();
+    }
+  }
+
+  #callWidth(call: string): number {
+    this.#context.font = CALL_FONT;
+    return this.#context.measureText(call).width + 12;
+  }
+
+  #textWidth(id: string, lines: ReadonlyArray<string>, font: string): number {
+    const cached = this.#widths.get(id);
+    if (cached !== undefined) return cached;
+    this.#context.font = font;
+    const width = Math.max(0, ...lines.map((line) => this.#context.measureText(line).width));
+    this.#widths.set(id, width);
+    return width;
   }
 
   #drawCall(call: string, cx: number, top: number): void {
@@ -564,10 +708,15 @@ export class GraphCanvas {
     context.fillText(call, cx, Math.round(top) + 3);
   }
 
-  #drawText(node: LayoutNode, label: NodeLabel, cx: number, top: number, strong: boolean): void {
+  #drawText(
+    node: LayoutNode,
+    lines: ReadonlyArray<string>,
+    cx: number,
+    top: number,
+    strong: boolean,
+  ): void {
     const context = this.#context;
     context.font = node.kind === "source" ? SOURCE_FONT : NOTE_FONT;
-    const lines = this.#lines(node.id, label.text, context.font);
     context.strokeStyle = this.#palette.ground;
     context.lineWidth = 3;
     context.fillStyle = strong || node.kind === "source" ? this.#palette.ink : this.#palette.mute;
@@ -580,20 +729,8 @@ export class GraphCanvas {
   #lines(id: string, text: string, font: string): ReadonlyArray<string> {
     const cached = this.#wrapped.get(id);
     if (cached !== undefined) return cached;
-    const context = this.#context;
-    context.font = font;
-    const lines: Array<string> = [];
-    let line = "";
-    for (const word of text.split(/\s+/)) {
-      const next = line === "" ? word : `${line} ${word}`;
-      if (line !== "" && context.measureText(next).width > LABEL_WIDTH) {
-        lines.push(line);
-        line = word;
-      } else {
-        line = next;
-      }
-    }
-    if (line !== "") lines.push(line);
+    this.#context.font = font;
+    const lines = wrapWords(text, LABEL_WIDTH, (line) => this.#context.measureText(line).width);
     this.#wrapped.set(id, lines);
     return lines;
   }
