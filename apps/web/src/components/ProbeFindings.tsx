@@ -11,7 +11,7 @@ import { useId, useState } from "react";
 
 import { useT } from "../i18n/I18n.tsx";
 import { advanceReadingAtom, KEYS } from "../state/graph.ts";
-import { VerdictIcon } from "./Probe.tsx";
+import { VerdictIcon } from "./ProbeRows.tsx";
 import { followRow } from "./ProbeWhole.tsx";
 import { Flourish, Notice } from "./ui.tsx";
 
@@ -20,8 +20,17 @@ const STATE_ORDER: ReadonlyArray<TopicState> = [
   "known-after-teaching",
   "taught",
   "gap",
+  "unconfirmed",
   "asking",
+  "not-asked",
 ];
+
+const toneOf = (state: TopicState) =>
+  state === "known" || state === "known-after-teaching"
+    ? "good"
+    : state === "asking" || state === "not-asked" || state === "unconfirmed"
+      ? "none"
+      : "gap";
 
 export function Findings({
   session,
@@ -68,10 +77,10 @@ export function Findings({
           {STATE_ORDER.map((state) => {
             const topics = findings.filter((finding) => finding.state === state);
             if (topics.length === 0) return null;
-            const tone = state === "known" || state === "known-after-teaching" ? "good" : "gap";
+            const tone = toneOf(state);
             return (
-              <div key={state} className="verdict" data-tone={state === "asking" ? "none" : tone}>
-                <VerdictIcon tone={state === "asking" ? "none" : tone} />
+              <div key={state} className="verdict" data-tone={tone}>
+                <VerdictIcon tone={tone} />
                 <div>
                   <dt className="verdict__name">{t.probe.states[state]}</dt>
                   <dd className="verdict__why">

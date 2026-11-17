@@ -1,5 +1,6 @@
 import type {
   ChatGptProblem,
+  Confidence,
   PointState,
   ReadingStart,
   ReasoningVerdict,
@@ -299,13 +300,23 @@ export const readingMessages = {
       readonly afterTeaching: number;
       readonly taught: number;
       readonly open: number;
+      readonly unconfirmed: number;
+      readonly asked: number;
+      readonly topics: number;
+      readonly planned: boolean;
     }) =>
       [
+        tally.planned
+          ? `${numbers.format(tally.asked)} of ${count(tally.topics, "topic", "topics")} asked`
+          : null,
         `${numbers.format(tally.known)} known`,
         tally.afterTeaching === 0
           ? null
-          : `${numbers.format(tally.afterTeaching)} known after teaching`,
+          : `${numbers.format(tally.afterTeaching)} known after help`,
         tally.taught === 0 ? null : `${numbers.format(tally.taught)} taught, not confirmed yet`,
+        tally.unconfirmed === 0
+          ? null
+          : `${numbers.format(tally.unconfirmed)} right, not confirmed yet`,
         tally.open === 0 ? null : `${numbers.format(tally.open)} still open`,
       ]
         .filter((part) => part !== null)
@@ -335,7 +346,49 @@ export const readingMessages = {
     reasoning: "Your Reasoning",
     answer: "Your answer",
     teachMeAsked: "You asked to be taught.",
+    hintAsked: "You asked for a hint.",
     judged: "Judged",
+    judgedAgain: "Judged again",
+    unconfirmedWhy: {
+      guess: "You were guessing, so it is not counted as known yet.",
+      bare: "No Reasoning for the choice, so it is not counted as known yet.",
+    },
+    judgedAgainOf: (n: number) => `The AI judged Q${numbers.format(n)} again.`,
+    dispute: "Question this judgment",
+    chooseOne: "Choose one",
+    chooseMany: "Choose all that apply",
+    optionsLabel: (n: number) => `Options for Q${numbers.format(n)}`,
+    option: (letter: string) => `Option ${letter}`,
+    yourChoice: "Your choice",
+    noChoice: "Choose an option in the question above.",
+    choiceMark: {
+      chosenRight: "Your choice · right",
+      chosenWrong: "Your choice · not right",
+      right: "Right answer",
+    },
+    tests: (misconception: string) => `Tests: ${misconception}`,
+    sure: "How sure are you?",
+    sureShort: "How sure",
+    confidence: { sure: "Sure", unsure: "Not sure", guess: "Guessing" } satisfies Record<
+      Confidence,
+      string
+    >,
+    hint: "Give me a hint",
+    hintGloss: (n: number) => `Hint · Q${numbers.format(n)}`,
+    hintFailed: "Glose could not ask for a hint. Try again.",
+    planned: "Topics planned",
+    talk: "Write to the AI instead",
+    talkLabel: "Message to the AI",
+    talkAbout: (n: number) => `about Q${numbers.format(n)}`,
+    talkAboutJudgment: (n: number) => `about the judgment of Q${numbers.format(n)}`,
+    talkHint:
+      "Ask what the question means, question a judgment, or ask about the book. Your answer waits.",
+    talkHintNoQuestion: "Ask about the book or a judgment, or ask for the next question.",
+    talkPlaceholder: "Write to the AI",
+    backToAnswer: "Back to your answer",
+    closeTalk: "Close the message",
+    messageFailed: "Glose could not send your message. Try again.",
+    you: (about: string | null) => (about === null ? "You" : `You · ${about}`),
     reasoningVerdicts: {
       sound: "Reasoning: sound",
       "partly-sound": "Reasoning: partly sound",
@@ -358,9 +411,11 @@ export const readingMessages = {
     states: {
       asking: "Asked, no answer yet",
       known: "Known",
-      "known-after-teaching": "Known after teaching",
+      "known-after-teaching": "Known after help",
       taught: "Taught, not confirmed yet",
       gap: "Still open",
+      unconfirmed: "Right, not confirmed yet",
+      "not-asked": "Not asked yet",
     } satisfies Record<TopicState, string>,
     foundEmpty: "The Probe ended before any answer.",
     keptIn: (file: string) => `The Probe is kept in ${file} in your Graph folder.`,
@@ -369,6 +424,7 @@ export const readingMessages = {
     doneRead: (title: string) => `Done: ${title} is read`,
     doneHint: "The Source leaves the desk. Its Notes, Free text and Probe stay.",
     reasoningPlaceholder: "Think out loud: how do you get there?",
+    choiceReasoningPlaceholder: "Think out loud: why this one?",
     dictate: {
       mac: "To speak instead, start your Mac's dictation: press Fn twice, or the microphone key.",
       windows: "To speak instead, press Windows + H for Windows voice typing.",

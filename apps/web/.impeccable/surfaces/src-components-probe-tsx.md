@@ -41,6 +41,16 @@ FORM: Glossed transcript, position 6 of 7 on the ordered list (dealt lead). seed
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
 
+## Extension: question forms and talk (Nov 2026)
+
+Shaped inside the Glossed Transcript; Jan asked for the first recommendation. Picked: "the answer
+slip and the talk line" (over a tabbed foot, and an answer form in the column). Choice options sit
+under the question as Choice rows with a letter tab and show the key once answered; the foot keeps
+its two columns: Reasoning with How sure at the left, the answer or the choice read back with
+Send, a hint and "teach me" at the right; "Write to the AI instead" turns the foot into a message
+box about the open question, and "Question this judgment" into one about a judgment. The topic
+plan is one quiet line in the transcript and "3 of 6 topics asked" in the tally.
+
 ## Open decisions
 
 - Transcription: the ChatGPT plan route refuses the transcription API, so dictation is the

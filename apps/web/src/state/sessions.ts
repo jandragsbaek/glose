@@ -59,6 +59,7 @@ export const restorePointAtom = GloseClient.mutation(RPC_METHODS.sessionsRestore
 export const addPointAtom = GloseClient.mutation(RPC_METHODS.sessionsAddPoint);
 export const writePointAtom = GloseClient.mutation(RPC_METHODS.sessionsWritePoint);
 export const answerProbeAtom = GloseClient.mutation(RPC_METHODS.sessionsAnswerProbe);
+export const askHintAtom = GloseClient.mutation(RPC_METHODS.sessionsAskHint);
 export const finishProbeAtom = GloseClient.mutation(RPC_METHODS.sessionsFinishProbe);
 export const goDeeperAtom = GloseClient.mutation(RPC_METHODS.sessionsGoDeeper);
 export const continueProbeAtom = GloseClient.mutation(RPC_METHODS.sessionsContinueProbe);

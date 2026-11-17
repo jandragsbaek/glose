@@ -189,6 +189,217 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
       }).pipe(Effect.scoped),
   );
 
+  it.effect(
+    "asks a choice question: plans, talks and hints while it is open, checks the choice in code, and judges again after a dispute",
+    () =>
+      Effect.gen(function* () {
+        const { fake, layer, graphFolder, sourceId, bodies } = yield* setUp;
+        fake.answer(MODELS, MODEL_LIST, MODEL_LIST, MODEL_LIST, MODEL_LIST, MODEL_LIST);
+        fake.answer(
+          RESPONSES,
+          toolCall("plan_topics", { topics: ["Attention residue", "Deep work", "deep work "] }),
+          toolCall("ask_question", {
+            topic: "Attention residue",
+            question: "What does a switch cost?",
+            again_of: null,
+            form: "choice",
+            select: "one",
+            options: [
+              { text: "Worse work on the next task", right: true, tests: null },
+              { text: "Lost time only", right: false, tests: "sees the cost as time" },
+              { text: "Tiredness", right: false, tests: "confuses residue with fatigue" },
+            ],
+          }),
+          answer("Choose one."),
+          answer("A change from one task to another."),
+          toolCall("give_hint", { question: 1, text: "Think of the quality, not the clock." }),
+          answer("Over to you."),
+        );
+
+        const session = yield* Effect.gen(function* () {
+          const sessions = yield* Sessions;
+          const { id } = yield* sessions.start({ kind: "probe", subject: sourceId });
+          yield* afterTurn(id);
+          const early = yield* (yield* FileSystem.FileSystem).readFileString(
+            (yield* Path.Path).join(graphFolder, "Probes", `${sourceId}.md`),
+          );
+          assert.include(early, "B. Lost time only");
+          assert.notInclude(early, "(right)", "the record keeps the key until the answer");
+          yield* sessions.send({ id, text: "What is a switch here?" });
+          yield* afterTurn(id);
+          yield* sessions.askHint({ id, question: 1 });
+          yield* afterTurn(id);
+          const two = yield* sessions
+            .answerProbe({
+              id,
+              question: 1,
+              reasoning: "",
+              answer: "",
+              teachMe: false,
+              choice: [0, 1],
+            })
+            .pipe(Effect.flip);
+          assert.strictEqual(two._tag, "QuestionNotOpen", "choose one takes one option");
+          fake.answer(
+            RESPONSES,
+            toolCall("judge_answer", {
+              question: 1,
+              reasoning_verdict: "partly-sound",
+              reasoning_why: "Time is part of it.",
+              result_verdict: "right",
+              result_why: "Exactly right.",
+              quote: null,
+              corrected_options: null,
+            }),
+            toolCall("judge_answer", {
+              question: 1,
+              reasoning_verdict: "partly-sound",
+              reasoning_why: "Time is part of it.",
+              result_verdict: "wrong",
+              result_why: "Time is lost, but the work suffers more.",
+              quote: null,
+              corrected_options: null,
+            }),
+            toolCall("judge_answer", {
+              question: 1,
+              reasoning_verdict: "sound",
+              reasoning_why: "Twice.",
+              result_verdict: "wrong",
+              result_why: "Twice.",
+              quote: null,
+              corrected_options: null,
+            }),
+            answer("Let us look at it."),
+          );
+          yield* sessions.answerProbe({
+            id,
+            question: 1,
+            reasoning: "Switching costs time.",
+            answer: "ignored",
+            teachMe: false,
+            choice: [1],
+            confidence: "sure",
+          });
+          yield* afterTurn(id);
+          fake.answer(
+            RESPONSES,
+            toolCall("judge_answer", {
+              question: 1,
+              reasoning_verdict: "sound",
+              reasoning_why: "Your point on time holds.",
+              result_verdict: "right",
+              result_why: "In this book, lost time is the cost the study measured.",
+              quote: null,
+              corrected_options: [
+                { right: false, tests: "sees quality as the only cost" },
+                { right: true, tests: null },
+                { right: false, tests: "confuses residue with fatigue" },
+              ],
+            }),
+            answer("Judged again: my key was wrong."),
+          );
+          yield* sessions.send({ id, text: "But time is lost too!", judgment: 1 });
+          yield* afterTurn(id);
+          yield* sessions.finishProbe(id);
+          return yield* sessions.watch(id).pipe(Stream.runHead, Effect.map(Option.getOrThrow));
+        }).pipe(Effect.provide(layer));
+
+        assert.deepStrictEqual(
+          session.entries.map((entry) => entry._tag),
+          [
+            "ProbePlan",
+            "ProbeQuestion",
+            "AiMessage",
+            "UserMessage",
+            "AiMessage",
+            "ProbeHintAsked",
+            "ProbeHint",
+            "AiMessage",
+            "ProbeAnswer",
+            "ProbeJudgment",
+            "AiMessage",
+            "UserMessage",
+            "ProbeJudgment",
+            "AiMessage",
+            "ProbeFinished",
+          ],
+        );
+        assert.deepStrictEqual(session.entries[0], {
+          _tag: "ProbePlan",
+          topics: ["Attention residue", "Deep work"],
+        });
+        assert.deepInclude(session.entries[3], { text: "What is a switch here?", question: 1 });
+        assert.deepInclude(session.entries[8], {
+          answer: "",
+          choice: [1],
+          confidence: "sure",
+        });
+        assert.deepInclude(session.entries[9], {
+          result: "wrong",
+          reasoning: "partly-sound",
+          resultWhy: "Time is lost, but the work suffers more.",
+        });
+        assert.deepInclude(session.entries[11], { text: "But time is lost too!", question: 1 });
+        assert.deepInclude(session.entries[12], { result: "right", reasoning: "sound" });
+        assert.deepInclude(
+          session.entries[1]?._tag === "ProbeQuestion" ? session.entries[1].choice : {},
+          {
+            right: [1],
+            tests: ["sees quality as the only cost", null, "confuses residue with fatigue"],
+          },
+        );
+
+        const inputs = bodies().map((body) => body.input.at(-1));
+        assert.deepInclude(inputs, {
+          type: "message",
+          role: "user",
+          content: "(While question 1 is open) What is a switch here?",
+        });
+        assert.deepInclude(inputs, {
+          type: "message",
+          role: "user",
+          content: "(Hint for question 1) Give me a hint, not the answer.",
+        });
+        assert.deepInclude(inputs, {
+          type: "message",
+          role: "user",
+          content:
+            "(Answer to question 1)\n\nMy Reasoning:\nSwitching costs time.\n\nMy choice:\nB) Lost time only\n\nHow sure I am: sure\n\nGlose checked the choice: wrong. A chosen option tests: sees the cost as time.",
+        });
+        const outputs = bodies()
+          .flatMap((body) => body.input)
+          .filter((item) => item.type === "function_call_output")
+          .map((item) => String(item["output"]));
+        assert.isTrue(
+          outputs.some((output) => output.includes("check of the choice says the result is wrong")),
+          "a choice's result follows Glose's check",
+        );
+        assert.isTrue(
+          outputs.some((output) => output.includes("judged already")),
+          "a second judgment needs a dispute first",
+        );
+        assert.deepInclude(inputs, {
+          type: "message",
+          role: "user",
+          content: "(About your judgment of question 1) But time is lost too!",
+        });
+
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const record = yield* fs.readFileString(path.join(graphFolder, "Probes", `${sourceId}.md`));
+        assert.include(
+          record,
+          "A. Worse work on the next task *(tests: sees quality as the only cost)*\nB. Lost time only *(right)*",
+        );
+        assert.include(record, "**Your choice:** B\n\n**How sure:** Sure");
+        assert.include(record, "> [!ai] Hint\n> Think of the quality, not the clock.");
+        assert.include(record, "**You · Q1:** But time is lost too!");
+        assert.include(record, "> [!ai] AI\n> Judged again: my key was wrong.");
+        assert.include(record, "> [!ai] Judged again · Q1\n> Reasoning sound.");
+        assert.include(record, "- Attention residue: Known after help\n- Deep work: Not asked");
+      }).pipe(Effect.scoped),
+  );
+
   it.effect("lets Extraction read the Probe and quote only the user's own words from it", () =>
     Effect.gen(function* () {
       const { fake, layer, sourceId, bodies } = yield* setUp;

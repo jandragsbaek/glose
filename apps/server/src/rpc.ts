@@ -1,5 +1,6 @@
-import { GloseRpcGroup, RPC_METHODS } from "@glose/contracts";
+import { GloseRpcGroup, publicSession, RPC_METHODS } from "@glose/contracts";
 import * as Effect from "effect/Effect";
+import * as Stream from "effect/Stream";
 
 import * as CardChecks from "./cards/CardChecks.ts";
 import * as Cards from "./cards/Cards.ts";
@@ -66,9 +67,12 @@ export const layer = GloseRpcGroup.toLayer(
       [RPC_METHODS.githubCancel]: () => github.cancel,
       [RPC_METHODS.githubDisconnect]: () => github.disconnect,
       [RPC_METHODS.githubRepositories]: () => github.repositories,
-      [RPC_METHODS.sessionsFind]: (input) => sessions.find(input),
-      [RPC_METHODS.sessionsStart]: (input) => sessions.start(input),
-      [RPC_METHODS.sessionsWatch]: ({ id }) => sessions.watch(id),
+      [RPC_METHODS.sessionsFind]: (input) =>
+        sessions
+          .find(input)
+          .pipe(Effect.map((found) => (found === null ? null : publicSession(found)))),
+      [RPC_METHODS.sessionsStart]: (input) => sessions.start(input).pipe(Effect.map(publicSession)),
+      [RPC_METHODS.sessionsWatch]: ({ id }) => sessions.watch(id).pipe(Stream.map(publicSession)),
       [RPC_METHODS.sessionsSend]: (input) => sessions.send(input),
       [RPC_METHODS.sessionsRetry]: ({ id }) => sessions.retry(id),
       [RPC_METHODS.sessionsStop]: ({ id }) => sessions.stop(id),
@@ -81,8 +85,10 @@ export const layer = GloseRpcGroup.toLayer(
       [RPC_METHODS.sessionsAddPoint]: (input) => sessions.addPoint(input),
       [RPC_METHODS.sessionsWritePoint]: (input) => sessions.writePoint(input),
       [RPC_METHODS.sessionsAnswerProbe]: (input) => sessions.answerProbe(input),
+      [RPC_METHODS.sessionsAskHint]: (input) => sessions.askHint(input),
       [RPC_METHODS.sessionsFinishProbe]: ({ id }) => sessions.finishProbe(id),
-      [RPC_METHODS.sessionsGoDeeper]: (input) => sessions.goDeeper(input),
+      [RPC_METHODS.sessionsGoDeeper]: (input) =>
+        sessions.goDeeper(input).pipe(Effect.map(publicSession)),
       [RPC_METHODS.sessionsContinueProbe]: ({ id }) => sessions.continueProbe(id),
       [RPC_METHODS.sessionsAddPassagePoint]: (input) => sessions.addPassagePoint(input),
       [RPC_METHODS.cardsList]: () => cards.list.pipe(Effect.flatMap(checks.score)),

@@ -1,54 +1,56 @@
 import {
-  isKnown,
+  choiceResult,
+  judgmentsOf,
   type Language,
   linkKey,
-  openQuestion,
   probeFindings,
   type ReadingStart,
-  type SourceKind,
-  ReasoningVerdict,
-  ResultVerdict,
   type SessionEntry,
-  TaughtKind,
+  type SourceKind,
 } from "@glose/contracts";
 import * as Effect from "effect/Effect";
-import * as Option from "effect/Option";
-import * as Schema from "effect/Schema";
 
-import type * as Graph from "../graph/Graph.ts";
-import type * as Sources from "../graph/Sources.ts";
 import type { AgentTool, InputItem } from "./agent.ts";
-import { findQuote } from "./extraction.ts";
-import { articleOf, readArticleTool } from "./articleTools.ts";
+import { readArticleTool } from "./articleTools.ts";
 import { readNoteTool, searchGraphTool } from "./graphTools.ts";
-
-const NO_ARGUMENTS = {
-  type: "object",
-  properties: {},
-  required: [],
-  additionalProperties: false,
-} as const;
+import { answerOf, type Context, NO_ARGUMENTS, probeTools, questionsOf } from "./probeTools.ts";
 
 const LANGUAGE_NAMES: Record<Language, string> = { en: "English", da: "Danish" };
 
-export const INSTRUCTIONS = `You are the AI in Glose, a desktop app where a person learns from what they read. You run the Probe of the Reading Stage for one Source (usually a book): one adaptive conversation that finds what the user knows about it, what they do not know, and what they still must learn.
+export const INSTRUCTIONS = `You are the AI in Glose, a desktop app where a person learns from what they read. You run the Probe of the Reading Stage for one Source (usually a book): one adaptive conversation that finds what the user knows about it, what they do not know, and what they still must learn. You are a tutor, not an examiner: the goal is that the user understands, and that both of you know exactly where they stand.
 
 The loop:
-1. Ask ONE question with ask_question, then end your turn. The user answers with their Reasoning (how they got there, in their own words) and their answer (the end result).
-2. Judge every answer with judge_answer. Judge the Reasoning and the result apart: the Reasoning can be sound while the result is wrong, or the other way round. Say why in one short sentence each. When one sentence of their Reasoning shows the misunderstanding, give its exact words as quote, copied character for character. When the user gave no Reasoning, its verdict is "none".
-3. When the answer shows a gap (the result is not right, or the Reasoning is not sound), teach that part with teach (kind "gap"): short, plain, true to the Source, aimed at the exact misunderstanding. Then ask about the same topic again in other words, with again_of set to the question you repeat. A gap closes only when the user answers it.
-4. When the user asks to be taught instead of answering, teach the topic (kind "gap"), then ask again in other words.
-5. When the answer shows no gap, move on to another topic that matters in the Source.
+1. Plan. Start with read_source (and read_article for an Article or a Course lesson), look at the user's Notes, then call plan_topics with the Source's main topics, the most important first (often 5 to 10). Revise the plan with plan_topics when the answers show a topic you missed.
+2. Ask ONE question with ask_question, then end your turn. The user answers with their Reasoning (how they got there, in their own words), their answer, and how sure they are (sure, unsure, guess; it may be missing).
+3. Judge every answer with judge_answer. Judge the Reasoning and the result apart: the Reasoning can be sound while the result is wrong, or the other way round. Say why in one short sentence each. When one sentence of their Reasoning shows the misunderstanding, give its exact words as quote, copied character for character. When the user gave no Reasoning, its verdict is "none".
+4. When the answer shows a gap (the result is not right, or the Reasoning is not sound), teach that part with teach (kind "gap"): short, plain, true to the Source, aimed at the exact misunderstanding. Then ask about the same topic again in other words, with again_of set to the question you repeat. A gap closes only when the user answers it.
+5. When the user asks to be taught instead of answering, teach the topic (kind "gap"), then ask again in other words.
+6. When the answer shows no gap, move on to the next topic of your plan that matters.
+
+Question forms (ask_question's form):
+- "open": the user explains in their own words. Use it most: questions that make the user explain, apply or connect, not recall a word: why, how, what follows, what would change.
+- "choice": 2 to 5 short options; select "one" (exactly one right option) or "many" (choose all that apply; at least one right). Glose shows "Choose one" or "Choose all that apply" itself, so do not say it in the question. Use it to tell apart ideas the user may confuse, to check a claim quickly before going deeper, or as a step down when an open question on the topic went badly. Every wrong option must be plausible and test one specific misconception, named in its tests field (for example "confuses attention residue with fatigue"); a right option's tests is null. No trick options, no "all of the above", no options that differ only in wording. Glose checks the choice itself: in judge_answer, give the result Glose's check gives (judge_answer refuses another), judge the Reasoning ("why this one?"), and say in result_why what the choice shows. A right choice with no Reasoning is not yet understanding: follow it later with an open question on the same topic.
+- Mix the forms. Do not ask two choice questions in a row on the same topic.
+
+How sure:
+- Sure and wrong is a misconception: teach it plainly and ask again.
+- Guess and right is not known yet, and neither is a right choice with no Reasoning: Glose counts them "right, not confirmed yet". Ask about the topic again later in another form, usually open.
+- Unsure and right: say what was right in result_why, so the user can trust it.
+
+Help and talk:
+- The user may ask for a hint (a message "(Hint for question N)"). Give ONE hint with give_hint: a nudge toward the idea, a smaller question, or where to look, never the answer itself. Then end your turn; the question stays open.
+- The user may write to you at any time. A message that starts "(While question N is open)" is not an answer. Answer it in one to three sentences, then end your turn; do not ask a new question, the question stays open. If they ask what the question means, say it in other words without giving the answer away. Never say anything that settles the open question; if they want help with it, point them to "Give me a hint". If they ask about the Source, answer, and say when you are unsure.
+- If the user disputes a judgment (a message "(About your judgment of question N)"), consider it honestly. If they are right, call judge_answer again on that question with the corrected verdicts; if the key of a choice question was wrong, also give corrected_options (each option, in order: right, and what a wrong one tests), and Glose corrects the key. If not, say why in one or two sentences. Never change a judgment only to please.
 
 How to work:
-- Start with read_source. Use list_notes, search_graph and read_note to see what the user's Graph already holds about the Source.
-- Cover the Source's main ideas, one topic at a time, the most important first. Name each topic in a few words; use the same name for every question on it.
-- Ask questions that make the user explain, apply or connect, not recall a word: why, how, what follows, what would change. One question at a time; never a list of questions.
+- Use list_notes, search_graph and read_note to see what the user's Graph already holds about the Source.
+- Cover the Source's main ideas, one topic at a time, the most important first. Name each topic in a few words; use the same name for every question on it, and the names of your plan.
+- One question at a time; never a list of questions.
 - Your teaching comes from your knowledge of the Source, not from the user's copy. If you are unsure what the Source says, say so in the teaching.
 - An Article or a Course lesson brings its text: read it with read_article. Then your questions and your teaching come from the text, the user's own copy. When you teach, give the paragraph your teaching rests on in teach's paragraph, so the user can read it there.
-- Go deeper: a user's message may start with "(Go deeper on ¶ N)". The user is reading and marked that Passage. Ask about that Passage only, one question at a time, and teach its gap as always. When the user's answers show they understand it, call close_passage, say so in one short sentence, and end your turn. Do not move on to another topic then: the Probe of the whole Source comes later, when the user asks for it.
-- When you have covered the Source's main ideas (often after 8 to 15 questions), call mark_covered and tell the user they can finish the Probe. Keep going if they answer more.
-- Your messages are optional and short: one or two sentences at most. Never repeat in a message the question, the judgment or the teaching; they show by themselves.
+- Go deeper: a user's message may start with "(Go deeper on ¶ N)". The user is reading and marked that Passage. Ask about that Passage only, one question at a time, and teach its gap as always; do not make a plan for it. When the user's answers show they understand it, call close_passage, say so in one short sentence, and end your turn. Do not move on to another topic then: the Probe of the whole Source comes later, when the user asks for it.
+- When you have covered the topics of your plan (often after 8 to 15 questions), call mark_covered and tell the user they can finish the Probe. Keep going if they answer more.
+- Your messages are optional and short: one or two sentences at most. Never repeat in a message the question, the options, the judgment, the hint or the teaching; they show by themselves.
 - Write in the language the user answers in; before their first answer, in the interface language named in the first message. Write plain text.`;
 
 const START_NOTES: Record<ReadingStart, string> = {
@@ -95,352 +97,128 @@ export const continueMessage: InputItem = {
   type: "message",
   role: "developer",
   content:
-    "The user has finished reading and asks for the Probe of the whole Source now. Cover its main ideas you have not asked about yet, the most important first.",
+    "The user has finished reading and asks for the Probe of the whole Source now. Make your plan with plan_topics, then cover its main ideas you have not asked about yet, the most important first.",
 };
 
-type Focus = Extract<SessionEntry, { _tag: "ProbeFocus" }>;
+const LETTERS = "ABCDEFGH";
 
-export const openFocus = (entries: ReadonlyArray<SessionEntry>): Focus | null => {
-  for (let index = entries.length - 1; index >= 0; index--) {
-    const entry = entries[index]!;
-    if (entry._tag === "ProbeFocusDone") return null;
-    if (entry._tag === "ProbeFocus") return entry;
+export const optionLetter = (index: number) => LETTERS[index] ?? String(index + 1);
+
+const CONFIDENCE_WORDS = { sure: "sure", unsure: "unsure", guess: "guessing" } as const;
+
+export const answerMessage = (
+  answer: Extract<SessionEntry, { _tag: "ProbeAnswer" }>,
+  question?: Extract<SessionEntry, { _tag: "ProbeQuestion" }>,
+): string => {
+  if (answer.teachMe) {
+    return `(Answer to question ${answer.question}) I do not know. Please teach me.${answer.reasoning === "" ? "" : `\n\nWhat I thought:\n${answer.reasoning}`}`;
   }
-  return null;
-};
-
-export const answerMessage = (answer: Extract<SessionEntry, { _tag: "ProbeAnswer" }>): string =>
-  answer.teachMe
-    ? `(Answer to question ${answer.question}) I do not know. Please teach me.${answer.reasoning === "" ? "" : `\n\nWhat I thought:\n${answer.reasoning}`}`
-    : [
-        `(Answer to question ${answer.question})`,
-        `My Reasoning:\n${answer.reasoning === "" ? "(none given)" : answer.reasoning}`,
-        `My answer:\n${answer.answer === "" ? "(none given)" : answer.answer}`,
-      ].join("\n\n");
-
-type Question = Extract<SessionEntry, { _tag: "ProbeQuestion" }>;
-type Answer = Extract<SessionEntry, { _tag: "ProbeAnswer" }>;
-
-const questionsOf = (entries: ReadonlyArray<SessionEntry>) =>
-  entries.filter((entry): entry is Question => entry._tag === "ProbeQuestion");
-
-const answerOf = (entries: ReadonlyArray<SessionEntry>, question: number) =>
-  entries.find(
-    (entry): entry is Answer => entry._tag === "ProbeAnswer" && entry.question === question,
-  );
-
-const isJudged = (entries: ReadonlyArray<SessionEntry>, question: number) =>
-  entries.some((entry) => entry._tag === "ProbeJudgment" && entry.question === question);
-
-const AskArguments = Schema.Struct({
-  topic: Schema.String,
-  question: Schema.String,
-  again_of: Schema.NullOr(Schema.Number),
-});
-const JudgeArguments = Schema.Struct({
-  question: Schema.Number,
-  reasoning_verdict: ReasoningVerdict,
-  reasoning_why: Schema.String,
-  result_verdict: ResultVerdict,
-  result_why: Schema.String,
-  quote: Schema.NullOr(Schema.String),
-});
-const TeachArguments = Schema.Struct({
-  kind: TaughtKind,
-  topic: Schema.String,
-  question: Schema.NullOr(Schema.Number),
-  text: Schema.String,
-  paragraph: Schema.optionalKey(Schema.NullOr(Schema.Number)),
-});
-const decodeAsk = Schema.decodeUnknownOption(AskArguments);
-const decodeJudge = Schema.decodeUnknownOption(JudgeArguments);
-const decodeTeach = Schema.decodeUnknownOption(TeachArguments);
-
-export interface Context {
-  readonly sources: Sources.Sources["Service"];
-  readonly graph: Graph.Graph["Service"];
-  readonly source: string;
-  readonly update: <A>(
-    change: (entries: ReadonlyArray<SessionEntry>) => readonly [A, ReadonlyArray<SessionEntry>],
-  ) => Effect.Effect<A>;
-}
-
-type Outcome = { readonly error: string } | Readonly<Record<string, unknown>>;
-
-export const tools = ({ sources, graph, source, update }: Context): AgentTool[] => {
-  const paragraphs = articleOf(sources, source).pipe(
-    Effect.map((article) => article?.units.length ?? 0),
-  );
+  const choice = question?.choice;
+  const chosen = answer.choice ?? [];
+  const picked =
+    choice === undefined
+      ? null
+      : chosen.map((index) => `${optionLetter(index)}) ${choice.options[index] ?? ""}`).join("\n");
+  const checked =
+    choice?.right === undefined
+      ? null
+      : `Glose checked the choice: ${choiceResult(choice.select, choice.right, chosen)}.${chosen
+          .map((index) => choice.tests?.[index] ?? null)
+          .filter((tests): tests is string => tests !== null)
+          .map((tests) => ` A chosen option tests: ${tests}.`)
+          .join("")}`;
   return [
-    {
-      name: "read_source",
-      entry: "read-source",
-      description:
-        "Read the Source of this Probe: its bibliographic data, how the user started it, and their Free text.",
-      parameters: NO_ARGUMENTS,
-      run: () =>
-        sources.get(source).pipe(
-          Effect.map((found) => ({
-            id: found.id,
-            kind: found.kind,
-            author: { family: found.familyName, given: found.givenName },
-            otherAuthors: found.otherAuthors,
-            title: found.title,
-            appearedIn: found.container,
-            lesson: found.part,
-            firstPublished: found.firstPublished,
-            edition: found.edition,
-            translator: found.translator,
-            readingStart: found.readingStart,
-            readingStep: found.readingStep,
-            freeText: found.freeText,
-          })),
-          Effect.orElseSucceed(() => ({ error: "The Source could not be read." })),
-        ),
-    },
-    {
-      name: "list_notes",
-      entry: "list-notes",
-      description: "List the Notes the user made from this Source, with the start of each.",
-      parameters: NO_ARGUMENTS,
-      run: () =>
-        graph.read.pipe(
-          Effect.map((view) => ({
-            notes: view.nodes
-              .filter(
-                (node) =>
-                  node.kind === "note" &&
-                  node.sourceId !== null &&
-                  linkKey(node.sourceId) === linkKey(source),
-              )
-              .map((node) => ({
-                name: node.id,
-                page: node.page,
-                start: node.body.replace(/\s+/g, " ").trim().slice(0, 240),
-              })),
-          })),
-          Effect.orElseSucceed(() => ({ error: "The Graph could not be read." })),
-        ),
-    },
-    searchGraphTool(graph),
-    readNoteTool(graph),
-    readArticleTool(sources, source),
-    {
-      name: "ask_question",
-      entry: null,
-      description:
-        "Ask the user one question, then end your turn. again_of is the number of the question this one asks again after teaching, else null.",
-      parameters: {
-        type: "object",
-        properties: {
-          topic: {
-            type: "string",
-            description:
-              "The topic of the Source, in a few words; the same for every question on it.",
-          },
-          question: { type: "string", description: "One question, plain text." },
-          again_of: { type: ["number", "null"], description: "The question this one asks again." },
-        },
-        required: ["topic", "question", "again_of"],
-        additionalProperties: false,
-      },
-      run: (args: unknown) =>
-        update((entries): readonly [Outcome, ReadonlyArray<SessionEntry>] => {
-          const asked = Option.getOrNull(decodeAsk(args));
-          if (asked === null || asked.topic.trim() === "" || asked.question.trim() === "") {
-            return [{ error: "Give a topic and a question." }, entries];
-          }
-          const open = openQuestion(entries);
-          if (open !== null) {
-            return [
-              {
-                error: `Question ${open.number} has no answer yet. End your turn; the user answers.`,
-              },
-              entries,
-            ];
-          }
-          const numbers = questionsOf(entries).map((question) => question.number);
-          const number = numbers.length === 0 ? 1 : Math.max(...numbers) + 1;
-          const again =
-            asked.again_of !== null && numbers.includes(asked.again_of) ? asked.again_of : null;
-          const repeated = questionsOf(entries).find((question) => question.number === again);
-          const focus = openFocus(entries);
-          const paragraph = repeated?.paragraph ?? focus?.paragraph;
-          const passage = repeated?.passage ?? focus?.text;
-          const entry: Question = {
-            _tag: "ProbeQuestion",
-            number,
-            topic: asked.topic.trim(),
-            text: asked.question.trim(),
-            again,
-            ...(paragraph === undefined ? {} : { paragraph }),
-            ...(passage === undefined ? {} : { passage }),
-          };
-          return [
-            {
-              shown: number,
-              next: "End your turn now. The user answers with Reasoning and an answer.",
-            },
-            [...entries, entry],
-          ];
-        }),
-    },
-    {
-      name: "judge_answer",
-      entry: null,
-      description:
-        "Judge the user's answer to a question: the Reasoning and the result apart, each with why in one sentence. quote: the exact words of their Reasoning the judgment points at, or null.",
-      parameters: {
-        type: "object",
-        properties: {
-          question: { type: "number", description: "The question's number." },
-          reasoning_verdict: { type: "string", enum: [...ReasoningVerdict.literals] },
-          reasoning_why: { type: "string", description: "Why, in one sentence." },
-          result_verdict: { type: "string", enum: [...ResultVerdict.literals] },
-          result_why: { type: "string", description: "Why, in one sentence." },
-          quote: {
-            type: ["string", "null"],
-            description: "Exact words of the user's Reasoning that show the misunderstanding.",
-          },
-        },
-        required: [
-          "question",
-          "reasoning_verdict",
-          "reasoning_why",
-          "result_verdict",
-          "result_why",
-          "quote",
-        ],
-        additionalProperties: false,
-      },
-      run: (args: unknown) =>
-        update((entries): readonly [Outcome, ReadonlyArray<SessionEntry>] => {
-          const asked = Option.getOrNull(decodeJudge(args));
-          if (asked === null) return [{ error: "Give the question and both verdicts." }, entries];
-          const answer = answerOf(entries, asked.question);
-          if (answer === undefined) {
-            return [{ error: `Question ${asked.question} has no answer to judge.` }, entries];
-          }
-          if (isJudged(entries, asked.question)) {
-            return [{ error: `Question ${asked.question} is judged already.` }, entries];
-          }
-          const quote = asked.quote === null ? null : findQuote(answer.reasoning, asked.quote);
-          const judgment: Extract<SessionEntry, { _tag: "ProbeJudgment" }> = {
-            _tag: "ProbeJudgment",
-            question: asked.question,
-            reasoning: answer.reasoning === "" ? "none" : asked.reasoning_verdict,
-            reasoningWhy: asked.reasoning_why.trim(),
-            result: asked.result_verdict,
-            resultWhy: asked.result_why.trim(),
-            quote,
-          };
-          return [
-            {
-              shown: true,
-              ...(asked.quote !== null && quote === null
-                ? { note: "The quote is not in the user's Reasoning, so it is not shown." }
-                : {}),
-              next: isKnown(judgment)
-                ? "No gap: move on to another topic."
-                : "A gap: teach it with teach, then ask again with again_of.",
-            },
-            [...entries, judgment],
-          ];
-        }),
-    },
-    {
-      name: "teach",
-      entry: null,
-      description:
-        'Teach the user, from your knowledge of the Source. kind "gap": the part an answer got wrong (question: its number). kind "intro": a topic before its first question, on a catch-up start (question: null).',
-      parameters: {
-        type: "object",
-        properties: {
-          kind: { type: "string", enum: [...TaughtKind.literals] },
-          topic: { type: "string", description: "The topic, as named in its questions." },
-          question: { type: ["number", "null"], description: "The question that showed the gap." },
-          text: { type: "string", description: "One to three short paragraphs, plain text." },
-          paragraph: {
-            type: ["number", "null"],
-            description:
-              "For an Article or Course lesson: the paragraph of the text the teaching rests on. Else null.",
-          },
-        },
-        required: ["kind", "topic", "question", "text", "paragraph"],
-        additionalProperties: false,
-      },
-      run: (args: unknown) =>
-        Effect.flatMap(paragraphs, (count) =>
-          update((entries): readonly [Outcome, ReadonlyArray<SessionEntry>] => {
-            const asked = Option.getOrNull(decodeTeach(args));
-            if (asked === null || asked.text.trim() === "") {
-              return [{ error: "Give the kind, the topic and the text." }, entries];
-            }
-            const question =
-              asked.question !== null &&
-              questionsOf(entries).some((q) => q.number === asked.question)
-                ? asked.question
-                : null;
-            const paragraph =
-              asked.paragraph !== null &&
-              asked.paragraph !== undefined &&
-              Number.isInteger(asked.paragraph) &&
-              asked.paragraph >= 1 &&
-              asked.paragraph <= count
-                ? asked.paragraph
-                : null;
-            const entry: Extract<SessionEntry, { _tag: "ProbeTaught" }> = {
-              _tag: "ProbeTaught",
-              kind: asked.kind,
-              topic: asked.topic.trim(),
-              question,
-              text: asked.text.trim(),
-              ...(paragraph === null ? {} : { paragraph }),
-            };
-            return [
-              { shown: true, next: "Now ask a question with ask_question." },
-              [...entries, entry],
-            ];
-          }),
-        ),
-    },
-    {
-      name: "close_passage",
-      entry: null,
-      description:
-        "Say that the user now understands the Passage they asked to go deeper on. Then say so in one short sentence and end your turn; do not ask about another topic.",
-      parameters: NO_ARGUMENTS,
-      run: () =>
-        update((entries): readonly [Outcome, ReadonlyArray<SessionEntry>] => {
-          const focus = openFocus(entries);
-          if (focus === null) return [{ error: "No Passage is open." }, entries];
-          if (openQuestion(entries) !== null) {
-            return [
-              { error: "A question is still open. End your turn; the user answers." },
-              entries,
-            ];
-          }
-          return [
-            { shown: true, next: "End your turn now." },
-            [...entries, { _tag: "ProbeFocusDone", paragraph: focus.paragraph, text: focus.text }],
-          ];
-        }),
-    },
-    {
-      name: "mark_covered",
-      entry: null,
-      description:
-        "Say that you have covered the Source's main ideas. Glose offers the user to finish the Probe.",
-      parameters: NO_ARGUMENTS,
-      run: () =>
-        update((entries): readonly [Outcome, ReadonlyArray<SessionEntry>] =>
-          entries.some((entry) => entry._tag === "ProbeCovered")
-            ? [{ shown: true }, entries]
-            : [{ shown: true }, [...entries, { _tag: "ProbeCovered" }]],
-        ),
-    },
-  ];
+    `(Answer to question ${answer.question})`,
+    `My Reasoning:\n${answer.reasoning === "" ? "(none given)" : answer.reasoning}`,
+    picked === null
+      ? `My answer:\n${answer.answer === "" ? "(none given)" : answer.answer}`
+      : `My choice:\n${picked}`,
+    ...(answer.confidence === undefined
+      ? []
+      : [`How sure I am: ${CONFIDENCE_WORDS[answer.confidence]}`]),
+    ...(checked === null ? [] : [checked]),
+  ].join("\n\n");
 };
+
+export const validChoice = (
+  question: Extract<SessionEntry, { _tag: "ProbeQuestion" }>,
+  choice: ReadonlyArray<number> | undefined,
+): ReadonlyArray<number> | undefined => {
+  if (question.choice === undefined || choice === undefined) return undefined;
+  const count = question.choice.options.length;
+  const picked = [...new Set(choice)].toSorted((a, b) => a - b);
+  if (picked.length === 0 || picked.some((i) => !Number.isInteger(i) || i < 0 || i >= count)) {
+    return undefined;
+  }
+  if (question.choice.select === "one" && picked.length !== 1) return undefined;
+  return picked;
+};
+
+export const hintMessage = (question: number): string =>
+  `(Hint for question ${question}) Give me a hint, not the answer.`;
+
+export const openMessage = (question: number, text: string): string =>
+  `(While question ${question} is open) ${text}`;
+
+export const judgmentMessage = (question: number, text: string, open: number | null): string =>
+  `(About your judgment of question ${question}${open === null ? "" : `; question ${open} is still open`}) ${text}`;
+
+export const tools = ({ sources, graph, source, update }: Context): AgentTool[] => [
+  {
+    name: "read_source",
+    entry: "read-source",
+    description:
+      "Read the Source of this Probe: its bibliographic data, how the user started it, and their Free text.",
+    parameters: NO_ARGUMENTS,
+    run: () =>
+      sources.get(source).pipe(
+        Effect.map((found) => ({
+          id: found.id,
+          kind: found.kind,
+          author: { family: found.familyName, given: found.givenName },
+          otherAuthors: found.otherAuthors,
+          title: found.title,
+          appearedIn: found.container,
+          lesson: found.part,
+          firstPublished: found.firstPublished,
+          edition: found.edition,
+          translator: found.translator,
+          readingStart: found.readingStart,
+          readingStep: found.readingStep,
+          freeText: found.freeText,
+        })),
+        Effect.orElseSucceed(() => ({ error: "The Source could not be read." })),
+      ),
+  },
+  {
+    name: "list_notes",
+    entry: "list-notes",
+    description: "List the Notes the user made from this Source, with the start of each.",
+    parameters: NO_ARGUMENTS,
+    run: () =>
+      graph.read.pipe(
+        Effect.map((view) => ({
+          notes: view.nodes
+            .filter(
+              (node) =>
+                node.kind === "note" &&
+                node.sourceId !== null &&
+                linkKey(node.sourceId) === linkKey(source),
+            )
+            .map((node) => ({
+              name: node.id,
+              page: node.page,
+              start: node.body.replace(/\s+/g, " ").trim().slice(0, 240),
+            })),
+        })),
+        Effect.orElseSucceed(() => ({ error: "The Graph could not be read." })),
+      ),
+  },
+  searchGraphTool(graph),
+  readNoteTool(graph),
+  readArticleTool(sources, source),
+  ...probeTools({ sources, graph, source, update }),
+];
 
 export const userWords = (entries: ReadonlyArray<SessionEntry>): string =>
   entries
@@ -452,20 +230,26 @@ export const forExtraction = (entries: ReadonlyArray<SessionEntry>) => ({
   findings: probeFindings(entries).map(({ topic, state }) => ({ topic, state })),
   questions: questionsOf(entries).map((question) => {
     const answer = answerOf(entries, question.number);
-    const judgment = entries.find(
-      (entry) => entry._tag === "ProbeJudgment" && entry.question === question.number,
-    );
+    const judgment = judgmentsOf(entries, question.number).at(-1);
     return {
       number: question.number,
       topic: question.topic,
       question: question.text,
+      ...(question.choice === undefined
+        ? {}
+        : {
+            options: question.choice.options,
+            chosen: answer?.choice?.map((index) => question.choice?.options[index] ?? "") ?? null,
+          }),
       reasoning: answer?.reasoning ?? null,
       answer: answer?.answer ?? null,
+      howSure: answer?.confidence ?? null,
       askedToBeTaught: answer?.teachMe ?? false,
+      hints: entries.filter(
+        (entry) => entry._tag === "ProbeHint" && entry.question === question.number,
+      ).length,
       judged:
-        judgment?._tag === "ProbeJudgment"
-          ? { reasoning: judgment.reasoning, result: judgment.result }
-          : null,
+        judgment === undefined ? null : { reasoning: judgment.reasoning, result: judgment.result },
     };
   }),
 });

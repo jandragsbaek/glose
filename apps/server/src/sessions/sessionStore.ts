@@ -1,4 +1,4 @@
-import { GraphFolderNotSet, type Session, SessionNotFound } from "@glose/contracts";
+import { GraphFolderNotSet, publicEntries, type Session, SessionNotFound } from "@glose/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Option from "effect/Option";
@@ -44,7 +44,7 @@ export const make = Effect.gen(function* () {
         path.join(folder, `${source.id}.md`),
         ProbeRecord.renderRecord({
           source,
-          entries: view.entries,
+          entries: publicEntries(view.entries),
           created: view.created,
           language: language ?? "en",
         }),

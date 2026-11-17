@@ -1,6 +1,13 @@
-import type { SessionEntry } from "./session.ts";
+import type { ChoiceSelect, ResultVerdict, Session, SessionEntry } from "./session.ts";
 
-export type TopicState = "asking" | "known" | "known-after-teaching" | "taught" | "gap";
+export type TopicState =
+  | "asking"
+  | "known"
+  | "known-after-teaching"
+  | "taught"
+  | "gap"
+  | "unconfirmed"
+  | "not-asked";
 
 export interface TopicFinding {
   readonly topic: string;
@@ -9,18 +16,31 @@ export interface TopicFinding {
 }
 
 type Judgment = Extract<SessionEntry, { _tag: "ProbeJudgment" }>;
+type Question = Extract<SessionEntry, { _tag: "ProbeQuestion" }>;
+type Answer = Extract<SessionEntry, { _tag: "ProbeAnswer" }>;
 
-export const isKnown = (judgment: Pick<Judgment, "reasoning" | "result">): boolean =>
-  judgment.result === "right" && (judgment.reasoning === "sound" || judgment.reasoning === "none");
+export type AnswerState = "known" | "unconfirmed" | "gap";
+
+export const answerState = (
+  judgment: Pick<Judgment, "reasoning" | "result">,
+  answer: Pick<Answer, "confidence" | "choice"> | undefined,
+): AnswerState => {
+  if (judgment.result !== "right") return "gap";
+  if (judgment.reasoning === "flawed" || judgment.reasoning === "partly-sound") return "gap";
+  if (answer?.confidence === "guess") return "unconfirmed";
+  if (judgment.reasoning === "none" && answer?.choice !== undefined) return "unconfirmed";
+  return "known";
+};
 
 const topicKey = (topic: string) => topic.trim().toLowerCase();
 
 interface Track {
   topic: string;
   questions: Array<number>;
-  known: boolean | null;
+  known: AnswerState | null;
   taughtSince: boolean;
   everTaught: boolean;
+  judged: number;
 }
 
 export const probeFindings = (
@@ -28,6 +48,7 @@ export const probeFindings = (
 ): ReadonlyArray<TopicFinding> => {
   const tracks = new Map<string, Track>();
   const byQuestion = new Map<number, Track>();
+  const answers = new Map<number, Answer>();
   const trackOf = (topic: string) => {
     const key = topicKey(topic);
     const found = tracks.get(key);
@@ -38,6 +59,7 @@ export const probeFindings = (
       known: null,
       taughtSince: false,
       everTaught: false,
+      judged: 0,
     };
     tracks.set(key, track);
     return track;
@@ -51,19 +73,26 @@ export const probeFindings = (
         break;
       }
       case "ProbeAnswer": {
+        answers.set(entry.question, entry);
         const track = byQuestion.get(entry.question);
         if (track !== undefined && entry.teachMe) {
-          track.known = false;
+          track.known = "gap";
           track.taughtSince = false;
         }
         break;
       }
       case "ProbeJudgment": {
         const track = byQuestion.get(entry.question);
-        if (track !== undefined) {
-          track.known = isKnown(entry);
+        if (track !== undefined && entry.question >= track.judged) {
+          track.known = answerState(entry, answers.get(entry.question));
           track.taughtSince = false;
+          track.judged = entry.question;
         }
+        break;
+      }
+      case "ProbeHint": {
+        const track = byQuestion.get(entry.question);
+        if (track !== undefined) track.everTaught = true;
         break;
       }
       case "ProbeTaught": {
@@ -82,9 +111,12 @@ export const probeFindings = (
         break;
     }
   }
-  return [...tracks.values()]
-    .filter((track) => track.questions.length > 0)
-    .map((track) => ({
+  const asked = [...tracks.values()].filter((track) => track.questions.length > 0);
+  const notAsked = (planOf(entries) ?? [])
+    .filter((topic) => !asked.some((track) => topicKey(track.topic) === topicKey(topic)))
+    .map((topic) => ({ topic, state: "not-asked" as const, questions: [] }));
+  return [
+    ...asked.map((track): TopicFinding => ({
       topic: track.topic,
       questions: track.questions,
       state:
@@ -92,14 +124,24 @@ export const probeFindings = (
           ? track.taughtSince
             ? "taught"
             : "asking"
-          : track.known
-            ? track.everTaught
-              ? "known-after-teaching"
-              : "known"
-            : track.taughtSince
-              ? "taught"
-              : "gap",
-    }));
+          : track.taughtSince && track.known !== "known"
+            ? "taught"
+            : track.known === "known"
+              ? track.everTaught
+                ? "known-after-teaching"
+                : "known"
+              : track.known,
+    })),
+    ...notAsked,
+  ];
+};
+
+export const planOf = (entries: ReadonlyArray<SessionEntry>): ReadonlyArray<string> | null => {
+  for (let index = entries.length - 1; index >= 0; index--) {
+    const entry = entries[index]!;
+    if (entry._tag === "ProbePlan") return entry.topics;
+  }
+  return null;
 };
 
 export const probeTally = (findings: ReadonlyArray<TopicFinding>) => {
@@ -109,8 +151,55 @@ export const probeTally = (findings: ReadonlyArray<TopicFinding>) => {
     afterTeaching: count("known-after-teaching"),
     taught: count("taught"),
     open: count("gap"),
+    unconfirmed: count("unconfirmed"),
+    asked: findings.filter((f) => f.state !== "not-asked").length,
+    topics: findings.length,
   };
 };
+
+export const judgmentsOf = (
+  entries: ReadonlyArray<SessionEntry>,
+  question: number,
+): ReadonlyArray<Judgment> =>
+  entries.filter(
+    (entry): entry is Judgment => entry._tag === "ProbeJudgment" && entry.question === question,
+  );
+
+export const choiceResult = (
+  select: ChoiceSelect,
+  right: ReadonlyArray<number>,
+  chosen: ReadonlyArray<number>,
+): ResultVerdict => {
+  const picked = new Set(chosen);
+  const hits = right.filter((option) => picked.has(option)).length;
+  if (hits === right.length && picked.size === right.length) return "right";
+  if (select === "many" && hits > 0) return "partly-right";
+  return "wrong";
+};
+
+const isAnswer = (entry: SessionEntry): entry is Answer => entry._tag === "ProbeAnswer";
+
+export const publicEntries = (
+  entries: ReadonlyArray<SessionEntry>,
+): ReadonlyArray<SessionEntry> => {
+  const finished = entries.findLastIndex((entry) => entry._tag === "ProbeFinished");
+  if (finished === entries.length - 1) return entries;
+  const answered = new Set(
+    entries.flatMap((entry) => (entry._tag === "ProbeAnswer" ? [entry.question] : [])),
+  );
+  const quietFrom = Math.max(entries.findLastIndex(isAnswer), finished) + 1;
+  return entries.map((entry, index) => {
+    if (index <= finished) return entry;
+    if (entry._tag === "Thinking" && index >= quietFrom) return { ...entry, text: "" };
+    if (entry._tag !== "ProbeQuestion" || entry.choice === undefined) return entry;
+    if (answered.has(entry.number)) return entry;
+    const { right: _right, tests: _tests, ...shown } = entry.choice;
+    return { ...entry, choice: shown } satisfies Question;
+  });
+};
+
+export const publicSession = (session: Session): Session =>
+  session.kind === "probe" ? { ...session, entries: publicEntries(session.entries) } : session;
 
 export const openQuestion = (
   entries: ReadonlyArray<SessionEntry>,
