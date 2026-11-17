@@ -21,6 +21,7 @@ import {
   AddPassagePoint,
   AddPoint,
   AnswerProbe,
+  AskHint,
   DropProposal,
   FindSession,
   GoDeeper,
@@ -133,6 +134,7 @@ export const RPC_METHODS = {
   sessionsWritePoint: "sessions.writePoint",
   sessionsAnswerProbe: "sessions.answerProbe",
   sessionsFinishProbe: "sessions.finishProbe",
+  sessionsAskHint: "sessions.askHint",
   sessionsGoDeeper: "sessions.goDeeper",
   sessionsContinueProbe: "sessions.continueProbe",
   sessionsAddPassagePoint: "sessions.addPassagePoint",
@@ -352,6 +354,16 @@ export const GloseRpcGroup = RpcGroup.make(
   Rpc.make(RPC_METHODS.sessionsAddPassagePoint, {
     payload: AddPassagePoint,
     error: Schema.Union([SourceNotFound, PassageRefused, GraphFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.sessionsAskHint, {
+    payload: AskHint,
+    error: Schema.Union([
+      SessionNotFound,
+      SessionBusy,
+      QuestionNotOpen,
+      GraphFolderNotSet,
+      StorageError,
+    ]),
   }),
   Rpc.make(RPC_METHODS.sessionsFinishProbe, {
     payload: SessionRef,

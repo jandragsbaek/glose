@@ -1,11 +1,9 @@
-/* oxlint-disable jandragsbaek/max-file-lines -- the Probe page, its rows, answer box and findings; move AnswerBox and Findings out next */
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import {
   openQuestion,
+  planOf,
   probeFindings,
   probeTally,
-  type ReasoningVerdict,
-  type ResultVerdict,
   type Session,
   type SessionEntry,
   type Source,
@@ -13,37 +11,23 @@ import {
 import { Link } from "@tanstack/react-router";
 import * as Exit from "effect/Exit";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
-import { BookOpen, Check, Minus, TriangleAlert } from "lucide-react";
-import { type FormEvent, type KeyboardEvent, type ReactNode, useId, useState } from "react";
+import { type ReactNode, useState } from "react";
 
 import { useT } from "../i18n/I18n.tsx";
 import {
-  answerProbeAtom,
   finishProbeAtom,
-  retrySessionAtom,
   probeSessionAtom,
   SESSION_KEYS,
   sessionAtom,
   startSessionAtom,
-  stopSessionAtom,
 } from "../state/sessions.ts";
-import { ManageUsageLink } from "./ChatGptConnection.tsx";
-import {
-  AiStep,
-  IS_MAC,
-  Live,
-  MessageText,
-  NeedsChatGpt,
-  SessionProblem,
-  ToolUses,
-  useChatGptReady,
-} from "./Session.tsx";
+import { AnswerBox, useAnswerDraft } from "./ProbeAnswer.tsx";
+import { ProbeRow, type RowContext, rowsOf } from "./ProbeRows.tsx";
+import { Live, NeedsChatGpt, SessionProblem, useChatGptReady } from "./Session.tsx";
 import { StepBar } from "./StepBar.tsx";
 import { Findings } from "./ProbeFindings.tsx";
 import { followRow, waitsForWhole, WholeProbe } from "./ProbeWhole.tsx";
 import { Notice, Page, SkeletonPanel, StorageProblem } from "./ui.tsx";
-
-type Entry<T extends SessionEntry["_tag"]> = Extract<SessionEntry, { _tag: T }>;
 
 interface Frame {
   readonly source: Source;
@@ -128,7 +112,7 @@ function ProbePage({
   const finish = useAtomSet(finishProbeAtom, { mode: "promiseExit" });
   const entries = session?.entries ?? [];
   const questions = questionCount(entries);
-  const tally = probeTally(probeFindings(entries));
+  const tally = { ...probeTally(probeFindings(entries)), planned: planOf(entries) !== null };
   const canFinish = session !== null && questions > 0 && !isFinished(session);
 
   const finishNow = async () => {
@@ -243,12 +227,31 @@ function ProbeView({ session, ...frame }: Frame & { readonly session: Session })
   const t = useT();
   const finished = isFinished(session);
   const rows = rowsOf(session.entries);
+  const open = openQuestion(session.entries);
+  const { draft, fields } = useAnswerDraft(open?.number ?? null);
+  const waitsForTheWhole = !finished && frame.source.hasText && waitsForWhole(session);
+  const context: RowContext = {
+    session,
+    draft,
+    open,
+    onDispute: finished ? null : (question) => draft.openTalk(question),
+  };
 
   return (
     <ProbePage
       {...frame}
       session={session}
-      box={finished ? undefined : <AnswerBox session={session} />}
+      box={
+        finished || (waitsForTheWhole && draft.talk === null) ? undefined : (
+          <AnswerBox
+            session={session}
+            open={open}
+            draft={draft}
+            fields={fields}
+            waitsForWhole={waitsForTheWhole}
+          />
+        )
+      }
     >
       {session.entries.length === 0 && !session.working ? (
         <p className="empty probe__empty">{t.probe.waiting}</p>
@@ -259,7 +262,7 @@ function ProbeView({ session, ...frame }: Frame & { readonly session: Session })
             // oxlint-disable-next-line react/no-array-index-key -- entries are only ever appended, so a row's place is its identity.
             key={index}
             row={row}
-            session={session}
+            context={context}
             follow={!session.working && index === rows.length - 1 ? followRow : undefined}
           />
         ))}
@@ -279,411 +282,8 @@ function ProbeView({ session, ...frame }: Frame & { readonly session: Session })
           </li>
         )}
       </ol>
-      {!finished && frame.source.hasText && waitsForWhole(session) ? (
-        <WholeProbe session={session} />
-      ) : null}
+      {waitsForTheWhole ? <WholeProbe session={session} /> : null}
       {finished ? <Findings session={session} source={frame.source} /> : null}
     </ProbePage>
-  );
-}
-
-type Row =
-  | { readonly kind: "tools"; readonly uses: ReadonlyArray<Entry<"ToolUse">> }
-  | { readonly kind: "entry"; readonly entry: SessionEntry }
-  | {
-      readonly kind: "answer";
-      readonly answer: Entry<"ProbeAnswer">;
-      readonly judgment: Entry<"ProbeJudgment"> | undefined;
-    };
-
-const rowsOf = (entries: ReadonlyArray<SessionEntry>): ReadonlyArray<Row> => {
-  const rows: Array<Row> = [];
-  for (const entry of entries) {
-    const last = rows.at(-1);
-    if (entry._tag === "ToolUse") {
-      if (last?.kind === "tools")
-        rows[rows.length - 1] = { kind: "tools", uses: [...last.uses, entry] };
-      else rows.push({ kind: "tools", uses: [entry] });
-    } else if (entry._tag === "ProbeAnswer") {
-      const judgment = entries.find(
-        (other): other is Entry<"ProbeJudgment"> =>
-          other._tag === "ProbeJudgment" && other.question === entry.question,
-      );
-      rows.push({ kind: "answer", answer: entry, judgment });
-    } else if (entry._tag !== "ProbeJudgment" && entry._tag !== "ProbeFinished") {
-      rows.push({ kind: "entry", entry });
-    }
-  }
-  return rows;
-};
-
-type Follow = ((node: HTMLElement | null) => void) | undefined;
-
-function ProbeRow({
-  row,
-  session,
-  follow,
-}: {
-  readonly row: Row;
-  readonly session: Session;
-  readonly follow: Follow;
-}) {
-  switch (row.kind) {
-    case "tools":
-      return (
-        <li className="probe__row" ref={follow}>
-          <div className="probe__main">
-            <ToolUses uses={row.uses} />
-          </div>
-        </li>
-      );
-    case "answer":
-      return (
-        <li className="probe__row" ref={follow}>
-          <div className="probe__main">
-            <AnswerView answer={row.answer} quote={row.judgment?.quote ?? null} />
-          </div>
-          {row.judgment === undefined ? null : <Judgment judgment={row.judgment} />}
-        </li>
-      );
-    case "entry":
-      return <EntryRow entry={row.entry} session={session} follow={follow} />;
-  }
-}
-
-function EntryRow({
-  entry,
-  session,
-  follow,
-}: {
-  readonly entry: SessionEntry;
-  readonly session: Session;
-  readonly follow: Follow;
-}) {
-  const t = useT();
-  switch (entry._tag) {
-    case "ProbeQuestion":
-      return (
-        <li className="probe__row" ref={follow}>
-          <div className="probe__main probe__question">
-            <p className="probe__who">
-              {t.session.ai} <span className="probe__qn">{t.probe.question(entry.number)}</span>
-              <span className="probe__topic">
-                {entry.topic}
-                {entry.again === null ? null : ` · ${t.probe.again(entry.again)}`}
-                {entry.paragraph === undefined
-                  ? null
-                  : ` · ${t.reader.probe.onParagraph(entry.paragraph)}`}
-              </span>
-            </p>
-            <p className="probe__ask">
-              <span className="sr-only">{t.probe.questionLabel(entry.number)}: </span>
-              {entry.text}
-            </p>
-          </div>
-        </li>
-      );
-    case "ProbeTaught":
-      return (
-        <li className="probe__row" ref={follow}>
-          <div
-            className="probe__main ai-text probe__taught"
-            data-scope="part"
-            role="group"
-            aria-label={entry.kind === "gap" ? t.probe.taught(entry.question) : t.probe.intro}
-          >
-            <p className="ai-text__gloss">
-              {entry.kind === "gap" ? t.probe.taught(entry.question) : t.probe.intro}
-              <span className="probe__taught-topic"> · {entry.topic}</span>
-            </p>
-            <MessageText text={entry.text} points={[]} onPoint={undefined} />
-            <p className="probe__check">
-              <BookOpen className="probe__icon" aria-hidden="true" />
-              {entry.paragraph === undefined ? (
-                t.probe.checkCopy
-              ) : (
-                <Link
-                  to="/sources/$sourceId"
-                  params={{ sourceId: session.subject }}
-                  search={{ text: 1, p: entry.paragraph }}
-                >
-                  {t.reader.margin.fromText(entry.paragraph)}
-                </Link>
-              )}
-            </p>
-          </div>
-        </li>
-      );
-    case "ProbeFocus":
-      return (
-        <li className="probe__row" ref={follow}>
-          <div className="probe__main you probe__focus">
-            <p className="you__who">{t.reader.probe.focus(entry.paragraph)}</p>
-            <blockquote className="probe__focus-quote">
-              <Link
-                to="/sources/$sourceId"
-                params={{ sourceId: session.subject }}
-                search={{ text: 1, p: entry.paragraph }}
-              >
-                {entry.text}
-              </Link>
-            </blockquote>
-          </div>
-        </li>
-      );
-    case "ProbeFocusDone":
-      return entry.paragraph === 0 ? null : (
-        <li className="probe__row" ref={follow}>
-          <div className="probe__main">
-            <p className="probe__covered">{t.reader.probe.focusDone(entry.paragraph)}</p>
-          </div>
-        </li>
-      );
-    case "ProbeCovered":
-      return (
-        <li className="probe__row" ref={follow}>
-          <div className="probe__main">
-            <p className="probe__covered">{t.probe.covered}</p>
-          </div>
-        </li>
-      );
-    case "AiMessage":
-    case "Thinking":
-      return (
-        <li className="probe__row" ref={follow}>
-          <div className="probe__main probe__say">
-            <AiStep entry={entry} session={session} points={[]} onPoint={undefined} />
-          </div>
-        </li>
-      );
-    case "UserMessage":
-      return (
-        <li className="probe__row" ref={follow}>
-          <div className="probe__main you">
-            <p className="you__who">{t.session.you}</p>
-            <p className="you__text">{entry.text}</p>
-          </div>
-        </li>
-      );
-    default:
-      return null;
-  }
-}
-
-function withQuote(text: string, quote: string | null): ReactNode {
-  if (quote === null) return text;
-  const at = text.indexOf(quote);
-  if (at === -1) return text;
-  return (
-    <>
-      {text.slice(0, at)}
-      <mark className="probe__quote">{quote}</mark>
-      {text.slice(at + quote.length)}
-    </>
-  );
-}
-
-export function AnswerView({
-  answer,
-  quote,
-}: {
-  readonly answer: Entry<"ProbeAnswer">;
-  readonly quote: string | null;
-}) {
-  const t = useT();
-  return (
-    <div className="you probe__answer">
-      {answer.teachMe ? <p className="probe__teach-me">{t.probe.teachMeAsked}</p> : null}
-      {answer.reasoning === "" ? null : (
-        <div>
-          <p className="probe__part">{t.probe.reasoning}</p>
-          <p className="you__text">{withQuote(answer.reasoning, quote)}</p>
-        </div>
-      )}
-      {answer.answer === "" ? null : (
-        <div className="probe__result">
-          <p className="probe__part">{t.probe.answer}</p>
-          <p className="you__text probe__result-text">{answer.answer}</p>
-        </div>
-      )}
-    </div>
-  );
-}
-
-const reasoningTone = (verdict: ReasoningVerdict) =>
-  verdict === "sound" ? "good" : verdict === "none" ? "none" : "gap";
-const resultTone = (verdict: ResultVerdict) => (verdict === "right" ? "good" : "gap");
-
-export function VerdictIcon({ tone }: { readonly tone: "good" | "gap" | "none" }) {
-  switch (tone) {
-    case "good":
-      return <Check className="verdict__icon" aria-hidden="true" />;
-    case "gap":
-      return <TriangleAlert className="verdict__icon" aria-hidden="true" />;
-    case "none":
-      return <Minus className="verdict__icon" aria-hidden="true" />;
-  }
-}
-
-export function Judgment({ judgment }: { readonly judgment: Entry<"ProbeJudgment"> }) {
-  const t = useT();
-  const headingId = useId();
-  return (
-    <aside className="probe__gloss" aria-labelledby={headingId}>
-      <p className="probe__gloss-head" id={headingId}>
-        {t.probe.judged}
-      </p>
-      <div className="verdict" data-tone={reasoningTone(judgment.reasoning)}>
-        <VerdictIcon tone={reasoningTone(judgment.reasoning)} />
-        <div>
-          <p className="verdict__name">{t.probe.reasoningVerdicts[judgment.reasoning]}</p>
-          {judgment.reasoningWhy === "" ? null : (
-            <p className="verdict__why">{judgment.reasoningWhy}</p>
-          )}
-        </div>
-      </div>
-      <div className="verdict" data-tone={resultTone(judgment.result)}>
-        <VerdictIcon tone={resultTone(judgment.result)} />
-        <div>
-          <p className="verdict__name">{t.probe.resultVerdicts[judgment.result]}</p>
-          {judgment.resultWhy === "" ? null : <p className="verdict__why">{judgment.resultWhy}</p>}
-        </div>
-      </div>
-    </aside>
-  );
-}
-
-const DICTATION = IS_MAC
-  ? "mac"
-  : typeof navigator !== "undefined" && /Windows/.test(navigator.userAgent)
-    ? "windows"
-    : "other";
-
-function AnswerBox({ session }: { readonly session: Session }) {
-  const t = useT();
-  const reasoningId = useId();
-  const reasoningHintId = useId();
-  const answerId = useId();
-  const [reasoning, setReasoning] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [failed, setFailed] = useState(false);
-  const send = useAtomSet(answerProbeAtom, { mode: "promiseExit" });
-  const stop = useAtomSet(stopSessionAtom);
-  const retry = useAtomSet(retrySessionAtom);
-  const open = openQuestion(session.entries);
-  const ready = open !== null && !session.working;
-  const canSend = ready && answer.trim() !== "";
-
-  const submit = async (teachMe: boolean, event?: FormEvent) => {
-    event?.preventDefault();
-    if (open === null || !ready || (!teachMe && !canSend)) return;
-    const exit = await send({
-      payload: {
-        id: session.id,
-        question: open.number,
-        reasoning,
-        answer: teachMe ? "" : answer,
-        teachMe,
-      },
-    });
-    setFailed(Exit.isFailure(exit));
-    if (Exit.isSuccess(exit)) {
-      setReasoning("");
-      setAnswer("");
-    }
-  };
-
-  const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) void submit(false);
-  };
-
-  return (
-    <form className="probe__box" onSubmit={(event) => submit(false, event)}>
-      <div className="probe__box-in">
-        <div className="probe__field">
-          <label className="probe__label" htmlFor={reasoningId}>
-            {t.probe.reasoning}
-            {open === null ? null : (
-              <span className="probe__for"> · {t.probe.question(open.number)}</span>
-            )}
-          </label>
-          <p className="field__hint" id={reasoningHintId}>
-            {t.probe.dictate[DICTATION]}
-          </p>
-          <textarea
-            className="composer__text probe__reasoning"
-            id={reasoningId}
-            aria-describedby={reasoningHintId}
-            placeholder={t.probe.reasoningPlaceholder}
-            value={reasoning}
-            onChange={(event) => setReasoning(event.target.value)}
-            onKeyDown={onKeyDown}
-            spellCheck
-          />
-        </div>
-        <div className="probe__field">
-          <label className="probe__label" htmlFor={answerId}>
-            {t.probe.answer}
-          </label>
-          <input
-            className="input"
-            id={answerId}
-            placeholder={t.probe.answerPlaceholder}
-            value={answer}
-            onChange={(event) => setAnswer(event.target.value)}
-            onKeyDown={onKeyDown}
-            autoComplete="off"
-            spellCheck
-          />
-          {failed ? (
-            <Notice tone="error">
-              <p>{t.probe.sendFailed}</p>
-            </Notice>
-          ) : null}
-          <div className="probe__actions">
-            <button
-              type="submit"
-              className="button button--primary"
-              disabled={!canSend}
-              aria-keyshortcuts={IS_MAC ? "Meta+Enter" : "Control+Enter"}
-            >
-              {t.probe.send}
-              <kbd className="key" aria-hidden="true">
-                {IS_MAC ? t.session.sendKey.mac : t.session.sendKey.other}
-              </kbd>
-            </button>
-            {session.working ? (
-              <button
-                type="button"
-                className="button"
-                onClick={() => stop({ payload: { id: session.id } })}
-              >
-                {t.session.stop}
-              </button>
-            ) : open === null ? (
-              <button
-                type="button"
-                className="button"
-                onClick={() => retry({ payload: { id: session.id } })}
-              >
-                {t.probe.askNext}
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="button button--quiet"
-                disabled={!ready}
-                onClick={() => void submit(true)}
-              >
-                {t.probe.teachMe}
-              </button>
-            )}
-          </div>
-          <p className="probe__plan">
-            {t.chatgpt.usingPlan}. <ManageUsageLink />
-          </p>
-        </div>
-      </div>
-    </form>
   );
 }

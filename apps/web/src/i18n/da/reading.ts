@@ -280,13 +280,19 @@ export const readingMessages: Pick<
       questions === 0 ? "med ChatGPT" : count(questions, "spørgsmål", "spørgsmål"),
     tally: (tally) =>
       [
+        tally.planned
+          ? `${numbers.format(tally.asked)} af ${count(tally.topics, "emne", "emner")} spurgt`
+          : null,
         `${numbers.format(tally.known)} kendt`,
         tally.afterTeaching === 0
           ? null
-          : `${numbers.format(tally.afterTeaching)} kendt efter undervisning`,
+          : `${numbers.format(tally.afterTeaching)} kendt efter hjælp`,
         tally.taught === 0
           ? null
           : `${numbers.format(tally.taught)} undervist, ikke bekræftet endnu`,
+        tally.unconfirmed === 0
+          ? null
+          : `${numbers.format(tally.unconfirmed)} rigtigt, ikke bekræftet endnu`,
         tally.open === 0 ? null : `${numbers.format(tally.open)} stadig åben`,
       ]
         .filter((part) => part !== null)
@@ -316,7 +322,46 @@ export const readingMessages: Pick<
     reasoning: "Dit ræsonnement",
     answer: "Dit svar",
     teachMeAsked: "Du bad om at blive undervist.",
+    hintAsked: "Du bad om et hint.",
     judged: "Vurderet",
+    judgedAgain: "Vurderet igen",
+    unconfirmedWhy: {
+      guess: "Du gættede, så det tæller ikke som kendt endnu.",
+      bare: "Intet ræsonnement for valget, så det tæller ikke som kendt endnu.",
+    },
+    judgedAgainOf: (n: number) => `AI'en vurderede S${numbers.format(n)} igen.`,
+    dispute: "Anfægt vurderingen",
+    chooseOne: "Vælg én",
+    chooseMany: "Vælg alle, der passer",
+    optionsLabel: (n: number) => `Svarmuligheder til S${numbers.format(n)}`,
+    option: (letter: string) => `Mulighed ${letter}`,
+    yourChoice: "Dit valg",
+    noChoice: "Vælg en mulighed i spørgsmålet ovenfor.",
+    choiceMark: {
+      chosenRight: "Dit valg · rigtigt",
+      chosenWrong: "Dit valg · ikke rigtigt",
+      right: "Rigtigt svar",
+    },
+    tests: (misconception: string) => `Tester: ${misconception}`,
+    sure: "Hvor sikker er du?",
+    sureShort: "Hvor sikker",
+    confidence: { sure: "Sikker", unsure: "Ikke sikker", guess: "Gætter" },
+    hint: "Giv mig et hint",
+    hintGloss: (n: number) => `Hint · S${numbers.format(n)}`,
+    hintFailed: "Glose kunne ikke bede om et hint. Prøv igen.",
+    planned: "Planlagte emner",
+    talk: "Skriv til AI'en i stedet",
+    talkLabel: "Besked til AI'en",
+    talkAbout: (n: number) => `om S${numbers.format(n)}`,
+    talkAboutJudgment: (n: number) => `om vurderingen af S${numbers.format(n)}`,
+    talkHint:
+      "Spørg, hvad spørgsmålet betyder, anfægt en vurdering, eller spørg om bogen. Dit svar venter.",
+    talkHintNoQuestion: "Spørg om bogen eller en vurdering, eller bed om næste spørgsmål.",
+    talkPlaceholder: "Skriv til AI'en",
+    backToAnswer: "Tilbage til dit svar",
+    closeTalk: "Luk beskeden",
+    messageFailed: "Glose kunne ikke sende din besked. Prøv igen.",
+    you: (about: string | null) => (about === null ? "Dig" : `Dig · ${about}`),
     reasoningVerdicts: {
       sound: "Ræsonnement: holdbart",
       "partly-sound": "Ræsonnement: delvis holdbart",
@@ -339,9 +384,11 @@ export const readingMessages: Pick<
     states: {
       asking: "Spurgt, intet svar endnu",
       known: "Kendt",
-      "known-after-teaching": "Kendt efter undervisning",
+      "known-after-teaching": "Kendt efter hjælp",
       taught: "Undervist, ikke bekræftet endnu",
       gap: "Stadig åben",
+      unconfirmed: "Rigtigt, ikke bekræftet endnu",
+      "not-asked": "Ikke spurgt endnu",
     },
     foundEmpty: "Sonderingen sluttede før noget svar.",
     keptIn: (file: string) => `Sonderingen er gemt i ${file} i din grafmappe.`,
@@ -350,6 +397,7 @@ export const readingMessages: Pick<
     doneRead: (title: string) => `Færdig: ${title} er læst`,
     doneHint: "Kilden forlader skrivebordet. Dens noter, frie tekst og sondering bliver.",
     reasoningPlaceholder: "Tænk højt: hvordan kommer du frem til det?",
+    choiceReasoningPlaceholder: "Tænk højt: hvorfor denne?",
     dictate: {
       mac: "Vil du hellere tale, så start din Macs diktering: tryk to gange på Fn eller på mikrofontasten.",
       windows: "Vil du hellere tale, så tryk Windows + H for Windows' stemmeindtastning.",

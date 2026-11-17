@@ -74,10 +74,25 @@ export type ResultVerdict = typeof ResultVerdict.Type;
 export const TaughtKind = Schema.Literals(["gap", "intro"]);
 export type TaughtKind = typeof TaughtKind.Type;
 
+export const Confidence = Schema.Literals(["sure", "unsure", "guess"]);
+export type Confidence = typeof Confidence.Type;
+
+export const ChoiceSelect = Schema.Literals(["one", "many"]);
+export type ChoiceSelect = typeof ChoiceSelect.Type;
+
+export const ProbeChoice = Schema.Struct({
+  select: ChoiceSelect,
+  options: Schema.Array(Schema.String),
+  right: Schema.optionalKey(Schema.Array(Schema.Number)),
+  tests: Schema.optionalKey(Schema.Array(Schema.NullOr(Schema.String))),
+});
+export type ProbeChoice = typeof ProbeChoice.Type;
+
 export const SessionEntry = Schema.Union([
   Schema.TaggedStruct("UserMessage", {
     text: Schema.String,
     about: Schema.optionalKey(Schema.String),
+    question: Schema.optionalKey(Schema.Number),
   }),
   Schema.TaggedStruct("AiMessage", { text: Schema.String }),
   Schema.TaggedStruct("ToolUse", {
@@ -95,12 +110,15 @@ export const SessionEntry = Schema.Union([
     again: Schema.NullOr(Schema.Number),
     paragraph: Schema.optionalKey(Schema.Number),
     passage: Schema.optionalKey(Schema.String),
+    choice: Schema.optionalKey(ProbeChoice),
   }),
   Schema.TaggedStruct("ProbeAnswer", {
     question: Schema.Number,
     reasoning: Schema.String,
     answer: Schema.String,
     teachMe: Schema.Boolean,
+    choice: Schema.optionalKey(Schema.Array(Schema.Number)),
+    confidence: Schema.optionalKey(Confidence),
   }),
   Schema.TaggedStruct("ProbeJudgment", {
     question: Schema.Number,
@@ -117,6 +135,9 @@ export const SessionEntry = Schema.Union([
     text: Schema.String,
     paragraph: Schema.optionalKey(Schema.Number),
   }),
+  Schema.TaggedStruct("ProbeHintAsked", { question: Schema.Number }),
+  Schema.TaggedStruct("ProbeHint", { question: Schema.Number, text: Schema.String }),
+  Schema.TaggedStruct("ProbePlan", { topics: Schema.Array(Schema.String) }),
   Schema.TaggedStruct("ProbeFocus", { paragraph: Schema.Number, text: Schema.String }),
   Schema.TaggedStruct("ProbeFocusDone", {
     paragraph: Schema.Number,
@@ -178,6 +199,7 @@ export const SendMessage = Schema.Struct({
   id: Schema.String,
   text: Words,
   about: Schema.optionalKey(Schema.String),
+  judgment: Schema.optionalKey(Schema.Number),
 });
 
 export const AnswerProbe = Schema.Struct({
@@ -186,7 +208,11 @@ export const AnswerProbe = Schema.Struct({
   reasoning: Schema.Trim,
   answer: Schema.Trim,
   teachMe: Schema.Boolean,
+  choice: Schema.optionalKey(Schema.Array(Schema.Number)),
+  confidence: Schema.optionalKey(Confidence),
 });
+
+export const AskHint = Schema.Struct({ id: Schema.String, question: Schema.Number });
 
 export const PointRef = Schema.Struct({ id: Schema.String, point: Schema.String });
 

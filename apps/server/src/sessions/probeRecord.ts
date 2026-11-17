@@ -1,4 +1,6 @@
 import {
+  type Confidence,
+  judgmentsOf,
   type Language,
   probeFindings,
   type ReasoningVerdict,
@@ -19,7 +21,19 @@ const LABELS = {
     reasoning: "Your Reasoning",
     answer: "Your answer",
     teachMe: "You asked to be taught.",
+    choice: "Your choice",
+    rightOption: "right",
+    tests: "tests",
+    sure: "How sure",
+    confidence: { sure: "Sure", unsure: "Not sure", guess: "Guessing" } satisfies Record<
+      Confidence,
+      string
+    >,
+    hint: "Hint",
+    you: "You",
+    plan: "Topics planned",
     judged: "Judged",
+    judgedAgain: "Judged again",
     reasoningVerdicts: {
       sound: "Reasoning sound",
       "partly-sound": "Reasoning partly sound",
@@ -40,9 +54,11 @@ const LABELS = {
     states: {
       asking: "Asked",
       known: "Known",
-      "known-after-teaching": "Known after teaching",
+      "known-after-teaching": "Known after help",
       taught: "Taught, not confirmed yet",
       gap: "Still open",
+      unconfirmed: "Right, not confirmed yet",
+      "not-asked": "Not asked",
     } satisfies Record<TopicState, string>,
   },
   da: {
@@ -52,7 +68,16 @@ const LABELS = {
     reasoning: "Dit ræsonnement",
     answer: "Dit svar",
     teachMe: "Du bad om at blive undervist.",
+    choice: "Dit valg",
+    rightOption: "rigtigt",
+    tests: "tester",
+    sure: "Hvor sikker",
+    confidence: { sure: "Sikker", unsure: "Ikke sikker", guess: "Gætter" },
+    hint: "Hint",
+    you: "Dig",
+    plan: "Planlagte emner",
     judged: "Vurderet",
+    judgedAgain: "Vurderet igen",
     reasoningVerdicts: {
       sound: "Ræsonnement holdbart",
       "partly-sound": "Ræsonnement delvis holdbart",
@@ -73,9 +98,11 @@ const LABELS = {
     states: {
       asking: "Spurgt",
       known: "Kendt",
-      "known-after-teaching": "Kendt efter undervisning",
+      "known-after-teaching": "Kendt efter hjælp",
       taught: "Undervist, ikke bekræftet endnu",
       gap: "Stadig åben",
+      unconfirmed: "Rigtigt, ikke bekræftet endnu",
+      "not-asked": "Ikke spurgt",
     },
   },
 } satisfies Record<Language, unknown>;
@@ -112,16 +139,53 @@ export const renderRecord = (input: {
           `## ${labels.question}${entry.number} · ${entry.topic}${entry.paragraph === undefined ? "" : ` · ¶ ${entry.paragraph}`}${entry.again === null ? "" : ` (${labels.again(entry.again)})`}`,
           entry.text,
         );
+        if (entry.choice !== undefined) {
+          const { options, right, tests } = entry.choice;
+          blocks.push(
+            options
+              .map((option, index) => {
+                const key = right?.includes(index)
+                  ? ` *(${labels.rightOption})*`
+                  : tests?.[index]
+                    ? ` *(${labels.tests}: ${tests[index]})*`
+                    : "";
+                return `${String.fromCharCode(65 + index)}. ${option}${key}`;
+              })
+              .join("\n"),
+          );
+        }
         break;
-      case "ProbeAnswer":
+      case "ProbeAnswer": {
         if (entry.teachMe) blocks.push(`*${labels.teachMe}*`);
         if (entry.reasoning !== "") blocks.push(`**${labels.reasoning}:** ${entry.reasoning}`);
         if (entry.answer !== "") blocks.push(`**${labels.answer}:** ${entry.answer}`);
+        if (entry.choice !== undefined) {
+          const letters = entry.choice.map((index) => String.fromCharCode(65 + index));
+          blocks.push(`**${labels.choice}:** ${letters.join(", ")}`);
+        }
+        if (entry.confidence !== undefined) {
+          blocks.push(`**${labels.sure}:** ${labels.confidence[entry.confidence]}`);
+        }
+        break;
+      }
+      case "ProbeHint":
+        blocks.push(callout(`> [!ai] ${labels.hint}`, entry.text));
+        break;
+      case "UserMessage":
+        blocks.push(
+          `**${entry.question === undefined ? labels.you : `${labels.you} · ${labels.question}${entry.question}`}:** ${entry.text}`,
+        );
+        break;
+      case "AiMessage":
+        if (entry.text.trim() !== "") blocks.push(callout("> [!ai] AI", entry.text));
+        break;
+      case "ProbePlan":
+        blocks.push(`*${labels.plan}: ${entry.topics.join(" · ")}*`);
         break;
       case "ProbeJudgment":
         blocks.push(
           callout(
-            `> [!ai] ${labels.judged}`,
+            `> [!ai] ${judgmentsOf(input.entries, entry.question)[0] === entry ? labels.judged : `${labels.judgedAgain} · ${labels.question}${entry.question}`}`,
             [
               `${labels.reasoningVerdicts[entry.reasoning]}. ${entry.reasoningWhy}`,
               "",

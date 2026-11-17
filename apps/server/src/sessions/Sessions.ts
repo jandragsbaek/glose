@@ -3,6 +3,7 @@ import {
   parseArticle,
   PassageRefused,
   type Card,
+  type Confidence,
   type NoteNameTaken,
   openQuestion,
   type PointNotFound,
@@ -58,6 +59,7 @@ export class Sessions extends Context.Service<
       readonly id: string;
       readonly text: string;
       readonly about?: string;
+      readonly judgment?: number;
     }) => Effect.Effect<void, SessionNotFound | SessionBusy | GraphError>;
     readonly retry: (id: string) => Effect.Effect<void, SessionNotFound | SessionBusy | GraphError>;
     readonly stop: (id: string) => Effect.Effect<void>;
@@ -103,6 +105,12 @@ export class Sessions extends Context.Service<
       readonly reasoning: string;
       readonly answer: string;
       readonly teachMe: boolean;
+      readonly choice?: ReadonlyArray<number>;
+      readonly confidence?: Confidence;
+    }) => Effect.Effect<void, SessionNotFound | SessionBusy | QuestionNotOpen | GraphError>;
+    readonly askHint: (input: {
+      readonly id: string;
+      readonly question: number;
     }) => Effect.Effect<void, SessionNotFound | SessionBusy | QuestionNotOpen | GraphError>;
     readonly finishProbe: (
       id: string,
@@ -271,18 +279,40 @@ export const make = Effect.gen(function* () {
     watch: (id) =>
       Stream.unwrap(Effect.map(load(id), (session) => SubscriptionRef.changes(session.view))),
 
-    send: Effect.fn("Sessions.send")(function* ({ id, text, about }) {
+    send: Effect.fn("Sessions.send")(function* ({ id, text, about, judgment }) {
       const session = yield* load(id);
       const view = yield* SubscriptionRef.get(session.view);
       const point = pointsOf(view.entries).find((other) => other.id === about);
+      const judged =
+        view.kind === "probe" &&
+        judgment !== undefined &&
+        view.entries.some((entry) => entry._tag === "ProbeJudgment" && entry.question === judgment)
+          ? judgment
+          : null;
+      const open = view.kind === "probe" && judged === null ? openQuestion(view.entries) : null;
+      const question = judged ?? open?.number ?? null;
       yield* beginTurn(
         session,
-        [{ _tag: "UserMessage", text, ...(point === undefined ? {} : { about: point.id }) }],
+        [
+          {
+            _tag: "UserMessage",
+            text,
+            ...(point === undefined ? {} : { about: point.id }),
+            ...(question === null ? {} : { question }),
+          },
+        ],
         [
           {
             type: "message",
             role: "user",
-            content: point === undefined ? text : Extraction.aboutMessage(point, text),
+            content:
+              point !== undefined
+                ? Extraction.aboutMessage(point, text)
+                : judged !== null
+                  ? Probe.judgmentMessage(judged, text, openQuestion(view.entries)?.number ?? null)
+                  : open !== null
+                    ? Probe.openMessage(open.number, text)
+                    : text,
           },
         ],
       );
@@ -307,18 +337,47 @@ export const make = Effect.gen(function* () {
     ...pointDecisions,
 
     answerProbe: Effect.fn("Sessions.answerProbe")(
-      function* ({ id, question, reasoning, answer, teachMe }) {
+      function* ({ id, question, reasoning, answer, teachMe, choice, confidence }) {
         const session = yield* load(id);
         const view = yield* SubscriptionRef.get(session.view);
         const open = view.kind === "probe" ? openQuestion(view.entries) : null;
-        if (open === null || open.number !== question || (!teachMe && answer === "")) {
+        if (open === null || open.number !== question) {
           return yield* new QuestionNotOpen({ id, question });
         }
-        const entry = { _tag: "ProbeAnswer" as const, question, reasoning, answer, teachMe };
+        const picked = teachMe ? undefined : Probe.validChoice(open, choice);
+        if (!teachMe && (open.choice === undefined ? answer === "" : picked === undefined)) {
+          return yield* new QuestionNotOpen({ id, question });
+        }
+        const entry = {
+          _tag: "ProbeAnswer" as const,
+          question,
+          reasoning,
+          answer: teachMe || open.choice !== undefined ? "" : answer,
+          teachMe,
+          ...(picked === undefined ? {} : { choice: picked }),
+          ...(teachMe || confidence === undefined ? {} : { confidence }),
+        };
         yield* beginTurn(
           session,
           [entry],
-          [{ type: "message", role: "user", content: Probe.answerMessage(entry) }],
+          [{ type: "message", role: "user", content: Probe.answerMessage(entry, open) }],
+        );
+      },
+      (effect) => deciding.withPermit(effect),
+    ),
+
+    askHint: Effect.fn("Sessions.askHint")(
+      function* ({ id, question }) {
+        const session = yield* load(id);
+        const view = yield* SubscriptionRef.get(session.view);
+        const open = view.kind === "probe" ? openQuestion(view.entries) : null;
+        if (open === null || open.number !== question) {
+          return yield* new QuestionNotOpen({ id, question });
+        }
+        yield* beginTurn(
+          session,
+          [{ _tag: "ProbeHintAsked", question }],
+          [{ type: "message", role: "user", content: Probe.hintMessage(question) }],
         );
       },
       (effect) => deciding.withPermit(effect),

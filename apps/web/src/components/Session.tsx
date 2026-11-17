@@ -281,7 +281,9 @@ export function AiStep({
     case "AiMessage":
       return <MessageText text={entry.text} points={points} onPoint={onPoint} />;
     case "Thinking":
-      return (
+      return entry.text === "" ? (
+        <p className="turn__note">{t.session.thought(entry.ms)}</p>
+      ) : (
         <details className="aside">
           <summary>
             <ChevronRight className="aside__chev" aria-hidden="true" />
