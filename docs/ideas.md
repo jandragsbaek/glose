@@ -813,7 +813,7 @@ Decided, first version (November 2026):
   `teach` (`gap`, or `intro` before a topic's first question on a catch-up start) and
   `mark_covered`, besides `read_source`, `list_notes`, `search_graph` and `read_note`. It asks
   in the language the user answers in.
-- What the Probe found is counted per topic: known, known after teaching, taught (not confirmed
+- What the Probe found is counted per topic: known, known after help, taught (not confirmed
   yet), still open, or asked. A tally shows it while the Probe runs.
 - The AI says when it has covered the book; the user can finish at any time. Finishing shows
   "What the Probe found" and the way on: "Continue to Extraction" after a `probe` or `catch-up`
@@ -833,6 +833,51 @@ Decided, first version (November 2026):
   dictation, Windows voice typing with Windows + H), which writes into the Reasoning box. An
   in-app recorder needs another transcriber (a local model, or an API key) and is not decided.
 - Not yet: reading a finished Probe again from the step bar, and an in-app recorder.
+
+## Decided, Probe question forms and talk (November 2026)
+
+- Jan asked for a Probe that probes properly: choice questions, and whatever else the AI needs.
+  Shaped with impeccable inside "The Glossed Transcript"; Jan took the first recommendation, "the
+  answer slip and the talk line", over a tabbed foot and an answer form in the column.
+- The AI picks each question's form in `ask_question`: `open` (Reasoning and answer, as before) or
+  `choice`: 2 to 5 options, `one` right or `many` (choose all that apply), and at least one wrong,
+  since a choice with no wrong option tests nothing. Each wrong option names the misconception it
+  tests. Glose checks the choice in code (right only for the exact set; an
+  overlap of `many` is partly right); `judge_answer` refuses a result that differs from the check,
+  so the stored why always fits it. The AI judges the Reasoning ("Why this one?"). Every wrong
+  option must name what it tests. The key stays on the server until the question is answered (or
+  the Probe ends): the screen and the record file leave it out until then, and the AI's reasoning
+  summaries since the last answer stay folded shut, without their text, until the next answer.
+- The options sit under the question in the transcript as Choice rows with a letter (A to E);
+  the answer box reads the choice back ("Your choice"). Answered, the options show the key: the
+  right ones with a Verdigris check, the user's wrong choice with a Rubric triangle and what it
+  tests.
+- How sure: every answer may carry Sure, Not sure or Guessing (`confidence`), optional. The AI
+  reads it as calibration: sure and wrong is a misconception to unlearn. A right guess, or a right
+  choice with no Reasoning, is "Right, not confirmed yet": in the judgment beside the answer (with
+  why), in the tally and in what the Probe found, and the AI asks about the topic again later in
+  another form.
+- Give me a hint: the AI gives one hint (`give_hint`), marked as AI text, and the question stays
+  open. A topic answered right after a hint or teaching is "Known after help" (it was "Known after
+  teaching").
+- Talk: "Write to the AI instead" turns the answer box into a message box, about the open
+  question; both drafts are kept. "Question this judgment" under a judgment writes about that
+  judgment. The AI answers in a few sentences, never settles the open question there (it points to
+  the hint), and keeps the question open. When the user is right, the AI judges again
+  (`judge_answer` on a judged question is allowed only in the turn after a message about that
+  question); when the key of a choice was wrong, the new judgment corrects it
+  (`corrected_options`: each option right or not, and what a wrong one tests). The new judgment
+  shows where it happened ("Judged again"), the first stays with the answer, and the latest stands
+  in what the Probe found. Talk ends after each sent message and when a new question opens.
+- Topic plan: the AI starts with `plan_topics`, the Source's main topics in order, and may revise
+  it. The transcript shows "Topics planned"; the tally says "3 of 6 topics asked"; topics never
+  asked are "Not asked yet" in what the Probe found and in the record.
+- Go deeper in the Reader's margin takes the same choice, How sure and hint; talk stays on the
+  Probe page.
+- The record (`Probes/<Source>.md`) keeps the options with the key (once answered), the choice,
+  How sure, hints, the user's messages with their question, the AI's messages and every judgment.
+- Not yet: other forms (ordering, matching, a scale), keys to pick an option, and showing the plan
+  as a map of topics.
 
 ## Reasoning as part of the answer
 

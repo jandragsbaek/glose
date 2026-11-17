@@ -1518,6 +1518,20 @@ of turns 22px apart, the newest scrolling into view as it lands (at once under r
 - **Other turns:** the Session's tool-use fold, reasoning and AI messages; the user's own messages
   as a Ground box; a 600 line when the AI has covered the main ideas; while the AI works, the live
   line with the moving Lapis tick.
+- **Choice options:** under a choice question, "Choose one" or "Choose all that apply" in Mute
+  13px, then the options 8px apart as Choice rows (Strong Hairline, 4px, 9px 14px, Paper, Body
+  400 15px): a native radio or checkbox, the letter in a small typed tab (Strong Hairline, 2px
+  corners, Lapis 700 12px, 22px), the option. Checked turns the row Lapis with Lapis Tint; focus
+  is the 2px Lapis outline around the row. Answered, the inputs go: the right options end in a
+  Verdigris check with "Right answer" (600 13px), the user's choice keeps the Ground of their turns
+  and ends in "Your choice · right" (check) or "Your choice · not right" (Rubric triangle, Rubric
+  words) with "Tests: …" in Mute 13px under it.
+- **Hint:** the AI Text mark for paragraphs (2px Rubric rule, ¶ gloss "Hint · Q6"), after a Mute
+  13px italic line "You asked for a hint."
+- **Topics planned:** one Mute 13px line, the label in the Part set, the topics joined by " · ".
+- **Judged again:** a Mute 600 13px line where it happened ("The AI judged Q2 again.") with the
+  gloss beside it headed "Judged again"; the answer keeps its first gloss.
+- **The user's message** names the question it is about: "You · Q6".
 
 ### Judgment Gloss (signature)
 
@@ -1526,7 +1540,10 @@ apart. A note with a 1px Strong Hairline on its left (16px padding), headed "Jud
 12px, 0.06em tracking, uppercase, then two verdicts 10px apart. Each verdict is a 16px icon and a
 600 14px/1.45 name ("Reasoning: sound", "Result: partly right") over the reason in Mute 13px.
 Sound and right take a Verdigris check; partly sound, flawed, partly right and wrong take a
-Rubric triangle and a Rubric name; no Reasoning takes a Mute dash. The words of the Reasoning the
+Rubric triangle and a Rubric name; no Reasoning takes a Mute dash. A right guess, or a right
+choice with no Reasoning, adds a third verdict with a Mute dash: "Right, not confirmed yet" and why
+("You were guessing, so it is not counted as known yet."). Under the verdicts, "Question
+this judgment" (a 13px 600 link button) turns the answer box to a message about that judgment. The words of the Reasoning the
 judgment points at carry the faint Rubric highlight (the lower 40% of the line, Ink text), so the
 reader sees where the thinking went wrong. Below 1080px the gloss sits under its answer, 12px
 below, with the same rule.
@@ -1544,6 +1561,21 @@ The Probe's foot, in the transcript's two columns.
   from either field) and the quiet "I don't know, teach me", which becomes a secondary Stop while
   the AI works. Under it the plan line in Mute 12px with a Manage usage link. Send stays off until
   there is an answer and an open question.
+- **How sure** sits under the Reasoning: "How sure are you? (optional)" in 600 13px, then three
+  28px segments (Strong Hairline, 4px, 600 13px): Sure, Not sure, Guessing. The checked one turns
+  Lapis on Lapis Tint; choosing it again clears it.
+- **Choice question:** the right column shows "Your choice" and the letters read back in 600
+  ("A, C"), or a Mute "Choose an option in the question above."; Send stays off until one is
+  checked. The Reasoning's placeholder asks "why this one?".
+- **Help:** "Give me a hint" and "I don't know, teach me" are quiet buttons (30px) stacked under
+  Send, their words on the column's edge.
+- **Talk:** "Write to the AI instead", a 13px 600 link button at the right of the Reasoning label,
+  turns the box to "Message to the AI · about Q6" with a hint and one textarea, and "Back to your
+  answer" in the same place; at the right the plan line, then Send level with the textarea's foot. Both drafts are kept, and the cursor moves with the switch. With
+  no open question the box is the message box, with "Ask for the next question". While talking,
+  the options above are off. While the Probe waits for the whole text (after Go deeper), the box
+  shows only when "Question this judgment" opens it, with "Close the message" in place of "Back to
+  your answer".
 - A send that fails shows an error notice under the answer field. The box goes when the Probe is
   finished.
 
@@ -1551,16 +1583,18 @@ The Probe's foot, in the transcript's two columns.
 
 The close of the transcript, 40px below the last turn, on the same leaf (up to 1016px, centred).
 The heading is a panel heading with a rubric Initial over the flourish rule. Then the topics by
-state, each in the verdict set: Known and Known after teaching with a Verdigris check; Taught, not
-confirmed yet and Still open with a Rubric triangle; Asked, no answer yet with a Mute dash. The
+state, each in the verdict set: Known and Known after help with a Verdigris check; Taught, not
+confirmed yet and Still open with a Rubric triangle; Asked, no answer yet and Not asked yet with a
+Mute dash; Right, not confirmed yet (a guess, or a choice with no Reasoning) takes a Mute dash
+too. The
 topics follow in Mute 13px, joined by " · ". A Meta line says where the record is kept ("The
 Probe is kept in Probes/<Source>.md in your Graph folder."), then the way on: a primary button
 ("Continue to Extraction", or "Done: <title> is read") with a Mute status beside it. An empty
 Probe says "The Probe ended before any answer."
 
 The tally in the band above says the same in one Mute 13px line with tabular numerals ("2 known ·
-1 known after teaching · 1 taught, not confirmed yet"), with `role="status"`. Before the first
-question, the leaf holds a 680px start: the empty-state lead line, a Mute body that follows the
+1 known after help · 1 taught, not confirmed yet"; with a plan it opens "3 of 6 topics asked"),
+with `role="status"`. Before the first question, the leaf holds a 680px start: the empty-state lead line, a Mute body that follows the
 Source's start, and Start the Probe.
 
 ### Specimen Leaves
