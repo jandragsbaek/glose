@@ -21,7 +21,11 @@ export const focusAfterRender = (
   requestAnimationFrame(() => {
     const target = (Array.isArray(refs) ? refs : [refs])
       .map((ref: RefObject<HTMLElement | null>) => ref.current)
-      .find((element) => element?.isConnected === true);
+      .find(
+        (element) =>
+          element?.isConnected === true &&
+          !(element instanceof HTMLButtonElement && element.disabled),
+      );
     if (target !== undefined && target !== null) target.focus();
     else if (frames > 0) focusAfterRender(refs, frames - 1);
   });
@@ -30,6 +34,13 @@ export const focusAfterRender = (
 export const cursorIsFree = (around: HTMLElement | null) => {
   const active = document.activeElement;
   return active === null || active === document.body || (around?.contains(active) ?? false);
+};
+
+export const handCursorOn = (around: HTMLElement | null, to: RefObject<HTMLElement | null>) => {
+  const free = cursorIsFree(around);
+  requestAnimationFrame(() => {
+    if (free || document.activeElement === document.body) focusAfterRender(to);
+  });
 };
 
 export const focusFirstProblem = (root: HTMLElement | null) =>

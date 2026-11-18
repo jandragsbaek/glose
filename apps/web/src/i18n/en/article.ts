@@ -238,6 +238,7 @@ export const articleMessages = {
     url: "Course address (URL)",
     perWeek: "Lessons a week",
     perWeekHint: "For files whose names give no week and day.",
+    perWeekInvalid: "Write a whole number, for example 5.",
     columns: {
       part: "Week · Day",
       title: "Title",
@@ -249,6 +250,7 @@ export const articleMessages = {
     states: {
       new: "New",
       taken: "Already in your Graph",
+      named: "A Source has this file name. Change the title.",
       added: "Added",
       failed: "Not added",
     },

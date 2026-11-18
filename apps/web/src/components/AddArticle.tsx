@@ -30,11 +30,11 @@ import { importTextAtom, KEYS } from "../state/graph.ts";
 import {
   blank,
   DropZone,
-  cursorIsFree,
   FillLine,
   focusAfterRender,
   focusFirstProblem,
   FormFoot,
+  handCursorOn,
   MoreDetails,
   readFiles,
   type TextFile,
@@ -92,7 +92,7 @@ export function AddArticle() {
     setFilled(next);
   };
 
-  const take = (found: TextFile, pasted = false) => {
+  const take = (found: TextFile, pasted = false, typeAtStart = typeRef.current) => {
     if (found.markdown.trim() === "") {
       setProblem({ say: (m) => m.importText.empty });
       return;
@@ -102,7 +102,8 @@ export function AddArticle() {
     setFromPaste(pasted);
     setChoosing(false);
     setPasting(false);
-    if (pasted || cursorIsFree(wayInRef.current)) focusAfterRender(anotherRef);
+    if (pasted) focusAfterRender(anotherRef);
+    else handCursorOn(wayInRef.current, anotherRef);
     const details = detailsFromMarkdown(found.markdown);
     const next = articleValuesOf(details);
     const fill = fillFromFile(valuesRef.current, filledRef.current, next);
@@ -111,7 +112,8 @@ export function AddArticle() {
     const keys = fill.filled;
     setMissing([]);
     setSubmitProblem(null);
-    const nextType = details.doi === null ? typeRef.current : "paper";
+    const nextType =
+      details.doi !== null && typeRef.current === typeAtStart ? "paper" : typeRef.current;
     setType(nextType);
     if (keys.some((key) => key === "otherAuthors" || folded(nextType).includes(key))) {
       setMore(true);
@@ -121,6 +123,8 @@ export function AddArticle() {
   const onFiles = async (pending: Promise<ReadonlyArray<File>>) => {
     if (busy) return;
     const request = ++readRef.current;
+    const typeAtStart = typeRef.current;
+    setProblem(null);
     setReading(true);
     try {
       const [file] = await pending;
@@ -130,7 +134,7 @@ export function AddArticle() {
         return;
       }
       const [found] = await readFiles([file]);
-      if (request === readRef.current && found !== undefined) take(found);
+      if (request === readRef.current && found !== undefined) take(found, false, typeAtStart);
     } catch {
       if (request === readRef.current) setProblem({ say: (m) => m.importText.readFailed });
     } finally {

@@ -14,11 +14,11 @@ import { importTextAtom, sourcesAtom } from "../state/graph.ts";
 import {
   blank,
   DropZone,
-  cursorIsFree,
   FillLine,
   focusAfterRender,
   focusFirstProblem,
   FormFoot,
+  handCursorOn,
   PART,
   readFiles,
   YEAR,
@@ -32,7 +32,7 @@ import {
   type Say,
 } from "./CourseFields.tsx";
 import { lessonBatch, pathOf } from "./lessonBatch.ts";
-import { type Lesson, LessonTable } from "./LessonTable.tsx";
+import { type Lesson, LessonTable, PerWeek } from "./LessonTable.tsx";
 import { Panel } from "./ui.tsx";
 
 const FROM_FILES = ["name", "family", "given", "year"] as const satisfies ReadonlyArray<FromFiles>;
@@ -71,7 +71,6 @@ export function AddLessons() {
   const [perWeek, setPerWeek] = useState("5");
   const perWeekRef = useRef(perWeek);
   const wayInRef = useRef<HTMLDivElement>(null);
-  const perWeekId = useId();
   const fileProblemId = useId();
   const partProblemId = useId();
   const [reading, setReading] = useState(false);
@@ -103,6 +102,7 @@ export function AddLessons() {
   const onFiles = async (pending: Promise<ReadonlyArray<File>>) => {
     if (busyRef.current) return;
     const request = ++readRef.current;
+    setFileProblem(null);
     setReading(true);
     let files: ReadonlyArray<File>;
     let markdown: ReadonlyArray<File>;
@@ -147,7 +147,7 @@ export function AddLessons() {
       ),
     );
     setErrors({});
-    if (cursorIsFree(wayInRef.current)) focusAfterRender(anotherRef);
+    handCursorOn(wayInRef.current, anotherRef);
   };
 
   const cancelRead = () => {
@@ -169,14 +169,22 @@ export function AddLessons() {
 
   const change = (key: string, patch: Partial<Lesson>) =>
     setLessons((current) =>
-      current.map((lesson) => (lesson.key === key ? { ...lesson, ...patch } : lesson)),
+      current.map((lesson) =>
+        lesson.key !== key
+          ? lesson
+          : {
+              ...lesson,
+              ...(lesson.state === "named" && patch.state === undefined ? { state: "new" } : {}),
+              ...patch,
+            },
+      ),
     );
 
   const changePerWeek = (value: string) => {
     setPerWeek(value);
-    perWeekRef.current = value;
     const week = Number(value);
     if (!Number.isInteger(week) || week < 1) return;
+    perWeekRef.current = value;
     setLessons((current) =>
       current.map((lesson) =>
         lesson.partByName || lesson.state === "added"
@@ -196,7 +204,9 @@ export function AddLessons() {
     badParts.length > 0 ? t.lessons.badPart : null,
     clashes.size > 0 ? t.lessons.clash([...clashes].join(", ")) : null,
   ].filter((line): line is string => line !== null);
-  const toAdd = lessons.filter((lesson) => lesson.state !== "added" && !taken(lesson.part));
+  const toAdd = lessons.filter(
+    (lesson) => lesson.state !== "added" && lesson.state !== "named" && !taken(lesson.part),
+  );
   const added = lessons.filter((lesson) => lesson.state === "added").length;
 
   const submit = async (event: FormEvent) => {
@@ -227,6 +237,7 @@ export function AddLessons() {
     const all = batch.length;
     setProgress({ done: 0, all });
     let missed = 0;
+    let named = 0;
     for (const [index, lesson] of batch.entries()) {
       setProgress({ done: index, all });
       const exit = await importText({
@@ -252,21 +263,22 @@ export function AddLessons() {
       } else {
         missed += 1;
         const error = Cause.findErrorOption(exit.cause);
-        change(lesson.key, {
-          state:
-            Option.isSome(error) && error.value._tag === "SourceNameTaken" ? "taken" : "failed",
-        });
+        const nameTaken = Option.isSome(error) && error.value._tag === "SourceNameTaken";
+        if (nameTaken) named += 1;
+        change(lesson.key, { state: nameTaken ? "named" : "failed" });
       }
     }
     busyRef.current = false;
     setProgress(null);
     setFinished(true);
     refreshSources();
-    focusAfterRender(missed > 0 ? [submitRef, openRef] : [openRef, submitRef]);
+    if (named > 0) focusFirstProblem(formRef.current);
+    else focusAfterRender(missed > 0 ? [submitRef, openRef] : [openRef, submitRef]);
   };
 
   const firstAdded = lessons.find((lesson) => lesson.state === "added");
-  const locked = busy || (lessons.length > 0 && toAdd.length === 0 && finished);
+  const waiting = lessons.some((lesson) => lesson.state === "named");
+  const locked = busy || (lessons.length > 0 && toAdd.length === 0 && !waiting && finished);
   const byOrder = lessons.some((lesson) => !lesson.partByName && lesson.state !== "added");
   const showDrop = lessons.length === 0 || choosing;
   const fromFile = Object.values(origins).includes("file");
@@ -409,25 +421,7 @@ export function AddLessons() {
             </p>
           ))}
         </div>
-        {byOrder ? (
-          <div className="panel__body add-lessons__per-week">
-            <label className="field__label" htmlFor={perWeekId}>
-              {t.lessons.perWeek}
-            </label>
-            <input
-              id={perWeekId}
-              className="input add-lessons__per-week-input"
-              value={perWeek}
-              inputMode="numeric"
-              disabled={locked}
-              aria-describedby={`${perWeekId}-hint`}
-              onChange={(event) => changePerWeek(event.target.value)}
-            />
-            <p className="field__hint" id={`${perWeekId}-hint`}>
-              {t.lessons.perWeekHint}
-            </p>
-          </div>
-        ) : null}
+        {byOrder ? <PerWeek value={perWeek} locked={locked} onChange={changePerWeek} /> : null}
         <FormFoot
           problem={problem === null ? null : problem.say(t)}
           status={

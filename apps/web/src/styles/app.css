@@ -8393,7 +8393,12 @@ h4.article__heading {
   color: var(--mute);
 }
 
-.lesson-state[data-state="failed"] {
+.lesson-state[data-state="named"] {
+  white-space: normal;
+}
+
+.lesson-state[data-state="failed"],
+.lesson-state[data-state="named"] {
   color: var(--rubric);
 }
 

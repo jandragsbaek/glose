@@ -1,9 +1,10 @@
 import { Check, CircleAlert } from "lucide-react";
+import { useId } from "react";
 
 import { useT } from "../i18n/I18n.tsx";
 import { PART } from "./textImport.tsx";
 
-type LessonState = "new" | "taken" | "added" | "failed";
+type LessonState = "new" | "taken" | "named" | "added" | "failed";
 
 export interface Lesson {
   readonly key: string;
@@ -35,6 +36,7 @@ export function LessonTable({
   readonly onChange: (name: string, patch: Partial<Lesson>) => void;
 }) {
   const t = useT();
+  const baseId = useId();
   const twice = new Set(
     lessons
       .map((lesson) => lesson.name)
@@ -54,7 +56,7 @@ export function LessonTable({
           </tr>
         </thead>
         <tbody>
-          {lessons.map((lesson) => {
+          {lessons.map((lesson, index) => {
             const state: LessonState =
               lesson.state === "new" && taken(lesson.part) ? "taken" : lesson.state;
             const wrong = !PART.test(lesson.part) || clashes.has(lesson.part);
@@ -87,6 +89,8 @@ export function LessonTable({
                     aria-label={t.lessons.titleLabel(
                       twice.has(lesson.name) ? lesson.path : lesson.name,
                     )}
+                    aria-invalid={state === "named" ? true : undefined}
+                    aria-describedby={state === "named" ? `${baseId}-${index}-state` : undefined}
                     disabled={state === "added" || busy}
                     onChange={(event) => onChange(lesson.key, { title: event.target.value })}
                   />
@@ -95,7 +99,7 @@ export function LessonTable({
                   </span>
                 </td>
                 <td className="num">{lesson.words}</td>
-                <td className="add-lessons__state">
+                <td className="add-lessons__state" id={`${baseId}-${index}-state`}>
                   {state === "new" ? null : <LessonStateMark state={state} />}
                 </td>
               </tr>
@@ -115,5 +119,40 @@ function LessonStateMark({ state }: { readonly state: Exclude<LessonState, "new"
       <Icon className="lesson-state__icon" aria-hidden="true" />
       {t.lessons.states[state]}
     </span>
+  );
+}
+
+export function PerWeek({
+  value,
+  locked,
+  onChange,
+}: {
+  readonly value: string;
+  readonly locked: boolean;
+  readonly onChange: (value: string) => void;
+}) {
+  const t = useT();
+  const id = useId();
+  const valid = Number.isInteger(Number(value)) && Number(value) >= 1;
+  return (
+    <div className="panel__body add-lessons__per-week">
+      <label className="field__label" htmlFor={id}>
+        {t.lessons.perWeek}
+      </label>
+      <input
+        id={id}
+        className="input add-lessons__per-week-input"
+        value={value}
+        inputMode="numeric"
+        disabled={locked}
+        aria-invalid={valid ? undefined : true}
+        aria-describedby={`${id}-hint`}
+        onChange={(event) => onChange(event.target.value)}
+      />
+      <p className={valid ? "field__hint" : "field__error"} id={`${id}-hint`}>
+        {valid ? null : <CircleAlert className="field__error-icon" aria-hidden="true" />}
+        {valid ? t.lessons.perWeekHint : t.lessons.perWeekInvalid}
+      </p>
+    </div>
   );
 }

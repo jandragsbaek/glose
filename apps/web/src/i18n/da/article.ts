@@ -240,6 +240,7 @@ export const articleMessages: typeof english = {
     url: "Kursets adresse (URL)",
     perWeek: "Lektioner om ugen",
     perWeekHint: "Til filer, hvis navne ikke giver uge og dag.",
+    perWeekInvalid: "Skriv et helt tal, fx 5.",
     columns: {
       part: "Uge · Dag",
       title: "Titel",
@@ -251,6 +252,7 @@ export const articleMessages: typeof english = {
     states: {
       new: "Ny",
       taken: "Allerede i din graf",
+      named: "En kilde har dette filnavn. Ret titlen.",
       added: "Tilføjet",
       failed: "Ikke tilføjet",
     },
