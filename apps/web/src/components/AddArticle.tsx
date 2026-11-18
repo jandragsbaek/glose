@@ -12,6 +12,17 @@ import * as Option from "effect/Option";
 import { CircleAlert, FileText } from "lucide-react";
 import { type ChangeEvent, type FormEvent, useId, useRef, useState } from "react";
 
+import {
+  type ArticleField,
+  articleValuesOf,
+  type ArticleValues,
+  EMPTY_ARTICLE,
+  FIELDS_OF,
+  fillFromFile,
+  folded,
+  SHOWN_OF,
+  TYPES,
+} from "../domain/articleForm.ts";
 import { detailsFromMarkdown, isMarkdownName } from "../domain/importText.ts";
 import type { Messages } from "../i18n/en.ts";
 import { useT } from "../i18n/I18n.tsx";
@@ -31,52 +42,6 @@ import {
   YEAR,
 } from "./textImport.tsx";
 import { Panel } from "./ui.tsx";
-
-const ARTICLE_FIELDS = [
-  "familyName",
-  "givenName",
-  "otherAuthors",
-  "title",
-  "published",
-  "container",
-  "volume",
-  "issue",
-  "pages",
-  "doi",
-  "url",
-  "accessed",
-] as const;
-type ArticleField = (typeof ARTICLE_FIELDS)[number];
-type ArticleValues = Record<ArticleField, string>;
-
-const EMPTY_ARTICLE: ArticleValues = {
-  familyName: "",
-  givenName: "",
-  otherAuthors: "",
-  title: "",
-  published: "",
-  container: "",
-  volume: "",
-  issue: "",
-  pages: "",
-  doi: "",
-  url: "",
-  accessed: "",
-};
-
-const TYPES = ["paper", "web", "press"] as const satisfies ReadonlyArray<ArticleType>;
-
-const FIELDS_OF: Record<ArticleType, ReadonlyArray<ArticleField>> = {
-  paper: ["volume", "issue", "pages", "doi", "url"],
-  web: ["url", "accessed"],
-  press: ["pages", "url"],
-};
-
-const SHOWN_OF: Record<ArticleType, ReadonlyArray<ArticleField>> = {
-  paper: ["doi"],
-  web: ["url"],
-  press: ["url"],
-};
 
 type Say = (t: Messages) => string;
 
@@ -103,10 +68,22 @@ export function AddArticle() {
   const [fromPaste, setFromPaste] = useState(false);
   const [reading, setReading] = useState(false);
   const readRef = useRef(0);
+  const valuesRef = useRef(values);
+  const filledRef = useRef(filled);
   const [missing, setMissing] = useState<ReadonlyArray<ArticleField>>([]);
   const [more, setMore] = useState(false);
   const [busy, setBusy] = useState(false);
   const article = text === null ? null : parseArticle(text.markdown);
+
+  const writeValues = (next: ArticleValues) => {
+    valuesRef.current = next;
+    setValues(next);
+  };
+
+  const writeFilled = (next: ReadonlyArray<ArticleField>) => {
+    filledRef.current = next;
+    setFilled(next);
+  };
 
   const take = (found: TextFile, pasted = false) => {
     if (found.markdown.trim() === "") {
@@ -120,28 +97,11 @@ export function AddArticle() {
     setPasting(false);
     focusAfterRender(anotherRef);
     const details = detailsFromMarkdown(found.markdown);
-    const next: Partial<ArticleValues> = {
-      ...(details.family === null ? {} : { familyName: details.family }),
-      ...(details.given === null ? {} : { givenName: details.given }),
-      ...(details.otherAuthors.length === 0
-        ? {}
-        : { otherAuthors: details.otherAuthors.join("\n") }),
-      ...(details.title === null ? {} : { title: details.title }),
-      ...(details.published === null ? {} : { published: details.published }),
-      ...(details.container === null ? {} : { container: details.container }),
-      ...(details.url === null ? {} : { url: details.url }),
-      ...(details.doi === null ? {} : { doi: details.doi }),
-    };
-    const keys = ARTICLE_FIELDS.filter(
-      (key) => next[key] !== undefined && (values[key].trim() === "" || filled.includes(key)),
-    );
-    const stale = filled.filter((key) => next[key] === undefined);
-    setValues((current) => ({
-      ...current,
-      ...Object.fromEntries(stale.map((key) => [key, ""])),
-      ...Object.fromEntries(keys.map((key) => [key, next[key] ?? ""])),
-    }));
-    setFilled(keys);
+    const next = articleValuesOf(details);
+    const fill = fillFromFile(valuesRef.current, filledRef.current, next);
+    writeValues(fill.values);
+    writeFilled(fill.filled);
+    const keys = fill.filled;
     setMissing([]);
     setSubmitProblem(null);
     const nextType = details.doi === null ? type : "paper";
@@ -151,16 +111,17 @@ export function AddArticle() {
     }
   };
 
-  const onFiles = async (files: ReadonlyArray<File>) => {
-    const file = files[0];
-    if (file === undefined || busy) return;
-    if (!isMarkdownName(file.name)) {
-      setProblem({ say: (m) => m.importText.notMarkdown(file.name) });
-      return;
-    }
+  const onFiles = async (pending: Promise<ReadonlyArray<File>>) => {
+    if (busy) return;
     const request = ++readRef.current;
     setReading(true);
     try {
+      const [file] = await pending;
+      if (request !== readRef.current || file === undefined) return;
+      if (!isMarkdownName(file.name)) {
+        setProblem({ say: (m) => m.importText.notMarkdown(file.name) });
+        return;
+      }
       const [found] = await readFiles([file]);
       if (request === readRef.current && found !== undefined) take(found);
     } catch {
@@ -170,9 +131,13 @@ export function AddArticle() {
     }
   };
 
-  const keep = () => {
+  const cancelRead = () => {
     readRef.current += 1;
     setReading(false);
+  };
+
+  const keep = () => {
+    cancelRead();
     setChoosing(false);
     setPasting(false);
     setProblem(null);
@@ -180,8 +145,8 @@ export function AddArticle() {
   };
 
   const set = (name: ArticleField) => (value: string) => {
-    setValues((current) => ({ ...current, [name]: value }));
-    setFilled((current) => current.filter((other) => other !== name));
+    writeValues({ ...valuesRef.current, [name]: value });
+    writeFilled(filledRef.current.filter((other) => other !== name));
     setMissing((current) => current.filter((other) => other !== name));
   };
 
@@ -320,7 +285,10 @@ export function AddArticle() {
                   type="button"
                   className="button button--primary"
                   disabled={pasted.trim() === ""}
-                  onClick={() => take({ name: t.importText.pasted, markdown: pasted }, true)}
+                  onClick={() => {
+                    cancelRead();
+                    take({ name: t.importText.pasted, markdown: pasted }, true);
+                  }}
                 >
                   {t.importText.usePasted}
                 </button>
@@ -347,7 +315,7 @@ export function AddArticle() {
                 tabIndex={-1}
                 aria-hidden="true"
                 onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                  void onFiles([...(event.currentTarget.files ?? [])]);
+                  void onFiles(Promise.resolve([...(event.currentTarget.files ?? [])]));
                   event.currentTarget.value = "";
                 }}
               />
@@ -365,6 +333,7 @@ export function AddArticle() {
                 type="button"
                 className="button button--quiet"
                 onClick={() => {
+                  cancelRead();
                   setPasting(true);
                   setProblem(null);
                   focusAfterRender(pasteRef);
@@ -484,6 +453,3 @@ export function AddArticle() {
     </Panel>
   );
 }
-
-const folded = (type: ArticleType): ReadonlyArray<ArticleField> =>
-  FIELDS_OF[type].filter((name) => !SHOWN_OF[type].includes(name));

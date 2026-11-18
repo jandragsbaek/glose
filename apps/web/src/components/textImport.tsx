@@ -37,6 +37,8 @@ export interface TextFile {
 export const readFiles = async (files: ReadonlyArray<File>): Promise<ReadonlyArray<TextFile>> =>
   Promise.all(files.map(async (file) => ({ name: file.name, markdown: await file.text() })));
 
+const MAX_FOLDER_DEPTH = 8;
+
 export const droppedFiles = async (event: DragEvent): Promise<ReadonlyArray<File>> => {
   const items = [...event.dataTransfer.items];
   const entries = items
@@ -51,12 +53,15 @@ export const droppedFiles = async (event: DragEvent): Promise<ReadonlyArray<File
       );
       Object.defineProperty(file, "webkitRelativePath", { value: entry.fullPath.slice(1) });
       out.push(file);
-    } else if (entry.isDirectory && depth < 2) {
+    } else if (entry.isDirectory && depth < MAX_FOLDER_DEPTH) {
       const reader = (entry as FileSystemDirectoryEntry).createReader();
-      const children = await new Promise<FileSystemEntry[]>((resolve, reject) =>
-        reader.readEntries(resolve, reject),
-      );
-      for (const child of children) await walk(child, depth + 1);
+      for (;;) {
+        const batch = await new Promise<FileSystemEntry[]>((resolve, reject) =>
+          reader.readEntries(resolve, reject),
+        );
+        if (batch.length === 0) break;
+        for (const child of batch) await walk(child, depth + 1);
+      }
     }
   };
   for (const entry of entries) await walk(entry, 0);
@@ -69,7 +74,7 @@ export function DropZone({
   hint,
 }: {
   readonly children: ReactNode;
-  readonly onFiles: (files: ReadonlyArray<File>) => void;
+  readonly onFiles: (files: Promise<ReadonlyArray<File>>) => void;
   readonly hint: string;
 }) {
   const [over, setOver] = useState(false);
@@ -85,7 +90,7 @@ export function DropZone({
       onDrop={(event) => {
         event.preventDefault();
         setOver(false);
-        void droppedFiles(event).then(onFiles);
+        onFiles(droppedFiles(event));
       }}
     >
       <div className="dropzone__actions">{children}</div>

@@ -780,8 +780,9 @@ state: for an Article and Course lessons, the way in while it is open, then the 
 (secondary until then); a book has no way in to wait for (the fields work alone), so its Search is
 secondary and Add Source is the primary from the start. A control that removes itself hands the
 cursor on: Undo to Family name, "Show all" to the chosen record, "Keep" and a read file or folder
-to "Choose another" or "Choose other files". A replacement still being read never overrides
-"Keep", and Add waits for it.
+to "Choose another" or "Choose other files". A file or folder still being read never overrides a
+newer choice (another file, pasted text, "Keep"), and Add waits for it in both kinds. A dropped
+folder is read to every depth.
 
 A focus screen (today only Review, at `/review`) fills the window without the rail and the page
 header. A 64px bar (12px 32px padding) holds the title left, a centred progress line and the way
@@ -1394,8 +1395,9 @@ are 5px 8px at 14px.
   course name, then "Teacher or provider" (600 14px) over the family and given name, then year and
   address. A course name taken from the folder says so ("From the folder name"); a year Glose
   could not read is this year, unmarked, with the hint "This year, as a guess. Change it for an
-  older course." Once a lesson is added, the course data locks, so a retry cannot split the
-  course. While the lessons are added, every control in the panel is locked, Cancel and the done
+  older course." Once a lesson is added, the course data and "Choose other files" lock, so a
+  retry cannot split the course or drop the result. When adding ends, the cursor goes to "Open
+  Week 1 · Day 1", or to the retry button when a lesson was not added. While the lessons are added, every control in the panel is locked, Cancel and the done
   links too;
   the status counts from 1 ("Adding lesson 1 of 20…"), and the summary counts every added lesson,
   retries included. The Panel

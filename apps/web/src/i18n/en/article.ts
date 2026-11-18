@@ -266,7 +266,7 @@ export const articleMessages = {
     fromFolder: "From the folder name",
     filledFolder: "Filled in from the folder name. Check the marked field.",
     filledBoth: "Filled in from the files and the folder name. Check the marked fields.",
-    noMarkdown: "There are no Markdown files there. Choose a folder of .md lesson files.",
+    noMarkdown: "There are no Markdown files there. Choose a folder or files that end in .md.",
     yearGuess: "This year, as a guess. Change it for an older course.",
     another: "Choose other files",
     keep: (n: number) => `Keep the ${count(n, "lesson", "lessons")}`,

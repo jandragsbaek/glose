@@ -268,7 +268,7 @@ export const articleMessages: typeof english = {
     fromFolder: "Fra mappens navn",
     filledFolder: "Udfyldt fra mappens navn. Tjek det mærkede felt.",
     filledBoth: "Udfyldt fra filerne og mappens navn. Tjek de mærkede felter.",
-    noMarkdown: "Der er ingen Markdown-filer der. Vælg en mappe med .md-lektionsfiler.",
+    noMarkdown: "Der er ingen Markdown-filer der. Vælg en mappe eller filer, der ender på .md.",
     yearGuess: "I år, som et gæt. Ret det for et ældre kursus.",
     another: "Vælg andre filer",
     keep: (n: number) =>

@@ -1,5 +1,5 @@
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { BOOK_TEXT_DETAILS, parseArticle } from "@glose/contracts";
+import { BOOK_TEXT_DETAILS } from "@glose/contracts";
 import { Link } from "@tanstack/react-router";
 import * as Cause from "effect/Cause";
 import * as Exit from "effect/Exit";
@@ -8,15 +8,7 @@ import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { CircleAlert, FolderOpen } from "lucide-react";
 import { type FormEvent, useId, useRef, useState } from "react";
 
-import {
-  byFileName,
-  comparePart,
-  detailsFromMarkdown,
-  isMarkdownName,
-  lessonTitle,
-  partByOrder,
-  partFromName,
-} from "../domain/importText.ts";
+import { byFileName, isMarkdownName, partByOrder } from "../domain/importText.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { importTextAtom, sourcesAtom } from "../state/graph.ts";
 import {
@@ -38,13 +30,11 @@ import {
   type Origin,
   type Say,
 } from "./CourseFields.tsx";
+import { lessonBatch, pathOf } from "./lessonBatch.ts";
 import { type Lesson, LessonTable } from "./LessonTable.tsx";
 import { Panel } from "./ui.tsx";
 
 const FROM_FILES = ["name", "family", "given", "year"] as const satisfies ReadonlyArray<FromFiles>;
-
-const pathOf = (file: File) =>
-  (file as File & { readonly webkitRelativePath?: string }).webkitRelativePath || file.name;
 
 export function AddLessons() {
   const t = useT();
@@ -81,7 +71,22 @@ export function AddLessons() {
   const perWeekId = useId();
   const fileProblemId = useId();
   const partProblemId = useId();
+  const [reading, setReading] = useState(false);
+  const courseRef = useRef(course);
+  const originsRef = useRef(origins);
+  const submitRef = useRef<HTMLButtonElement>(null);
+  const openRef = useRef<HTMLAnchorElement>(null);
   const busy = progress !== null;
+
+  const writeCourse = (next: Course) => {
+    courseRef.current = next;
+    setCourse(next);
+  };
+
+  const writeOrigins = (next: Partial<Record<FromFiles, Origin>>) => {
+    originsRef.current = next;
+    setOrigins(next);
+  };
 
   const taken = (part: string) =>
     sources.some(
@@ -92,21 +97,28 @@ export function AddLessons() {
         source.part === part,
     );
 
-  const onFiles = async (files: ReadonlyArray<File>) => {
+  const onFiles = async (pending: Promise<ReadonlyArray<File>>) => {
     if (busyRef.current) return;
-    const markdown = files.filter((file) => isMarkdownName(file.name));
-    if (markdown.length === 0) {
-      setFileProblem({ say: (m) => m.lessons.noMarkdown });
-      return;
-    }
     const request = ++readRef.current;
+    setReading(true);
+    let files: ReadonlyArray<File>;
+    let markdown: ReadonlyArray<File>;
     let read;
     try {
+      files = await pending;
+      if (request !== readRef.current) return;
+      markdown = files.filter((file) => isMarkdownName(file.name));
+      if (markdown.length === 0) {
+        setFileProblem({ say: (m) => m.lessons.noMarkdown });
+        return;
+      }
       const texts = await readFiles(markdown);
       read = byFileName(texts.map((text, index) => ({ ...text, path: pathOf(markdown[index]!) })));
     } catch {
       if (request === readRef.current) setFileProblem({ say: (m) => m.importText.readFailed });
       return;
+    } finally {
+      if (request === readRef.current) setReading(false);
     }
     if (request !== readRef.current || busyRef.current) return;
     setSkipped(files.length - markdown.length);
@@ -114,48 +126,19 @@ export function AddLessons() {
     setProblem(null);
     setFinished(false);
     setChoosing(false);
-    const week = Math.max(1, Number(perWeek) || 5);
-    const next = read.map((file, index): Lesson => {
-      const article = parseArticle(file.markdown);
-      const named = partFromName(file.name);
-      return {
-        key: `${index}:${file.path}`,
-        name: file.name,
-        path: file.path,
-        markdown: file.markdown,
-        order: index,
-        partByName: named !== null,
-        part: named ?? partByOrder(index, week),
-        title: lessonTitle(file.name, file.markdown),
-        words: article.words,
-        state: "new",
-        id: null,
-      };
-    });
-    setLessons([...next].sort((a, b) => comparePart(a.part, b.part)));
-    const first = detailsFromMarkdown(read[0]!.markdown);
-    const folder = pathOf(markdown[0]!).includes("/") ? pathOf(markdown[0]!).split("/")[0]! : null;
-    setFrom(folder);
-    const found: Record<FromFiles, { readonly value: string; readonly origin: Origin }> = {
-      name:
-        first.container !== null
-          ? { value: first.container, origin: "file" }
-          : { value: folder ?? "", origin: "folder" },
-      family: { value: first.family ?? "", origin: "file" },
-      given: { value: first.given ?? "", origin: "file" },
-      year:
-        first.year !== null
-          ? { value: first.year, origin: "file" }
-          : { value: String(new Date().getFullYear()), origin: "guess" },
-    };
+    const batch = lessonBatch(read, markdown, Math.max(1, Number(perWeek) || 5));
+    setLessons(batch.lessons);
+    setFrom(batch.folder);
+    const found = batch.found;
+    const current = courseRef.current;
     const replace = FROM_FILES.filter(
-      (key) => course[key].trim() === "" || origins[key] !== undefined,
+      (key) => current[key].trim() === "" || originsRef.current[key] !== undefined,
     );
-    setCourse((current) => ({
+    writeCourse({
       ...current,
       ...Object.fromEntries(replace.map((key) => [key, found[key].value])),
-    }));
-    setOrigins(
+    });
+    writeOrigins(
       Object.fromEntries(
         replace.filter((key) => found[key].value !== "").map((key) => [key, found[key].origin]),
       ),
@@ -165,13 +148,14 @@ export function AddLessons() {
   };
 
   const pick = (input: HTMLInputElement) => {
-    void onFiles([...(input.files ?? [])]);
+    void onFiles(Promise.resolve([...(input.files ?? [])]));
     input.value = "";
   };
 
   const changeCourse = (key: CourseField) => (value: string) => {
-    setCourse((current) => ({ ...current, [key]: value }));
-    setOrigins(({ [key as FromFiles]: _, ...rest }) => rest);
+    writeCourse({ ...courseRef.current, [key]: value });
+    const { [key as FromFiles]: _, ...rest } = originsRef.current;
+    writeOrigins(rest);
     setErrors(({ [key]: _, ...rest }) => rest);
   };
 
@@ -208,7 +192,7 @@ export function AddLessons() {
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (busyRef.current) return;
+    if (busyRef.current || reading) return;
     if (lessons.length === 0) {
       setFileProblem({ say: (m) => m.lessons.needFiles });
       focusAfterRender(chooseRef);
@@ -232,6 +216,7 @@ export function AddLessons() {
     const batch = toAdd;
     const all = batch.length;
     setProgress({ done: 0, all });
+    let missed = 0;
     for (const [index, lesson] of batch.entries()) {
       setProgress({ done: index, all });
       const exit = await importText({
@@ -255,6 +240,7 @@ export function AddLessons() {
       if (Exit.isSuccess(exit)) {
         change(lesson.key, { state: "added", id: exit.value.id });
       } else {
+        missed += 1;
         const error = Cause.findErrorOption(exit.cause);
         change(lesson.key, {
           state:
@@ -266,6 +252,7 @@ export function AddLessons() {
     setProgress(null);
     setFinished(true);
     refreshSources();
+    focusAfterRender(missed > 0 ? submitRef : openRef);
   };
 
   const firstAdded = lessons.find((lesson) => lesson.state === "added");
@@ -356,7 +343,7 @@ export function AddLessons() {
                 ref={anotherRef}
                 type="button"
                 className="button button--small"
-                disabled={locked}
+                disabled={locked || added > 0}
                 onClick={() => {
                   setChoosing(true);
                   focusAfterRender(chooseRef);
@@ -443,9 +430,10 @@ export function AddLessons() {
             </button>
           ) : toAdd.length > 0 ? (
             <button
+              ref={submitRef}
               type="submit"
               className={showDrop ? "button" : "button button--primary"}
-              disabled={busy}
+              disabled={busy || reading}
             >
               {busy
                 ? t.importText.adding
@@ -461,6 +449,7 @@ export function AddLessons() {
           ) : finished && firstAdded?.id != null ? (
             <>
               <Link
+                ref={openRef}
                 to="/sources/$sourceId"
                 params={{ sourceId: firstAdded.id }}
                 search={{}}
