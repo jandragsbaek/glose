@@ -41,7 +41,7 @@ export const renderNoteFile = (note: NoteFileContent): string => {
       : [
           (note.footnotes ?? [])
             .map(({ label, text }) => `[^${label}]: ${text.replace(/\s+/g, " ").trim()}`)
-            .join("\n"),
+            .join("\n\n"),
         ]),
   ];
   const body = blocks.length === 0 ? "" : `\n${blocks.join("\n\n")}\n`;

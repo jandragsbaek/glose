@@ -431,7 +431,10 @@ export const tools = ({
           );
           continue;
         }
-        const source = library.find((other) => other.url !== null && sameUrl(other.url, page.url));
+        const source = library.find(
+          (other) =>
+            other.url !== null && (sameUrl(other.url, page.url) || sameUrl(other.url, asked.url)),
+        );
         const stored = source === undefined ? null : yield* articleText(source.id);
         const found =
           source === undefined

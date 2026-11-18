@@ -2,7 +2,8 @@ import { AI_CALLOUT, MARKDOWN_CODE, parseWikilink, WIKILINK } from "@glose/contr
 
 export type Inline =
   | { readonly kind: "text"; readonly at: number; readonly text: string }
-  | { readonly kind: "link"; readonly at: number; readonly target: string; readonly label: string };
+  | { readonly kind: "link"; readonly at: number; readonly target: string; readonly label: string }
+  | { readonly kind: "note"; readonly at: number; readonly label: string };
 
 export interface ListItem {
   readonly at: number;
@@ -40,7 +41,28 @@ const codeRanges = (text: string, fencedOnly: boolean) =>
 const codeAt = (ranges: ReturnType<typeof codeRanges>, at: number) =>
   ranges.find((range) => at >= range.start && at < range.end);
 
-const inlines = (text: string): ReadonlyArray<Inline> => {
+const FOOTNOTE = /\[\^q(\d{1,4})\]:?/g;
+
+const withNotes = (part: Extract<Inline, { kind: "text" }>): ReadonlyArray<Inline> => {
+  const out: Array<Inline> = [];
+  let last = 0;
+  for (const match of part.text.matchAll(FOOTNOTE)) {
+    if (match.index > last) {
+      out.push({ kind: "text", at: part.at + last, text: part.text.slice(last, match.index) });
+    }
+    out.push({ kind: "note", at: part.at + match.index, label: match[1]! });
+    last = match.index + match[0].length;
+  }
+  if (last < part.text.length) {
+    out.push({ kind: "text", at: part.at + last, text: part.text.slice(last) });
+  }
+  return out;
+};
+
+const inlines = (text: string): ReadonlyArray<Inline> =>
+  wikilinked(text).flatMap((part) => (part.kind === "text" ? withNotes(part) : [part]));
+
+const wikilinked = (text: string): ReadonlyArray<Inline> => {
   const code = codeRanges(text, false);
   const out: Array<Inline> = [];
   let last = 0;

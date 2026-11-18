@@ -79,6 +79,12 @@ describe("quotes", () => {
         "will apply to the U.S",
       ),
     );
+    assert.isNull(
+      findWholeQuote(
+        parseArticle("Then she walked into a cafe\u0301 nearby.\n"),
+        "walked into a cafe",
+      ),
+    );
     assert.strictEqual(
       findWholeQuote(
         parseArticle("她说‘Read the full report.’然后离开。\n"),

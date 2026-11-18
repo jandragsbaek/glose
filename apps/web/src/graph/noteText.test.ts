@@ -6,6 +6,20 @@ const withoutOffsets = (value: unknown): unknown =>
   JSON.parse(JSON.stringify(value, (key, field: unknown) => (key === "at" ? undefined : field)));
 
 describe("parseNoteText", () => {
+  it("shows research footnotes as numbers, each definition its own paragraph", () => {
+    const blocks = parseNoteText(
+      "It works.[^q1]\n\n[^q1]: “Words” [[Web 2024 A page]], ¶ 2\n\n[^q2]: “More words” [[Web 2024 A page]], ¶ 5",
+    );
+    const kinds = blocks.map((block) =>
+      block.kind === "paragraph" ? block.inlines.map((part) => part.kind) : [],
+    );
+    assert.deepStrictEqual(kinds, [
+      ["text", "note"],
+      ["note", "text", "link", "text"],
+      ["note", "text", "link", "text"],
+    ]);
+  });
+
   it("splits paragraphs and lists, and keeps wikilinks with the words they show", () => {
     assert.deepStrictEqual(
       withoutOffsets(

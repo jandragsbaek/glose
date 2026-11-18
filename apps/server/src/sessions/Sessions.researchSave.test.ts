@@ -188,6 +188,73 @@ it.layer(NodeServices.layer)("Sessions: saving a researched Note", (it) => {
     }),
   );
 
+  it.effect("uses the Source the user has when it holds the address the page moved from", () =>
+    Effect.gen(function* () {
+      const short = "https://doi.example/10.1/abc";
+      const { fake, layer } = yield* setUpWithPages(new Map([[short, PAGE_A]]));
+      fake.answer(MODELS, MODEL_LIST);
+      fake.answer(
+        RESPONSES,
+        toolCall("propose_pages", {
+          pages: [
+            {
+              url: short,
+              stance: "supports",
+              kind: "web",
+              why: "Known by its DOI.",
+              quotes: [
+                "Students who tested themselves remembered more a week later than students who reread.",
+              ],
+            },
+          ],
+        }),
+        answer("Found it."),
+        answer(""),
+      );
+
+      const { session, source } = yield* Effect.gen(function* () {
+        const source = yield* (yield* Sources.Sources).importText({
+          familyName: "Author",
+          givenName: null,
+          title: "Retrieval practice by DOI",
+          firstPublished: 2024,
+          edition: null,
+          editionYear: null,
+          publisher: null,
+          translator: null,
+          kind: "article",
+          articleType: "paper",
+          otherAuthors: [],
+          container: "Journal",
+          published: null,
+          volume: null,
+          issue: null,
+          pages: null,
+          url: short,
+          doi: null,
+          accessed: "2026-11-01",
+          part: null,
+          markdown: PAGE_A.markdown,
+        });
+        const sessions = yield* Sessions;
+        const started = yield* sessions.startResearch({
+          draft: DRAFT,
+          ask: "learn",
+          title: "Testing",
+          text: "",
+          question: `Read ${short}`,
+          notes: [],
+        });
+        return { session: yield* afterTurn(started.id), source };
+      }).pipe(Effect.provide(layer));
+
+      const [page] = session.entries.flatMap((entry) =>
+        entry._tag === "FoundPages" ? entry.pages : [],
+      );
+      assert.strictEqual(page?.source, source.id);
+    }),
+  );
+
   it.effect("refuses a Note that cites a page the user did not keep", () =>
     Effect.gen(function* () {
       const { fake, layer } = yield* setUpWithPages(new Map([[URL_A, PAGE_A]]));

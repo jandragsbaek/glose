@@ -15,7 +15,17 @@ export function NoteText({
   readonly renderLink: (part: WikilinkPart) => ReactNode;
 }) {
   const inline = (parts: ReadonlyArray<Inline>) =>
-    parts.map((part) => (part.kind === "text" ? part.text : renderLink(part)));
+    parts.map((part) =>
+      part.kind === "text" ? (
+        part.text
+      ) : part.kind === "note" ? (
+        <sup key={part.at} className="note-ref">
+          {part.label}
+        </sup>
+      ) : (
+        renderLink(part)
+      ),
+    );
   const render = (block: Block): ReactNode => {
     switch (block.kind) {
       case "paragraph":
