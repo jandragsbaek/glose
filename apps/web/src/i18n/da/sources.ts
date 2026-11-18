@@ -127,7 +127,11 @@ export const sourceMessages: Pick<Messages, "source" | "sources" | "addSource"> 
   addSource: {
     title: "Tilføj kilde",
     book: "Bogen",
-    findHint: "Søger i Open Library, et åbent bogkatalog. Et ISBN finder netop din udgave.",
+    findHint:
+      "Søger i Open Library, et åbent bogkatalog. Et resultat udfylder felterne nedenfor; du kan også skrive dem selv. Et ISBN finder netop din udgave.",
+    showResults: (n: number) => `Vis alle ${count(n, "resultat", "resultater")}`,
+    checkFields:
+      "Nogle felter ovenfor mangler en værdi eller skal rettes. Markøren står i det første.",
     searchLabel: "Titel, forfatter eller ISBN",
     search: "Søg",
     searching: "Søger i Open Library",

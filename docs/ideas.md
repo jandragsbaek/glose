@@ -836,7 +836,13 @@ the agent; these are the picks.
 - An Article's year of publication was always needed for the call number; the form now says so.
   Cancel goes back to Sources from every kind.
 - Course lessons asks for "Lessons a week" only when a file's name gives no week and day. The file
-  name sits under each lesson's title in the table.
+  name sits under each lesson's title in the table. The course data Glose read from the files is
+  marked like any other filled value.
+- Each kind keeps what the user typed while another kind is shown. A new file or folder replaces
+  only the values Glose filled; Undo of a Catalog fill puts back only fields the user has not
+  touched since. After a Catalog choice the results fold to the chosen book.
+- The three kinds check a form the same way, in Glose's own words: a line under each field that
+  needs a value or a fix, one line in the foot, and the cursor in the first such field.
 
 ## Decided, the Probe (November 2026)
 

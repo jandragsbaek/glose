@@ -19,6 +19,8 @@ import {
   blank,
   DropZone,
   FillLine,
+  focusAfterRender,
+  focusFirstProblem,
   FormFoot,
   MoreDetails,
   readFiles,
@@ -80,7 +82,12 @@ export function AddArticle() {
   const navigate = useNavigate();
   const importText = useAtomSet(importTextAtom, { mode: "promiseExit" });
   const fileRef = useRef<HTMLInputElement>(null);
+  const chooseRef = useRef<HTMLButtonElement>(null);
+  const pasteRef = useRef<HTMLTextAreaElement>(null);
+  const anotherRef = useRef<HTMLButtonElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const pasteId = useId();
+  const problemId = useId();
   const [text, setText] = useState<TextFile | null>(null);
   const [pasting, setPasting] = useState(false);
   const [pasted, setPasted] = useState("");
@@ -101,6 +108,7 @@ export function AddArticle() {
     }
     setProblem(null);
     setText(found);
+    focusAfterRender(anotherRef);
     const details = detailsFromMarkdown(found.markdown);
     const next: Partial<ArticleValues> = {
       ...(details.family === null ? {} : { familyName: details.family }),
@@ -114,15 +122,17 @@ export function AddArticle() {
       ...(details.url === null ? {} : { url: details.url }),
       ...(details.doi === null ? {} : { doi: details.doi }),
     };
-    const keys = (Object.keys(next) as ArticleField[]).filter(
-      (key) => values[key].trim() === "" || filled.includes(key),
+    const keys = ARTICLE_FIELDS.filter(
+      (key) => next[key] !== undefined && (values[key].trim() === "" || filled.includes(key)),
     );
+    const stale = filled.filter((key) => next[key] === undefined);
     setValues((current) => ({
       ...current,
+      ...Object.fromEntries(stale.map((key) => [key, ""])),
       ...Object.fromEntries(keys.map((key) => [key, next[key] ?? ""])),
     }));
     setFilled(keys);
-    setMissing((current) => current.filter((name) => !keys.includes(name)));
+    setMissing([]);
     setSubmitProblem(null);
     const nextType = details.doi === null ? type : "paper";
     setType(nextType);
@@ -156,18 +166,22 @@ export function AddArticle() {
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
+    if (text === null) {
+      setMissing([]);
+      setSubmitProblem(null);
+      setProblem(pasting ? t.importText.needPasted : t.importText.needText);
+      focusAfterRender(pasting ? pasteRef : chooseRef);
+      return;
+    }
     const empty = (["familyName", "title"] as const).filter((name) => values[name].trim() === "");
     const lacking: ReadonlyArray<ArticleField> = [
       ...empty,
       ...(year === null || !YEAR.test(year) ? (["published"] as const) : []),
     ];
     setMissing(lacking);
-    if (text === null) {
-      setSubmitProblem(t.importText.needText);
-      return;
-    }
     if (lacking.length > 0) {
-      setSubmitProblem(t.importText.needDetails);
+      setSubmitProblem(t.addSource.checkFields);
+      focusFirstProblem(formRef.current);
       return;
     }
     setSubmitProblem(null);
@@ -214,9 +228,12 @@ export function AddArticle() {
     setSubmitProblem(
       Option.isSome(error) && error.value._tag === "SourceNameTaken"
         ? t.addSource.nameTaken(error.value.fileName)
-        : t.errors.storage,
+        : `${t.errors.storage} ${t.errors.storageRecovery}`,
     );
   };
+
+  const errorOf = (name: ArticleField) =>
+    name === "published" ? t.importText.needYear : t.importText.needField;
 
   const field = (
     name: ArticleField,
@@ -235,9 +252,6 @@ export function AddArticle() {
       {...(name === "url" ? { inputMode: "url" as const } : {})}
     />
   );
-
-  const errorOf = (name: ArticleField) =>
-    name === "published" ? t.importText.needYear : t.importText.needField;
 
   const extraLabels: Record<ArticleField, string> = {
     familyName: t.addSource.familyName,
@@ -264,6 +278,7 @@ export function AddArticle() {
                 {t.importText.pasteLabel}
               </label>
               <textarea
+                ref={pasteRef}
                 id={pasteId}
                 className="textarea add-text__paste"
                 value={pasted}
@@ -282,9 +297,13 @@ export function AddArticle() {
                 <button
                   type="button"
                   className="button button--quiet"
-                  onClick={() => setPasting(false)}
+                  onClick={() => {
+                    setPasting(false);
+                    setProblem(null);
+                    focusAfterRender(chooseRef);
+                  }}
                 >
-                  {t.addSource.cancel}
+                  {t.importText.backToFile}
                 </button>
               </div>
             </div>
@@ -296,12 +315,15 @@ export function AddArticle() {
                 accept=".md,.markdown,.mdown,.txt,text/markdown,text/plain"
                 className="sr-only"
                 tabIndex={-1}
+                aria-hidden="true"
                 onChange={(event: ChangeEvent<HTMLInputElement>) =>
                   void onFiles([...(event.target.files ?? [])])
                 }
               />
               <button
+                ref={chooseRef}
                 type="button"
+                aria-describedby={problem === null ? undefined : problemId}
                 className="button button--primary"
                 onClick={() => fileRef.current?.click()}
               >
@@ -311,7 +333,11 @@ export function AddArticle() {
               <button
                 type="button"
                 className="button button--quiet"
-                onClick={() => setPasting(true)}
+                onClick={() => {
+                  setPasting(true);
+                  setProblem(null);
+                  focusAfterRender(pasteRef);
+                }}
               >
                 {t.importText.paste}
               </button>
@@ -329,18 +355,20 @@ export function AddArticle() {
               </p>
             </div>
             <button
+              ref={anotherRef}
               type="button"
               className="button button--small"
               onClick={() => {
                 setText(null);
-                setPasted("");
+                setPasting(false);
+                focusAfterRender(chooseRef);
               }}
             >
               {t.importText.another}
             </button>
           </div>
         )}
-        <p role="status" className="add-text__status">
+        <p role="status" className="add-text__status" id={problemId}>
           {problem === null ? null : (
             <span className="field__error">
               <CircleAlert className="field__error-icon" aria-hidden="true" />
@@ -349,7 +377,7 @@ export function AddArticle() {
           )}
         </p>
       </div>
-      <form className="add-source__form" onSubmit={submit} noValidate>
+      <form ref={formRef} className="add-source__form" onSubmit={submit} noValidate>
         <div className="panel__body add-source__fields">
           <div role="status" className="fill-status">
             {filled.length === 0 ? null : <FillLine>{t.importText.filledFromFile}</FillLine>}
@@ -400,7 +428,11 @@ export function AddArticle() {
           </fieldset>
         </div>
         <FormFoot problem={submitProblem}>
-          <button type="submit" className="button button--primary" disabled={busy}>
+          <button
+            type="submit"
+            className={text === null ? "button" : "button button--primary"}
+            disabled={busy}
+          >
             {busy ? t.importText.adding : t.importText.submit}
           </button>
           <Link to="/sources" className="button button--quiet">

@@ -774,8 +774,9 @@ Add Source (`/sources/new`) is one column up to 760px for every kind, so switchi
 moves the page: the Kind Choice with its one-line hint 8px under it, then, 20px below, one panel
 for the kind ("The book", "The article", "The course"). The panel's first body is the way in (the
 catalog search, or the Drop Zone); under a Hairline the second holds the data, fields 16px apart;
-the Panel Foot ends it. Course lessons sets its table across the panel between the Drop Zone and
-the course data.
+the Panel Foot ends it. Course lessons sets its table across the panel between the way in and the
+course data. Each kind keeps what the user typed while another kind is shown. One Lapis button per
+state: the way in while it is open, then the foot's submit (secondary until then).
 
 A focus screen (today only Review, at `/review`) fills the window without the rail and the page
 header. A 64px bar (12px 32px padding) holds the title left, a centred progress line and the way
@@ -900,7 +901,13 @@ Firm and plain, ink-outlined.
   optional, it is the other way round: the few that must be filled say "required" in Mute 400.
 - **Filled in:** a value Glose took from Open Library or a file's frontmatter carries a 6px Lapis
   dot at the input's right end (30px right padding) until the user edits it. The Fill Line above the
-  fields is its key; screen readers hear where the value came from.
+  fields is its key; screen readers hear where the value came from. A new file or folder replaces
+  only values Glose filled, never what the user typed; Undo puts back only the fields the user has
+  not touched since.
+- **Checking a form:** the browser's own bubbles are off (`noValidate`). A failed submit puts the
+  Rubric line under each field that needs a value or a fix, one summary in the Panel Foot, and the
+  cursor in the first such field. When the way in is missing (no text, no lesson files), only that
+  says so, beside the Drop Zone, and the cursor goes to its button.
 - **Hover / Focus:** hover darkens the border to Mute; focus turns it Lapis with the focus halo.
 - **Error:** border Rubric, and below the field a Rubric line with a circle-alert icon and the
   words. Never the border alone.
@@ -1336,9 +1343,10 @@ the default).
 ### Catalog Results
 
 The Open Library records under the book search, as one joined list in a Hairline box (4px): a row
-per record (10px 12px, 14px), the call number first, the title in 600, then author, first
-publication and edition in Mute 13px; the row wraps. Hover fills it Lapis Tint; the chosen record
-keeps the Tint and a 1px Lapis outline inside.
+per record (10px 12px, 14px), the call number in its own column, then the title in 600 and author,
+first publication and edition in Mute 13px, which wrap under the title. Hover fills it Lapis Tint;
+the chosen record keeps the Tint and a 1px Lapis outline inside. Once a record is chosen, the list
+folds to that row and a link button under it, "Show all 7 results"; a new search opens it again.
 
 ### Drop Zone
 
@@ -1349,7 +1357,10 @@ course folder" (primary, with a folder icon) and a quiet "Choose lesson files". 
 Mute 13px hint says what happens to the files. While a file is dragged over it, the border turns
 Lapis and the fill Lapis Tint (160ms). A chosen file replaces it with a row: a 24px Lapis file
 icon, the name in 600 (it wraps anywhere) over Mute 13px tabular counts ("12 paragraphs · 2,300
-words"), and "Choose another". Pasting opens a 220px textarea (14px) in its place.
+words"), and "Choose another"; read lesson files give the same row with a folder icon, the folder's
+name over the count, and "Choose other files". Pasting opens a 220px textarea (14px) in its place,
+with "Use this text" (primary) and a quiet "Choose a file instead". The cursor follows: into the
+textarea, onto "Choose another", back onto the choose button.
 
 ### Lesson Table
 
@@ -1357,7 +1368,8 @@ On Add Source for Course lessons, the files read from the folder, across "The co
 Initial, the count as Meta) under the Drop Zone, set like the register's table: 14px tabular,
 cells 6px 12px (20px at the panel edges), a Hairline under each, Mute 600 13px heads, Words aligned
 right. Columns: "Week · Day" as a 64px field in Courier Prime 700 ("1.3"), the title as a field
-(at least 14em) with its file name in Mute 12px under it, words, and the state. Fields in the table
+(at least 14em) with its file name in Mute 12px under it, words, and the state (empty while a
+lesson is new). Fields in the table
 are 5px 8px at 14px.
 
 - **State marks:** a 15px icon and Mute 13px words, in a fixed cell: a dash and "New"; a Mute
@@ -1365,11 +1377,14 @@ are 5px 8px at 14px.
   "Not added" in Rubric.
 - **Locked rows:** an added lesson reads as text: its fields lose border and fill and turn Mute, so
   the row cannot be edited and does not look like a form.
-- **Clash:** two lessons with the same week and day turn their Week · Day fields Rubric, and the
-  Panel Foot's problem line gives the field error with its icon and the clashing parts.
+- **Clash:** two lessons with the same week and day turn their Week · Day fields Rubric, and at once
+  a Rubric line with its icon under the table names the clashing parts (a malformed one too); the
+  fields point to it.
 - **Lessons a week:** only when a file's name gives no week and day, one line under the table: the
   label, a 72px field and its Mute hint, 12px apart.
-- The course data follows in the same panel: the course name, teacher, year and address. The Panel
+- The course data follows in the same panel, with its own Fill Line: the course name, then
+  "Teacher or provider" (600 14px) over the family and given name, then year and address. While
+  the lessons are added, every control in the panel is locked. The Panel
   Foot: "Add 20 lessons" (primary; "Adding lesson 3 of 20…" while it works), then "Open Week 1 · Day
   1" and "See them in Sources" when done.
 

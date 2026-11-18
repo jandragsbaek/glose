@@ -189,7 +189,7 @@ export const articleMessages = {
     empty: "The text is empty.",
     readFailed: "Glose could not read that file.",
     fromFile: "From the file",
-    filledFromFile: "Filled in from the file's frontmatter. Check the marked fields.",
+    filledFromFile: "Filled in from the file. Check the marked fields.",
     type: "Kind of article",
     more: {
       paper: "Other authors, volume, issue, pages and address",
@@ -217,7 +217,8 @@ export const articleMessages = {
     needText: "Choose a Markdown file or paste the text first.",
     needYear: "Write at least the year, for example 2026.",
     needField: "Fill this in.",
-    needDetails: "A required field is empty. Fill it in, then add the Article.",
+    needPasted: "Paste the text, then choose Use this text.",
+    backToFile: "Choose a file instead",
   },
   lessons: {
     chooseFolder: "Choose the course folder",
@@ -257,7 +258,11 @@ export const articleMessages = {
     openFirst: (part: string) => `Open ${lessonPart(part)}`,
     seeSources: "See them in Sources",
     needFiles: "Choose the lesson files first.",
-    needCourse: "Name the course and its teacher or provider, and give the year.",
+    filled: "Filled in from the files. Check the marked fields.",
+    another: "Choose other files",
+    keep: (n: number) => `Keep the ${count(n, "lesson", "lessons")}`,
+    someFiles: (n: number) => count(n, "lesson file", "lesson files"),
+    submitAny: "Add the lessons",
     badPart: "Write week and day as 2.3.",
     clash: (parts: string) =>
       `Two lessons have the same week and day (${parts}). Change one of them.`,

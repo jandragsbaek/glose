@@ -8,7 +8,13 @@ import { type FormEvent, useId, useRef, useState } from "react";
 
 import { AddArticle } from "../components/AddArticle.tsx";
 import { AddLessons } from "../components/AddLessons.tsx";
-import { FillLine, FormFoot, MoreDetails, TextField } from "../components/textImport.tsx";
+import {
+  FillLine,
+  focusFirstProblem,
+  FormFoot,
+  MoreDetails,
+  TextField,
+} from "../components/textImport.tsx";
 import { CallNumber, Notice, Page, Panel } from "../components/ui.tsx";
 import {
   EMPTY_FORM,
@@ -63,7 +69,15 @@ function AddSource() {
             {t.kinds.hints[kind]}
           </p>
         </div>
-        {kind === "book" ? <AddBook /> : kind === "article" ? <AddArticle /> : <AddLessons />}
+        <div hidden={kind !== "book"}>
+          <AddBook />
+        </div>
+        <div hidden={kind !== "article"}>
+          <AddArticle />
+        </div>
+        <div hidden={kind !== "lesson"}>
+          <AddLessons />
+        </div>
       </div>
     </Page>
   );
@@ -71,6 +85,7 @@ function AddSource() {
 
 const YEAR = /^-?\d{1,4}$/;
 const YEAR_FIELDS = ["firstPublished", "editionYear"] as const;
+const REQUIRED: ReadonlyArray<FieldName> = ["familyName", "title"];
 
 const text = (values: FormValues, name: FieldName) => {
   const value = values[name].trim();
@@ -95,19 +110,22 @@ type Search =
   | { readonly _tag: "Found"; readonly records: ReadonlyArray<CatalogRecord> }
   | { readonly _tag: "Unavailable" };
 
+type Failure = "fields" | "storage" | { readonly nameTaken: string };
+
 const FOLDED: ReadonlyArray<FieldName> = ["edition", "translator"];
 
 function AddBook() {
   const t = useT();
   const navigate = useNavigate();
   const createSource = useAtomSet(createSourceAtom, { mode: "promiseExit" });
-  const [invalidYears, setInvalidYears] = useState<ReadonlyArray<FieldName>>([]);
-  const [failure, setFailure] = useState<{ readonly nameTaken: string } | "storage" | null>(null);
+  const [errors, setErrors] = useState<Partial<Record<FieldName, string>>>({});
+  const [failure, setFailure] = useState<Failure | null>(null);
   const [busy, setBusy] = useState(false);
   const [values, setValues] = useState<FormValues>(EMPTY_FORM);
   const [fill, setFill] = useState<Fill | null>(null);
   const [more, setMore] = useState(false);
   const firstFieldRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const focusFirstField = () => {
     const input = firstFieldRef.current;
@@ -124,25 +142,35 @@ function AddBook() {
       before: { values, fill },
     });
     setValues(filled.values);
-    setInvalidYears([]);
+    setErrors({});
+    setFailure(null);
     if (FOLDED.some((name) => filled.values[name] !== "")) setMore(true);
     focusFirstField();
   };
 
   const undoFill = () => {
     if (fill === null) return;
-    setValues(fill.before.values);
+    const untouched = fill.filled.map((name) => [name, fill.before.values[name]] as const);
+    setValues((current) => ({ ...current, ...Object.fromEntries(untouched) }));
     setFill(fill.before.fill);
   };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const invalid = YEAR_FIELDS.filter((name) => {
+    const found: Partial<Record<FieldName, string>> = {};
+    for (const name of REQUIRED) {
+      if (text(values, name) === null) found[name] = t.importText.needField;
+    }
+    for (const name of YEAR_FIELDS) {
       const value = text(values, name);
-      return value !== null && !YEAR.test(value);
-    });
-    setInvalidYears(invalid);
-    if (invalid.length > 0) return;
+      if (value !== null && !YEAR.test(value)) found[name] = t.addSource.yearInvalid;
+    }
+    setErrors(found);
+    if (Object.keys(found).length > 0) {
+      setFailure("fields");
+      focusFirstProblem(formRef.current);
+      return;
+    }
 
     const details: SourceDetails = {
       familyName: text(values, "familyName") ?? "",
@@ -154,6 +182,7 @@ function AddBook() {
       publisher: text(values, "publisher"),
       translator: text(values, "translator"),
     };
+    setFailure(null);
     setBusy(true);
     const exit = await createSource({ payload: details, reactivityKeys: KEYS.sources });
     setBusy(false);
@@ -181,11 +210,12 @@ function AddBook() {
       hint={options.hint}
       wide={options.wide ?? false}
       inputMode={YEAR_FIELDS.some((other) => other === name) ? "numeric" : undefined}
-      error={invalidYears.includes(name) ? t.addSource.yearInvalid : undefined}
+      error={errors[name]}
       value={values[name]}
       filledFrom={fill?.filled.includes(name) ? t.addSource.fromCatalog : undefined}
       onChange={(value) => {
         setValues((current) => ({ ...current, [name]: value }));
+        setErrors(({ [name]: _, ...rest }) => rest);
         setFill((current) =>
           current === null
             ? null
@@ -201,10 +231,10 @@ function AddBook() {
       <div className="panel__body">
         <FindBook chosen={fill?.record.id ?? null} onChoose={choose} />
       </div>
-      <form className="add-source__form" onSubmit={submit}>
+      <form ref={formRef} className="add-source__form" onSubmit={submit} noValidate>
         <div className="panel__body add-source__fields">
           <div role="status" className="fill-status">
-            {fill === null ? null : (
+            {fill === null || fill.filled.length === 0 ? null : (
               <FillLine onUndo={undoFill}>
                 {t.addSource.filled}
                 {fill.kept.length === 0 ? null : ` ${t.addSource.keptTyped}`}
@@ -234,13 +264,15 @@ function AddBook() {
           problem={
             failure === null
               ? null
-              : failure === "storage"
-                ? `${t.errors.storage} ${t.errors.storageRecovery}`
-                : t.addSource.nameTaken(failure.nameTaken)
+              : failure === "fields"
+                ? t.addSource.checkFields
+                : failure === "storage"
+                  ? `${t.errors.storage} ${t.errors.storageRecovery}`
+                  : t.addSource.nameTaken(failure.nameTaken)
           }
         >
           <button type="submit" className="button button--primary" disabled={busy}>
-            {t.addSource.submit}
+            {busy ? t.importText.adding : t.addSource.submit}
           </button>
           <Link to="/sources" className="button button--quiet">
             {t.addSource.cancel}
@@ -261,6 +293,7 @@ function FindBook({
   const t = useT();
   const searchCatalog = useAtomSet(searchCatalogAtom, { mode: "promiseExit" });
   const [search, setSearch] = useState<Search>({ _tag: "Idle" });
+  const [folded, setFolded] = useState(false);
   const latest = useRef(0);
   const inputId = useId();
   const hintId = `${inputId}-hint`;
@@ -270,6 +303,7 @@ function FindBook({
     const query = String(new FormData(event.currentTarget).get("query") ?? "").trim();
     if (query === "") return;
     const request = ++latest.current;
+    setFolded(false);
     setSearch({ _tag: "Searching" });
     const exit = await searchCatalog({ payload: { query } });
     if (request !== latest.current) return;
@@ -277,6 +311,10 @@ function FindBook({
       Exit.isSuccess(exit) ? { _tag: "Found", records: exit.value } : { _tag: "Unavailable" },
     );
   };
+
+  const records = search._tag === "Found" ? search.records : [];
+  const showOnlyChosen = folded && records.some((record) => record.id === chosen);
+  const shown = showOnlyChosen ? records.filter((record) => record.id === chosen) : records;
 
   return (
     <div className="find-book">
@@ -310,21 +348,33 @@ function FindBook({
             <p>{t.addSource.unavailable}</p>
           </Notice>
         ) : null}
-        {search._tag === "Found" && search.records.length === 0 ? (
+        {search._tag === "Found" && records.length === 0 ? (
           <p className="status">{t.addSource.noResults}</p>
         ) : null}
-        {search._tag === "Found" && search.records.length > 0 ? (
+        {shown.length > 0 ? (
           <ul className="catalog-results" aria-label={t.addSource.results}>
-            {search.records.map((record) => (
+            {shown.map((record) => (
               <li key={record.id}>
                 <CatalogChoice
                   record={record}
                   chosen={record.id === chosen}
-                  onChoose={() => onChoose(record)}
+                  onChoose={() => {
+                    setFolded(true);
+                    onChoose(record);
+                  }}
                 />
               </li>
             ))}
           </ul>
+        ) : null}
+        {showOnlyChosen ? (
+          <button
+            type="button"
+            className="link-button find-book__more"
+            onClick={() => setFolded(false)}
+          >
+            {t.addSource.showResults(records.length)}
+          </button>
         ) : null}
       </div>
     </div>
@@ -351,16 +401,18 @@ function CatalogChoice({
   return (
     <button type="button" className="choice" aria-pressed={chosen} onClick={onChoose}>
       <CallNumber source={details} />
-      <cite>
-        {details.title}
-        <span className="sr-only">{t.addSource.partBreak}</span>
-      </cite>
-      {parts.map((part) => (
-        <span key={part}>
-          {part}
+      <span className="choice__text">
+        <cite>
+          {details.title}
           <span className="sr-only">{t.addSource.partBreak}</span>
-        </span>
-      ))}
+        </cite>
+        {parts.map((part) => (
+          <span key={part} className="choice__meta">
+            {part}
+            <span className="sr-only">{t.addSource.partBreak}</span>
+          </span>
+        ))}
+      </span>
     </button>
   );
 }

@@ -14,6 +14,21 @@ export const today = () => {
   return `${now.getFullYear()}-${two(now.getMonth() + 1)}-${two(now.getDate())}`;
 };
 
+export const focusAfterRender = (ref: RefObject<HTMLElement | null>, frames = 10): void => {
+  requestAnimationFrame(() => {
+    const target = ref.current;
+    if (target?.isConnected) target.focus();
+    else if (frames > 0) focusAfterRender(ref, frames - 1);
+  });
+};
+
+export const focusFirstProblem = (root: HTMLElement | null) =>
+  requestAnimationFrame(() => {
+    const target = root?.querySelector<HTMLElement>('[aria-invalid="true"]');
+    target?.closest("details")?.setAttribute("open", "");
+    target?.focus();
+  });
+
 export interface TextFile {
   readonly name: string;
   readonly markdown: string;

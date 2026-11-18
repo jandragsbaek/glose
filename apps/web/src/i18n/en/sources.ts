@@ -125,7 +125,10 @@ export const sourceMessages = {
   addSource: {
     title: "Add Source",
     book: "The book",
-    findHint: "Searches Open Library, an open book catalog. An ISBN finds your exact edition.",
+    findHint:
+      "Searches Open Library, an open book catalog. A result fills in the fields below; you can also type them yourself. An ISBN finds your exact edition.",
+    showResults: (n: number) => `Show all ${count(n, "result", "results")}`,
+    checkFields: "Some fields above need a value or a fix. The first one has the cursor.",
     searchLabel: "Title, author or ISBN",
     search: "Search",
     searching: "Searching Open Library",
