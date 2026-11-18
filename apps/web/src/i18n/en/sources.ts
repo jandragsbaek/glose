@@ -1,4 +1,4 @@
-import type { ReadingStep } from "@glose/contracts";
+import { isTimestamp, type ReadingStep } from "@glose/contracts";
 import type { MissingDetail } from "../../domain/source.ts";
 import { numbers, count, list, monthYear } from "./format.ts";
 
@@ -6,17 +6,20 @@ export const sourceMessages = {
   source: {
     firstPublished: (year: number) => `first published ${year}`,
     callNumberLabel: (callNumber: string) => `Call number ${callNumber}`,
-    page: (page: string) => (page.startsWith("¶") ? page : `p. ${page}`),
+    page: (page: string, video = false) =>
+      page.startsWith("¶") || (video && isTimestamp(page)) ? page : `p. ${page}`,
     missingTitle: "Missing for a correct Citation",
     missing: {
       firstPublished: "The year of first publication",
       publisher: "The publisher",
       container: "Where it appeared: the journal, website or course",
+      channel: "Where it appeared: the channel or event",
     },
     missingInline: {
       firstPublished: "the year of first publication",
       publisher: "the publisher",
       container: "where it appeared",
+      channel: "the channel or event",
     },
     missingLine: (missing: ReadonlyArray<string>) =>
       `Missing for a correct Citation: ${list.format(missing)}.`,
@@ -32,6 +35,9 @@ export const sourceMessages = {
       editionYear: "Edition year",
       publisher: "Publisher",
       translator: "Translator",
+      speaker: "Speaker",
+      channel: "Channel or event",
+      address: "Address",
       file: "File",
     },
     fileName: (id: string) => `${id}.md`,
@@ -109,14 +115,16 @@ export const sourceMessages = {
     ready: "Ready",
     missing: (missing: ReadonlyArray<MissingDetail>): string =>
       missing.length > 1
-        ? missing.includes("container")
+        ? missing.includes("container") || missing.includes("channel")
           ? "No year or place"
           : "No year or publisher"
         : missing[0] === "firstPublished"
           ? "No year"
           : missing[0] === "container"
             ? "No journal, site or course"
-            : "No publisher",
+            : missing[0] === "channel"
+              ? "No channel or event"
+              : "No publisher",
     matching: (shown: number, total: number) =>
       `${numbers.format(shown)} of ${count(total, "Source", "Sources")}`,
     nothingFound: "No Source matches.",

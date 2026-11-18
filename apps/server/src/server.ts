@@ -15,6 +15,7 @@ import * as NodeHttp from "node:http";
 import * as CardChecks from "./cards/CardChecks.ts";
 import * as Cards from "./cards/Cards.ts";
 import * as Catalog from "./catalog/Catalog.ts";
+import * as Videos from "./catalog/Videos.ts";
 import * as ChatGpt from "./chatgpt/ChatGpt.ts";
 import * as Credentials from "./chatgpt/Credentials.ts";
 import * as Responses from "./chatgpt/Responses.ts";
@@ -69,6 +70,7 @@ export const layerAppWith = (webPages: Layer.Layer<WebPages.WebPages>) =>
         layerChatGpt,
         Responses.layer,
         Catalog.layer,
+        Videos.layer,
         Recall.layer,
         webPages,
         Layer.mergeAll(Versions.layer, Setup.layer).pipe(

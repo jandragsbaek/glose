@@ -8011,6 +8011,333 @@ h4.article__heading {
   }
 }
 
+/* The Watch step of a Video: the video as a plate on Paper, its timestamps under it like
+   contents, and the watch notes in the margin. */
+
+.watch {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.watch__desk {
+  display: grid;
+  grid-template-columns: minmax(0, 880px) minmax(320px, 400px);
+  grid-template-rows: minmax(0, 1fr);
+  justify-content: center;
+  column-gap: 32px;
+  flex: 1;
+  min-height: 0;
+  padding: 0 32px;
+  overflow: hidden;
+}
+
+.watch__column,
+.watch__margin {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.watch__column {
+  padding: 24px 2px 48px;
+}
+
+.watch__margin {
+  padding: 24px 2px 32px;
+}
+
+.watch__screen {
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.watch__frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--tray);
+}
+
+.watch__player,
+.watch__player iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.watch__frame:not([data-state="ready"]) .watch__player {
+  visibility: hidden;
+}
+
+.watch__status {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--mute);
+  font-size: 13px;
+}
+
+.watch__problem {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px 32px;
+  color: var(--ink);
+  font-size: 14px;
+  text-align: center;
+  text-wrap: pretty;
+}
+
+.watch__problem p {
+  max-width: 46ch;
+}
+
+.watch__problem-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--rubric);
+}
+
+/* The timestamps under the video: one row per moment, the time in Courier as its Location. */
+
+.cues {
+  margin-top: 28px;
+}
+
+.cues__title {
+  margin-bottom: 4px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cues__title::first-letter {
+  font-family: var(--font-initial);
+  font-size: 2em;
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: 0;
+  color: var(--accent);
+}
+
+.cues__empty {
+  padding: 12px 0;
+  color: var(--mute);
+  font-size: 13px;
+}
+
+.cues__item {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 0 8px 12px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  color: var(--ink);
+  font: 400 14px/1.35 var(--font-ui);
+  text-align: left;
+  cursor: pointer;
+  transition: box-shadow 160ms var(--ease-out);
+}
+
+.cues__time {
+  color: var(--accent);
+  font: 700 12px/18px var(--font-call);
+  font-variant-numeric: tabular-nums;
+}
+
+.cues__words {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cues__words[data-empty] {
+  color: var(--mute);
+  font-style: italic;
+}
+
+.cues__item:hover .cues__words {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.cues__item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.cues__item[aria-current="time"] {
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+
+.done-watching {
+  max-width: none;
+  margin-top: 48px;
+}
+
+.done-watching__hint {
+  max-width: 66ch;
+  margin-bottom: 18px;
+  color: var(--mute);
+  font-size: 14px;
+}
+
+/* The watch notes: a CodeMirror field with each timestamp drawn as its time. */
+
+.watch-notes .cm-editor {
+  min-height: 220px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 15px/1.6 var(--font-ui);
+  transition:
+    border-color 160ms var(--ease-out),
+    box-shadow 160ms var(--ease-out);
+}
+
+.watch-notes .cm-editor:hover {
+  border-color: var(--mute);
+}
+
+.watch-notes .cm-editor.cm-focused {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--halo);
+}
+
+.watch-notes .cm-editor {
+  max-height: max(220px, calc(100vh - 540px));
+}
+
+.watch-notes .cm-scroller {
+  min-height: 218px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  font: inherit;
+  line-height: inherit;
+}
+
+.watch-notes .cm-content {
+  padding: 10px 12px;
+  caret-color: var(--accent);
+}
+
+.watch-notes .cm-line {
+  padding: 0;
+}
+
+.watch-notes .cm-placeholder {
+  color: var(--mute);
+}
+
+.watch-notes .cm-cursor {
+  border-left: 2px solid var(--accent);
+}
+
+.watch-notes .cm-selectionBackground,
+.watch-notes .cm-focused .cm-selectionBackground,
+.watch-notes .cm-content ::selection {
+  background: var(--gold-wash);
+}
+
+.watch-notes__stamp {
+  padding: 0 4px;
+  border-radius: 2px;
+  background: var(--tint);
+  color: var(--accent);
+  font: 700 12px/1 var(--font-call);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.watch-notes__stamp:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.watch__stamp-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  border-top: 1px solid var(--line);
+}
+
+.watch__stamp-row .button {
+  gap: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.graph__watch {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.graph__watch-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.details__link {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1080px) {
+  .watch__desk {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    padding: 0 24px;
+    overflow: auto;
+  }
+
+  .watch__column,
+  .watch__margin {
+    overflow: visible;
+  }
+
+  .watch__column {
+    padding-bottom: 0;
+  }
+
+  .watch__margin {
+    padding-bottom: 48px;
+  }
+
+  .watch-notes .cm-editor {
+    max-height: 60vh;
+  }
+}
+
+@media (max-width: 720px) {
+  .watch__desk {
+    padding: 0 16px;
+  }
+}
+
 /* Add Source: what is being added, and the text it brings. */
 
 .add-kind {

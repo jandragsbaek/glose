@@ -106,6 +106,7 @@ export function CiteSlip({
       : null;
   const chosen = picked ?? (missing === null ? (matches[0]?.node ?? null) : null);
   const ownPage = chosen?.kind === "note" ? chosen.page : null;
+  const chosenVideo = chosen !== null && sourceOf(chosen)?.kind === "video";
   const carried = inherited && chosen !== null && linkKey(chosen.id) !== current;
   const pageText = (carried ? "" : page).trim();
   const typedPage = pageText === "" ? null : pageText;
@@ -250,7 +251,7 @@ export function CiteSlip({
         )}
         <div className="cite-slip__foot">
           <label className="cite-slip__page-label" htmlFor={pageId}>
-            {t.writing.citePage}
+            {chosenVideo ? t.watch.time : t.writing.citePage}
           </label>
           <input
             ref={pageField}
@@ -278,10 +279,14 @@ export function CiteSlip({
             {chosen === null || typedPage !== null
               ? null
               : chosen.kind === "source"
-                ? t.writing.citePageSource
+                ? chosenVideo
+                  ? t.watch.citeTimeSource
+                  : t.writing.citePageSource
                 : ownPage === null
-                  ? t.writing.citePageMissing
-                  : t.writing.citePageFromNote(ownPage)}
+                  ? chosenVideo
+                    ? t.watch.citeTimeMissing
+                    : t.writing.citePageMissing
+                  : t.writing.citePageFromNote(t.source.page(ownPage, chosenVideo))}
           </p>
           {editing === null ? null : (
             <button type="button" className="button button--quiet" onClick={onRemove}>

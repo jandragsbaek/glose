@@ -6,6 +6,7 @@ import { writingMessages } from "./en/writing.ts";
 import { recallMessages } from "./en/recall.ts";
 import { settingsMessages } from "./en/settings.ts";
 import { articleMessages } from "./en/article.ts";
+import { videoMessages } from "./en/video.ts";
 
 export const en = {
   ...coreMessages,
@@ -16,6 +17,7 @@ export const en = {
   ...recallMessages,
   ...settingsMessages,
   ...articleMessages,
+  ...videoMessages,
 };
 
 export type Messages = typeof en;

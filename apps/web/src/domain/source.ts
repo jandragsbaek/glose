@@ -15,7 +15,7 @@ export const callNumber = (source: CallNumbered): string => {
   return source.kind === "lesson" && source.part != null ? `${base} ${source.part}` : base;
 };
 
-export type MissingDetail = "firstPublished" | "publisher" | "container";
+export type MissingDetail = "firstPublished" | "publisher" | "container" | "channel";
 
 export const missingDetails = (source: Source): ReadonlyArray<MissingDetail> => [
   ...(source.firstPublished === null ? (["firstPublished"] as const) : []),
@@ -24,7 +24,7 @@ export const missingDetails = (source: Source): ReadonlyArray<MissingDetail> => 
       ? (["publisher"] as const)
       : []
     : source.container === null
-      ? (["container"] as const)
+      ? ([source.kind === "video" ? "channel" : "container"] as const)
       : []),
 ];
 

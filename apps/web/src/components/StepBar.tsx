@@ -1,9 +1,14 @@
-import { readingStepsOf, type Source, type WorkStep } from "@glose/contracts";
+import { readingStepsOf, type Source, type SourceKind, type WorkStep } from "@glose/contracts";
 import { Check } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { wordCount } from "../domain/source.ts";
+import { cuesOf, notesWordCount, videoIdOf } from "../domain/video.ts";
+import type { Messages } from "../i18n/en.ts";
 import { useT } from "../i18n/I18n.tsx";
+
+export const stepName = (t: Messages, step: WorkStep, kind: SourceKind): string =>
+  kind === "video" && step === "free-text" ? t.watch.step : t.steps.names[step];
 
 export function StepBar({
   source,
@@ -22,9 +27,14 @@ export function StepBar({
   const steps = readingStepsOf(source.readingStart, source.kind);
   const current = source.readingStep === "done" ? -1 : steps.indexOf(source.readingStep);
   const position = current === -1 ? steps.length : current;
-  const words = wordCount(source.freeText);
+  const video = source.kind === "video";
+  const videoId = video ? videoIdOf(source.url) : null;
+  const words = video ? notesWordCount(source.freeText, videoId) : wordCount(source.freeText);
 
   const note = (step: WorkStep, index: number) => {
+    if (step === "free-text" && video) {
+      return t.watch.stepNote(cuesOf(source.freeText, videoId).length, words);
+    }
     if (step === "free-text" && index < position) {
       return words === 0 ? t.steps.noFreeText : t.steps.words(words);
     }
@@ -49,7 +59,7 @@ export function StepBar({
             <span className="step__name">
               {done ? <Check className="step__icon" aria-hidden="true" /> : null}
               <span className="step__num">{index + 1}</span>
-              {t.steps.names[step]}
+              {stepName(t, step, source.kind)}
               {done ? <span className="sr-only">{t.steps.done}</span> : null}
             </span>
             <span className="step__note">

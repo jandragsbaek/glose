@@ -1,8 +1,14 @@
 import { useAtomValue } from "@effect/atom-react";
-import { type GraphNode, type GraphView, linkKey } from "@glose/contracts";
+import {
+  type GraphNode,
+  type GraphView,
+  isTimestamp,
+  linkKey,
+  timestampSeconds,
+} from "@glose/contracts";
 import { Link } from "@tanstack/react-router";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
-import { X } from "lucide-react";
+import { Play, X } from "lucide-react";
 import type { ReactNode, Ref } from "react";
 
 import { type GraphIndex, holdsAiText } from "../graph/graphIndex.ts";
@@ -75,6 +81,17 @@ export function NodePanel({
             <NodeLink id={source.id} className="graph__link" onShow={onShow}>
               {source.title}
             </NodeLink>
+            {source.kind === "video" && node.page !== null && isTimestamp(node.page) ? (
+              <Link
+                to="/sources/$sourceId"
+                params={{ sourceId: source.id }}
+                search={{ t: timestampSeconds(node.page) ?? 0 }}
+                className="graph__watch"
+              >
+                <Play className="graph__watch-icon" aria-hidden="true" />
+                {t.watch.watchFrom(node.page)}
+              </Link>
+            ) : null}
           </p>
         )}
         {rewriting ? null : isSource ? (

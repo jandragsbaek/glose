@@ -16,16 +16,19 @@ export const articleMessages: typeof english = {
       book: "Bog",
       article: "Artikel",
       lesson: "Kursuslektioner",
+      video: "Video",
     } satisfies Record<SourceKind, string>,
     one: {
       book: "Bog",
       article: "Artikel",
       lesson: "Kursuslektion",
+      video: "Video",
     } satisfies Record<SourceKind, string>,
     hints: {
       book: "Du læser den et andet sted. Glose gemmer din frie tekst og dine noter.",
       article: "Én Markdown-fil eller indsat tekst. Du læser den i Glose.",
       lesson: "En mappe med lektionsfiler fra et kursus. Hver lektion bliver en kilde.",
+      video: "Et foredrag eller en anden video på YouTube. Du ser den i Glose og stempler tiderne.",
     } satisfies Record<SourceKind, string>,
     articleTypes: {
       paper: "Videnskabelig artikel",

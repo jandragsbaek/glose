@@ -132,6 +132,15 @@ function ProbePage({
         >
           {t.reader.readText}
         </Link>
+      ) : source.kind === "video" ? (
+        <Link
+          to="/sources/$sourceId"
+          params={{ sourceId: source.id }}
+          search={{ watch: 1 }}
+          className="button button--quiet"
+        >
+          {t.watch.watchVideo}
+        </Link>
       ) : null}
       <button
         type="button"

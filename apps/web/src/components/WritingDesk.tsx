@@ -1,5 +1,6 @@
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import {
+  linkKey,
   type PublicationRecord,
   postFileName,
   referenceToken,
@@ -212,7 +213,11 @@ export function WritingDesk({
     if (cite === null) return;
     const { from, to, editing } = cite;
     setCite(null);
-    const token = referenceToken(target, page);
+    const node = nodes.find((other) => linkKey(other.id) === linkKey(target));
+    const sourceId = node?.kind === "note" ? node.sourceId : target;
+    const video =
+      sources?.find((source) => linkKey(source.id) === linkKey(sourceId ?? ""))?.kind === "video";
+    const token = referenceToken(target, page, video);
     const at = editing !== null || from === to ? hugWord(fields.body, from) : from;
     editor.current?.replace(at, to, at < from && editing === null ? `${token} ` : token);
   };

@@ -1,4 +1,4 @@
-import type { ReadingStep } from "@glose/contracts";
+import { isTimestamp, type ReadingStep } from "@glose/contracts";
 import type { MissingDetail } from "../../domain/source.ts";
 import { numbers, count, list, monthYear, capitalised } from "./format.ts";
 import type { Messages } from "../en.ts";
@@ -7,17 +7,20 @@ export const sourceMessages: Pick<Messages, "source" | "sources" | "addSource"> 
   source: {
     firstPublished: (year: number) => `først udgivet ${year}`,
     callNumberLabel: (callNumber: string) => `Opstillingssignatur ${callNumber}`,
-    page: (page: string) => (page.startsWith("¶") ? page : `s. ${page}`),
+    page: (page: string, video = false) =>
+      page.startsWith("¶") || (video && isTimestamp(page)) ? page : `s. ${page}`,
     missingTitle: "Mangler for en korrekt kildehenvisning",
     missing: {
       firstPublished: "Året for første udgivelse",
       publisher: "Forlaget",
       container: "Hvor den udkom: tidsskriftet, webstedet eller kurset",
+      channel: "Hvor den udkom: kanalen eller begivenheden",
     },
     missingInline: {
       firstPublished: "året for første udgivelse",
       publisher: "forlaget",
       container: "hvor den udkom",
+      channel: "kanalen eller begivenheden",
     },
     missingLine: (missing: ReadonlyArray<string>) =>
       `Mangler for en korrekt kildehenvisning: ${list.format(missing)}.`,
@@ -33,6 +36,9 @@ export const sourceMessages: Pick<Messages, "source" | "sources" | "addSource"> 
       editionYear: "Udgaveår",
       publisher: "Forlag",
       translator: "Oversætter",
+      speaker: "Taler",
+      channel: "Kanal eller begivenhed",
+      address: "Adresse",
       file: "Fil",
     },
     fileName: (id: string) => `${id}.md`,
@@ -111,14 +117,16 @@ export const sourceMessages: Pick<Messages, "source" | "sources" | "addSource"> 
     ready: "Klar",
     missing: (missing: ReadonlyArray<MissingDetail>) =>
       missing.length > 1
-        ? missing.includes("container")
+        ? missing.includes("container") || missing.includes("channel")
           ? "Intet år eller sted"
           : "Intet år eller forlag"
         : missing[0] === "firstPublished"
           ? "Intet år"
           : missing[0] === "container"
             ? "Intet tidsskrift, websted eller kursus"
-            : "Intet forlag",
+            : missing[0] === "channel"
+              ? "Ingen kanal eller begivenhed"
+              : "Intet forlag",
     matching: (shown: number, total: number) =>
       `${numbers.format(shown)} af ${count(total, "kilde", "kilder")}`,
     nothingFound: "Ingen kilde passer.",

@@ -1,4 +1,4 @@
-import type { Point } from "@glose/contracts";
+import { isTimestamp, type Point } from "@glose/contracts";
 import { Link } from "@tanstack/react-router";
 import { BookOpen, Copy, GitCompareArrows, Quote } from "lucide-react";
 import type { ReactNode } from "react";
@@ -8,7 +8,7 @@ import { pointNumber } from "./Session.tsx";
 
 export const elementOf = (point: string) => `point-${point}`;
 
-export function PointSource({ point }: { readonly point: Point }) {
+export function PointSource({ point, video }: { readonly point: Point; readonly video: boolean }) {
   const t = useT();
   return (
     <>
@@ -16,7 +16,10 @@ export function PointSource({ point }: { readonly point: Point }) {
         <p className="point__from">
           <Quote className="point__icon" aria-hidden="true" />
           <span>
-            {t.extraction.fromFreeText} <q>{point.quote}</q>
+            {video && point.page !== null && isTimestamp(point.page)
+              ? t.watch.fromNotes(point.page)
+              : t.extraction.fromFreeText}{" "}
+            <q>{point.quote}</q>
           </span>
         </p>
       ) : null}
@@ -78,10 +81,12 @@ export function NoteLink({ name }: { readonly name: string }) {
 
 export function PointRow({
   point,
+  video,
   about,
   children,
 }: {
   readonly point: Point;
+  readonly video: boolean;
   readonly about: boolean;
   readonly children: ReactNode;
 }) {
@@ -93,7 +98,7 @@ export function PointRow({
       <span className="point-row__title">{point.title}</span>
       <span className="point-row__actions">{children}</span>
       <div className="point-row__source">
-        <PointSource point={point} />
+        <PointSource point={point} video={video} />
       </div>
     </li>
   );

@@ -119,7 +119,7 @@ export const writingMessages = {
     format: { h2: "Heading", h3: "Subheading", strong: "Bold", em: "Italic" },
     citeShort: "Cite",
     citeFind: "Find a Note, a Source or an author",
-    citePageFromNote: (page: string) => `Empty uses p. ${page} from the Note.`,
+    citePageFromNote: (location: string) => `Empty uses ${location} from the Note.`,
     citePageMissing: "The Note has no page. Add it here.",
     citePageSource: "A Source has no page of its own. Add the page you cite.",
     citeSave: "Save",

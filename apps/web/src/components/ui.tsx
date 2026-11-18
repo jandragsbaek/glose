@@ -98,12 +98,14 @@ export function CallNumber({
     <span
       className={missing ? "call call--missing" : "call"}
       aria-label={t.source.callNumberLabel(
-        page === null ? label : `${label} · ${t.source.page(page)}`,
+        page === null ? label : `${label} · ${t.source.page(page, source.kind === "video")}`,
       )}
     >
       {missing ? <TriangleAlert className="call__icon" aria-hidden="true" /> : null}
       {label}
-      {page === null ? null : <span className="call__loc">· {t.source.page(page)}</span>}
+      {page === null ? null : (
+        <span className="call__loc">· {t.source.page(page, source.kind === "video")}</span>
+      )}
     </span>
   );
 }

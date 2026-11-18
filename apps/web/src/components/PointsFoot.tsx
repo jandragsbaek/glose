@@ -12,9 +12,11 @@ import { Notice } from "./ui.tsx";
 export function PointsFoot({
   session,
   dropped,
+  video,
 }: {
   readonly session: Session;
   readonly dropped: ReadonlyArray<Point>;
+  readonly video: boolean;
 }) {
   const t = useT();
   const inputId = useId();
@@ -45,7 +47,7 @@ export function PointsFoot({
           <p className="points__head">{t.extraction.dropped}</p>
           <ol className="point-rows point-rows--dropped">
             {dropped.map((point) => (
-              <PointRow key={point.id} point={point} about={false}>
+              <PointRow key={point.id} point={point} video={video} about={false}>
                 <button
                   type="button"
                   className="button button--quiet button--small"

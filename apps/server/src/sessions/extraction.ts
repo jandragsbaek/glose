@@ -2,10 +2,16 @@ import {
   findInArticle,
   type Language,
   linkKey,
+  type PlainNotes,
+  plainNotes,
+  plainStamps,
   type Point,
   type PointLink,
   type SessionEntry,
   type Source,
+  timestampSeconds,
+  timestampText,
+  youtubeId,
 } from "@glose/contracts";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
@@ -38,6 +44,7 @@ How to work:
 - Start with read_source: the Source's bibliographic data and the user's Free text, what they wrote freely about it. When its readingStart is "probe" or "catch-up", the user began with a Probe: call read_probe, which gives every question, the user's Reasoning and answers, how each was judged, and what the Probe found per topic. Propose Points first on what the Probe found: the topics the user knows, and the gaps it taught. Then use search_graph a few times, with different words for the Source's main ideas, and read_note on the Notes that matter, so you know what the user's Graph already holds. Call list_sources when other Sources may matter.
 - Propose Points only through propose_points, a few at a time (at most ${MAX_POINTS}), the ones that matter most first. list_points shows the Points already in the Session; do not propose one again.
 - An Article or a Course lesson (read_source gives its kind) brings its text: call read_article. Read it all; propose the Source's core points from the text, and first the points the user's Passages mark (what they highlighted while reading, with their own words on it). Use origin "article" for a Point the text states: give the quote, the exact words of the text, copied character for character, and Glose sets its Location from the paragraph. The text is the user's own copy, so do not use origin "ai" for what the text says.
+- A Video (kind "video", a talk or another video on YouTube) brings no text, and you have not seen it: Glose holds no transcript. Its Free text is the user's watch notes, where [12:34] marks the time in the video that the words after it are about. Propose its Points from the notes, with origin "free-text", the notes' exact words as the quote (words after one timestamp, never across two), and that timestamp in timestamp (such as "12:34"); Glose checks the words are there and sets the Point's Location to that time. Use origin "ai" only for what you truly know of the talk, and say so.
 - Say where each Point comes from. Origin "free-text" when the user's Free text holds it: give the quote, the exact words of the Free text, copied character for character. Origin "probe" when the user's own Reasoning or answers in the Probe hold it: give the quote, their exact words, copied character for character. Origin "ai" when it comes from your knowledge of the Source and not from the Free text. Never present your knowledge as something the user wrote. If you are unsure what the Source says, say so.
 - Use the Graph. When a Note already says the Point, name it in repeats. When a Note disagrees with the Point or pulls against it, name it in pulls_against_note and say how. Propose links to the Notes the Point's Note should link to, each with a short reason. Name only Notes that search_graph or read_note showed you, by their exact names.
 - Give each Point a draft of its Note: one to three short paragraphs that state the claim, explain it and stay true to the Source. The user's form starts with it. Glose marks it as AI text, edited or not, until the user says they rewrote it in their own words.
@@ -98,6 +105,7 @@ const ProposeArguments = Schema.Struct({
       pulls_against_why: NullableString,
       links: Schema.Array(Schema.Struct({ note: Schema.String, why: Schema.String })),
       draft: Schema.String,
+      timestamp: Schema.optionalKey(NullableString),
     }),
   ),
 });
@@ -112,15 +120,46 @@ const decodeDraft = Schema.decodeUnknownOption(DraftArguments);
 
 const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-export const findQuote = (freeText: string, quote: string): string | null => {
+const quotePattern = (quote: string, flags: string): RegExp | null => {
   const words = quote
     .trim()
     .replace(/^["'“”‘’«»„…\s]+|["'“”‘’«»„…\s]+$/g, "")
     .split(/\s+/)
     .filter((word) => word !== "");
   if (words.length === 0) return null;
-  const match = new RegExp(words.map(escape).join("\\s+"), "iu").exec(freeText);
-  return match === null ? null : match[0];
+  return new RegExp(words.map(escape).join("\\s+"), flags);
+};
+
+export const findQuote = (freeText: string, quote: string): string | null =>
+  quotePattern(quote, "iu")?.exec(freeText)?.[0] ?? null;
+
+const EDGE_STAMPS = /^(?:\s*\[[0-9:]+\])+\s*|\s*(?:\[[0-9:]+\]\s*)+$/g;
+
+const timeOf = (text: string | null) => {
+  const seconds = text === null ? null : timestampSeconds(text.replace(/^\[|\]$/g, ""));
+  return seconds === null ? null : timestampText(seconds);
+};
+
+export const findInNotes = (
+  { text: notes, stamps }: PlainNotes,
+  quote: string,
+  timestamp: string | null,
+): { readonly text: string; readonly page: string | null } | null => {
+  const pattern = quotePattern(quote.replace(EDGE_STAMPS, ""), "giu");
+  if (pattern === null) return null;
+  const found = Array.from(notes.matchAll(pattern)).flatMap((match) => {
+    const start = match.index;
+    const end = start + match[0].length;
+    if (stamps.some((stamp) => stamp.start < end && stamp.end > start)) return [];
+    const page = stamps.filter((stamp) => stamp.end <= start).at(-1)?.label ?? null;
+    return [{ text: match[0], page }];
+  });
+  const [first] = found;
+  if (first === undefined) return null;
+  const named = timeOf(timestamp);
+  const chosen = found.find((match) => named !== null && match.page === named);
+  if (chosen !== undefined) return chosen;
+  return found.every((match) => match.page === first.page) ? first : { ...first, page: null };
 };
 
 const LINK_ITEMS = {
@@ -197,7 +236,13 @@ export const tools = ({
       parameters: NO_ARGUMENTS,
       run: () =>
         sources.get(source).pipe(
-          Effect.map((found) => ({ ...describe(found), freeText: found.freeText })),
+          Effect.map((found) => ({
+            ...describe(found),
+            freeText:
+              found.kind === "video"
+                ? plainStamps(found.freeText, youtubeId(found.url ?? ""))
+                : found.freeText,
+          })),
           Effect.orElseSucceed(() => ({ error: "The Source could not be read." })),
         ),
     },
@@ -278,6 +323,9 @@ export const tools = ({
                   description:
                     "A draft of the Note's text: one to three short paragraphs, plain text. Glose marks it as AI text.",
                 },
+                timestamp: nullable(
+                  "For a Video: the timestamp the quoted words come after in the watch notes, such as 12:34. Null for other Sources.",
+                ),
               },
               required: [
                 "title",
@@ -288,6 +336,7 @@ export const tools = ({
                 "pulls_against_why",
                 "links",
                 "draft",
+                "timestamp",
               ],
               additionalProperties: false,
             },
@@ -299,9 +348,13 @@ export const tools = ({
       run: Effect.fn("Extraction.proposePoints")(function* (args: unknown) {
         const asked = Option.getOrNull(decodePropose(args))?.points ?? [];
         const resolve = yield* resolver;
-        const freeText = yield* sources.get(source).pipe(
-          Effect.map((found) => found.freeText),
-          Effect.orElseSucceed(() => ""),
+        const { freeText, notes } = yield* sources.get(source).pipe(
+          Effect.map((found) => {
+            if (found.kind !== "video") return { freeText: found.freeText, notes: null };
+            const plain = plainNotes(found.freeText, youtubeId(found.url ?? ""));
+            return { freeText: plain.text, notes: plain };
+          }),
+          Effect.orElseSucceed(() => ({ freeText: "", notes: null })),
         );
         const probeEntries = yield* probe;
         const probeText = probeEntries === null ? "" : probeWords(probeEntries);
@@ -318,18 +371,24 @@ export const tools = ({
             point.origin === "article" && point.quote !== null && article !== null
               ? findInArticle(article, point.quote)
               : null;
+          const inNotes =
+            notes !== null && point.origin === "free-text" && point.quote !== null
+              ? findInNotes(notes, point.quote, point.timestamp ?? null)
+              : null;
           const quote =
             point.quote === null
               ? null
               : point.origin === "article"
                 ? (inArticle?.text.replace(/\s+/g, " ") ?? null)
-                : findQuote(point.origin === "probe" ? probeText : freeText, point.quote);
+                : notes !== null && point.origin === "free-text"
+                  ? (inNotes?.text ?? null)
+                  : findQuote(point.origin === "probe" ? probeText : freeText, point.quote);
           unquoted.push(point.quote !== null && quote === null);
           proposed.push({
             title,
             origin: point.origin === "article" && article === null ? "ai" : point.origin,
             quote,
-            page: inArticle === null ? null : `¶ ${inArticle.n}`,
+            page: inArticle !== null ? `¶ ${inArticle.n}` : (inNotes?.page ?? null),
             repeats: resolve(point.repeats),
             pullsAgainst:
               against === null

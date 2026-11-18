@@ -1,4 +1,10 @@
-import { aiCallout, hasAiCallout, type Language, textParagraphs } from "@glose/contracts";
+import {
+  aiCallout,
+  hasAiCallout,
+  isTimestamp,
+  type Language,
+  textParagraphs,
+} from "@glose/contracts";
 import * as Yaml from "yaml";
 
 import { FRONTMATTER } from "./sourceFile.ts";
@@ -21,12 +27,19 @@ export interface NoteFileContent {
 
 const RELATED: Record<Language, string> = { en: "Related", da: "Se også" };
 
+const pageValue = (page: string) => {
+  if (!isTimestamp(page)) return page;
+  const scalar = new Yaml.Scalar(page);
+  scalar.type = Yaml.Scalar.QUOTE_DOUBLE;
+  return scalar;
+};
+
 export const renderNoteFile = (note: NoteFileContent): string => {
   const draft = note.draft === null || textParagraphs(note.draft).length === 0 ? null : note.draft;
   const frontmatter = new Yaml.Document({
     glose: "note",
     ...(note.source === null ? {} : { source: `[[${note.source}]]` }),
-    ...(note.page === null ? {} : { page: note.page }),
+    ...(note.page === null ? {} : { page: pageValue(note.page) }),
     ...(note.aiTitle || draft !== null ? { ai: true } : {}),
     ...(note.aiTitle ? { "ai-title": true } : {}),
   });
@@ -66,7 +79,7 @@ export const editNoteFile = (markdown: string, edit: NoteEdit): string | null =>
     .replace(/\r\n?/g, "\n")
     .replace(/^(?:[ \t]*\n)+/, "")
     .trimEnd();
-  set("page", edit.page);
+  set("page", edit.page === null ? null : pageValue(edit.page));
   set("ai", edit.aiTitle || edit.aiNote || hasAiCallout(body) ? true : null);
   set("ai-title", edit.aiTitle ? true : null);
   const yaml = Yaml.isMap(frontmatter.contents) && frontmatter.contents.items.length > 0;

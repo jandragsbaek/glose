@@ -3,13 +3,14 @@ import type { Source } from "@glose/contracts";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import * as Exit from "effect/Exit";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
-import { useId, useState } from "react";
+import { type ReactNode, useId, useState } from "react";
 
 import { Extraction } from "../components/Extraction.tsx";
 import { Probe } from "../components/Probe.tsx";
 import { Reader } from "../components/Reader.tsx";
 import { ReadingStart } from "../components/ReadingStart.tsx";
 import { StepBar } from "../components/StepBar.tsx";
+import { VideoNotes, Watch } from "../components/Watch.tsx";
 import {
   CallNumber,
   Notice,
@@ -20,21 +21,27 @@ import {
   StorageProblem,
 } from "../components/ui.tsx";
 import { asksWhereToStart, missingDetails, wordCount } from "../domain/source.ts";
+import { videoIdOf, youtubeAt } from "../domain/video.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { KEYS, saveFreeTextAtom, sourceAtom } from "../state/graph.ts";
 
 interface SourceSearch {
   readonly text?: 1;
   readonly p?: number;
+  readonly watch?: 1;
+  readonly t?: number;
 }
 
 export const Route = createFileRoute("/sources/$sourceId")({
   component: ReadingStage,
   validateSearch: (search: Record<string, unknown>): SourceSearch => {
     const p = Number(search.p);
+    const at = Number(search.t);
     return {
       ...(search.text === 1 || search.text === "1" ? { text: 1 as const } : {}),
       ...(Number.isInteger(p) && p > 0 ? { p } : {}),
+      ...(search.watch === 1 || search.watch === "1" ? { watch: 1 as const } : {}),
+      ...(search.t !== undefined && Number.isInteger(at) && at >= 0 ? { t: at } : {}),
     };
   },
 });
@@ -85,7 +92,9 @@ function SourceView({ source }: { readonly source: Source }) {
           .join(", ")
       : source.kind === "article"
         ? (source.container ?? t.kinds.one.article)
-        : null;
+        : source.kind === "video"
+          ? (source.container ?? t.kinds.one.video)
+          : null;
   const sub = (
     <span className="button-row">
       {author}
@@ -96,9 +105,15 @@ function SourceView({ source }: { readonly source: Source }) {
   if (source.hasText && (source.readingStep === "read" || search.text === 1)) {
     return <Reader source={source} sub={sub} focus={search.p ?? null} />;
   }
+  if (
+    source.kind === "video" &&
+    (source.readingStep === "free-text" || search.watch === 1 || search.t !== undefined)
+  ) {
+    return <Watch source={source} sub={sub} start={search.t ?? 0} />;
+  }
   const sourcePanels = (
     <div className="columns">
-      <FreeText source={source} />
+      {source.kind === "video" ? <VideoNotes source={source} /> : <FreeText source={source} />}
       <Details source={source} />
     </div>
   );
@@ -121,6 +136,15 @@ function SourceView({ source }: { readonly source: Source }) {
               className="button button--quiet"
             >
               {t.reader.readText}
+            </Link>
+          ) : source.kind === "video" ? (
+            <Link
+              to="/sources/$sourceId"
+              params={{ sourceId: source.id }}
+              search={{ watch: 1 }}
+              className="button button--quiet"
+            >
+              {t.watch.watchVideo}
             </Link>
           ) : undefined
         }
@@ -244,16 +268,42 @@ function Details({ source }: { readonly source: Source }) {
   const t = useT();
   const missing = missingDetails(source);
   const author = [source.familyName, source.givenName].filter(Boolean).join(", ");
-  const rows: ReadonlyArray<readonly [string, string | number | null]> = [
-    [t.source.fields.author, author],
-    [t.source.fields.title, source.title],
-    [t.source.fields.firstPublished, source.firstPublished],
-    [t.source.fields.publisher, source.publisher],
-    [t.source.fields.edition, source.edition],
-    [t.source.fields.editionYear, source.editionYear],
-    [t.source.fields.translator, source.translator],
-    [t.source.fields.file, t.source.fileName(source.id)],
-  ];
+  const videoId = videoIdOf(source.url);
+  const rows: ReadonlyArray<readonly [string, ReactNode]> =
+    source.kind === "video"
+      ? [
+          [t.source.fields.speaker, author],
+          [t.source.fields.title, source.title],
+          [t.addVideo.year, source.firstPublished],
+          [t.source.fields.channel, source.container],
+          [
+            t.source.fields.address,
+            videoId === null ? (
+              source.url
+            ) : (
+              <a
+                key="address"
+                href={youtubeAt(videoId)}
+                target="_blank"
+                rel="noreferrer"
+                className="details__link"
+              >
+                {youtubeAt(videoId)}
+              </a>
+            ),
+          ],
+          [t.source.fields.file, t.source.fileName(source.id)],
+        ]
+      : [
+          [t.source.fields.author, author],
+          [t.source.fields.title, source.title],
+          [t.source.fields.firstPublished, source.firstPublished],
+          [t.source.fields.publisher, source.publisher],
+          [t.source.fields.edition, source.edition],
+          [t.source.fields.editionYear, source.editionYear],
+          [t.source.fields.translator, source.translator],
+          [t.source.fields.file, t.source.fileName(source.id)],
+        ];
   return (
     <Panel title={t.source.details} initial="accent">
       <div className="panel__body">

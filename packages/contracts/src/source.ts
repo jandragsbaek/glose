@@ -8,25 +8,29 @@ export type ReadingStart = typeof ReadingStart.Type;
 
 export type WorkStep = Exclude<ReadingStep, "done">;
 
-export const SourceKind = Schema.Literals(["book", "article", "lesson"]);
+export const SourceKind = Schema.Literals(["book", "article", "lesson", "video"]);
 export type SourceKind = typeof SourceKind.Type;
 
 export const ArticleType = Schema.Literals(["paper", "web", "press"]);
 export type ArticleType = typeof ArticleType.Type;
 
-export const hasOwnText = (kind: SourceKind): boolean => kind !== "book";
+export const hasOwnText = (kind: SourceKind): boolean => kind === "article" || kind === "lesson";
+
+export const citedByContainer = (kind: SourceKind): boolean => kind !== "book";
 
 export const readingStepsOf = (
   start: ReadingStart | null,
   kind: SourceKind = "book",
 ): ReadonlyArray<WorkStep> =>
-  hasOwnText(kind)
-    ? start === "probe" || start === "catch-up"
-      ? ["read", "probe", "extraction"]
-      : ["read", "extraction", "probe"]
-    : start === "probe" || start === "catch-up"
-      ? ["probe", "extraction"]
-      : ["free-text", "extraction", "probe"];
+  kind === "video"
+    ? ["free-text", "extraction", "probe"]
+    : hasOwnText(kind)
+      ? start === "probe" || start === "catch-up"
+        ? ["read", "probe", "extraction"]
+        : ["read", "extraction", "probe"]
+      : start === "probe" || start === "catch-up"
+        ? ["probe", "extraction"]
+        : ["free-text", "extraction", "probe"];
 
 export const nextReadingStep = (
   start: ReadingStart | null,
@@ -125,6 +129,16 @@ export const ImportText = Schema.Struct({
   markdown: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
 });
 export type ImportText = typeof ImportText.Type;
+
+export const AddVideo = Schema.Struct({
+  familyName: Text,
+  givenName: OptionalText,
+  title: Text,
+  firstPublished: Year,
+  container: OptionalText,
+  url: Text,
+});
+export type AddVideo = typeof AddVideo.Type;
 
 export const ArticleText = Schema.Struct({ markdown: Schema.String });
 export type ArticleText = typeof ArticleText.Type;

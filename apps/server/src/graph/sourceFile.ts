@@ -1,5 +1,6 @@
 import {
   ArticleType,
+  hasOwnText,
   ReadingStart,
   ReadingStep,
   type Source,
@@ -116,7 +117,7 @@ export const parseSourceFile = (markdown: string): Option.Option<SourceFileConte
           part: text(data.part),
           readingPlace: data["reading-place"] ?? null,
           readingStep:
-            data["reading-step"] ?? ((data.kind ?? "book") === "book" ? "free-text" : "read"),
+            data["reading-step"] ?? (hasOwnText(data.kind ?? "book") ? "read" : "free-text"),
           readingStart: data["reading-start"] ?? null,
           added: addedTime(data.added),
           freeText: (match[2] ?? "").replace(/^\r?\n/, "").trimEnd(),

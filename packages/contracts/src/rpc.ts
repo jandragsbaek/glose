@@ -52,6 +52,7 @@ import {
   StorageError,
 } from "./settings.ts";
 import {
+  AddVideo,
   ArticleText,
   ChooseReadingStart,
   AdvanceReading,
@@ -69,6 +70,7 @@ import {
   SourceNotFound,
   SourceRef,
 } from "./source.ts";
+import { LookupVideo, VideoFound, VideoNotFound } from "./video.ts";
 import { BackUpToGitHub, EndDay, RemoteRefused, SetRemote, VersionsStatus } from "./versions.ts";
 import {
   PublicationExists,
@@ -102,6 +104,8 @@ export const RPC_METHODS = {
   sourcesAdvance: "sources.advance",
   sourcesImportText: "sources.importText",
   sourcesSetPlace: "sources.setPlace",
+  sourcesAddVideo: "sources.addVideo",
+  sourcesLookupVideo: "sources.lookupVideo",
   articlesGet: "articles.get",
   articlesMarkPassage: "articles.markPassage",
   articlesRemovePassage: "articles.removePassage",
@@ -220,6 +224,16 @@ export const GloseRpcGroup = RpcGroup.make(
     payload: SetReadingPlace,
     success: Source,
     error: Schema.Union([SourceNotFound, GraphFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.sourcesAddVideo, {
+    payload: AddVideo,
+    success: Source,
+    error: Schema.Union([SourceNameTaken, VideoNotFound, GraphFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.sourcesLookupVideo, {
+    payload: LookupVideo,
+    success: VideoFound,
+    error: VideoNotFound,
   }),
   Rpc.make(RPC_METHODS.articlesGet, {
     payload: SourceRef,

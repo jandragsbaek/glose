@@ -14,6 +14,7 @@ import {
   setUp,
   toolCall,
 } from "../testkit/sessions.ts";
+import { Sources } from "../graph/Sources.ts";
 import { Sessions } from "./Sessions.ts";
 
 it.layer(NodeServices.layer)("Sessions", (it) => {
@@ -201,6 +202,127 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
           role: "user",
           content: '(About point 1: "Labour leaves nothing")\n\nIs this right?',
         });
+      }).pipe(Effect.scoped),
+  );
+
+  it.effect(
+    "gives a Point from a Video's watch notes the timestamp its quote comes after, and none when that is unclear",
+    () =>
+      Effect.gen(function* () {
+        const { fake, layer, bodies } = yield* setUp;
+        fake.answer(MODELS, MODEL_LIST, MODEL_LIST);
+        fake.answer(
+          RESPONSES,
+          toolCall("read_source", {}),
+          toolCall("propose_points", {
+            points: [
+              {
+                title: "People buy why you do it",
+                origin: "free-text",
+                quote: "[4:10] He says people buy why you do it",
+                repeats: null,
+                pulls_against_note: null,
+                pulls_against_why: null,
+                links: [],
+                draft: "",
+              },
+              {
+                title: "A point from before any timestamp",
+                origin: "free-text",
+                quote: "First thoughts",
+                repeats: null,
+                pulls_against_note: null,
+                pulls_against_why: null,
+                links: [],
+                draft: "",
+              },
+              {
+                title: "The circle repeats",
+                origin: "free-text",
+                quote: "the golden circle",
+                repeats: null,
+                pulls_against_note: null,
+                pulls_against_why: null,
+                links: [],
+                draft: "",
+              },
+              {
+                title: "The circle comes back late",
+                origin: "free-text",
+                quote: "the golden circle",
+                repeats: null,
+                pulls_against_note: null,
+                pulls_against_why: null,
+                links: [],
+                draft: "",
+                timestamp: "6:20",
+              },
+              {
+                title: "Examples show the point",
+                origin: "free-text",
+                quote: "show the point",
+                repeats: null,
+                pulls_against_note: null,
+                pulls_against_why: null,
+                links: [],
+                draft: "",
+                timestamp: "2:00",
+              },
+              {
+                title: "Across two moments",
+                origin: "free-text",
+                quote: "why you do it. [6:20] Again",
+                repeats: null,
+                pulls_against_note: null,
+                pulls_against_why: null,
+                links: [],
+                draft: "",
+              },
+            ],
+          }),
+          answer("Start with [1]."),
+        );
+
+        const { session, video } = yield* Effect.gen(function* () {
+          const sources = yield* Sources;
+          const video = yield* sources.addVideo({
+            familyName: "Sinek",
+            givenName: "Simon",
+            title: "Start with why",
+            firstPublished: 2009,
+            container: "TEDx Talks",
+            url: "https://www.youtube.com/watch?v=u4ZoJKF_VuA",
+          });
+          yield* sources.saveFreeText({
+            id: video.id,
+            freeText: [
+              "First thoughts on the talk.",
+              "[4:10](https://www.youtube.com/watch?v=u4ZoJKF_VuA&t=250s) He says people buy why you do it.",
+              "[6:20](https://youtu.be/u4ZoJKF_VuA?t=380) Again the golden circle, as at [1:40] the golden circle.",
+              "[2:00](https://youtu.be/u4ZoJKF_VuA?t=120)(examples) show the point.",
+            ].join("\n"),
+            finish: true,
+          });
+          const { id } = yield* (yield* Sessions).start({ kind: "extraction", subject: video.id });
+          return { session: yield* afterTurn(id), video };
+        }).pipe(Effect.provide(layer));
+
+        const points = session.entries.find((entry) => entry._tag === "Points");
+        assert.deepStrictEqual(
+          points?._tag === "Points" ? points.points.map((point) => [point.quote, point.page]) : [],
+          [
+            ["He says people buy why you do it", "4:10"],
+            ["First thoughts", null],
+            ["the golden circle", null],
+            ["the golden circle", "6:20"],
+            ["show the point", "2:00"],
+            [null, null],
+          ],
+        );
+        const read = bodies()[1]!.input.find((item) => item.type === "function_call_output");
+        assert.include(String(read?.["output"]), "[4:10] He says people buy why you do it.");
+        assert.notInclude(String(read?.["output"]), "youtube.com");
+        assert.strictEqual(video.kind, "video");
       }).pipe(Effect.scoped),
   );
 });

@@ -9,6 +9,21 @@ const read = (markdown: string) =>
   buildGraphView([{ name: "Spaced practice beats massed practice", markdown }]).nodes[0];
 
 describe("renderNoteFile", () => {
+  it("quotes a time in a video, so a YAML 1.1 reader keeps it a time and not seconds", () => {
+    const markdown = renderNoteFile({
+      source: "Sinek 2009 Start with why",
+      page: "4:10",
+      text: "People buy why you do it.",
+      draft: null,
+      aiTitle: false,
+      related: [],
+      language: "en",
+    });
+
+    assert.include(markdown, 'page: "4:10"\n');
+    assert.strictEqual(read(markdown)?.page, "4:10");
+  });
+
   it("writes the user's words, the kept AI draft as marked paragraphs, and the Links", () => {
     const markdown = renderNoteFile({
       source: SOURCE,
