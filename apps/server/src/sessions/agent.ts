@@ -76,7 +76,7 @@ const WebSearchCall = Schema.Struct({
 const decodeWebSearchCall = Schema.decodeUnknownOption(WebSearchCall);
 
 const refusesWebSearch = (error: ResponsesError) =>
-  (error.status === 400 || error.status === null) &&
+  (error.status === 400 || error.status === 403 || error.status === null) &&
   /web[_ ]search/i.test(`${error.code ?? ""} ${error.detail}`);
 
 export interface WebSearch {
@@ -103,6 +103,8 @@ export interface Turn {
   readonly summaries: boolean;
   readonly onSummariesRefused: Effect.Effect<void>;
   readonly webSearch?: WebSearch | null;
+  readonly maxRounds?: number;
+  readonly onOutput?: (output: ReadonlyArray<OutputItem>) => void;
 }
 
 export const runTurn = Effect.fn("agent.runTurn")(function* (turn: Turn) {
@@ -124,7 +126,7 @@ export const runTurn = Effect.fn("agent.runTurn")(function* (turn: Turn) {
   let summaries = turn.summaries;
   let webSearch = turn.webSearch ?? null;
 
-  for (let round = 0; round < MAX_ROUNDS; round++) {
+  for (let round = 0; round < (turn.maxRounds ?? MAX_ROUNDS); round++) {
     let output: Array<OutputItem> = [];
     let completed = false;
     const request = Effect.fn("agent.request")(function* (withSummaries: boolean) {
@@ -142,7 +144,10 @@ export const runTurn = Effect.fn("agent.runTurn")(function* (turn: Turn) {
           tool_choice: "auto",
           parallel_tool_calls: false,
           ...(withSummaries ? { reasoning: { summary: "auto" } } : {}),
-          include: ["reasoning.encrypted_content"],
+          include: [
+            "reasoning.encrypted_content",
+            ...(webSearch === null ? [] : ["web_search_call.action.sources"]),
+          ],
           store: false,
           stream: true,
         })
@@ -204,6 +209,7 @@ export const runTurn = Effect.fn("agent.runTurn")(function* (turn: Turn) {
       return yield* new ResponsesError({ status: null, code: null, detail: "stream ended early" });
     }
 
+    turn.onOutput?.(output);
     const results: Array<InputItem> = [];
     for (const item of output) {
       const call = decodeFunctionCall(item);

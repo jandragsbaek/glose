@@ -21,7 +21,7 @@ import {
   labelOf,
   narrowToAiText,
 } from "../graph/graphIndex.ts";
-import { DRAFT_NODE, newDraftId, proposedLinksOf, withDraft } from "../graph/newNote.ts";
+import { DRAFT_NODE, newDraftId, pagesOf, proposedLinksOf, withDraft } from "../graph/newNote.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { graphAtom, sourcesAtom } from "../state/graph.ts";
 import { noSessionAtom, sessionAtom } from "../state/sessions.ts";
@@ -36,13 +36,26 @@ function GraphSection() {
   const t = useT();
   const graph = useAtomValue(graphAtom);
   const refresh = useAtomRefresh(graphAtom);
+  const [starting, setStarting] = useState(false);
   return AsyncResult.matchWithError(graph, {
     onInitial: () => <GraphLoading />,
     onError: () => <GraphProblem onRetry={refresh} />,
     onDefect: () => <GraphProblem onRetry={refresh} />,
     onSuccess: ({ value }) =>
-      value.nodes.length === 0 ? (
-        <Page title={t.graph.title}>
+      value.nodes.length === 0 && !starting ? (
+        <Page
+          title={t.graph.title}
+          actions={
+            <button
+              type="button"
+              className="button button--primary"
+              onClick={() => setStarting(true)}
+            >
+              <Plus size={16} aria-hidden="true" />
+              {t.newNote.open}
+            </button>
+          }
+        >
           <div className="narrow">
             <Panel title={t.graph.title} initial="rubric">
               <div className="panel__body">
@@ -52,19 +65,33 @@ function GraphSection() {
           </div>
         </Page>
       ) : (
-        <GraphWithSources view={value} />
+        <GraphWithSources
+          view={value}
+          startNew={value.nodes.length === 0}
+          onEmpty={() => setStarting(false)}
+        />
       ),
   });
 }
 
-function GraphWithSources({ view }: { readonly view: GraphView }) {
+function GraphWithSources({
+  view,
+  startNew,
+  onEmpty,
+}: {
+  readonly view: GraphView;
+  readonly startNew: boolean;
+  readonly onEmpty: () => void;
+}) {
   const sources = useAtomValue(sourcesAtom);
   const refresh = useAtomRefresh(sourcesAtom);
   return AsyncResult.matchWithError(sources, {
     onInitial: () => <GraphLoading />,
     onError: () => <GraphProblem onRetry={refresh} />,
     onDefect: () => <GraphProblem onRetry={refresh} />,
-    onSuccess: ({ value }) => <GraphPage view={view} sources={value} />,
+    onSuccess: ({ value }) => (
+      <GraphPage view={view} sources={value} startNew={startNew} onEmpty={onEmpty} />
+    ),
   });
 }
 
@@ -101,16 +128,22 @@ const NO_LINKS: ReadonlySet<string> = new Set();
 function GraphPage({
   view,
   sources,
+  startNew,
+  onEmpty,
 }: {
   readonly view: GraphView;
   readonly sources: ReadonlyArray<Source>;
+  readonly startNew: boolean;
+  readonly onEmpty: () => void;
 }) {
   const t = useT();
   const navigate = useNavigate();
   const { node: selectedId } = Route.useSearch();
   const [canvas, setCanvas] = useState<GraphCanvas | null>(null);
   const [query, setQuery] = useState("");
-  const [desk, setDesk] = useState<Desk | null>(null);
+  const [desk, setDesk] = useState<Desk | null>(() =>
+    startNew ? { kind: "new", draft: newDraftId() } : null,
+  );
   const [unsaved, setUnsaved] = useState(false);
   const [requested, setRequested] = useState<Wanted | null>(null);
   const [aiOnly, setAiOnly] = useState(false);
@@ -118,18 +151,27 @@ function GraphPage({
   const [newText, setNewText] = useState("");
   const [linked, setLinked] = useState<ReadonlySet<string>>(NO_LINKS);
   const [leafWidth, setLeafWidth] = useState(0);
-  const [researchId, setResearchId] = useState<string | null>(null);
+  const [research, setResearch] = useState<{ readonly draft: string; readonly id: string } | null>(
+    null,
+  );
   const opener = useRef<HTMLButtonElement>(null);
   const newOpener = useRef<HTMLButtonElement>(null);
   const openedOnCanvas = useRef(false);
   const findId = useId();
 
-  const research = AsyncResult.getOrElse(
+  const researchId = desk?.kind === "new" && research?.draft === desk.draft ? research.id : null;
+  const researchSession = AsyncResult.getOrElse(
     useAtomValue(researchId === null ? noSessionAtom : sessionAtom(researchId)),
     () => null,
   );
+  const keptPages =
+    researchSession === null
+      ? 0
+      : pagesOf(researchSession.entries).filter((page) => page.state === "kept").length;
   const proposed =
-    research === null ? [] : proposedLinksOf(research.entries).map((link) => link.note);
+    researchSession === null
+      ? []
+      : proposedLinksOf(researchSession.entries).map((link) => link.note);
 
   const index = indexGraph(view, sources);
   const labels = new Map(view.nodes.map((node) => [node.id, labelOf(node, index)]));
@@ -156,7 +198,7 @@ function GraphPage({
 
   const select = (id: string | null) =>
     navigate({ to: "/graph", search: id === null ? {} : { node: id } });
-  const newChanged = newTitle.trim() !== "" || newText.trim() !== "";
+  const newChanged = newTitle.trim() !== "" || newText.trim() !== "" || keptPages > 0;
   const dirty = desk?.kind === "rewrite" ? unsaved : desk?.kind === "new" ? newChanged : false;
 
   const apply = (wanted: Wanted) => {
@@ -170,7 +212,6 @@ function GraphPage({
     setNewTitle("");
     setNewText("");
     setLinked(NO_LINKS);
-    setResearchId(null);
     setDesk({ kind: "new", draft: newDraftId() });
   };
   const want = (wanted: Wanted) => {
@@ -195,7 +236,8 @@ function GraphPage({
       setDesk(null);
       setUnsaved(false);
     });
-    returnFocus(was);
+    if (view.nodes.length === 0) onEmpty();
+    else returnFocus(was);
   };
   const returnFocus = (was: Desk["kind"] | undefined) => {
     if (was === "new") newOpener.current?.focus();
@@ -362,7 +404,7 @@ function GraphPage({
                     return next;
                   })
                 }
-                session={research}
+                session={researchSession}
                 leaving={requested !== null}
                 onStay={() => setRequested(null)}
                 onClose={closeDesk}
@@ -382,11 +424,11 @@ function GraphPage({
           {drafting !== null ? (
             <Research
               draft={drafting.draft}
-              session={research}
+              session={researchSession}
               title={newTitle}
               text={newText}
               notes={view.nodes.filter((node) => node.kind === "note").map((node) => node.id)}
-              onStarted={setResearchId}
+              onStarted={(draft, id) => setResearch({ draft, id })}
             />
           ) : selected === undefined ? (
             <SourceList index={index} view={view} unwritten={unwritten} onShow={show} />

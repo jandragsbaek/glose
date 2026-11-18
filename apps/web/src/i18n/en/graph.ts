@@ -6,7 +6,7 @@ export const graphMessages = {
   graph: {
     title: "Graph",
     empty:
-      "The Graph holds your Notes and the Links between them. It stays empty until Extraction makes the first Notes from a Source.",
+      "The Graph holds your Notes and the Links between them. Extraction makes Notes from a Source, or start one yourself with New Note.",
     counts: (notes: number, sources: number, links: number) =>
       [
         count(notes, "Note", "Notes"),

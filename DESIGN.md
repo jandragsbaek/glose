@@ -1569,7 +1569,7 @@ authorities numbered under it. The leaf lies over the left of the Graph's canvas
 stays in view beside it.
 
 - **Way in:** New Note (primary, with its N key cap) after Find in the Graph's page head; N on the
-  canvas opens it too. Closing it returns focus to the button.
+  canvas opens it too. An empty Graph's page head has New Note as well. Closing it returns focus to the button.
 - **Leaf:** a panel over the canvas cell's left, `min(720px, 64%)` wide, 16px from the cell's
   edges, its own scroll; the canvas is not inert. Lapis Initial, "New Note", Meta "A Note in your
   Graph, in your words". The zoom controls move to the canvas's top right while it is open.

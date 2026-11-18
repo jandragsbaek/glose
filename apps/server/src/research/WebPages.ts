@@ -2,10 +2,14 @@ import * as Context from "effect/Context";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as NodeDnsPromises from "node:dns/promises";
+import * as NodeHttp from "node:http";
+import * as NodeHttps from "node:https";
 import * as NodeNet from "node:net";
+import type * as NodeStream from "node:stream";
+import * as NodeZlib from "node:zlib";
 
 import { pageFromHtml, pageFromText, type WebPage } from "./pageText.ts";
+import { AddressRefused, isPublicAddress, publicLookup } from "./publicAddress.ts";
 
 export type { WebPage } from "./pageText.ts";
 
@@ -36,36 +40,7 @@ const TIMEOUT_MS = 20_000;
 const CACHED = 60;
 const USER_AGENT = "Mozilla/5.0 (compatible; Glose; +https://github.com/jandragsbaek/glose)";
 
-const ipv4Private = (address: string): boolean => {
-  const [a = 0, b = 0] = address.split(".").map(Number);
-  return (
-    a === 0 ||
-    a === 10 ||
-    a === 127 ||
-    a >= 224 ||
-    (a === 100 && b >= 64 && b <= 127) ||
-    (a === 169 && b === 254) ||
-    (a === 172 && b >= 16 && b <= 31) ||
-    (a === 192 && b === 168) ||
-    (a === 198 && (b === 18 || b === 19))
-  );
-};
-
-export const isPublicAddress = (address: string): boolean => {
-  const kind = NodeNet.isIP(address);
-  if (kind === 4) return !ipv4Private(address);
-  if (kind !== 6) return false;
-  const lower = address.toLowerCase();
-  const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(lower);
-  if (mapped !== null) return !ipv4Private(mapped[1]!);
-  return !(
-    lower === "::" ||
-    lower === "::1" ||
-    /^f[cd]/.test(lower) ||
-    /^fe[89ab]/.test(lower) ||
-    /^ff/.test(lower)
-  );
-};
+export { isPublicAddress } from "./publicAddress.ts";
 
 export const webUrl = (text: string): URL | null => {
   try {
@@ -79,34 +54,6 @@ export const webUrl = (text: string): URL | null => {
   }
 };
 
-const publicHost = async (url: URL): Promise<boolean> => {
-  const host = url.hostname.replace(/^\[|\]$/g, "");
-  if (NodeNet.isIP(host) !== 0) return isPublicAddress(host);
-  if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local")) return false;
-  const addresses = await NodeDnsPromises.lookup(host, { all: true, verbatim: true });
-  return addresses.length > 0 && addresses.every(({ address }) => isPublicAddress(address));
-};
-
-const readCapped = async (response: Response): Promise<string | null> => {
-  const reader = response.body?.getReader();
-  if (reader === undefined) return "";
-  const chunks: Array<Uint8Array> = [];
-  let size = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    size += value.byteLength;
-    if (size > MAX_BYTES) {
-      await reader.cancel();
-      return null;
-    }
-    chunks.push(value);
-  }
-  const charset = /charset=([\w-]+)/i.exec(response.headers.get("content-type") ?? "")?.[1];
-  const decoder = new TextDecoder(charset ?? "utf-8", { fatal: false });
-  return chunks.map((chunk) => decoder.decode(chunk, { stream: true })).join("") + decoder.decode();
-};
-
 class Refused extends Error {
   readonly reason: UnreadableReason;
   constructor(reason: UnreadableReason) {
@@ -115,35 +62,93 @@ class Refused extends Error {
   }
 }
 
+const literalHost = (url: URL) => url.hostname.replace(/^\[|\]$/g, "");
+
+const get = (url: URL, signal: AbortSignal) =>
+  new Promise<NodeHttp.IncomingMessage>((resolve, reject) => {
+    const client = url.protocol === "https:" ? NodeHttps : NodeHttp;
+    const request = client.request(
+      url,
+      {
+        method: "GET",
+        signal,
+        lookup: publicLookup,
+        headers: {
+          "user-agent": USER_AGENT,
+          accept: "text/html,application/xhtml+xml,text/plain,text/markdown;q=0.9,*/*;q=0.1",
+          "accept-encoding": "gzip, deflate, br",
+        },
+      },
+      resolve,
+    );
+    request.on("error", reject);
+    request.end();
+  });
+
+const decoded = (response: NodeHttp.IncomingMessage): NodeStream.Readable => {
+  switch (response.headers["content-encoding"]) {
+    case "gzip":
+    case "x-gzip":
+      return response.pipe(NodeZlib.createGunzip());
+    case "deflate":
+      return response.pipe(NodeZlib.createInflate());
+    case "br":
+      return response.pipe(NodeZlib.createBrotliDecompress());
+    default:
+      return response;
+  }
+};
+
+const readCapped = async (response: NodeHttp.IncomingMessage): Promise<string | null> => {
+  const chunks: Array<Buffer> = [];
+  let size = 0;
+  for await (const chunk of decoded(response)) {
+    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk));
+    size += buffer.byteLength;
+    if (size > MAX_BYTES) {
+      response.destroy();
+      return null;
+    }
+    chunks.push(buffer);
+  }
+  const charset = /charset=([\w-]+)/i.exec(response.headers["content-type"] ?? "")?.[1];
+  try {
+    return new TextDecoder(charset ?? "utf-8").decode(Buffer.concat(chunks));
+  } catch {
+    return new TextDecoder("utf-8").decode(Buffer.concat(chunks));
+  }
+};
+
+const reasonOf = (cause: unknown): UnreadableReason =>
+  cause instanceof Refused ? cause.reason : cause instanceof AddressRefused ? "address" : "failed";
+
 const fetchPage = async (start: URL): Promise<WebPage> => {
   let url = start;
   const signal = AbortSignal.timeout(TIMEOUT_MS);
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
-    if (!(await publicHost(url))) throw new Refused("address");
-    const response = await fetch(url, {
-      redirect: "manual",
-      signal,
-      headers: {
-        "user-agent": USER_AGENT,
-        accept: "text/html,application/xhtml+xml,text/plain,text/markdown;q=0.9,*/*;q=0.1",
-      },
-    });
-    const location = response.headers.get("location");
-    if (response.status >= 300 && response.status < 400 && location !== null) {
+    const host = literalHost(url);
+    if (NodeNet.isIP(host) !== 0 && !isPublicAddress(host)) throw new Refused("address");
+    if (host === "localhost" || host.endsWith(".localhost")) throw new Refused("address");
+    const response = await get(url, signal);
+    const status = response.statusCode ?? 0;
+    const location = response.headers.location;
+    if (status >= 300 && status < 400 && location !== undefined) {
+      response.resume();
       const next = webUrl(new URL(location, url).href);
       if (next === null) throw new Refused("address");
       url = next;
       continue;
     }
-    if (response.status === 401 || response.status === 403 || response.status === 451) {
-      throw new Refused("blocked");
-    }
-    if (response.status === 404 || response.status === 410) throw new Refused("not-found");
-    if (!response.ok) throw new Refused("failed");
-    const type = (response.headers.get("content-type") ?? "text/html").toLowerCase();
+    if (status === 401 || status === 403 || status === 451) throw new Refused("blocked");
+    if (status === 404 || status === 410) throw new Refused("not-found");
+    if (status < 200 || status >= 300) throw new Refused("failed");
+    const type = (response.headers["content-type"] ?? "text/html").toLowerCase();
     const html = type.includes("html") || type.includes("xml");
     const text = type.startsWith("text/plain") || type.includes("markdown");
-    if (!html && !text) throw new Refused("not-text");
+    if (!html && !text) {
+      response.destroy();
+      throw new Refused("not-text");
+    }
     const body = await readCapped(response);
     if (body === null) throw new Refused("too-large");
     const page = html ? pageFromHtml(body, url.href) : pageFromText(body, url.href);
@@ -171,7 +176,7 @@ export const make = Effect.sync(() => {
         catch: (cause) =>
           new PageUnreadable({
             url: url.href,
-            reason: cause instanceof Refused ? cause.reason : "failed",
+            reason: reasonOf(cause),
           }),
       }).pipe(
         Effect.tap((page) =>

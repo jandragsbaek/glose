@@ -754,11 +754,11 @@ find sources online. Shaped with impeccable; Jan chose "The Commonplace Leaf" ov
 Against board, a Find-then-Write page and a twin-column key rail. Built and reviewed by a
 three-model council.
 
-- New Note (primary, in the Graph header; N on the canvas) opens a leaf over the left of the
-  canvas: the title (a claim or a question), "Rests on", the user's words, the kept quotes
+- New Note (primary, in the Graph header; N on the canvas; also on an empty Graph) opens a leaf
+  over the left of the canvas: the title (a claim or a question), "Rests on", the user's words, the kept quotes
   numbered under them, the proposed Links, and Save or Cancel. The canvas stays in view on the
   right with the new Note as a dashed node, and dashed lines to the Notes the AI proposes to link.
-  Unsaved words ask before they are lost, as on the rewrite desk.
+  Unsaved words or kept pages ask before they are lost, as on the rewrite desk.
 - The side panel becomes Research. The research is optional: without ChatGPT the leaf works and
   the panel says how to connect. The user picks what to ask: Learn this, Back my idea, Check this
   claim or Bridge two Notes (two Notes named from the Graph), with an optional question.
@@ -768,8 +768,17 @@ three-model council.
   Note's text, and has no tool that could.
 - Glose reads a page itself (the main text, as a browser's reader view: Readability, linkedom and
   turndown) and keeps a quote only when the page holds those exact words; the quote's Location is
-  its paragraph number (`¶ 8`). Glose reads only public http and https addresses, never this
-  computer or its own network. A page Glose cannot read (a paywall, a PDF) cannot be proposed.
+  its paragraph number (`¶ 8`). A quote has at least four words. Glose reads only public http and
+  https addresses, never this computer or its own network: every address the name resolves to is
+  checked inside the connection itself, so a name cannot change between the check and the read.
+  Images are not imported, and links become absolute web links. A page Glose cannot read (a
+  paywall, a PDF) cannot be proposed.
+- Web pages can hold text written to steer the AI. So the AI reads only addresses that came from
+  its web searches, from the user, or that are written in a page it read; an address it makes up
+  (with the user's Note text in it, say) is refused. Its instructions say page text is material,
+  never instructions, and that nothing from the Graph goes into an address or a search.
+- The author of a kept page comes from the page itself; the AI does not name one. A page without
+  one is filed under its site, and its Source can be corrected like any other.
 - The ChatGPT route allows web search "subject to model and account/workspace policy". When the
   account refuses it, the turn goes on without it, the Session says so, and the user can paste a
   page's address in the message box.
@@ -782,9 +791,12 @@ three-model council.
   Source already uses that Source. The Note's `source` is the kept page the user chose under
   "Rests on" (the first kept page by default); without one the Note has no `source` and says "No
   Source yet". Only kept pages whose quotes or Source the Note uses become Sources.
-- Quotes are footnotes: a quote's number cites it where the cursor is (`[^1]` against the word
-  before it). On save every kept quote becomes a footnote, the cited ones first, numbered 1 to n:
-  `[^1]: “words” [[Source]], ¶ 8`. Checked Links go on the `Related:` line.
+- Quotes are footnotes: a quote's number cites it where the cursor is (`[^q1]` against the word
+  before it). On save every kept quote becomes a footnote, the cited ones first, numbered q1 to
+  qn: `[^q1]: “words” [[Source]], ¶ 8`. The `q` keeps them apart from the user's own footnotes.
+  The ¶ comes from the text the Source holds (the page as stored, or the Source the user already
+  has), and every page is checked before Glose writes any file. Brackets in a quote are escaped,
+  so a quote cannot make a Link. Checked Links go on the `Related:` line.
 - Not yet: PDFs, a reload that keeps the unsaved leaf, reading a found page in Glose before it is
   kept, and the new Note's place on the canvas near its Links (it is drawn apart until saved).
 

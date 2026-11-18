@@ -28,23 +28,23 @@ describe("keptQuotes", () => {
 describe("footnotesFor", () => {
   const kept = keptQuotes([page("w1", "kept", ["a", "b"]), page("w2", "kept", ["c"])]);
 
-  it("numbers the footnotes in the order the text cites them, then the rest", () => {
-    const result = footnotesFor("First.[^3] Then.[^1]", kept);
-    expect(result.text).toBe("First.[^1] Then.[^2]");
+  it("numbers the quote footnotes in the order the text cites them, and leaves the user's own footnotes", () => {
+    const result = footnotesFor("First.[^q3] Then.[^q1] Mine.[^1]", kept);
+    expect(result.text).toBe("First.[^q1] Then.[^q2] Mine.[^1]");
     expect(result.quotes.map((quote) => quote.text)).toEqual(["c", "a", "b"]);
     expect(result.missing).toEqual([]);
   });
 
   it("names a cited quote that is no longer kept", () => {
-    expect(footnotesFor("Gone.[^9]", kept).missing).toEqual([9]);
+    expect(footnotesFor("Gone.[^q9] Mine.[^9]", kept).missing).toEqual([9]);
   });
 });
 
 describe("insertMarker", () => {
   it("sets the marker against the word before the cursor and keeps the space after it", () => {
     expect(insertMarker("It works. Next", 10, 2)).toEqual({
-      text: "It works.[^2] Next",
-      caret: 14,
+      text: "It works.[^q2] Next",
+      caret: 15,
     });
   });
 });

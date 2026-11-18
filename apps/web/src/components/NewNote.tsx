@@ -82,7 +82,7 @@ export function NewNote({
   ]);
   const becoming = kept.filter((page) => used.has(page.id) && page.source === null).length;
 
-  const changed = title.trim() !== "" || text.trim() !== "";
+  const changed = title.trim() !== "" || text.trim() !== "" || kept.length > 0;
   const blocker = useBlocker({
     shouldBlockFn: ({ next }) => changed && next.pathname !== "/graph",
     enableBeforeUnload: false,
@@ -176,6 +176,7 @@ export function NewNote({
             placeholder={t.newNote.titlePlaceholder}
             aria-invalid={problem?.kind === "noTitle" || problem?.kind === "taken" || undefined}
             aria-describedby={problem === null ? undefined : errorId}
+            readOnly={busy}
             onChange={(event) => {
               onTitle(event.target.value.replace(/\n/g, " "));
               if (problem?.kind === "noTitle" || problem?.kind === "taken") setProblem(null);
@@ -183,7 +184,13 @@ export function NewNote({
             spellCheck
             autoFocus
           />
-          <RestsOn id={restsId} kept={kept} source={source} onChoose={(id) => setRestsOn(id)} />
+          <RestsOn
+            id={restsId}
+            busy={busy}
+            kept={kept}
+            source={source}
+            onChoose={(id) => setRestsOn(id)}
+          />
         </div>
 
         <div className="note-leaf__text">
@@ -196,6 +203,7 @@ export function NewNote({
             className="textarea note-leaf__words"
             value={text}
             placeholder={t.newNote.textPlaceholder}
+            readOnly={busy}
             onChange={(event) => onText(event.target.value)}
             onSelect={(event) => {
               caret.current = event.currentTarget.selectionStart;
@@ -204,10 +212,10 @@ export function NewNote({
           />
         </div>
 
-        <Apparatus quotes={quotes} cited={cited} onCite={cite} />
+        <Apparatus quotes={quotes} cited={cited} busy={busy} onCite={cite} />
 
         {links.length === 0 ? null : (
-          <LinkChoices links={links} checked={checked} onCheck={onCheck} />
+          <LinkChoices links={links} checked={checked} busy={busy} onCheck={onCheck} />
         )}
 
         <div className="note-leaf__foot">
@@ -282,11 +290,13 @@ const problemText = (problem: Problem, t: ReturnType<typeof useT>): string => {
 
 function RestsOn({
   id,
+  busy,
   kept,
   source,
   onChoose,
 }: {
   readonly id: string;
+  readonly busy: boolean;
   readonly kept: ReadonlyArray<FoundPage>;
   readonly source: FoundPage | null;
   readonly onChoose: (id: string | null) => void;
@@ -294,9 +304,13 @@ function RestsOn({
   const t = useT();
   return (
     <div className="note-leaf__rests">
-      <label className="note-leaf__rests-label" htmlFor={id}>
-        {t.newNote.restsOn}
-      </label>
+      {kept.length === 0 ? (
+        <span className="note-leaf__rests-label">{t.newNote.restsOn}</span>
+      ) : (
+        <label className="note-leaf__rests-label" htmlFor={id}>
+          {t.newNote.restsOn}
+        </label>
+      )}
       {source === null ? (
         <span className="note-leaf__none">
           <TriangleAlert className="call__icon" aria-hidden="true" />
@@ -306,14 +320,13 @@ function RestsOn({
         <CallNumber source={pageAuthorship(source)} />
       )}
       {kept.length === 0 ? (
-        <span className="note-leaf__hint" id={id}>
-          {t.newNote.noSourceHint}
-        </span>
+        <span className="note-leaf__hint">{t.newNote.noSourceHint}</span>
       ) : (
         <span className="select note-leaf__select">
           <select
             id={id}
             className="input"
+            disabled={busy}
             aria-label={t.newNote.restsOnLabel}
             value={source?.id ?? ""}
             onChange={(event) => onChoose(event.target.value === "" ? null : event.target.value)}
@@ -335,10 +348,12 @@ function RestsOn({
 function Apparatus({
   quotes,
   cited,
+  busy,
   onCite,
 }: {
   readonly quotes: ReadonlyArray<KeptQuote>;
   readonly cited: ReadonlySet<number>;
+  readonly busy: boolean;
   readonly onCite: (quote: KeptQuote) => void;
 }) {
   const t = useT();
@@ -367,6 +382,7 @@ function Apparatus({
                 aria-label={t.newNote.cite(quote.number)}
                 title={t.newNote.cite(quote.number)}
                 onMouseDown={(event) => event.preventDefault()}
+                disabled={busy}
                 onClick={() => onCite(quote)}
               >
                 {quote.number}
@@ -392,10 +408,12 @@ function Apparatus({
 function LinkChoices({
   links,
   checked,
+  busy,
   onCheck,
 }: {
   readonly links: ReadonlyArray<ResearchLink>;
   readonly checked: ReadonlySet<string>;
+  readonly busy: boolean;
   readonly onCheck: (note: string, on: boolean) => void;
 }) {
   const t = useT();
@@ -410,6 +428,7 @@ function LinkChoices({
               <input
                 type="checkbox"
                 checked={checked.has(link.note)}
+                disabled={busy}
                 onChange={(event) => onCheck(link.note, event.target.checked)}
               />
               <span className="note-leaf__link-name">{link.note}</span>

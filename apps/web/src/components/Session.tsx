@@ -431,7 +431,7 @@ function ToolUseLine({ use }: { readonly use: Extract<SessionEntry, { _tag: "Too
         ? t.session.tools["search-web"]
         : t.session.trail.searchWeb(use.detail);
     case "read-web-page":
-      return use.detail === undefined ? (
+      return use.detail === undefined || !/^https?:\/\//i.test(use.detail) ? (
         t.session.tools["read-web-page"]
       ) : (
         <>

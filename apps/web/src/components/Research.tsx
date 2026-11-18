@@ -23,10 +23,12 @@ export function Research({
   readonly title: string;
   readonly text: string;
   readonly notes: ReadonlyArray<string>;
-  readonly onStarted: (id: string) => void;
+  readonly onStarted: (draft: string, session: string) => void;
 }) {
   const t = useT();
   const ready = useChatGptReady();
+  const last = session?.entries.findLast((entry) => entry._tag === "ResearchStart");
+  const lastAsk = last?._tag === "ResearchStart" ? last.ask : "learn";
   return (
     <Panel title={t.research.title} initial="rubric" meta={t.research.meta}>
       <div className="panel__body stack research">
@@ -58,6 +60,7 @@ export function Research({
                   text={text}
                   notes={notes}
                   again
+                  initialAsk={lastAsk}
                   busy={session.working}
                   onStarted={onStarted}
                 />
@@ -77,6 +80,7 @@ function AskForm({
   text,
   notes,
   again = false,
+  initialAsk = "learn",
   busy = false,
   onStarted,
 }: {
@@ -85,8 +89,9 @@ function AskForm({
   readonly text: string;
   readonly notes: ReadonlyArray<string>;
   readonly again?: boolean;
+  readonly initialAsk?: ResearchAsk;
   readonly busy?: boolean;
-  readonly onStarted: (id: string) => void;
+  readonly onStarted: (draft: string, session: string) => void;
 }) {
   const t = useT();
   const start = useAtomSet(startResearchAtom, { mode: "promiseExit" });
@@ -97,7 +102,7 @@ function AskForm({
   const toId = useId();
   const listId = useId();
   const problemId = useId();
-  const [ask, setAsk] = useState<ResearchAsk>("learn");
+  const [ask, setAsk] = useState<ResearchAsk>(initialAsk);
   const [question, setQuestion] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -132,7 +137,7 @@ function AskForm({
     setStarting(false);
     if (Exit.isSuccess(exit)) {
       setQuestion("");
-      onStarted(exit.value.id);
+      onStarted(draft, exit.value.id);
     } else setProblem("failed");
   };
 

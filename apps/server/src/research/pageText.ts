@@ -27,7 +27,16 @@ const meta = (document: Document, ...names: ReadonlyArray<string>): string | nul
   return null;
 };
 
-const turndown = () => {
+const absolute = (href: string, base: string): string | null => {
+  try {
+    const url = new URL(href, base);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.href : null;
+  } catch {
+    return null;
+  }
+};
+
+const turndown = (base: string) => {
   const service = new TurndownService({
     headingStyle: "atx",
     codeBlockStyle: "fenced",
@@ -35,6 +44,14 @@ const turndown = () => {
     emDelimiter: "*",
   });
   service.remove(["script", "style", "noscript", "iframe", "form", "button"]);
+  service.addRule("no-images", { filter: ["img", "picture"], replacement: () => "" });
+  service.addRule("web-links", {
+    filter: "a",
+    replacement: (content, node) => {
+      const href = absolute((node as HTMLElement).getAttribute("href") ?? "", base);
+      return href === null || content.trim() === "" ? content : `[${content}](${href})`;
+    },
+  });
   return service;
 };
 
@@ -56,7 +73,7 @@ export const pageFromHtml = (html: string, url: string): WebPage | null => {
   const article = new Readability(document as unknown as Document, { keepClasses: false }).parse();
   const content = article?.content ?? null;
   if (content === null) return null;
-  const markdown = turndown()
+  const markdown = turndown(url)
     .turndown(content)
     .replace(/\n{3,}/g, "\n\n")
     .trim()

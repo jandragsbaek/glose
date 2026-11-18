@@ -96,10 +96,16 @@ export const make = Effect.fn("Sessions.makeSessionTurn")(function* ({
             entries: [...view.entries, { _tag: "WebSearchOff" }],
           })).pipe(Effect.as([Research.webSearchOffMessage])),
         };
+    let seen = JSON.stringify(session.items.filter(Research.isSourceOfAddresses));
     return {
       instructions: Research.INSTRUCTIONS,
       webSearch,
+      maxRounds: Research.MAX_ROUNDS,
+      onOutput: (output: ReadonlyArray<Readonly<Record<string, unknown>>>) => {
+        seen += JSON.stringify(output.filter(Research.isSourceOfAddresses));
+      },
       tools: Research.tools({
+        known: (url) => Research.knownIn(seen, url),
         graph,
         webPages,
         sources: sources.list.pipe(Effect.orElseSucceed(() => [])),

@@ -34,6 +34,7 @@ function PageSlip({ sessionId, page }: { readonly sessionId: string; readonly pa
   const t = useT();
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [decided, setDecided] = useState(false);
   const keep = useAtomSet(keepPageAtom, { mode: "promiseExit" });
   const drop = useAtomSet(dropPageAtom, { mode: "promiseExit" });
   const decide = async (run: typeof keep) => {
@@ -41,6 +42,7 @@ function PageSlip({ sessionId, page }: { readonly sessionId: string; readonly pa
     const exit = await run({ payload: { id: sessionId, page: page.id } });
     setBusy(false);
     setFailed(Exit.isFailure(exit));
+    setDecided(Exit.isSuccess(exit));
   };
   const authorship = pageAuthorship(page);
   const meta = [
@@ -91,6 +93,7 @@ function PageSlip({ sessionId, page }: { readonly sessionId: string; readonly pa
                 type="button"
                 className="button button--quiet button--small"
                 disabled={busy}
+                autoFocus={decided}
                 onClick={() => void decide(drop)}
               >
                 {t.research.unkeep}
@@ -103,6 +106,7 @@ function PageSlip({ sessionId, page }: { readonly sessionId: string; readonly pa
                 type="button"
                 className="button button--quiet button--small"
                 disabled={busy}
+                autoFocus={decided}
                 onClick={() => void decide(keep)}
               >
                 {t.research.keepAgain}

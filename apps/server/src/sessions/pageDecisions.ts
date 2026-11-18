@@ -1,8 +1,11 @@
 import {
+  findInArticle,
   type FoundPage,
   type ImportText,
   linkKey,
   pageAuthorship,
+  parseArticle,
+  type Source,
   PageRefused,
   ProposalNotOpen,
   type NoteQuote,
@@ -25,7 +28,7 @@ import { webUrl } from "../research/WebPages.ts";
 import * as Settings from "../settings/Settings.ts";
 import type { InputItem } from "./agent.ts";
 import { type Live, type Load, patch } from "./liveSession.ts";
-import { checkQuotes, kickoff, pageLabel, pagesOf, restartMessage, setPage } from "./research.ts";
+import { kickoff, pageLabel, pagesOf, restartMessage, setPage } from "./research.ts";
 import type { GraphError } from "./sessionRecord.ts";
 import type { SessionStore } from "./sessionStore.ts";
 
@@ -66,8 +69,10 @@ export const sourceOfPage = (page: FoundPage, markdown: string, today: string): 
 const quoteKey = (quote: { readonly text: string; readonly paragraph: number }) =>
   `${quote.paragraph}\u0000${quote.text}`;
 
-export const footnoteOf = (quote: NoteQuote, source: string): string =>
-  `“${quote.text}” [[${source}]], ¶ ${quote.paragraph}`;
+const literal = (text: string) => text.replace(/[\\[\]]/g, (mark) => `\\${mark}`);
+
+export const footnoteOf = (text: string, source: string, paragraph: number): string =>
+  `“${literal(text)}” [[${source}]], ¶ ${paragraph}`;
 
 export const make = Effect.fn("Sessions.makePageDecisions")(function* ({
   load,
@@ -116,30 +121,51 @@ export const make = Effect.fn("Sessions.makePageDecisions")(function* ({
     return { session, kept: pagesOf(view.entries).filter((page) => page.state === "kept") };
   });
 
-  const sourceFor = Effect.fn("Sessions.sourceForPage")(function* (
+  const prepare = Effect.fn("Sessions.prepareKeptPage")(function* (
     page: FoundPage,
     quotes: ReadonlyArray<NoteQuote>,
     today: string,
+    library: ReadonlyArray<Source>,
   ) {
-    const library = yield* sources.list;
     const known =
       library.find((source) => source.id === page.source) ??
       library.find(
         (source) => source.url !== null && webUrl(source.url)?.href === webUrl(page.url)?.href,
       );
-    if (known !== undefined) return known.id;
-    const read = yield* webPages.read(page.url).pipe(
-      Effect.catchTags({
-        PageUnreadable: () => Effect.fail(new PageRefused({ page: page.id, reason: "unreadable" })),
-      }),
-    );
-    const { missing } = checkQuotes(
-      read.markdown,
-      quotes.map((quote) => quote.text),
-    );
-    if (missing > 0) return yield* new PageRefused({ page: page.id, reason: "quote-gone" });
-    const details = sourceOfPage(page, read.markdown, today);
-    const created = yield* sources.importText(details).pipe(
+    const markdown =
+      known === undefined
+        ? (yield* webPages.read(page.url).pipe(
+            Effect.catchTags({
+              PageUnreadable: () =>
+                Effect.fail(new PageRefused({ page: page.id, reason: "unreadable" })),
+            }),
+          )).markdown
+        : yield* sources.articleText(known.id).pipe(
+            Effect.catchTags({
+              SourceNotFound: () =>
+                Effect.fail(new PageRefused({ page: page.id, reason: "quote-gone" })),
+              PassageRefused: () =>
+                Effect.fail(new PageRefused({ page: page.id, reason: "quote-gone" })),
+            }),
+          );
+    const article = parseArticle(markdown);
+    const located = new Map<string, number>();
+    for (const quote of quotes) {
+      const match = findInArticle(article, quote.text);
+      if (match === null) return yield* new PageRefused({ page: page.id, reason: "quote-gone" });
+      located.set(quoteKey(quote), match.n);
+    }
+    return {
+      located,
+      write:
+        known === undefined
+          ? importSource(sourceOfPage(page, markdown, today))
+          : Effect.succeed(known.id),
+    };
+  });
+
+  const importSource = (details: ImportText) =>
+    sources.importText(details).pipe(
       Effect.catchTags({
         SourceNameTaken: () =>
           sources.importText({ ...details, title: `${details.title} (${details.container})` }),
@@ -148,9 +174,8 @@ export const make = Effect.fn("Sessions.makePageDecisions")(function* ({
         SourceNameTaken: (taken) =>
           Effect.fail(new StorageError({ detail: `A Source named ${taken.fileName} exists.` })),
       }),
+      Effect.map((source) => source.id),
     );
-    return created.id;
-  });
 
   const createNote = Effect.fn("Sessions.createNote")(
     function* (input: {
@@ -181,12 +206,15 @@ export const make = Effect.fn("Sessions.makePageDecisions")(function* ({
       }
 
       const today = new Date(yield* Clock.currentTimeMillis).toISOString().slice(0, 10);
-      const sourceIds = new Map<string, string>();
+      const library = yield* sources.list;
+      const prepared = new Map<string, Effect.Success<ReturnType<typeof prepare>>>();
       for (const id of used) {
-        const page = byId.get(id)!;
         const quotes = input.quotes.filter((quote) => quote.page === id);
-        sourceIds.set(id, yield* sourceFor(page, quotes, today));
+        prepared.set(id, yield* prepare(byId.get(id)!, quotes, today, library));
       }
+      yield* notes.checkName(input.title);
+      const sourceIds = new Map<string, string>();
+      for (const [id, { write }] of prepared) sourceIds.set(id, yield* write);
 
       const view = yield* graph.read;
       const names = new Map(
@@ -206,8 +234,12 @@ export const make = Effect.fn("Sessions.makePageDecisions")(function* ({
         related,
         language: language ?? "en",
         footnotes: input.quotes.map((quote, index) => ({
-          label: String(index + 1),
-          text: footnoteOf(quote, sourceIds.get(quote.page)!),
+          label: `q${index + 1}`,
+          text: footnoteOf(
+            quote.text,
+            sourceIds.get(quote.page)!,
+            prepared.get(quote.page)!.located.get(quoteKey(quote))!,
+          ),
         })),
       });
 
@@ -219,7 +251,9 @@ export const make = Effect.fn("Sessions.makePageDecisions")(function* ({
               : `; the kept pages it uses are now the Sources ${[...sourceIds.values()].map((id) => `[[${id}]]`).join(", ")}`
           }.`,
         );
-        yield* save(session);
+        yield* save(session).pipe(
+          Effect.catch((error) => Effect.logWarning("The research Session was not saved", error)),
+        );
       }
       return name;
     },

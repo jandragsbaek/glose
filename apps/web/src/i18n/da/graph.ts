@@ -5,7 +5,7 @@ export const graphMessages: Pick<Messages, "graph" | "rewrite" | "newNote" | "re
   graph: {
     title: "Graf",
     empty:
-      "Grafen rummer dine noter og links mellem dem. Den er tom, indtil udtræk laver de første noter fra en kilde.",
+      "Grafen rummer dine noter og links mellem dem. Udtræk laver noter fra en kilde, eller start selv en med Ny note.",
     counts: (notes: number, sources: number, links: number) =>
       [
         count(notes, "note", "noter"),

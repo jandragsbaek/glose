@@ -16,6 +16,8 @@ const ARTICLE = `<!doctype html>
 best studied ways to learn, and it works for students of every age and subject.</p>
 <p>Students who tested themselves remembered more a week later than students who reread. The
 gain held for prose passages, for word lists and for maps, and it grew with the delay.</p>
+<p><img src="http://192.168.1.1/tracker.png" alt="x"> See <a href="/next">the next part</a>
+and <a href="javascript:alert(1)">this</a>.</p>
 <p>The effort of recall is part of what makes it stick, so a test that feels hard is not a sign
 that the method fails. Feedback after the test helps, but the test helps without it too.</p>
 </article>
@@ -35,6 +37,13 @@ describe("pageFromHtml", () => {
     );
     assert.notInclude(page!.markdown, "About");
     assert.notInclude(page!.markdown, "<p>");
+  });
+
+  it("keeps no images, makes links absolute and drops links that are not web pages", () => {
+    const page = pageFromHtml(ARTICLE, "https://learning.example/retrieval");
+    assert.notInclude(page!.markdown, "192.168.1.1");
+    assert.include(page!.markdown, "[the next part](https://learning.example/next)");
+    assert.notInclude(page!.markdown, "javascript:");
   });
 
   it("gives nothing for a page without text", () => {

@@ -47,7 +47,7 @@ export const keptQuotes = (pages: ReadonlyArray<FoundPage>): ReadonlyArray<KeptQ
   return out;
 };
 
-const MARKER = /\[\^(\d{1,4})\]/g;
+const MARKER = /\[\^q(\d{1,4})\]/g;
 
 export const citedNumbers = (text: string): ReadonlyArray<number> => [
   ...new Set(Array.from(text.matchAll(MARKER), (match) => Number(match[1]))),
@@ -72,7 +72,7 @@ export const footnotesFor = (
   return {
     text: text.replace(MARKER, (marker, digits: string) => {
       const next = label.get(Number(digits));
-      return next === undefined ? marker : `[^${next}]`;
+      return next === undefined ? marker : `[^q${next}]`;
     }),
     quotes: order.map((number) => {
       const { page, paragraph, text: words } = byNumber.get(number)!;
@@ -90,7 +90,7 @@ export const insertMarker = (
   const head = text.slice(0, at);
   const before = head.replace(/[ \t]+$/, "");
   const gap = head.slice(before.length);
-  const marker = `[^${number}]`;
+  const marker = `[^q${number}]`;
   return {
     text: `${before}${marker}${gap}${text.slice(at)}`,
     caret: before.length + marker.length + gap.length,
