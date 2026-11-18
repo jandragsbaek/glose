@@ -6,7 +6,7 @@ import * as Exit from "effect/Exit";
 import * as Option from "effect/Option";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { Check, CircleAlert, FolderOpen, Minus } from "lucide-react";
-import { type FormEvent, useRef, useState } from "react";
+import { type FormEvent, useId, useRef, useState } from "react";
 
 import {
   byFileName,
@@ -19,7 +19,7 @@ import {
 } from "../domain/importText.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { importTextAtom, sourcesAtom } from "../state/graph.ts";
-import { blank, DropZone, PART, readFiles, TextField, YEAR } from "./textImport.tsx";
+import { blank, DropZone, FormFoot, PART, readFiles, TextField, YEAR } from "./textImport.tsx";
 import { Panel } from "./ui.tsx";
 
 type LessonState = "new" | "taken" | "added" | "failed";
@@ -52,6 +52,7 @@ export function AddLessons() {
   );
   const [finished, setFinished] = useState<{ added: number; skipped: number } | null>(null);
   const [perWeek, setPerWeek] = useState("5");
+  const perWeekId = useId();
 
   const taken = (part: string) =>
     sources.some(
@@ -182,13 +183,15 @@ export function AddLessons() {
   const firstAdded = lessons.find((lesson) => lesson.state === "added");
   const locked = lessons.length > 0 && toAdd.length === 0 && finished !== null;
 
+  const byOrder = lessons.some((lesson) => !lesson.partByName && lesson.state !== "added");
+
   return (
-    <form className="form add-lessons" onSubmit={submit} noValidate>
-      <Panel
-        title={t.lessons.files}
-        initial="rubric"
-        meta={lessons.length === 0 ? undefined : t.lessons.count(lessons.length)}
-      >
+    <Panel
+      title={t.lessons.course}
+      initial="rubric"
+      meta={lessons.length === 0 ? undefined : t.lessons.count(lessons.length)}
+    >
+      <form className="add-source__form add-lessons" onSubmit={submit} noValidate>
         <div className="panel__body">
           <DropZone onFiles={(files) => void onFiles(files)} hint={t.lessons.dropHint}>
             <input
@@ -217,7 +220,11 @@ export function AddLessons() {
               <FolderOpen className="button__icon" aria-hidden="true" />
               {t.lessons.chooseFolder}
             </button>
-            <button type="button" className="button" onClick={() => filesRef.current?.click()}>
+            <button
+              type="button"
+              className="button button--quiet"
+              onClick={() => filesRef.current?.click()}
+            >
               {t.lessons.chooseFiles}
             </button>
           </DropZone>
@@ -232,7 +239,6 @@ export function AddLessons() {
                 <tr>
                   <th scope="col">{t.lessons.columns.part}</th>
                   <th scope="col">{t.lessons.columns.title}</th>
-                  <th scope="col">{t.lessons.columns.file}</th>
                   <th scope="col" className="num">
                     {t.lessons.columns.words}
                   </th>
@@ -270,8 +276,8 @@ export function AddLessons() {
                           disabled={state === "added"}
                           onChange={(event) => change(index, { title: event.target.value })}
                         />
+                        <span className="add-lessons__file">{lesson.name}</span>
                       </td>
-                      <td className="add-lessons__file">{lesson.name}</td>
                       <td className="num">{lesson.words}</td>
                       <td className="add-lessons__state">
                         <LessonStateMark state={state} />
@@ -283,8 +289,25 @@ export function AddLessons() {
             </table>
           </div>
         )}
-      </Panel>
-      <Panel title={t.lessons.course} initial="accent">
+        {byOrder ? (
+          <div className="panel__body add-lessons__per-week">
+            <label className="field__label" htmlFor={perWeekId}>
+              {t.lessons.perWeek}
+            </label>
+            <input
+              id={perWeekId}
+              className="input add-lessons__per-week-input"
+              value={perWeek}
+              inputMode="numeric"
+              disabled={locked}
+              aria-describedby={`${perWeekId}-hint`}
+              onChange={(event) => changePerWeek(event.target.value)}
+            />
+            <p className="field__hint" id={`${perWeekId}-hint`}>
+              {t.lessons.perWeekHint}
+            </p>
+          </div>
+        ) : null}
         <div className="panel__body">
           <fieldset className="fieldset">
             <legend className="sr-only">{t.lessons.course}</legend>
@@ -321,64 +344,54 @@ export function AddLessons() {
             />
             <TextField
               disabled={locked}
-              label={t.lessons.perWeek}
-              value={perWeek}
-              onChange={changePerWeek}
-              hint={t.lessons.perWeekHint}
-              inputMode="numeric"
-            />
-            <TextField
-              disabled={locked}
               label={t.lessons.url}
               value={course.url}
               onChange={(url) => setCourse((current) => ({ ...current, url }))}
-              wide
               inputMode="url"
             />
           </fieldset>
         </div>
-      </Panel>
-      <p role="status" className="add-lessons__status">
-        {progress === null ? null : t.lessons.adding(progress.done, progress.all)}
-        {finished === null ? null : t.lessons.done(finished.added, finished.skipped)}
-        {problem === null ? null : (
-          <span className="field__error">
-            <CircleAlert className="field__error-icon" aria-hidden="true" />
-            {problem}
-          </span>
-        )}
-      </p>
-      <div className="button-row">
-        {toAdd.length > 0 ? (
-          <button type="submit" className="button button--primary" disabled={progress !== null}>
-            {progress === null
-              ? finished === null
-                ? t.lessons.submit(toAdd.length)
-                : t.lessons.retry(toAdd.length)
-              : t.lessons.adding(progress.done, progress.all)}
-          </button>
-        ) : null}
-        {finished !== null && firstAdded?.id != null ? (
-          <>
-            <Link
-              to="/sources/$sourceId"
-              params={{ sourceId: firstAdded.id }}
-              search={{}}
-              className={toAdd.length > 0 ? "button" : "button button--primary"}
-            >
-              {t.lessons.openFirst(firstAdded.part)}
+        <FormFoot
+          problem={problem}
+          status={
+            progress !== null
+              ? t.lessons.adding(progress.done, progress.all)
+              : finished !== null
+                ? t.lessons.done(finished.added, finished.skipped)
+                : null
+          }
+        >
+          {toAdd.length > 0 ? (
+            <button type="submit" className="button button--primary" disabled={progress !== null}>
+              {progress === null
+                ? finished === null
+                  ? t.lessons.submit(toAdd.length)
+                  : t.lessons.retry(toAdd.length)
+                : t.lessons.adding(progress.done, progress.all)}
+            </button>
+          ) : null}
+          {finished !== null && firstAdded?.id != null ? (
+            <>
+              <Link
+                to="/sources/$sourceId"
+                params={{ sourceId: firstAdded.id }}
+                search={{}}
+                className={toAdd.length > 0 ? "button" : "button button--primary"}
+              >
+                {t.lessons.openFirst(firstAdded.part)}
+              </Link>
+              <Link to="/sources" className="button button--quiet">
+                {t.lessons.seeSources}
+              </Link>
+            </>
+          ) : (
+            <Link to="/sources" className="button button--quiet">
+              {t.addSource.cancel}
             </Link>
-            <Link to="/sources" className="button">
-              {t.lessons.seeSources}
-            </Link>
-          </>
-        ) : (
-          <Link to="/sources" className="button">
-            {t.addSource.cancel}
-          </Link>
-        )}
-      </div>
-    </form>
+          )}
+        </FormFoot>
+      </form>
+    </Panel>
   );
 }
 

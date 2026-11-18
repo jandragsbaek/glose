@@ -18,13 +18,16 @@ import { importTextAtom, KEYS } from "../state/graph.ts";
 import {
   blank,
   DropZone,
+  FillLine,
+  FormFoot,
+  MoreDetails,
   readFiles,
   type TextFile,
   TextField,
   today,
   YEAR,
 } from "./textImport.tsx";
-import { Notice, Panel } from "./ui.tsx";
+import { Panel } from "./ui.tsx";
 
 const ARTICLE_FIELDS = [
   "familyName",
@@ -66,6 +69,12 @@ const FIELDS_OF: Record<ArticleType, ReadonlyArray<ArticleField>> = {
   press: ["pages", "url"],
 };
 
+const SHOWN_OF: Record<ArticleType, ReadonlyArray<ArticleField>> = {
+  paper: ["doi"],
+  web: ["url"],
+  press: ["url"],
+};
+
 export function AddArticle() {
   const t = useT();
   const navigate = useNavigate();
@@ -80,7 +89,8 @@ export function AddArticle() {
   const [filled, setFilled] = useState<ReadonlyArray<ArticleField>>([]);
   const [problem, setProblem] = useState<string | null>(null);
   const [submitProblem, setSubmitProblem] = useState<string | null>(null);
-  const [yearMissing, setYearMissing] = useState(false);
+  const [missing, setMissing] = useState<ReadonlyArray<ArticleField>>([]);
+  const [more, setMore] = useState(false);
   const [busy, setBusy] = useState(false);
   const article = text === null ? null : parseArticle(text.markdown);
 
@@ -112,7 +122,13 @@ export function AddArticle() {
       ...Object.fromEntries(keys.map((key) => [key, next[key] ?? ""])),
     }));
     setFilled(keys);
-    if (details.doi !== null) setType("paper");
+    setMissing((current) => current.filter((name) => !keys.includes(name)));
+    setSubmitProblem(null);
+    const nextType = details.doi === null ? type : "paper";
+    setType(nextType);
+    if (keys.some((key) => key === "otherAuthors" || folded(nextType).includes(key))) {
+      setMore(true);
+    }
   };
 
   const onFiles = async (files: ReadonlyArray<File>) => {
@@ -133,22 +149,27 @@ export function AddArticle() {
   const set = (name: ArticleField) => (value: string) => {
     setValues((current) => ({ ...current, [name]: value }));
     setFilled((current) => current.filter((other) => other !== name));
+    setMissing((current) => current.filter((other) => other !== name));
   };
 
   const year = /\b(\d{4})\b/.exec(values.published)?.[1] ?? null;
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
+    const empty = (["familyName", "title"] as const).filter((name) => values[name].trim() === "");
+    const lacking: ReadonlyArray<ArticleField> = [
+      ...empty,
+      ...(year === null || !YEAR.test(year) ? (["published"] as const) : []),
+    ];
+    setMissing(lacking);
     if (text === null) {
       setSubmitProblem(t.importText.needText);
       return;
     }
-    if (year === null || !YEAR.test(year)) {
-      setYearMissing(true);
-      setSubmitProblem(t.importText.needYear);
+    if (lacking.length > 0) {
+      setSubmitProblem(t.importText.needDetails);
       return;
     }
-    setYearMissing(false);
     setSubmitProblem(null);
     const shown = new Set(FIELDS_OF[type]);
     const kept = (name: ArticleField) => (shown.has(name) ? blank(values[name]) : null);
@@ -207,12 +228,16 @@ export function AddArticle() {
       label={label}
       value={values[name]}
       onChange={set(name)}
-      filled={filled.includes(name)}
+      filledFrom={filled.includes(name) ? t.importText.fromFile : undefined}
       {...options}
-      {...(name === "published" && yearMissing ? { error: t.importText.needYear } : {})}
-      {...(name === "otherAuthors" ? { multiline: true } : {})}
+      error={missing.includes(name) ? errorOf(name) : undefined}
+      multiline={name === "otherAuthors"}
+      {...(name === "url" ? { inputMode: "url" as const } : {})}
     />
   );
+
+  const errorOf = (name: ArticleField) =>
+    name === "published" ? t.importText.needYear : t.importText.needField;
 
   const extraLabels: Record<ArticleField, string> = {
     familyName: t.addSource.familyName,
@@ -230,171 +255,162 @@ export function AddArticle() {
   };
 
   return (
-    <form className="form narrow" onSubmit={submit} noValidate>
-      <Panel title={t.importText.text} initial="rubric">
-        <div className="panel__body">
-          {text === null ? (
-            pasting ? (
-              <div className="field">
-                <label className="field__label" htmlFor={pasteId}>
-                  {t.importText.pasteLabel}
-                </label>
-                <textarea
-                  id={pasteId}
-                  className="textarea add-text__paste"
-                  value={pasted}
-                  onChange={(event) => setPasted(event.target.value)}
-                  spellCheck={false}
-                />
-                <div className="button-row">
-                  <button
-                    type="button"
-                    className="button button--primary"
-                    disabled={pasted.trim() === ""}
-                    onClick={() => take({ name: t.importText.pasted, markdown: pasted })}
-                  >
-                    {t.importText.usePasted}
-                  </button>
-                  <button
-                    type="button"
-                    className="button button--quiet"
-                    onClick={() => setPasting(false)}
-                  >
-                    {t.addSource.cancel}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <DropZone onFiles={(files) => void onFiles(files)} hint={t.importText.dropHint}>
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept=".md,.markdown,.mdown,.txt,text/markdown,text/plain"
-                  className="sr-only"
-                  tabIndex={-1}
-                  onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                    void onFiles([...(event.target.files ?? [])])
-                  }
-                />
+    <Panel title={t.importText.article} initial="rubric">
+      <div className="panel__body">
+        {text === null ? (
+          pasting ? (
+            <div className="field">
+              <label className="field__label" htmlFor={pasteId}>
+                {t.importText.pasteLabel}
+              </label>
+              <textarea
+                id={pasteId}
+                className="textarea add-text__paste"
+                value={pasted}
+                onChange={(event) => setPasted(event.target.value)}
+                spellCheck={false}
+              />
+              <div className="button-row">
                 <button
                   type="button"
                   className="button button--primary"
-                  onClick={() => fileRef.current?.click()}
+                  disabled={pasted.trim() === ""}
+                  onClick={() => take({ name: t.importText.pasted, markdown: pasted })}
                 >
-                  <FileText className="button__icon" aria-hidden="true" />
-                  {t.importText.chooseFile}
+                  {t.importText.usePasted}
                 </button>
                 <button
                   type="button"
                   className="button button--quiet"
-                  onClick={() => setPasting(true)}
+                  onClick={() => setPasting(false)}
                 >
-                  {t.importText.paste}
+                  {t.addSource.cancel}
                 </button>
-              </DropZone>
-            )
-          ) : (
-            <div className="add-text__chosen">
-              <FileText className="add-text__icon" aria-hidden="true" />
-              <div className="add-text__file">
-                <p className="add-text__name">{text.name}</p>
-                <p className="add-text__meta">
-                  {article === null
-                    ? null
-                    : t.importText.chosenMeta(article.units.length, article.words)}
-                </p>
               </div>
+            </div>
+          ) : (
+            <DropZone onFiles={(files) => void onFiles(files)} hint={t.importText.dropHint}>
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".md,.markdown,.mdown,.txt,text/markdown,text/plain"
+                className="sr-only"
+                tabIndex={-1}
+                onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                  void onFiles([...(event.target.files ?? [])])
+                }
+              />
               <button
                 type="button"
-                className="button button--small"
-                onClick={() => {
-                  setText(null);
-                  setPasted("");
-                }}
+                className="button button--primary"
+                onClick={() => fileRef.current?.click()}
               >
-                {t.importText.another}
+                <FileText className="button__icon" aria-hidden="true" />
+                {t.importText.chooseFile}
               </button>
+              <button
+                type="button"
+                className="button button--quiet"
+                onClick={() => setPasting(true)}
+              >
+                {t.importText.paste}
+              </button>
+            </DropZone>
+          )
+        ) : (
+          <div className="add-text__chosen">
+            <FileText className="add-text__icon" aria-hidden="true" />
+            <div className="add-text__file">
+              <p className="add-text__name">{text.name}</p>
+              <p className="add-text__meta">
+                {article === null
+                  ? null
+                  : t.importText.chosenMeta(article.units.length, article.words)}
+              </p>
             </div>
+            <button
+              type="button"
+              className="button button--small"
+              onClick={() => {
+                setText(null);
+                setPasted("");
+              }}
+            >
+              {t.importText.another}
+            </button>
+          </div>
+        )}
+        <p role="status" className="add-text__status">
+          {problem === null ? null : (
+            <span className="field__error">
+              <CircleAlert className="field__error-icon" aria-hidden="true" />
+              {problem}
+            </span>
           )}
-          <p role="status" className="add-text__status">
-            {problem === null ? null : (
-              <span className="field__error">
-                <CircleAlert className="field__error-icon" aria-hidden="true" />
-                {problem}
-              </span>
-            )}
-          </p>
-        </div>
-      </Panel>
-      {filled.length === 0 ? null : (
-        <Notice tone="info">
-          <p>{t.importText.filledFromFile}</p>
-        </Notice>
-      )}
-      <Panel title={t.addSource.author} initial="accent">
-        <div className="panel__body">
+        </p>
+      </div>
+      <form className="add-source__form" onSubmit={submit} noValidate>
+        <div className="panel__body add-source__fields">
+          <div role="status" className="fill-status">
+            {filled.length === 0 ? null : <FillLine>{t.importText.filledFromFile}</FillLine>}
+          </div>
+          <fieldset className="add-text__type">
+            <legend className="field__label">{t.importText.type}</legend>
+            <div className="segmented">
+              {TYPES.map((option) => (
+                <label key={option}>
+                  <input
+                    type="radio"
+                    name="article-type"
+                    value={option}
+                    checked={type === option}
+                    onChange={() => setType(option)}
+                  />
+                  <span>{t.kinds.articleTypes[option]}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
           <fieldset className="fieldset">
             <legend className="sr-only">{t.addSource.author}</legend>
             {field("familyName", t.addSource.familyName, { required: true })}
             {field("givenName", t.addSource.givenName)}
-            {field("otherAuthors", t.importText.otherAuthors, {
-              wide: true,
-              hint: t.importText.otherAuthorsHint,
-            })}
           </fieldset>
-        </div>
-      </Panel>
-      <Panel title={t.importText.details} initial="rubric">
-        <div className="panel__body">
-          <fieldset className="segmented add-text__types">
-            <legend className="sr-only">{t.importText.type}</legend>
-            {TYPES.map((option) => (
-              <label key={option}>
-                <input
-                  type="radio"
-                  name="article-type"
-                  value={option}
-                  checked={type === option}
-                  onChange={() => setType(option)}
-                />
-                <span>{t.kinds.articleTypes[option]}</span>
-              </label>
-            ))}
-          </fieldset>
-          <fieldset className="fieldset add-text__fields">
-            <legend className="sr-only">{t.importText.details}</legend>
+          <fieldset className="fieldset">
+            <legend className="sr-only">{t.addSource.work}</legend>
             {field("title", t.addSource.titleField, { required: true, wide: true })}
-            {field("published", t.importText.published, { hint: t.importText.publishedHint })}
+            {field("published", t.importText.published, {
+              required: true,
+              hint: t.importText.publishedHint,
+            })}
             {field("container", t.importText.containers[type])}
-            {FIELDS_OF[type].map((name) =>
-              field(name, extraLabels[name], {
-                ...(name === "url" ? { wide: true } : {}),
-                ...(name === "accessed" ? { hint: t.importText.accessedHint } : {}),
-              }),
-            )}
+            {SHOWN_OF[type].map((name) => field(name, extraLabels[name], { wide: true }))}
+            <MoreDetails summary={t.importText.more[type]} open={more} onToggle={setMore}>
+              {field("otherAuthors", t.importText.otherAuthors, {
+                wide: true,
+                hint: t.importText.otherAuthorsHint,
+              })}
+              {folded(type).map((name) =>
+                field(name, extraLabels[name], {
+                  ...(name === "url" ? { wide: true } : {}),
+                  ...(name === "accessed" ? { hint: t.importText.accessedHint } : {}),
+                }),
+              )}
+            </MoreDetails>
           </fieldset>
         </div>
-      </Panel>
-      <p role="alert" className="add-text__submit-problem">
-        {submitProblem === null ? null : (
-          <span className="field__error">
-            <CircleAlert className="field__error-icon" aria-hidden="true" />
-            {submitProblem}
-          </span>
-        )}
-      </p>
-      <div className="button-row">
-        <button
-          type="submit"
-          className="button button--primary"
-          disabled={busy || values.familyName.trim() === "" || values.title.trim() === ""}
-        >
-          {busy ? t.importText.adding : t.importText.submit}
-        </button>
-        <Link to="/sources" className="button">
-          {t.addSource.cancel}
-        </Link>
-      </div>
-    </form>
+        <FormFoot problem={submitProblem}>
+          <button type="submit" className="button button--primary" disabled={busy}>
+            {busy ? t.importText.adding : t.importText.submit}
+          </button>
+          <Link to="/sources" className="button button--quiet">
+            {t.addSource.cancel}
+          </Link>
+        </FormFoot>
+      </form>
+    </Panel>
   );
 }
+
+const folded = (type: ArticleType): ReadonlyArray<ArticleField> =>
+  FIELDS_OF[type].filter((name) => !SHOWN_OF[type].includes(name));

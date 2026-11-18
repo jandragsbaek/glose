@@ -126,9 +126,8 @@ export const sourceMessages: Pick<Messages, "source" | "sources" | "addSource"> 
   },
   addSource: {
     title: "Tilføj kilde",
-    find: "Find bogen",
-    findHint:
-      "Søg i Open Library, et åbent bogkatalog. Når du vælger en bog, udfyldes formularen nedenfor. Et ISBN finder netop din udgave.",
+    book: "Bogen",
+    findHint: "Søger i Open Library, et åbent bogkatalog. Et ISBN finder netop din udgave.",
     searchLabel: "Titel, forfatter eller ISBN",
     search: "Søg",
     searching: "Søger i Open Library",
@@ -142,16 +141,10 @@ export const sourceMessages: Pick<Messages, "source" | "sources" | "addSource"> 
       return parts.length === 0 ? "" : `Udgave: ${parts.join(", ")}`;
     },
     partBreak: ". ",
-    notYourCopy:
-      "Ikke dit eksemplar? Søg på det ISBN, der står i din bog, for at få netop den udgave.",
-    filledTitle: (title: string) => `Udfyldt fra Open Library: ${title}`,
-    filled:
-      "Tjek felterne mærket Fra Open Library mod dit eksemplar. Titel, forlag og udgaveår skal være dem fra den bog, du har læst.",
+    filled: "Udfyldt fra Open Library. Tjek de mærkede felter mod dit eksemplar.",
     keptTyped: "Felter, du selv har skrevet i, er beholdt.",
     undoFill: "Fortryd",
     fromCatalog: "Fra Open Library",
-    intro:
-      "En bog du læser eller har læst. En kildehenvisning kræver fuldstændige data, så udfyld det du har. Glose viser, hvad der mangler.",
     author: "Forfatter",
     work: "Værk",
     familyName: "Efternavn",
@@ -162,6 +155,8 @@ export const sourceMessages: Pick<Messages, "source" | "sources" | "addSource"> 
     edition: "Udgave",
     editionHint: "Som det står i dit eksemplar, for eksempel 2.",
     editionYear: "Udgaveår",
+    editionYearHint: "Året for det eksemplar, du har læst.",
+    more: "Udgave og oversætter",
     publisher: "Forlag",
     translator: "Oversætter",
     yearInvalid: "Skriv året med tal, for eksempel 1958.",

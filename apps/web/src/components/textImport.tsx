@@ -1,5 +1,5 @@
-import { CircleAlert } from "lucide-react";
-import { type DragEvent, type ReactNode, useId, useState } from "react";
+import { ChevronRight, CircleAlert } from "lucide-react";
+import { type DragEvent, type ReactNode, type RefObject, useId, useState } from "react";
 
 import { useT } from "../i18n/I18n.tsx";
 
@@ -83,38 +83,43 @@ export function TextField({
   label,
   value,
   onChange,
+  name,
   hint,
   required = false,
   wide = false,
-  filled = false,
+  filledFrom,
   error,
   multiline = false,
   inputMode,
   disabled = false,
+  inputRef,
 }: {
   readonly label: string;
   readonly value: string;
   readonly onChange: (value: string) => void;
-  readonly hint?: string;
+  readonly name?: string;
+  readonly hint?: string | undefined;
   readonly required?: boolean;
   readonly wide?: boolean;
-  readonly filled?: boolean;
+  readonly filledFrom?: string | undefined;
   readonly error?: string | undefined;
   readonly multiline?: boolean;
-  readonly inputMode?: "numeric" | "url";
+  readonly inputMode?: "numeric" | "url" | undefined;
   readonly disabled?: boolean;
+  readonly inputRef?: RefObject<HTMLInputElement | null> | undefined;
 }) {
   const t = useT();
   const id = useId();
   const describedBy = [
     hint === undefined ? null : `${id}-hint`,
-    filled ? `${id}-filled` : null,
+    filledFrom === undefined ? null : `${id}-filled`,
     error === undefined ? null : `${id}-error`,
   ]
     .filter(Boolean)
     .join(" ");
   const props = {
     id,
+    name,
     value,
     "aria-describedby": describedBy === "" ? undefined : describedBy,
     "aria-invalid": error === undefined ? undefined : true,
@@ -125,40 +130,119 @@ export function TextField({
     <div className={wide ? "field field--wide" : "field"}>
       <label className="field__label" htmlFor={id}>
         {label}
-        {required ? null : <span className="field__optional"> {t.common.optional}</span>}
+        {required ? <span className="field__need"> {t.common.required}</span> : null}
       </label>
-      {multiline ? (
-        <textarea
-          {...props}
-          className="input field__lines"
-          rows={2}
-          onChange={(event) => onChange(event.target.value)}
-        />
-      ) : (
-        <input
-          {...props}
-          className="input"
-          inputMode={inputMode}
-          autoComplete="off"
-          onChange={(event) => onChange(event.target.value)}
-        />
+      <div className="field__control" data-filled={filledFrom === undefined ? undefined : ""}>
+        {multiline ? (
+          <textarea
+            {...props}
+            className="input field__lines"
+            rows={2}
+            onChange={(event) => onChange(event.target.value)}
+          />
+        ) : (
+          <input
+            {...props}
+            ref={inputRef}
+            className="input"
+            inputMode={inputMode}
+            autoComplete="off"
+            onChange={(event) => onChange(event.target.value)}
+          />
+        )}
+      </div>
+      {filledFrom === undefined ? null : (
+        <span className="sr-only" id={`${id}-filled`}>
+          {filledFrom}
+        </span>
       )}
       {hint === undefined ? null : (
         <p className="field__hint" id={`${id}-hint`}>
           {hint}
         </p>
       )}
-      {filled ? (
-        <p className="field__hint field__hint--catalog" id={`${id}-filled`}>
-          {t.importText.fromFile}
-        </p>
-      ) : null}
       {error === undefined ? null : (
         <p className="field__error" id={`${id}-error`}>
           <CircleAlert className="field__error-icon" aria-hidden="true" />
           {error}
         </p>
       )}
+    </div>
+  );
+}
+
+export function FillLine({
+  children,
+  onUndo,
+}: {
+  readonly children: ReactNode;
+  readonly onUndo?: (() => void) | undefined;
+}) {
+  const t = useT();
+  return (
+    <div className="fill-line">
+      <span className="fill-line__dot" aria-hidden="true" />
+      <p className="fill-line__text">{children}</p>
+      {onUndo === undefined ? null : (
+        <button type="button" className="link-button fill-line__undo" onClick={onUndo}>
+          {t.addSource.undoFill}
+        </button>
+      )}
+    </div>
+  );
+}
+
+export function MoreDetails({
+  summary,
+  open,
+  onToggle,
+  children,
+}: {
+  readonly summary: string;
+  readonly open: boolean;
+  readonly onToggle: (open: boolean) => void;
+  readonly children: ReactNode;
+}) {
+  return (
+    <details
+      className="more-details field--wide"
+      open={open}
+      onToggle={(event) => onToggle(event.currentTarget.open)}
+    >
+      <summary className="more-details__summary">
+        <ChevronRight className="more-details__chev" aria-hidden="true" />
+        {summary}
+      </summary>
+      <div className="fieldset more-details__fields">{children}</div>
+    </details>
+  );
+}
+
+export function FormFoot({
+  problem,
+  status,
+  children,
+}: {
+  readonly problem: string | null;
+  readonly status?: ReactNode;
+  readonly children: ReactNode;
+}) {
+  return (
+    <div className="panel__foot">
+      {status === undefined ? null : (
+        <p role="status" className="form-status">
+          {status}
+        </p>
+      )}
+      <p role="alert" className="form-problem">
+        {problem === null ? null : (
+          <span className="field__error">
+            <CircleAlert className="field__error-icon" aria-hidden="true" />
+            {problem}
+          </span>
+        )}
+      </p>
+      <div className="button-row">{children}</div>
     </div>
   );
 }

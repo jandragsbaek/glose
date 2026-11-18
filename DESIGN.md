@@ -350,7 +350,8 @@ components:
     backgroundColor: "{colors.paper}"
     textColor: "{colors.ink}"
     rounded: "{rounded.base}"
-    padding: "14px 16px"
+    padding: "0 18px"
+    height: "40px"
   kind-choice-selected:
     backgroundColor: "{colors.tint}"
     textColor: "{colors.lapis}"
@@ -431,8 +432,9 @@ three small pigments (gold, rubric red, verdigris) each with one job.
   while a trail shows, the open Note's other Links turn quiet ink so Lapis means the trail alone.
   In the Reader it is the Mark Bar, the paragraph number where a Passage sits, the ¶ numbers in
   the apparatus, the 1px underline of a Passage taken deeper and "Taken deeper" in the margin. On
-  Add Source it is the border and name of the checked kind and the border of a Drop Zone while a
-  file is dragged over it.
+  Add Source it is the name of the checked kind, the dot on a value Glose filled in and the same
+  dot in the Fill Line, the outline of the chosen catalog record, and the border of a Drop Zone
+  while a file is dragged over it.
 - **Raised Lapis** (lapis-raised): the current rail item, and the section in view on the Settings
   window's spine; primary button hover. Hover on a rail item or a spine section is half a step,
   Lapis and Raised Lapis mixed half and half, so "here" stays the stronger mark.
@@ -486,11 +488,12 @@ three small pigments (gold, rubric red, verdigris) each with one job.
 - **Strong Hairline** (line-strong): input and choice borders, the segmented control's border and
   dividers, key-cap borders, the ring of a Reading mark not reached yet, the border of a leaf over
   the page (the Versions panel, a sheet), the left rule of a Probe judgment gloss, scrollbar thumb.
-  Also the border of a Kind Choice option and of the Drop Zone, and the left rule of a quote in an
-  Article.
+  Also the Kind Choice's border and dividers, the catalog results' border, the Drop Zone's border,
+  and the left rule of a quote in an Article.
 - **Lapis Tint** (tint): secondary button hover, the current step, a selected choice, a hovered or
   checked segment, the register row whose Links are shown, the Settings window's Close on hover,
-  the checked Kind Choice option and a Drop Zone while a file is dragged over it.
+  the checked or hovered Kind Choice option, the Fill Line, a hovered or chosen catalog record, and
+  a Drop Zone while a file is dragged over it.
 - **Tray** (tray): a warm well a step darker than Ground, behind the Recall Trays only, so the
   Paper slips in it read as lying in a tray. A neutral, not a field of color.
 
@@ -767,9 +770,12 @@ margin (280–340px) share the row. Below 900px the desk is one column that scro
 sides), the foot sticks to the bottom of the window, the band pads 12px 16px, and the gutter
 narrows to 64px.
 
-Add Source (`/sources/new`) opens with the Kind Choice (up to 760px, 24px below it); the form under
-it follows the kind. Book keeps its form; Article is one narrow form (the text, then the data);
-Course lessons is the lesson files panel with its table, then the course panel.
+Add Source (`/sources/new`) is one column up to 760px for every kind, so switching kinds never
+moves the page: the Kind Choice with its one-line hint 8px under it, then, 20px below, one panel
+for the kind ("The book", "The article", "The course"). The panel's first body is the way in (the
+catalog search, or the Drop Zone); under a Hairline the second holds the data, fields 16px apart;
+the Panel Foot ends it. Course lessons sets its table across the panel between the Drop Zone and
+the course data.
 
 A focus screen (today only Review, at `/review`) fills the window without the rail and the page
 header. A 64px bar (12px 32px padding) holds the title left, a centred progress line and the way
@@ -877,13 +883,24 @@ Firm and plain, ink-outlined.
 - **Head:** the panel heading (uppercase, Initial in rubric or lapis, alternating down a column),
   optional Meta pushed right, then the hairline rule with the rubric flourish centered.
 - **Internal Padding:** 16px 20px 20px; stacked bodies divide with a Hairline.
+- **Panel Foot:** 16px 20px, a Hairline above: the problem line (Rubric, with its icon) and the
+  status line, each only when it speaks, then the buttons, the primary first and a quiet Cancel.
+  Add Source ends each panel this way.
+- **More details:** a fold for the fields a Citation rarely needs, named by them ("Edition and
+  translator", "Other authors and date accessed"): a 16px Mute chevron that turns 90° (160ms) and
+  the summary in 600 14px, Lapis on hover; the fields open in the same two-column grid 12px below.
+  It opens by itself when Glose fills one of its fields.
 - **Empty state:** Mute body, max 62ch, saying what comes next and how; a lead line (600, 16px,
   Ink) where the empty state is the main content.
 
 ### Inputs / Fields
 
 - **Style:** Paper, 1px Strong Hairline, 4px, 8px 12px padding, Body type. Label 600 14px above,
-  "(optional)" in Mute 400 beside it, hint in Meta below.
+  "(optional)" in Mute 400 beside it, hint in Meta below. On Add Source, where most fields are
+  optional, it is the other way round: the few that must be filled say "required" in Mute 400.
+- **Filled in:** a value Glose took from Open Library or a file's frontmatter carries a 6px Lapis
+  dot at the input's right end (30px right padding) until the user edits it. The Fill Line above the
+  fields is its key; screen readers hear where the value came from.
 - **Hover / Focus:** hover darkens the border to Mute; focus turns it Lapis with the focus halo.
 - **Error:** border Rubric, and below the field a Rubric line with a circle-alert icon and the
   words. Never the border alone.
@@ -900,6 +917,10 @@ and the Backup panel.
 
 - **Style:** an icon (18px) and words in a 4px box. Info uses a lapis icon on Paper. Warning uses
   a rubric icon on Rubric Wash. Error uses a rubric icon and a Rubric border, with role alert.
+- **Fill Line:** one line on Lapis Tint (4px, 10px 12px, 14px) at the top of the fields: the
+  same 6px Lapis dot, the words ("Filled in from Open Library. Check the marked fields against your
+  copy.") and, for a catalog fill, Undo as a link button pushed right. It replaces a notice and the
+  per-field "From …" lines.
 - **Inside a panel:** the panel is the box; the notice drops its border and fill and keeps icon
   and words (a warning title turns Rubric).
 - **Inline warning:** a rubric triangle icon and a sentence, with a link to the fix.
@@ -1302,21 +1323,29 @@ tooltip. 8px apart; it wraps. The first lesson has only the next; the last only 
 
 ### Kind Choice
 
-The first question on Add Source, "What are you adding?" (Mute 600 13px, 0.06em tracking,
-uppercase): three options side by side in equal columns, 12px apart: Book, Article, Course lessons.
-Each is a Paper box with a Strong Hairline border (4px, 14px 16px): the name in 600 15px over a
-Mute 13px/1.4 hint that says what Glose does with it. The radio is invisible over the whole box.
-Hover darkens the border to Mute; checked turns the border Lapis, the fill Lapis Tint, the name
-Lapis, and adds a 3px Gilt underline inside its foot; keyboard focus draws the 2px Lapis outline at
-2px. 160ms on the shared ease-out. The kind lives in the address (`?kind=article|lesson`; Book is
-the default). Below 720px the options stack.
+The first question on Add Source: three joined segments in one Paper box with a Strong Hairline
+border and dividers (4px, 40px tall, 0 18px): Book, Article, Course lessons, each name 600 14px.
+The question "What are you adding?" is the group's accessible name, not shown. Under it, 8px down,
+one Mute 14px line says what Glose does with the checked kind ("You read it elsewhere. Glose keeps
+your Free text and Notes."), and the group names it as its description. Hover fills a segment
+Lapis Tint; checked fills it Lapis Tint, turns the name Lapis and adds a 3px Gilt underline inside
+its foot; keyboard focus draws the 2px Lapis outline inside. 160ms on the shared ease-out. The
+segments wrap in a narrow window. The kind lives in the address (`?kind=article|lesson`; Book is
+the default).
+
+### Catalog Results
+
+The Open Library records under the book search, as one joined list in a Hairline box (4px): a row
+per record (10px 12px, 14px), the call number first, the title in 600, then author, first
+publication and edition in Mute 13px; the row wraps. Hover fills it Lapis Tint; the chosen record
+keeps the Tint and a 1px Lapis outline inside.
 
 ### Drop Zone
 
 Where a file or a folder is chosen or dropped: a Ground box with a Strong Hairline border (4px, 22px
 20px, 10px gaps). A wrapping row of buttons (10px gaps): for an Article, "Choose a Markdown file"
 (primary, with a file icon) and a quiet "Paste the text instead"; for Course lessons, "Choose the
-course folder" (primary, with a folder icon) and "Choose lesson files" (secondary). Under them a
+course folder" (primary, with a folder icon) and a quiet "Choose lesson files". Under them a
 Mute 13px hint says what happens to the files. While a file is dragged over it, the border turns
 Lapis and the fill Lapis Tint (160ms). A chosen file replaces it with a row: a 24px Lapis file
 icon, the name in 600 (it wraps anywhere) over Mute 13px tabular counts ("12 paragraphs · 2,300
@@ -1324,12 +1353,12 @@ words"), and "Choose another". Pasting opens a 220px textarea (14px) in its plac
 
 ### Lesson Table
 
-On Add Source for Course lessons, the files read from the folder, in the "The lesson files" panel
-(rubric Initial, the count as Meta) under the Drop Zone, set like the register's table: 14px
-tabular, cells 6px 12px (20px at the panel edges), a Hairline under each, Mute 600 13px heads, Words
-aligned right. Columns: "Week · Day" as a 64px field in Courier Prime 700 ("1.3"), the title as a
-field (at least 18em), the file in Mute 13px, words, and the state. Fields in the table are 5px 8px
-at 14px.
+On Add Source for Course lessons, the files read from the folder, across "The course" panel (rubric
+Initial, the count as Meta) under the Drop Zone, set like the register's table: 14px tabular,
+cells 6px 12px (20px at the panel edges), a Hairline under each, Mute 600 13px heads, Words aligned
+right. Columns: "Week · Day" as a 64px field in Courier Prime 700 ("1.3"), the title as a field
+(at least 14em) with its file name in Mute 12px under it, words, and the state. Fields in the table
+are 5px 8px at 14px.
 
 - **State marks:** a 15px icon and Mute 13px words, in a fixed cell: a dash and "New"; a Mute
   circle-alert and "Already in your Graph"; a Verdigris check and "Added"; a Rubric circle-alert and
@@ -1337,10 +1366,12 @@ at 14px.
 - **Locked rows:** an added lesson reads as text: its fields lose border and fill and turn Mute, so
   the row cannot be edited and does not look like a form.
 - **Clash:** two lessons with the same week and day turn their Week · Day fields Rubric, and the
-  status line under the panels gives the field error with its icon and the clashing parts.
-- The course panel (lapis Initial) follows with the course name, teacher, year, address and lessons
-  a week. The foot: "Add 20 lessons" (primary; "Adding lesson 3 of 20…" while it works), then
-  "Open Week 1 · Day 1" and "See them in Sources" when done.
+  Panel Foot's problem line gives the field error with its icon and the clashing parts.
+- **Lessons a week:** only when a file's name gives no week and day, one line under the table: the
+  label, a 72px field and its Mute hint, 12px apart.
+- The course data follows in the same panel: the course name, teacher, year and address. The Panel
+  Foot: "Add 20 lessons" (primary; "Adding lesson 3 of 20…" while it works), then "Open Week 1 · Day
+  1" and "See them in Sources" when done.
 
 ### Reading Marks
 

@@ -32,6 +32,7 @@ export const coreMessages = {
   common: {
     retry: "Try again",
     optional: "optional",
+    required: "required",
     loading: "Loading",
   },
   errors: {

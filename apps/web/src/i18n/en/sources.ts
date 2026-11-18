@@ -124,9 +124,8 @@ export const sourceMessages = {
   },
   addSource: {
     title: "Add Source",
-    find: "Find the book",
-    findHint:
-      "Search Open Library, an open book catalog. Choosing a book fills in the form below. An ISBN finds your exact edition.",
+    book: "The book",
+    findHint: "Searches Open Library, an open book catalog. An ISBN finds your exact edition.",
     searchLabel: "Title, author or ISBN",
     search: "Search",
     searching: "Searching Open Library",
@@ -140,16 +139,10 @@ export const sourceMessages = {
       return parts.length === 0 ? "" : `Edition: ${parts.join(", ")}`;
     },
     partBreak: ". ",
-    notYourCopy:
-      "Not your copy? Search by the ISBN printed in your book to get that exact edition.",
-    filledTitle: (title: string) => `Filled in from Open Library: ${title}`,
-    filled:
-      "Check the fields marked From Open Library against your copy. The title, publisher and edition year must be those of the book you read.",
+    filled: "Filled in from Open Library. Check the marked fields against your copy.",
     keptTyped: "Fields you typed yourself are kept.",
     undoFill: "Undo",
     fromCatalog: "From Open Library",
-    intro:
-      "A book you are reading or have read. A Citation needs complete data, so fill in what you have. Glose shows what is missing.",
     author: "Author",
     work: "Work",
     familyName: "Family name",
@@ -160,6 +153,8 @@ export const sourceMessages = {
     edition: "Edition",
     editionHint: "As printed in your copy, for example 2nd.",
     editionYear: "Edition year",
+    editionYearHint: "The year of the copy you read.",
+    more: "Edition and translator",
     publisher: "Publisher",
     translator: "Translator",
     yearInvalid: "Write the year as digits, for example 1958.",
