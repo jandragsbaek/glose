@@ -77,8 +77,8 @@ The core loop depends on the stage the user is in. Stages known so far:
   language, Appearance, Graph folder, Backup, ChatGPT and Your website. The list of pages at its
   side marks the page shown and opens another on a click. Jan asked for pages in place of the
   first design, one scrolling column of every section (November 2026).
-- A page the user leaves keeps its state while the window is open, so a sign-in that waits on
-  GitHub or ChatGPT goes on behind another page.
+- A page the user leaves keeps its state while the window is open, so a ChatGPT sign-in and its
+  outcome stay while the user looks at another page.
 - The address keeps the window: `?settings=<page>` on any page with the rail (not the Review
   focus screen) opens it at that page (`language`, `appearance`, `graph-folder`, `backup`,
   `chatgpt`, `site`). There is no `/settings` page.

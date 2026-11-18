@@ -435,7 +435,7 @@ three small pigments (gold, rubric red, verdigris) each with one job.
   Add Source it is the name of the checked kind, the dot on a value Glose filled in and the same
   dot in the Fill Line, the outline of the chosen catalog record, and the border of a Drop Zone
   while a file is dragged over it.
-- **Raised Lapis** (lapis-raised): the current rail item, and the section in view on the Settings
+- **Raised Lapis** (lapis-raised): the current rail item, and the section shown on the Settings
   window's spine; primary button hover. Hover on a rail item or a spine section is half a step,
   Lapis and Raised Lapis mixed half and half, so "here" stays the stronger mark.
 - **Lapis Rule** (lapis-line): hairlines and outlines on the lapis field (rail divider, the
@@ -447,7 +447,7 @@ three small pigments (gold, rubric red, verdigris) each with one job.
 
 - **Gilt** (gold): the "you are here" marker. The current rail icon, the current step's 3px
   underline, the 2px underline under the current Reading mark, the two gilt bands on a spine (a
-  Source's, and the top and foot of the Settings window's spine), the icon of the section in view
+  Source's, and the top and foot of the Settings window's spine), the icon of the section shown
   on that spine, and the focus outline on lapis. Also the triangle of a Check that warns on a Recall slip, beside
   Ink words. In the Reader: the 3px edge of the current section in Contents, the 2px underline
   under the open Passage and under its ¶ number in the apparatus, and the 1px underline (at 70%)
@@ -1007,11 +1007,11 @@ holds it: `?settings=<section>` on any page with the rail (not the Review focus 
   the leaf.
 - **Spine:** a Lapis field (76px 10px 26px padding, so its first section lines up with the first
   panel under the head; its own scroll), closed at the top and the foot by
-  two 2px Gilt bands, 6px apart (8px and 14px from the end). It lists the five sections in the
+  two 2px Gilt bands, 6px apart (8px and 14px from the end). It lists the six sections in the
   rail's vocabulary: a 20px Lucide icon (1.6 stroke) and the name in 500 14px/1.3, 12px apart, in
   a 42px row (9px 12px padding, 4px corners, 4px gaps). Names hyphenate and break anywhere.
-  Resting sections are Lapis Mist. The section in view fills Raised Lapis with white text, turns its
-  icon Gilt and carries `aria-current`; hover is half a step (Lapis and Raised Lapis mixed half and
+  Resting sections are Lapis Mist. The section shown fills Raised Lapis with white text, turns its
+  icon Gilt and carries `aria-current="page"`; hover is half a step (Lapis and Raised Lapis mixed half and
   half) with white text. Focus is the Gilt outline. 160ms on the shared ease-out.
 - **Head:** a 56px Paper band (8px 16px 8px 32px padding, so the close glyph ends on the panels'
   right edge), a Hairline under it. "Settings"
@@ -1019,21 +1019,18 @@ holds it: `?settings=<section>` on any page with the rail (not the Review focus 
   (10px side padding, 10px gap) with an Esc Key Cap and a 20px X icon (1.8 stroke), named "Close
   Settings" ("Luk Indstillinger"), with `aria-keyshortcuts="Escape"`. Hover fills it Lapis Tint,
   without an underline.
-- **Body:** Ground, its own scroll (20px 32px 40px; the top padding equals the 20px gap, so a
-  section that lands at the top shows nothing of the panel before it). The panels as on any page, in one column up to
-  760px with 20px gaps, their Initials alternating rubric and lapis, their titles `h3` under the
-  window's `h2`: Interface language (choice
+- **Body:** Ground, its own scroll (20px 32px 40px). It shows one section at a time, after T3
+  Code's settings pages: its panel as on any page, up to 760px wide, with its own Initial,
+  and its title an `h3` under the window's `h2`. The sections: Interface language (choice
   rows), Appearance (the Appearance Panel), Graph folder (the path as a Call Number label that
   wraps, and a Meta hint), Backup (the Backup Panel), ChatGPT and Your website. A sheet opened from a panel opens over the window.
-- **Spine and scroll:** the last section is at least as tall as the body, so every section can reach
-  the top. The window opens with the asked section 20px under the head and keeps it there while
-  panels load, until the user scrolls; that section takes focus, so the first Tab goes to its first
-  control. Each section is a `role="group"` named by its title, `tabindex="-1"`, without an outline.
-  The spine marks the last section whose top is within 96px of the top of the body. A click on a
-  section scrolls the body to it, smoothly (at once under reduced motion), moves focus to it (the
-  spine section points to it with `aria-controls`) and puts it in the address; a key press during
-  that scroll finishes it at once. Focus entering a section marks it. A sheet opened from a panel
-  gives focus back to the button that opened it when it closes.
+- **Spine and pages:** the window opens at the section in the address. A click on a spine section
+  puts it in the address (replacing the entry, so Back does not walk the sections) and shows it
+  from its top. Each time a section is shown it takes focus, so the first Tab goes to its first
+  control. Each section is a `role="group"` named by its title, `tabindex="-1"`, without an
+  outline; the spine section points to it with `aria-controls`. The sections not shown stay in the
+  page, `hidden`, so what the user did in one stays while the window is open. A sheet opened from
+  a panel gives focus back to the button that opened it when it closes.
 - **Veil and motion:** the page dims under Ink at 32%, as under a sheet. The window fades in from
   98.5% scale in 160ms on the shared ease-out while the veil fades in. Closing runs a 140ms out
   animation, back to 98.5% and clear with the veil, then the dialog closes. Under reduced motion

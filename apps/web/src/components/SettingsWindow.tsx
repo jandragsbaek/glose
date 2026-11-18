@@ -11,7 +11,7 @@ import {
   CloudUpload,
   X,
 } from "lucide-react";
-import { type ReactNode, useId, useRef, useState } from "react";
+import { type ReactNode, useId, useLayoutEffect, useRef, useState } from "react";
 
 import { LANGUAGES, useT } from "../i18n/I18n.tsx";
 import { KEYS, setLanguageAtom, settingsAtom } from "../state/graph.ts";
@@ -83,12 +83,12 @@ export function OpenSettingsButton({
 
 export function SettingsWindow() {
   const section = useSearch({ strict: false, select: (search) => search.settings });
-  return section === undefined ? null : <SettingsDialog section={section} />;
+  return section === undefined ? null : <SettingsDialog shown={section} />;
 }
 
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-function SettingsDialog({ section }: { readonly section: SettingsSection }) {
+function SettingsDialog({ shown }: { readonly shown: SettingsSection }) {
   const t = useT();
   const navigate = useNavigate();
   const titleId = useId();
@@ -112,20 +112,23 @@ function SettingsDialog({ section }: { readonly section: SettingsSection }) {
 
   const openDialog = (node: HTMLDialogElement | null) => {
     dialogRef.current = node;
-    if (node === null || node.open) return;
-    node.showModal();
-    node.querySelector<HTMLElement>(`[data-section="${section}"]`)?.focus();
+    if (node !== null && !node.open) node.showModal();
   };
 
-  const goTo = (next: SettingsSection) => {
-    if (next === section) return;
-    if (leafRef.current !== null) leafRef.current.scrollTop = 0;
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- scroll and focus, not state: a page can take focus only once it is no longer hidden, so the shown page starts at the top and takes focus after it renders.
+  useLayoutEffect(() => {
+    const leaf = leafRef.current;
+    if (leaf === null) return;
+    leaf.scrollTop = 0;
+    leaf.querySelector<HTMLElement>(`[data-section="${shown}"]`)?.focus({ preventScroll: true });
+  }, [shown]);
+
+  const goTo = (section: SettingsSection) =>
     void navigate({
       to: ".",
-      search: (prev) => ({ ...prev, settings: next }),
+      search: (prev) => ({ ...prev, settings: section }),
       replace: true,
     });
-  };
 
   return (
     <dialog
@@ -157,19 +160,19 @@ function SettingsDialog({ section }: { readonly section: SettingsSection }) {
     >
       <nav className="settings-window__spine" aria-label={t.settings.sections}>
         <ul>
-          {SETTINGS_SECTIONS.map((page) => {
-            const Icon = SECTION_ICONS[page];
+          {SETTINGS_SECTIONS.map((section) => {
+            const Icon = SECTION_ICONS[section];
             return (
-              <li key={page}>
+              <li key={section}>
                 <button
                   type="button"
                   className="settings-window__section-link"
-                  aria-current={page === section ? "page" : undefined}
-                  aria-controls={`${pagesId}-${page}`}
-                  onClick={() => goTo(page)}
+                  aria-current={section === shown ? "page" : undefined}
+                  aria-controls={`${pagesId}-${section}`}
+                  onClick={() => goTo(section)}
                 >
                   <Icon className="settings-window__icon" aria-hidden="true" />
-                  {sectionTitle(t, page)}
+                  {sectionTitle(t, section)}
                 </button>
               </li>
             );
@@ -193,7 +196,7 @@ function SettingsDialog({ section }: { readonly section: SettingsSection }) {
           </button>
         </header>
         <div ref={leafRef} className="settings-window__body">
-          <SettingsPages idPrefix={pagesId} shown={section} />
+          <SettingsPages idPrefix={pagesId} shown={shown} />
         </div>
       </div>
     </dialog>
