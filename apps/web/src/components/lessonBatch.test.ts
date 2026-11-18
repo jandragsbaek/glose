@@ -27,5 +27,6 @@ describe("isHeld", () => {
     assert.isFalse(isHeld({ ...conflict, title: "Intro, again" }, course));
     assert.isFalse(isHeld({ ...conflict, part: "1.2" }, course));
     assert.isFalse(isHeld(conflict, { family: "Berg", year: "2024" }));
+    assert.isTrue(isHeld({ ...conflict, takenAs: "Articles/Berg 2026 1.1 Intro.md" }, course));
   });
 });

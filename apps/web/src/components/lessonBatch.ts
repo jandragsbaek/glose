@@ -75,5 +75,5 @@ export const isHeld = (lesson: Lesson, course: Pick<Course, "family" | "year">) 
         lesson.title.trim() === "" ? lesson.name : lesson.title.trim(),
       ].join(" "),
     )}.md`,
-    lesson.takenAs,
+    lesson.takenAs.split("/").at(-1) ?? lesson.takenAs,
   );

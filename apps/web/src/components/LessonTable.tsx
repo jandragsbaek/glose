@@ -60,12 +60,9 @@ export function LessonTable({
         </thead>
         <tbody>
           {lessons.map((lesson, index) => {
-            const state: LessonState =
-              lesson.state === "named" && !held(lesson)
-                ? "new"
-                : lesson.state === "new" && taken(lesson.part)
-                  ? "taken"
-                  : lesson.state;
+            const settled: LessonState =
+              lesson.state === "named" && !held(lesson) ? "new" : lesson.state;
+            const state: LessonState = settled === "new" && taken(lesson.part) ? "taken" : settled;
             const wrong = !PART.test(lesson.part) || clashes.has(lesson.part);
             return (
               <tr
