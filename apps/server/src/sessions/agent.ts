@@ -67,6 +67,22 @@ const refusesSummaries = (error: ResponsesError) =>
 
 const toInput = ({ id: _id, ...item }: OutputItem): InputItem => item;
 
+const WebSearchCall = Schema.Struct({
+  type: Schema.Literal("web_search_call"),
+  action: Schema.optionalKey(
+    Schema.Struct({ type: Schema.String, query: Schema.optionalKey(Schema.String) }),
+  ),
+});
+const decodeWebSearchCall = Schema.decodeUnknownOption(WebSearchCall);
+
+const refusesWebSearch = (error: ResponsesError) =>
+  (error.status === 400 || error.status === null) &&
+  /web[_ ]search/i.test(`${error.code ?? ""} ${error.detail}`);
+
+export interface WebSearch {
+  readonly onRefused: Effect.Effect<ReadonlyArray<InputItem>>;
+}
+
 const messageText = (item: OutputItem) =>
   Option.map(decodeAssistantMessage(item), (message) =>
     message.content
@@ -86,6 +102,7 @@ export interface Turn {
   readonly onItems: (items: ReadonlyArray<InputItem>) => Effect.Effect<void>;
   readonly summaries: boolean;
   readonly onSummariesRefused: Effect.Effect<void>;
+  readonly webSearch?: WebSearch | null;
 }
 
 export const runTurn = Effect.fn("agent.runTurn")(function* (turn: Turn) {
@@ -105,6 +122,7 @@ export const runTurn = Effect.fn("agent.runTurn")(function* (turn: Turn) {
   };
   const items: Array<InputItem> = [...turn.items];
   let summaries = turn.summaries;
+  let webSearch = turn.webSearch ?? null;
 
   for (let round = 0; round < MAX_ROUNDS; round++) {
     let output: Array<OutputItem> = [];
@@ -117,7 +135,10 @@ export const runTurn = Effect.fn("agent.runTurn")(function* (turn: Turn) {
           model: turn.model,
           instructions: turn.instructions,
           input: items,
-          tools: turn.tools.length === 0 ? [] : [toolSpec],
+          tools: [
+            ...(turn.tools.length === 0 ? [] : [toolSpec]),
+            ...(webSearch === null ? [] : [{ type: "web_search" }]),
+          ],
           tool_choice: "auto",
           parallel_tool_calls: false,
           ...(withSummaries ? { reasoning: { summary: "auto" } } : {}),
@@ -132,6 +153,15 @@ export const runTurn = Effect.fn("agent.runTurn")(function* (turn: Turn) {
                 return turn.onDelta(event.delta);
               case "ItemDone":
                 output.push(event.item);
+                if (Option.isSome(decodeWebSearchCall(event.item))) {
+                  const query = Option.getOrUndefined(decodeWebSearchCall(event.item))?.action
+                    ?.query;
+                  return turn.onEntry({
+                    _tag: "ToolUse",
+                    tool: "search-web",
+                    ...(query === undefined || query.trim() === "" ? {} : { detail: query.trim() }),
+                  });
+                }
                 return Option.match(messageText(event.item), {
                   onSome: (text) => turn.onEntry({ _tag: "AiMessage", text }),
                   onNone: () =>
@@ -152,6 +182,11 @@ export const runTurn = Effect.fn("agent.runTurn")(function* (turn: Turn) {
           }),
         );
     });
+    const offWebSearch = Effect.fn("agent.offWebSearch")(function* (search: WebSearch) {
+      webSearch = null;
+      items.push(...(yield* search.onRefused));
+      yield* request(summaries);
+    });
     yield* request(summaries).pipe(
       Effect.catchIf(
         (error) => summaries && output.length === 0 && refusesSummaries(error),
@@ -159,6 +194,10 @@ export const runTurn = Effect.fn("agent.runTurn")(function* (turn: Turn) {
           summaries = false;
           return turn.onSummariesRefused.pipe(Effect.andThen(request(false)));
         },
+      ),
+      Effect.catchIf(
+        (error) => webSearch !== null && output.length === 0 && refusesWebSearch(error),
+        () => (webSearch === null ? Effect.void : offWebSearch(webSearch)),
       ),
     );
     if (!completed) {

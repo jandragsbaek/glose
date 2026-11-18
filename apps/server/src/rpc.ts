@@ -56,6 +56,11 @@ export const layer = GloseRpcGroup.toLayer(
       [RPC_METHODS.articlesSetPassageWords]: (input) => sources.setPassageWords(input),
       [RPC_METHODS.graphRead]: () => graph.read,
       [RPC_METHODS.notesSave]: (input) => notes.save(input),
+      [RPC_METHODS.notesCreate]: (input) => sessions.createNote(input),
+      [RPC_METHODS.researchStart]: (input) =>
+        sessions.startResearch(input).pipe(Effect.map(publicSession)),
+      [RPC_METHODS.researchKeepPage]: (input) => sessions.keepPage(input),
+      [RPC_METHODS.researchDropPage]: (input) => sessions.dropPage(input),
       [RPC_METHODS.catalogSearch]: ({ query }) => catalog.search(query),
       [RPC_METHODS.chatgptWatch]: () => chatGpt.status,
       [RPC_METHODS.chatgptConnect]: (input) => chatGpt.connect(input),

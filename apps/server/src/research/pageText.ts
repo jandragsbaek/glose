@@ -1,0 +1,89 @@
+import { Readability } from "@mozilla/readability";
+import { parseHTML } from "linkedom";
+import TurndownService from "turndown";
+
+export interface WebPage {
+  readonly url: string;
+  readonly title: string;
+  readonly author: string | null;
+  readonly site: string | null;
+  readonly published: string | null;
+  readonly markdown: string;
+}
+
+const MAX_MARKDOWN = 400_000;
+
+const clean = (text: string | null | undefined): string | null => {
+  const value = text?.replace(/\s+/g, " ").trim() ?? "";
+  return value === "" ? null : value;
+};
+
+const meta = (document: Document, ...names: ReadonlyArray<string>): string | null => {
+  for (const name of names) {
+    const element = document.querySelector(`meta[property="${name}"], meta[name="${name}"]`);
+    const value = clean(element?.getAttribute("content"));
+    if (value !== null) return value;
+  }
+  return null;
+};
+
+const turndown = () => {
+  const service = new TurndownService({
+    headingStyle: "atx",
+    codeBlockStyle: "fenced",
+    bulletListMarker: "-",
+    emDelimiter: "*",
+  });
+  service.remove(["script", "style", "noscript", "iframe", "form", "button"]);
+  return service;
+};
+
+const AUTHOR_PREFIX = /^(?:by|af|von|par)\s+/i;
+
+export const pageFromHtml = (html: string, url: string): WebPage | null => {
+  const { document } = parseHTML(html);
+  const published = meta(
+    document,
+    "article:published_time",
+    "citation_publication_date",
+    "citation_date",
+    "date",
+    "dc.date",
+  );
+  const metaAuthor = meta(document, "citation_author", "author", "article:author");
+  const site = meta(document, "og:site_name", "citation_journal_title", "application-name");
+  const metaTitle = meta(document, "citation_title", "og:title");
+  const article = new Readability(document as unknown as Document, { keepClasses: false }).parse();
+  const content = article?.content ?? null;
+  if (content === null) return null;
+  const markdown = turndown()
+    .turndown(content)
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+    .slice(0, MAX_MARKDOWN);
+  if (markdown === "") return null;
+  const byline = clean(article?.byline)?.replace(AUTHOR_PREFIX, "") ?? null;
+  const author = metaAuthor?.startsWith("http") === false ? metaAuthor : byline;
+  return {
+    url,
+    title: clean(article?.title) ?? metaTitle ?? new URL(url).hostname,
+    author: author !== null && author.length <= 120 ? author : null,
+    site: clean(article?.siteName) ?? site,
+    published: clean(article?.publishedTime) ?? published,
+    markdown,
+  };
+};
+
+export const pageFromText = (text: string, url: string): WebPage | null => {
+  const markdown = text.replace(/\r\n?/g, "\n").trim().slice(0, MAX_MARKDOWN);
+  if (markdown === "") return null;
+  const heading = /^#\s+(.+)$/m.exec(markdown)?.[1]?.trim();
+  return {
+    url,
+    title: heading ?? new URL(url).pathname.split("/").filter(Boolean).pop() ?? url,
+    author: null,
+    site: new URL(url).hostname,
+    published: null,
+    markdown,
+  };
+};

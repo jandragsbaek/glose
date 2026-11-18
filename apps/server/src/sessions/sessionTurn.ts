@@ -14,12 +14,14 @@ import * as ChatGpt from "../chatgpt/ChatGpt.ts";
 import { Responses, type ResponsesError } from "../chatgpt/Responses.ts";
 import * as Graph from "../graph/Graph.ts";
 import * as Sources from "../graph/Sources.ts";
-import { type InputItem, runTurn } from "./agent.ts";
+import * as WebPages from "../research/WebPages.ts";
+import { type InputItem, runTurn, type WebSearch } from "./agent.ts";
 import * as CardExtraction from "./cardExtraction.ts";
 import type { CardJudging } from "./cardJudging.ts";
 import * as Extraction from "./extraction.ts";
 import { addPoints, changeNumbered, type Live, patch } from "./liveSession.ts";
 import * as Probe from "./probe.ts";
+import * as Research from "./research.ts";
 import { pointsOf } from "./sessionEntries.ts";
 import type { SessionStore } from "./sessionStore.ts";
 
@@ -59,6 +61,7 @@ export const make = Effect.fn("Sessions.makeSessionTurn")(function* ({
   const cards = yield* Cards.Cards;
   const chatGpt = yield* ChatGpt.ChatGpt;
   const responses = yield* Responses;
+  const webPages = yield* WebPages.WebPages;
   let summaries = true;
 
   const probeOf = (subject: string) =>
@@ -78,8 +81,54 @@ export const make = Effect.fn("Sessions.makeSessionTurn")(function* ({
       Effect.orElseSucceed(() => null),
     );
 
-  const rulesOf = (session: Live, { kind, subject }: Session) => {
+  const appendEntries = (session: Live, entries: ReadonlyArray<SessionEntry>) =>
+    SubscriptionRef.modify(session.view, (view) => {
+      const before = view.entries.length;
+      return [before, { ...view, entries: [...view.entries, ...entries] }];
+    });
+
+  const researchRules = (session: Live, entries: ReadonlyArray<SessionEntry>) => {
+    const webSearch: WebSearch | null = entries.some((entry) => entry._tag === "WebSearchOff")
+      ? null
+      : {
+          onRefused: patch(session, (view) => ({
+            ...view,
+            entries: [...view.entries, { _tag: "WebSearchOff" }],
+          })).pipe(Effect.as([Research.webSearchOffMessage])),
+        };
+    return {
+      instructions: Research.INSTRUCTIONS,
+      webSearch,
+      tools: Research.tools({
+        graph,
+        webPages,
+        sources: sources.list.pipe(Effect.orElseSucceed(() => [])),
+        pages: SubscriptionRef.get(session.view).pipe(
+          Effect.map((view) => Research.pagesOf(view.entries)),
+        ),
+        propose: (proposed) =>
+          SubscriptionRef.modify(session.view, (view) => {
+            const before = Research.pagesOf(view.entries).length;
+            const pages = proposed.map((page, index) => ({
+              ...page,
+              id: `w${before + index + 1}`,
+              state: "open" as const,
+            }));
+            return [
+              pages.map((page) => page.id),
+              { ...view, entries: [...view.entries, { _tag: "FoundPages" as const, pages }] },
+            ];
+          }),
+        proposeLinks: (links) =>
+          appendEntries(session, [{ _tag: "ResearchLinks", links }]).pipe(Effect.asVoid),
+      }),
+    };
+  };
+
+  const rulesOf = (session: Live, { kind, subject, entries }: Session) => {
     switch (kind) {
+      case "note-research":
+        return researchRules(session, entries);
       case "extraction":
         return {
           instructions: Extraction.INSTRUCTIONS,
@@ -114,6 +163,7 @@ export const make = Effect.fn("Sessions.makeSessionTurn")(function* ({
             probeSummary: Probe.forExtraction,
             probeWords: Probe.userWords,
           }),
+          webSearch: null,
         };
       case "probe":
         return {
@@ -128,11 +178,13 @@ export const make = Effect.fn("Sessions.makeSessionTurn")(function* ({
                 return [result, { ...view, entries }];
               }),
           }),
+          webSearch: null,
         };
       case "card-extraction":
         return {
           instructions: CardExtraction.INSTRUCTIONS,
           tools: CardExtraction.tools({ graph, cards, note: subject, propose: propose(session) }),
+          webSearch: null,
         };
     }
   };
@@ -236,7 +288,9 @@ export const make = Effect.fn("Sessions.makeSessionTurn")(function* ({
         : [
             kind === "extraction"
               ? Extraction.decisionsMessage(session.decisions)
-              : CardExtraction.decisionsMessage(session.decisions),
+              : kind === "note-research"
+                ? Research.decisionsMessage(session.decisions)
+                : CardExtraction.decisionsMessage(session.decisions),
           ];
     session.decisions = [];
     session.items = [...session.items, ...decisions, ...items];

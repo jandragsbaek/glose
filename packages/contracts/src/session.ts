@@ -1,8 +1,14 @@
 import * as Schema from "effect/Schema";
 
 import { CardScore } from "./cardScore.ts";
+import { ArticleType } from "./source.ts";
 
-export const SessionKind = Schema.Literals(["extraction", "card-extraction", "probe"]);
+export const SessionKind = Schema.Literals([
+  "extraction",
+  "card-extraction",
+  "probe",
+  "note-research",
+]);
 export type SessionKind = typeof SessionKind.Type;
 
 export const SessionTool = Schema.Literals([
@@ -14,6 +20,8 @@ export const SessionTool = Schema.Literals([
   "list-notes",
   "read-probe",
   "read-article",
+  "search-web",
+  "read-web-page",
 ]);
 export type SessionTool = typeof SessionTool.Type;
 
@@ -88,6 +96,34 @@ export const ProbeChoice = Schema.Struct({
 });
 export type ProbeChoice = typeof ProbeChoice.Type;
 
+export const ResearchAsk = Schema.Literals(["learn", "back", "check", "bridge"]);
+export type ResearchAsk = typeof ResearchAsk.Type;
+
+export const Stance = Schema.Literals(["supports", "pulls-against", "context"]);
+export type Stance = typeof Stance.Type;
+
+export const FoundQuote = Schema.Struct({ text: Schema.String, paragraph: Schema.Number });
+export type FoundQuote = typeof FoundQuote.Type;
+
+export const FoundPage = Schema.Struct({
+  id: Schema.String,
+  url: Schema.String,
+  title: Schema.String,
+  site: Schema.NullOr(Schema.String),
+  author: Schema.NullOr(Schema.String),
+  published: Schema.NullOr(Schema.String),
+  articleType: ArticleType,
+  stance: Stance,
+  why: Schema.String,
+  quotes: Schema.Array(FoundQuote),
+  state: ProposalState,
+  source: Schema.NullOr(Schema.String),
+});
+export type FoundPage = typeof FoundPage.Type;
+
+export const ResearchLink = Schema.Struct({ note: Schema.String, why: Schema.String });
+export type ResearchLink = typeof ResearchLink.Type;
+
 export const SessionEntry = Schema.Union([
   Schema.TaggedStruct("UserMessage", {
     text: Schema.String,
@@ -145,6 +181,15 @@ export const SessionEntry = Schema.Union([
   }),
   Schema.TaggedStruct("ProbeCovered", {}),
   Schema.TaggedStruct("ProbeFinished", { at: Schema.Number }),
+  Schema.TaggedStruct("ResearchStart", {
+    ask: ResearchAsk,
+    title: Schema.String,
+    question: Schema.String,
+    notes: Schema.Array(Schema.String),
+  }),
+  Schema.TaggedStruct("FoundPages", { pages: Schema.Array(FoundPage) }),
+  Schema.TaggedStruct("ResearchLinks", { links: Schema.Array(ResearchLink) }),
+  Schema.TaggedStruct("WebSearchOff", {}),
 ]);
 export type SessionEntry = typeof SessionEntry.Type;
 

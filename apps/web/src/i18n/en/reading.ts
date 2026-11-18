@@ -9,6 +9,7 @@ import type {
   SessionTool,
   TopicState,
 } from "@glose/contracts";
+import { hostOf } from "../../domain/webAddress.ts";
 import { numbers, count, list } from "./format.ts";
 
 export const readingMessages = {
@@ -108,6 +109,8 @@ export const readingMessages = {
       "list-notes": "The AI looked at the Notes you made from this Source.",
       "read-probe": "The AI read your Probe.",
       "read-article": "The AI read the text and your Passages.",
+      "search-web": "The AI searched the web.",
+      "read-web-page": "The AI read a web page.",
     } satisfies Record<SessionTool, string>,
     trail: {
       readSource: "Read the Source and your Free text",
@@ -118,6 +121,8 @@ export const readingMessages = {
       listNotes: "Looked at your Notes from this Source",
       readProbe: "Read your Probe",
       readArticle: "Read the text and your Passages",
+      searchWeb: (query: string) => `Searched the web for “${query}”`,
+      readWebPage: "Read",
     },
     trailSummary: (read: {
       readonly freeText: boolean;
@@ -128,8 +133,11 @@ export const readingMessages = {
       readonly sourceNotes: boolean;
       readonly probe: boolean;
       readonly article: boolean;
+      readonly webSearches: number;
+      readonly webPages: number;
     }) => {
       const things = [
+        ...(read.webPages > 0 ? [count(read.webPages, "web page", "web pages")] : []),
         ...(read.article ? ["the text"] : []),
         ...(read.freeText ? ["your Free text"] : []),
         ...(read.probe ? ["your Probe"] : []),
@@ -144,7 +152,13 @@ export const readingMessages = {
           : read.searches === 1
             ? "searched your Graph"
             : `searched your Graph ${numbers.format(read.searches)} times`;
-      const line = [things.length === 0 ? null : `read ${list.format(things)}`, searched]
+      const web =
+        read.webSearches === 0
+          ? null
+          : read.webSearches === 1
+            ? "searched the web"
+            : `searched the web ${numbers.format(read.webSearches)} times`;
+      const line = [web, things.length === 0 ? null : `read ${list.format(things)}`, searched]
         .filter((part) => part !== null)
         .join(" · ");
       return line.charAt(0).toUpperCase() + line.slice(1);
@@ -169,6 +183,10 @@ export const readingMessages = {
           return "Reading your Probe";
         case "read-article":
           return "Reading the text";
+        case "search-web":
+          return detail === undefined ? "Searching the web" : `Searching the web for “${detail}”`;
+        case "read-web-page":
+          return detail === undefined ? "Reading a web page" : `Reading ${hostOf(detail)}`;
         case null:
           return "Thinking";
       }

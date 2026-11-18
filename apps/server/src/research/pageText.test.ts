@@ -1,0 +1,51 @@
+import { assert, describe, it } from "@effect/vitest";
+
+import { pageFromHtml, pageFromText } from "./pageText.ts";
+
+const ARTICLE = `<!doctype html>
+<html><head>
+<title>Retrieval practice, explained | Learning Example</title>
+<meta property="og:site_name" content="Learning Example">
+<meta name="author" content="Sample Author">
+<meta property="article:published_time" content="2024-03-01T10:00:00Z">
+</head><body>
+<nav><a href="/">Home</a> <a href="/about">About</a></nav>
+<article>
+<h1>Retrieval practice, explained</h1>
+<p>Retrieval practice means bringing information to mind without looking. It is one of the
+best studied ways to learn, and it works for students of every age and subject.</p>
+<p>Students who tested themselves remembered more a week later than students who reread. The
+gain held for prose passages, for word lists and for maps, and it grew with the delay.</p>
+<p>The effort of recall is part of what makes it stick, so a test that feels hard is not a sign
+that the method fails. Feedback after the test helps, but the test helps without it too.</p>
+</article>
+<footer>© Learning Example</footer>
+</body></html>`;
+
+describe("pageFromHtml", () => {
+  it("keeps the article's text as Markdown and reads who wrote it, where and when", () => {
+    const page = pageFromHtml(ARTICLE, "https://learning.example/retrieval");
+    assert.isNotNull(page);
+    assert.strictEqual(page!.author, "Sample Author");
+    assert.strictEqual(page!.site, "Learning Example");
+    assert.strictEqual(page!.published, "2024-03-01T10:00:00Z");
+    assert.include(
+      page!.markdown,
+      "Students who tested themselves remembered more a week later than students who reread.",
+    );
+    assert.notInclude(page!.markdown, "About");
+    assert.notInclude(page!.markdown, "<p>");
+  });
+
+  it("gives nothing for a page without text", () => {
+    assert.isNull(pageFromHtml("<html><body></body></html>", "https://empty.example/"));
+  });
+});
+
+describe("pageFromText", () => {
+  it("takes a Markdown page's first heading as its title", () => {
+    const page = pageFromText("# Notes on spacing\n\nSpace it out.", "https://notes.example/s.md");
+    assert.strictEqual(page?.title, "Notes on spacing");
+    assert.strictEqual(page?.site, "notes.example");
+  });
+});

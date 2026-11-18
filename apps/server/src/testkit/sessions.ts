@@ -10,6 +10,7 @@ import * as ServerConfig from "../config.ts";
 import * as Sources from "../graph/Sources.ts";
 import * as Server from "../server.ts";
 import { Sessions } from "../sessions/Sessions.ts";
+import * as WebPages from "../research/WebPages.ts";
 import * as Settings from "../settings/Settings.ts";
 import { writeCredentials } from "./credentials.ts";
 import { makeDirs } from "./graph.ts";
@@ -99,7 +100,10 @@ export type Body = {
   readonly input: ReadonlyArray<Record<string, unknown>>;
 };
 
-export const setUp = Effect.gen(function* () {
+export const setUpWithPages = (pages: ReadonlyMap<string, WebPages.WebPage>) =>
+  setUpOn(WebPages.layerTest(pages));
+
+const setUpOn = Effect.fn("testkit.setUpOn")(function* (webPages: Layer.Layer<WebPages.WebPages>) {
   const dirs = yield* makeDirs;
   const path = yield* Path.Path;
   const fake = yield* makeFakeOpenAi;
@@ -122,7 +126,7 @@ export const setUp = Effect.gen(function* () {
       },
     ],
   });
-  const layer = Server.layerApp.pipe(
+  const layer = Server.layerAppWith(webPages).pipe(
     Layer.provide(fake.layer),
     Layer.provide(NodeServices.layer),
     Layer.provide(ServerConfig.layerTest(dirs)),
@@ -154,6 +158,8 @@ export const setUp = Effect.gen(function* () {
       .map((request) => JSON.parse(request.body) as Body);
   return { fake, layer, graphFolder, sourceId, bodies };
 });
+
+export const setUp = setUpOn(WebPages.layer);
 
 export const afterTurn = (id: string) =>
   Sessions.use((sessions) =>

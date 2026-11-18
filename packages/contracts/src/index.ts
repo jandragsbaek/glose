@@ -7,6 +7,7 @@ export * from "./github.ts";
 export * from "./graph.ts";
 export * from "./probe.ts";
 export * from "./recall.ts";
+export * from "./research.ts";
 export * from "./server.ts";
 export * from "./session.ts";
 export * from "./settings.ts";

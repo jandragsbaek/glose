@@ -1,7 +1,7 @@
 import { numbers, count, list } from "./format.ts";
 import type { Messages } from "../en.ts";
 
-export const graphMessages: Pick<Messages, "graph" | "rewrite"> = {
+export const graphMessages: Pick<Messages, "graph" | "rewrite" | "newNote" | "research"> = {
   graph: {
     title: "Graf",
     empty:
@@ -87,5 +87,102 @@ export const graphMessages: Pick<Messages, "graph" | "rewrite"> = {
     discard: "Kassér",
     keepWriting: "Skriv videre",
     saveFailed: "Glose kunne ikke gemme noten. Prøv igen.",
+  },
+  newNote: {
+    key: "N",
+    open: "Ny note",
+    title: "Ny note",
+    meta: "En note i din graf, med dine ord",
+    titleLabel: "Titel",
+    titlePlaceholder: "Idéen, påstanden eller spørgsmålet, som en hel sætning",
+    restsOn: "Bygger på",
+    restsOnLabel: "Den kilde, noten bygger på",
+    noSource: "Ingen kilde endnu",
+    noSourceHint: "Behold en side fra researchen for at give noten en kilde, eller gem den uden.",
+    textLabel: "Med dine ord",
+    textPlaceholder: "Skriv det, du forstår. AI'en skriver ikke her.",
+    quotes: "Beholdte citater",
+    quotesEmpty:
+      "Når du beholder en side fra researchen, kommer dens citater her. Vælg et citats nummer for at henvise til det, hvor markøren står.",
+    cite: (n: number) => `Henvis til citat ${numbers.format(n)}, hvor markøren står`,
+    paragraph: (n: number) => `¶ ${numbers.format(n)}`,
+    wordForWord: "Ord for ord",
+    wordForWordHint: "Glose fandt præcis disse ord på siden.",
+    citedIn: (n: number) => `Henviser til citat ${numbers.format(n)}`,
+    citesMissing: (cited: ReadonlyArray<number>) =>
+      `Din tekst henviser til ${cited.length === 1 ? "citat" : "citaterne"} ${list.format(cited.map((n) => numbers.format(n)))}, som du ikke længere beholder. Behold siden igen, eller tag ${cited.length === 1 ? "nummeret" : "numrene"} ud af teksten.`,
+    links: "Links",
+    linksHint: "Noter, AI'en fandt i din graf. De afkrydsede linkes fra noten.",
+    becomesSources: (n: number) =>
+      n === 0
+        ? ""
+        : `${count(n, "beholdt side bliver en kilde", "beholdte sider bliver kilder")}, når du gemmer.`,
+    save: "Gem note",
+    saving: "Gemmer …",
+    pageProblems: {
+      "not-kept":
+        "Et citat eller kilden kommer fra en side, du ikke længere beholder. Behold den igen, eller fjern citatet.",
+      unreadable:
+        "Glose kunne ikke læse en af de beholdte sider igen for at gemme den. Prøv igen, eller drop siden.",
+      "quote-gone":
+        "Et citat står ikke længere på sin side, så Glose kan ikke gemme det. Fjern citatet, eller drop siden.",
+    },
+    draftNode: "Ny note",
+  },
+  research: {
+    title: "Research",
+    meta: "med AI'en",
+    intro: "AI'en finder websider og præcise citater, og noter at linke til. Du skriver noten.",
+    askLegend: "Bed AI'en om at",
+    asks: {
+      learn: "Lære emnet",
+      back: "Støtte min idé",
+      check: "Tjekke påstanden",
+      bridge: "Forbinde to noter",
+    },
+    askHints: {
+      learn: "Klare, pålidelige sider, der forklarer emnet.",
+      back: "Sider, der støtter din idé, og sider, der trækker imod den.",
+      check: "Det stærkeste belæg på begge sider af påstanden.",
+      bridge: "Det, der forbinder to af dine noter.",
+    },
+    questionLabel: "Dit spørgsmål",
+    questionHint: "Valgfrit. Hvad vil du finde ud af?",
+    bridgeFrom: "Første note",
+    bridgeTo: "Anden note",
+    bridgePlaceholder: "En notes navn",
+    bridgeMissing: "Vælg to noter fra din graf.",
+    needsTitle: "Skriv en titel eller et par ord først, så AI'en ved, hvad den skal lede efter.",
+    start: "Find kilder",
+    again: "Søg igen",
+    needsChatGpt: "Research kræver ChatGPT",
+    needsChatGptBody: "Forbind din ChatGPT-plan i Indstillinger. Du kan skrive noten uden.",
+    startFailed: "Glose kunne ikke starte researchen. Prøv igen.",
+    youAsked: (ask: string) => `Du bad om: ${ask}`,
+    stances: {
+      supports: "Støtter",
+      "pulls-against": "Trækker imod",
+      context: "Baggrund",
+    },
+    kinds: {
+      paper: "Videnskabelig artikel",
+      web: "Webessay",
+      press: "Blad eller avis",
+    },
+    keep: "Behold",
+    kept: "Beholdt",
+    drop: "Drop",
+    dropped: "Droppet",
+    keepAgain: "Behold alligevel",
+    unkeep: "Fjern",
+    moreQuotes: (n: number) => `og ${count(n, "citat mere", "citater mere")} fra siden`,
+    youHave: "Du har denne kilde",
+    openPage: "Åbn siden",
+    pagesProposed: (n: number) => `Fandt ${count(n, "side", "sider")}`,
+    linksProposed: (n: number) => `Foreslog ${count(n, "link", "links")}`,
+    webSearchOff:
+      "Websøgning er ikke tilgængelig for din ChatGPT-konto. Indsæt adressen på en side i beskedfeltet, så læser AI'en den.",
+    placeholder: "Spørg om siderne, eller indsæt en sides adresse",
+    decideFailed: "Glose kunne ikke gemme dit valg. Prøv igen.",
   },
 };

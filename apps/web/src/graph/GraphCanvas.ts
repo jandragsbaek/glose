@@ -16,6 +16,7 @@ import { type Box, frameTarget, labelCenter, overlaps, wrapWords } from "./canva
 import { subscribePaint } from "../theme/appearance.ts";
 import { type Palette, readPalette } from "./canvasPalette.ts";
 import { drawCallLabel, drawNode } from "./canvasNode.ts";
+import { type DraftMark, drawDraft } from "./canvasDraft.ts";
 import { holdsAiText } from "./graphIndex.ts";
 import { drawStopTabs, drawTrailLine, layoutStopTabs, type StopTab } from "./canvasTrail.ts";
 
@@ -51,6 +52,7 @@ const easeOut = (t: number) => 1 - (1 - t) ** 3;
 
 export class GraphCanvas {
   readonly #canvas: HTMLCanvasElement;
+  #draft: DraftMark | null = null;
   readonly #context: CanvasRenderingContext2D;
   readonly #zoom: ZoomBehavior<HTMLCanvasElement, unknown>;
   readonly #selection: Selection<HTMLCanvasElement, unknown, null, undefined>;
@@ -206,6 +208,11 @@ export class GraphCanvas {
   setTrail(ids: ReadonlyArray<string>): void {
     if (ids === this.#trail) return;
     this.#trail = ids;
+    this.#request();
+  }
+
+  setDraft(draft: DraftMark | null): void {
+    this.#draft = draft;
     this.#request();
   }
 
@@ -576,6 +583,7 @@ export class GraphCanvas {
       }
     }
 
+    drawDraft(context, this.#byId, this.#draft, k, palette);
     this.#context.setTransform(this.#ratio, 0, 0, this.#ratio, 0, 0);
     const tabs = this.#stopTabs();
     this.#drawLabels(tabs);

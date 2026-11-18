@@ -1562,6 +1562,62 @@ on the desk it shows only the title, the Source and the Links.
 - **Narrow:** below 1080px the desk takes the canvas's place in the page's flow; below 720px each
   row stacks, the AI text above the user's field.
 
+### New Note Leaf (signature: The Commonplace Leaf)
+
+A new Note written from blank, set like a commonplace book: the user's entry on top, the quoted
+authorities numbered under it. The leaf lies over the left of the Graph's canvas, so the Graph
+stays in view beside it.
+
+- **Way in:** New Note (primary, with its N key cap) after Find in the Graph's page head; N on the
+  canvas opens it too. Closing it returns focus to the button.
+- **Leaf:** a panel over the canvas cell's left, `min(720px, 64%)` wide, 16px from the cell's
+  edges, its own scroll; the canvas is not inert. Lapis Initial, "New Note", Meta "A Note in your
+  Graph, in your words". The zoom controls move to the canvas's top right while it is open.
+- **Top (18px 28px 0):** the title as the borderless 21px title field (it grows to its
+  placeholder, so long Danish words wrap). Under it "Rests on" (Mute 600 13px), the kept page's
+  Call Number, and a select of the kept pages with "No Source yet" last. Without a kept page:
+  a Rubric triangle and "No Source yet" (600 13px) and a Mute hint.
+- **Text (20px 28px 24px):** "In your words" label and a 16px/1.65 field, at least 200px, growing
+  with its text.
+- **Kept quotes:** Hairline above (14px 28px 16px), Mute 600 13px head with the count. Each row:
+  a 28px typed number tab (Strong Hairline, 2px corners, Lapis 700 12px Courier) that cites the
+  quote where the cursor was; the quote in curly quotes with a Mute 13px "page title · ¶ 8"; at
+  the right a Verdigris check with "Word for word", or "Cites quote 1" once the text cites it
+  (the tab's border turns Lapis). Without kept pages, a Mute hint says how quotes arrive.
+- **Links:** the same band, a checkbox per Note the AI proposed, its name 600 and its reason Mute
+  13px under it.
+- **Foot:** sticky, as the rewrite desk's: Save Note (primary), Cancel (quiet), and pushed right a
+  Mute tabular line "1 kept page becomes a Source when you save." Cancel with words becomes the
+  rewrite desk's inline "Discard what you wrote?". Errors stand in a field error line across the
+  foot.
+- **On the canvas:** the new Note is a Paper node in a dashed Lapis ring, with the Gilt selected
+  ring, labelled with its title (or "New Note"). Dashed lines run edge to edge to the Notes the AI
+  proposed: Lapis when checked, Strong Hairline when not. The canvas frames the new Note and those
+  Notes in the part of the cell the leaf leaves free.
+- **Below 1080px** the leaf takes the canvas's place in the flow, as the rewrite desk does.
+
+### Research (side panel)
+
+The side panel while the New Note Leaf is open: Rubric Initial, "Research", Meta "with the AI".
+
+- **Before a Session:** a Mute hint, then "Ask the AI to" with four Start Choice rows (600 label,
+  Mute hint under it): Learn this, Back my idea, Check this claim, Bridge two Notes. Bridge adds
+  two Note fields that complete from the Graph. "Your question" field with a hint, then Find
+  sources (primary). Without ChatGPT, the Needs-ChatGPT notice instead of the form.
+- **With a Session:** the Session transcript (the user's ask as a Ground box: "You asked: Check
+  this claim" and the question), the tool trail ("Searched the web · read 2 web pages · searched
+  your Graph"), the found pages, the AI's few sentences; a folded "Search again" with the same
+  form; the message box, its placeholder "Ask about these pages, or paste a page's address".
+- **Found page slip:** Paper, Hairline, 4px corners, 10px 12px 12px. Head: the Call Number the
+  page would get, then the title (600 15px) as a link out with a small external icon. A Mute 13px
+  line: author · site · year · kind. One quote beside a 2px Strong Hairline rule with its Lapis
+  Courier ¶; "and 1 more quote from this page" and the AI's why in Mute 13px. Foot: the stance
+  (600 13px) and, pushed right, Keep (small secondary) and Drop (small quiet). Kept: a 3px
+  Verdigris left edge and a Verdigris check "Kept" with Remove. Dropped: Mute, quote and why
+  folded, "Keep after all". A page that is a Source already shows a Verdigris "You have this
+  Source".
+- **Web search off:** an info Notice in the transcript says so and asks for a page's address.
+
 ### Core Points (Extraction)
 
 One panel, its groups divided by Hairlines (22px 28px 26px padding), in this order:

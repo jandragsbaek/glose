@@ -1,3 +1,4 @@
+import { hostOf } from "../../domain/webAddress.ts";
 import { numbers, count, list } from "./format.ts";
 import type { Messages } from "../en.ts";
 
@@ -102,6 +103,8 @@ export const readingMessages: Pick<
       "list-notes": "AI'en så på de noter, du har lavet fra denne kilde.",
       "read-probe": "AI'en læste din sondering.",
       "read-article": "AI'en læste teksten og dine passager.",
+      "search-web": "AI'en søgte på nettet.",
+      "read-web-page": "AI'en læste en webside.",
     },
     trail: {
       readSource: "Læste kilden og din frie tekst",
@@ -112,9 +115,12 @@ export const readingMessages: Pick<
       listNotes: "Så på dine noter fra denne kilde",
       readProbe: "Læste din sondering",
       readArticle: "Læste teksten og dine passager",
+      searchWeb: (query: string) => `Søgte på nettet efter »${query}«`,
+      readWebPage: "Læste",
     },
     trailSummary: (read) => {
       const things = [
+        ...(read.webPages > 0 ? [count(read.webPages, "webside", "websider")] : []),
         ...(read.article ? ["teksten"] : []),
         ...(read.freeText ? ["din frie tekst"] : []),
         ...(read.probe ? ["din sondering"] : []),
@@ -129,7 +135,13 @@ export const readingMessages: Pick<
           : read.searches === 1
             ? "søgte i din graf"
             : `søgte i din graf ${numbers.format(read.searches)} gange`;
-      const line = [things.length === 0 ? null : `læste ${list.format(things)}`, searched]
+      const web =
+        read.webSearches === 0
+          ? null
+          : read.webSearches === 1
+            ? "søgte på nettet"
+            : `søgte på nettet ${numbers.format(read.webSearches)} gange`;
+      const line = [web, things.length === 0 ? null : `læste ${list.format(things)}`, searched]
         .filter((part) => part !== null)
         .join(" · ");
       return line.charAt(0).toUpperCase() + line.slice(1);
@@ -152,6 +164,10 @@ export const readingMessages: Pick<
           return "Læser din sondering";
         case "read-article":
           return "Læser teksten";
+        case "search-web":
+          return detail === undefined ? "Søger på nettet" : `Søger på nettet efter »${detail}«`;
+        case "read-web-page":
+          return detail === undefined ? "Læser en webside" : `Læser ${hostOf(detail)}`;
         case null:
           return "Tænker";
       }

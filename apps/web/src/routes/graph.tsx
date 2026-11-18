@@ -1,28 +1,30 @@
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
-import { type GraphNode, type GraphView, linkKey, type Source } from "@glose/contracts";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { type GraphView, type Source } from "@glose/contracts";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
-import { Search, X } from "lucide-react";
-import { type ReactNode, type Ref, useId, useRef, useState } from "react";
+import { Plus, Search } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
-import { AiText, MissingLink, NoteText, type WikilinkPart } from "../components/NoteText.tsx";
-import { type Linking, RewriteNote } from "../components/RewriteNote.tsx";
+import { NewNote } from "../components/NewNote.tsx";
+import { Research } from "../components/Research.tsx";
+import { RewriteNote } from "../components/RewriteNote.tsx";
+import { linkingOf, NodePanel, wikilinks } from "../components/GraphNodePanel.tsx";
 import { GraphStage } from "../components/GraphStage.tsx";
-import { AiKey, NodeLink, NodeList, SourceList } from "../components/GraphLists.tsx";
-import { CallNumber, Page, Panel, SkeletonPanel, StorageProblem } from "../components/ui.tsx";
+import { AiKey, SourceList } from "../components/GraphLists.tsx";
+import { Page, Panel, SkeletonPanel, StorageProblem } from "../components/ui.tsx";
 import type { GraphCanvas, GraphCanvasEvents } from "../graph/GraphCanvas.ts";
 import {
   findNodes,
-  type GraphIndex,
   indexGraph,
   holdsAiText,
   labelOf,
   narrowToAiText,
 } from "../graph/graphIndex.ts";
+import { DRAFT_NODE, newDraftId, proposedLinksOf, withDraft } from "../graph/newNote.ts";
 import { useT } from "../i18n/I18n.tsx";
-import { cardsAtom } from "../state/cards.ts";
 import { graphAtom, sourcesAtom } from "../state/graph.ts";
+import { noSessionAtom, sessionAtom } from "../state/sessions.ts";
 
 export const Route = createFileRoute("/graph")({
   component: GraphSection,
@@ -86,6 +88,16 @@ function GraphProblem({ onRetry }: { readonly onRetry: () => void }) {
   );
 }
 
+type Desk =
+  | { readonly kind: "rewrite"; readonly id: string }
+  | { readonly kind: "new"; readonly draft: string };
+
+type Wanted =
+  | { readonly kind: "rewrite"; readonly id: string; readonly onCanvas: boolean }
+  | { readonly kind: "new" };
+
+const NO_LINKS: ReadonlySet<string> = new Set();
+
 function GraphPage({
   view,
   sources,
@@ -98,19 +110,41 @@ function GraphPage({
   const { node: selectedId } = Route.useSearch();
   const [canvas, setCanvas] = useState<GraphCanvas | null>(null);
   const [query, setQuery] = useState("");
-  const [rewriting, setRewriting] = useState<string | null>(null);
+  const [desk, setDesk] = useState<Desk | null>(null);
   const [unsaved, setUnsaved] = useState(false);
-  const [requested, setRequested] = useState<string | null>(null);
+  const [requested, setRequested] = useState<Wanted | null>(null);
   const [aiOnly, setAiOnly] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newText, setNewText] = useState("");
+  const [linked, setLinked] = useState<ReadonlySet<string>>(NO_LINKS);
+  const [leafWidth, setLeafWidth] = useState(0);
+  const [researchId, setResearchId] = useState<string | null>(null);
   const opener = useRef<HTMLButtonElement>(null);
+  const newOpener = useRef<HTMLButtonElement>(null);
   const openedOnCanvas = useRef(false);
-  const requestedOnCanvas = useRef(false);
   const findId = useId();
+
+  const research = AsyncResult.getOrElse(
+    useAtomValue(researchId === null ? noSessionAtom : sessionAtom(researchId)),
+    () => null,
+  );
+  const proposed =
+    research === null ? [] : proposedLinksOf(research.entries).map((link) => link.note);
 
   const index = indexGraph(view, sources);
   const labels = new Map(view.nodes.map((node) => [node.id, labelOf(node, index)]));
   const selected = selectedId === undefined ? undefined : index.byId.get(selectedId);
+  const rewriting = desk?.kind === "rewrite" ? desk.id : null;
   const rewritten = rewriting === null ? undefined : index.byId.get(rewriting);
+  const drafting = desk?.kind === "new" ? desk : null;
+  const stageView = drafting === null ? view : withDraft(view);
+  const stageLabels =
+    drafting === null
+      ? labels
+      : new Map([
+          ...labels,
+          [DRAFT_NODE, { text: newTitle.trim() || t.newNote.draftNode, call: null }],
+        ]);
 
   const found = findNodes(view, labels, query);
   const unwritten = view.nodes.filter(holdsAiText);
@@ -122,40 +156,59 @@ function GraphPage({
 
   const select = (id: string | null) =>
     navigate({ to: "/graph", search: id === null ? {} : { node: id } });
-  const openDesk = (id: string) => {
+  const newChanged = newTitle.trim() !== "" || newText.trim() !== "";
+  const dirty = desk?.kind === "rewrite" ? unsaved : desk?.kind === "new" ? newChanged : false;
+
+  const apply = (wanted: Wanted) => {
     setRequested(null);
     setUnsaved(false);
-    setRewriting(id);
-  };
-  const rewrite = (id: string, onCanvas = false) => {
-    if (rewriting !== null && rewriting !== id && unsaved) {
-      requestedOnCanvas.current = onCanvas;
-      setRequested(id);
+    if (wanted.kind === "rewrite") {
+      openedOnCanvas.current = wanted.onCanvas;
+      setDesk({ kind: "rewrite", id: wanted.id });
       return;
     }
-    openedOnCanvas.current = onCanvas;
-    openDesk(id);
+    setNewTitle("");
+    setNewText("");
+    setLinked(NO_LINKS);
+    setResearchId(null);
+    setDesk({ kind: "new", draft: newDraftId() });
   };
+  const want = (wanted: Wanted) => {
+    const same =
+      (wanted.kind === "new" && desk?.kind === "new") ||
+      (wanted.kind === "rewrite" && desk?.kind === "rewrite" && desk.id === wanted.id);
+    if (same) return;
+    if (desk !== null && dirty) {
+      setRequested(wanted);
+      return;
+    }
+    apply(wanted);
+  };
+  const rewrite = (id: string, onCanvas = false) => want({ kind: "rewrite", id, onCanvas });
   const closeDesk = () => {
     if (requested !== null) {
-      openedOnCanvas.current = requestedOnCanvas.current;
-      openDesk(requested);
+      apply(requested);
       return;
     }
+    const was = desk?.kind;
     flushSync(() => {
-      setRewriting(null);
+      setDesk(null);
       setUnsaved(false);
     });
-    returnFocus();
+    returnFocus(was);
   };
-  const returnFocus = () => {
-    if (openedOnCanvas.current) canvas?.focus();
+  const returnFocus = (was: Desk["kind"] | undefined) => {
+    if (was === "new") newOpener.current?.focus();
+    else if (openedOnCanvas.current) canvas?.focus();
     else opener.current?.focus();
   };
   const show = (id: string) => canvas?.centerOn(id);
   const events: GraphCanvasEvents = {
-    onSelect: (id) => void select(id),
+    onSelect: (id) => {
+      if (id !== DRAFT_NODE) void select(id);
+    },
     onOpen: (id) => {
+      if (id === DRAFT_NODE) return;
       if (index.byId.get(id)?.kind === "source") {
         void navigate({ to: "/sources/$sourceId", params: { sourceId: id } });
         return;
@@ -165,6 +218,17 @@ function GraphPage({
     },
   };
 
+  const framing = drafting === null || leafWidth === 0 ? "" : [DRAFT_NODE, ...proposed].join("\n");
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- the canvas is imperative: it frames the new Note, and the Notes the AI proposes to link, once they are drawn.
+  useEffect(() => {
+    if (canvas === null || framing === "") return;
+    const ids = framing.split("\n");
+    const frame = requestAnimationFrame(() =>
+      ids.length === 1 ? canvas.centerOn(ids[0]!) : canvas.frame(ids),
+    );
+    return () => cancelAnimationFrame(frame);
+  }, [canvas, framing]);
+
   const notes = view.nodes.filter((node) => node.kind === "note").length;
   return (
     <Page
@@ -172,46 +236,77 @@ function GraphPage({
       sub={t.graph.counts(notes, view.nodes.length - notes, view.links.length)}
       fill
       actions={
-        <form
-          className="graph-find"
-          role="search"
-          onSubmit={(event) => {
-            event.preventDefault();
-            const first = findings?.[0];
-            if (first === undefined) return;
-            void select(first.id);
-            show(first.id);
-          }}
-        >
-          <label htmlFor={findId} className="sr-only">
-            {t.graph.findLabel}
-          </label>
-          <Search className="graph-find__icon" aria-hidden="true" />
-          <input
-            id={findId}
-            className="input graph-find__input"
-            type="search"
-            value={query}
-            placeholder={t.graph.findPlaceholder}
-            onChange={(event) => setQuery(event.target.value)}
-          />
-          <span className="graph-find__count" aria-live="polite">
-            {findings === null ? "" : t.graph.found(findings.length)}
-          </span>
-        </form>
+        <>
+          <form
+            className="graph-find"
+            role="search"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const first = findings?.[0];
+              if (first === undefined) return;
+              void select(first.id);
+              show(first.id);
+            }}
+          >
+            <label htmlFor={findId} className="sr-only">
+              {t.graph.findLabel}
+            </label>
+            <Search className="graph-find__icon" aria-hidden="true" />
+            <input
+              id={findId}
+              className="input graph-find__input"
+              type="search"
+              value={query}
+              placeholder={t.graph.findPlaceholder}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+            <span className="graph-find__count" aria-live="polite">
+              {findings === null ? "" : t.graph.found(findings.length)}
+            </span>
+          </form>
+          <button
+            ref={newOpener}
+            type="button"
+            className="button button--primary"
+            aria-keyshortcuts="N"
+            onClick={() => want({ kind: "new" })}
+          >
+            <Plus size={16} aria-hidden="true" />
+            {t.newNote.open}
+            <kbd className="key" aria-hidden="true">
+              {t.newNote.key}
+            </kbd>
+          </button>
+        </>
       }
     >
       <div className="graph">
-        <div className="graph__work">
+        <div
+          className={drafting === null ? "graph__work" : "graph__work graph__work--leaf"}
+          onKeyDown={(event) => {
+            if (
+              event.key.toLowerCase() === "n" &&
+              !event.metaKey &&
+              !event.ctrlKey &&
+              !event.altKey &&
+              event.target instanceof HTMLCanvasElement
+            ) {
+              event.preventDefault();
+              want({ kind: "new" });
+            }
+          }}
+        >
           <GraphStage
-            view={view}
-            labels={labels}
-            selectedId={selected?.id ?? null}
+            view={stageView}
+            labels={stageLabels}
+            selectedId={drafting === null ? (selected?.id ?? null) : (selected?.id ?? DRAFT_NODE)}
             matches={matches}
             events={events}
             canvas={canvas}
             onCanvas={setCanvas}
             covered={rewritten !== undefined}
+            draft={drafting === null ? null : { id: DRAFT_NODE, targets: proposed, linked }}
+            insetLeft={drafting === null ? 0 : leafWidth}
             label={t.graph.canvasLabel(view.nodes.length, view.links.length, unwritten.length)}
           >
             <AiKey
@@ -234,17 +329,66 @@ function GraphPage({
                 onChanged={setUnsaved}
                 onClose={closeDesk}
                 onSaved={async (id) => {
-                  setRewriting(null);
+                  setDesk(null);
                   setUnsaved(false);
                   await select(id);
-                  requestAnimationFrame(returnFocus);
+                  requestAnimationFrame(() => returnFocus("rewrite"));
+                }}
+              />
+            </div>
+          )}
+          {drafting === null ? null : (
+            <div
+              className="graph__desk graph__desk--leaf"
+              ref={(desk) => {
+                if (desk === null) return;
+                const observer = new ResizeObserver(() => setLeafWidth(desk.offsetWidth));
+                observer.observe(desk);
+                return () => observer.disconnect();
+              }}
+            >
+              <NewNote
+                key={drafting.draft}
+                title={newTitle}
+                onTitle={setNewTitle}
+                text={newText}
+                onText={setNewText}
+                checked={linked}
+                onCheck={(note, on) =>
+                  setLinked((now) => {
+                    const next = new Set(now);
+                    if (on) next.add(note);
+                    else next.delete(note);
+                    return next;
+                  })
+                }
+                session={research}
+                leaving={requested !== null}
+                onStay={() => setRequested(null)}
+                onClose={closeDesk}
+                onSaved={async (id) => {
+                  setDesk(null);
+                  await select(id);
+                  requestAnimationFrame(() => {
+                    canvas?.centerOn(id);
+                    canvas?.focus();
+                  });
                 }}
               />
             </div>
           )}
         </div>
         <aside className="graph__side">
-          {selected === undefined ? (
+          {drafting !== null ? (
+            <Research
+              draft={drafting.draft}
+              session={research}
+              title={newTitle}
+              text={newText}
+              notes={view.nodes.filter((node) => node.kind === "note").map((node) => node.id)}
+              onStarted={setResearchId}
+            />
+          ) : selected === undefined ? (
             <SourceList index={index} view={view} unwritten={unwritten} onShow={show} />
           ) : (
             <NodePanel
@@ -262,170 +406,4 @@ function GraphPage({
       </div>
     </Page>
   );
-}
-
-function NodePanel({
-  node,
-  index,
-  rewriting,
-  opener,
-  onShow,
-  onRewrite,
-  onClose,
-}: {
-  readonly node: GraphNode;
-  readonly index: GraphIndex;
-  readonly rewriting: boolean;
-  readonly opener: Ref<HTMLButtonElement>;
-  readonly onShow: (id: string) => void;
-  readonly onRewrite: () => void;
-  readonly onClose: () => void;
-}) {
-  const t = useT();
-  const isSource = node.kind === "source";
-  const source = index.sources.get(isSource ? node.id : (node.sourceId ?? ""));
-  const linked = index.linked.get(node.id) ?? [];
-  const fromSource = linked.filter((other) => other.sourceId === node.id);
-  const others = isSource ? linked.filter((other) => other.sourceId !== node.id) : linked;
-  return (
-    <Panel
-      title={isSource ? t.graph.source : t.graph.note}
-      initial={isSource ? "accent" : "rubric"}
-      meta={
-        <button
-          type="button"
-          className="graph__close"
-          aria-label={t.graph.close}
-          title={t.graph.close}
-          onClick={onClose}
-        >
-          <X size={16} aria-hidden="true" />
-        </button>
-      }
-    >
-      <div className="panel__body graph__node">
-        {node.aiTitle ? (
-          <AiText scope="title">
-            <h3 className="graph__title">{node.title}</h3>
-          </AiText>
-        ) : (
-          <h3 className="graph__title">{node.title}</h3>
-        )}
-        {isSource ? (
-          source === undefined ? null : (
-            <p className="graph__source">
-              <CallNumber source={source} />
-              <span>{[source.givenName, source.familyName].filter(Boolean).join(" ")}</span>
-            </p>
-          )
-        ) : source === undefined ? (
-          <p className="graph__source graph__source--none">{t.graph.noSource}</p>
-        ) : (
-          <p className="graph__source">
-            <CallNumber source={source} page={node.page} />
-            <NodeLink id={source.id} className="graph__link" onShow={onShow}>
-              {source.title}
-            </NodeLink>
-          </p>
-        )}
-        {rewriting ? null : isSource ? (
-          <p className="graph__actions">
-            <Link to="/sources/$sourceId" params={{ sourceId: node.id }} className="button">
-              {t.graph.openSource}
-            </Link>
-          </p>
-        ) : (
-          <NoteCards
-            noteId={node.id}
-            aiText={holdsAiText(node)}
-            opener={opener}
-            onRewrite={onRewrite}
-          />
-        )}
-        {rewriting ? null : (
-          <NoteText
-            markdown={node.body}
-            aiText={node.aiText && !node.aiTitle}
-            renderLink={wikilinks(index, onShow)}
-          />
-        )}
-      </div>
-      {isSource && fromSource.length > 0 ? (
-        <div className="panel__body">
-          <h4 className="subhead">{t.graph.notesFromSource}</h4>
-          <NodeList nodes={fromSource} onShow={onShow} />
-        </div>
-      ) : null}
-      <div className="panel__body">
-        <h4 className="subhead">{t.graph.linkCount(others.length)}</h4>
-        {others.length === 0 ? (
-          <p className="empty">{t.graph.noLinks}</p>
-        ) : (
-          <NodeList nodes={others} onShow={onShow} />
-        )}
-      </div>
-    </Panel>
-  );
-}
-
-function NoteCards({
-  noteId,
-  aiText,
-  opener,
-  onRewrite,
-}: {
-  readonly noteId: string;
-  readonly aiText: boolean;
-  readonly opener: Ref<HTMLButtonElement>;
-  readonly onRewrite: () => void;
-}) {
-  const t = useT();
-  const cards = useAtomValue(cardsAtom);
-  const count = AsyncResult.getOrElse(
-    AsyncResult.map(
-      cards,
-      (all) =>
-        all.filter((card) => card.from !== null && linkKey(card.from) === linkKey(noteId)).length,
-    ),
-    () => null,
-  );
-  return (
-    <p className="button-row graph__actions">
-      <button
-        ref={opener}
-        type="button"
-        className={aiText ? "button button--primary" : "button"}
-        onClick={onRewrite}
-      >
-        {aiText ? t.graph.rewrite : t.graph.edit}
-      </button>
-      <Link to="/notes/$noteId/cards" params={{ noteId }} className="button">
-        {t.graph.makeCards}
-      </Link>
-      {count === null ? null : <span className="status">{t.graph.cardCount(count)}</span>}
-    </p>
-  );
-}
-
-const wikilinks =
-  (index: GraphIndex, onShow: (id: string) => void) =>
-  (part: WikilinkPart): ReactNode => {
-    const target = index.byKey.get(linkKey(part.target));
-    return target === undefined ? (
-      <MissingLink key={part.at} name={part.target} label={part.label} />
-    ) : (
-      <NodeLink key={part.at} id={target.id} className="graph__wikilink" onShow={onShow}>
-        {part.label}
-      </NodeLink>
-    );
-  };
-
-function linkingOf(node: GraphNode, view: GraphView, index: GraphIndex): Linking {
-  const from = view.links
-    .filter((link) => link.to === node.id && link.from !== node.id)
-    .map((link) => index.byId.get(link.from));
-  return {
-    notes: from.filter((other) => other?.kind === "note").length,
-    sources: from.filter((other) => other?.kind === "source").length,
-  };
 }
