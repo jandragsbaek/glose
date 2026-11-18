@@ -781,8 +781,10 @@ state: for an Article and Course lessons, the way in while it is open, then the 
 secondary and Add Source is the primary from the start. A control that removes itself hands the
 cursor on: Undo to Family name, "Show all" to the chosen record, "Keep" and a read file or folder
 to "Choose another" or "Choose other files". A file or folder still being read never overrides a
-newer choice (another file, pasted text, "Keep"), and Add waits for it in both kinds. A dropped
-folder is read to every depth.
+newer choice (another file, pasted text, "Keep", the article's kind, "Lessons a week"), and Add
+waits for it in both kinds while the status line says "Reading the file…" / "Reading the files…".
+After a read the cursor moves on only if it is still at the way in. Add with the chooser open
+keeps the current lessons. A dropped folder is read to every depth.
 
 A focus screen (today only Review, at `/review`) fills the window without the rail and the page
 header. A 64px bar (12px 32px padding) holds the title left, a centred progress line and the way

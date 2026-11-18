@@ -30,6 +30,7 @@ import { importTextAtom, KEYS } from "../state/graph.ts";
 import {
   blank,
   DropZone,
+  cursorIsFree,
   FillLine,
   focusAfterRender,
   focusFirstProblem,
@@ -59,7 +60,13 @@ export function AddArticle() {
   const [text, setText] = useState<TextFile | null>(null);
   const [pasting, setPasting] = useState(false);
   const [pasted, setPasted] = useState("");
-  const [type, setType] = useState<ArticleType>("web");
+  const [type, setTypeState] = useState<ArticleType>("web");
+  const typeRef = useRef(type);
+  const wayInRef = useRef<HTMLDivElement>(null);
+  const setType = (next: ArticleType) => {
+    typeRef.current = next;
+    setTypeState(next);
+  };
   const [values, setValues] = useState<ArticleValues>({ ...EMPTY_ARTICLE, accessed: today() });
   const [filled, setFilled] = useState<ReadonlyArray<ArticleField>>([]);
   const [problem, setProblem] = useState<{ readonly say: Say } | null>(null);
@@ -95,7 +102,7 @@ export function AddArticle() {
     setFromPaste(pasted);
     setChoosing(false);
     setPasting(false);
-    focusAfterRender(anotherRef);
+    if (pasted || cursorIsFree(wayInRef.current)) focusAfterRender(anotherRef);
     const details = detailsFromMarkdown(found.markdown);
     const next = articleValuesOf(details);
     const fill = fillFromFile(valuesRef.current, filledRef.current, next);
@@ -104,7 +111,7 @@ export function AddArticle() {
     const keys = fill.filled;
     setMissing([]);
     setSubmitProblem(null);
-    const nextType = details.doi === null ? type : "paper";
+    const nextType = details.doi === null ? typeRef.current : "paper";
     setType(nextType);
     if (keys.some((key) => key === "otherAuthors" || folded(nextType).includes(key))) {
       setMore(true);
@@ -265,7 +272,7 @@ export function AddArticle() {
 
   return (
     <Panel title={t.importText.article} initial="rubric">
-      <div className="panel__body">
+      <div ref={wayInRef} className="panel__body">
         {text === null || choosing ? (
           pasting ? (
             <div className="field">
@@ -375,7 +382,11 @@ export function AddArticle() {
           </div>
         )}
         <p role="status" className="add-text__status" id={problemId}>
-          {problem === null ? null : (
+          {problem === null ? (
+            reading ? (
+              <span className="form-status">{t.importText.reading}</span>
+            ) : null
+          ) : (
             <span className="field__error">
               <CircleAlert className="field__error-icon" aria-hidden="true" />
               {problem.say(t)}

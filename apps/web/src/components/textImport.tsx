@@ -14,12 +14,22 @@ export const today = () => {
   return `${now.getFullYear()}-${two(now.getMonth() + 1)}-${two(now.getDate())}`;
 };
 
-export const focusAfterRender = (ref: RefObject<HTMLElement | null>, frames = 10): void => {
+export const focusAfterRender = (
+  refs: RefObject<HTMLElement | null> | ReadonlyArray<RefObject<HTMLElement | null>>,
+  frames = 10,
+): void => {
   requestAnimationFrame(() => {
-    const target = ref.current;
-    if (target?.isConnected) target.focus();
-    else if (frames > 0) focusAfterRender(ref, frames - 1);
+    const target = (Array.isArray(refs) ? refs : [refs])
+      .map((ref: RefObject<HTMLElement | null>) => ref.current)
+      .find((element) => element?.isConnected === true);
+    if (target !== undefined && target !== null) target.focus();
+    else if (frames > 0) focusAfterRender(refs, frames - 1);
   });
+};
+
+export const cursorIsFree = (around: HTMLElement | null) => {
+  const active = document.activeElement;
+  return active === null || active === document.body || (around?.contains(active) ?? false);
 };
 
 export const focusFirstProblem = (root: HTMLElement | null) =>
@@ -37,8 +47,6 @@ export interface TextFile {
 export const readFiles = async (files: ReadonlyArray<File>): Promise<ReadonlyArray<TextFile>> =>
   Promise.all(files.map(async (file) => ({ name: file.name, markdown: await file.text() })));
 
-const MAX_FOLDER_DEPTH = 8;
-
 export const droppedFiles = async (event: DragEvent): Promise<ReadonlyArray<File>> => {
   const items = [...event.dataTransfer.items];
   const entries = items
@@ -46,25 +54,25 @@ export const droppedFiles = async (event: DragEvent): Promise<ReadonlyArray<File
     .filter((entry): entry is FileSystemEntry => entry != null);
   if (entries.length === 0) return [...event.dataTransfer.files];
   const out: File[] = [];
-  const walk = async (entry: FileSystemEntry, depth: number): Promise<void> => {
+  const walk = async (entry: FileSystemEntry): Promise<void> => {
     if (entry.isFile) {
       const file = await new Promise<File>((resolve, reject) =>
         (entry as FileSystemFileEntry).file(resolve, reject),
       );
       Object.defineProperty(file, "webkitRelativePath", { value: entry.fullPath.slice(1) });
       out.push(file);
-    } else if (entry.isDirectory && depth < MAX_FOLDER_DEPTH) {
+    } else if (entry.isDirectory) {
       const reader = (entry as FileSystemDirectoryEntry).createReader();
       for (;;) {
         const batch = await new Promise<FileSystemEntry[]>((resolve, reject) =>
           reader.readEntries(resolve, reject),
         );
         if (batch.length === 0) break;
-        for (const child of batch) await walk(child, depth + 1);
+        for (const child of batch) await walk(child);
       }
     }
   };
-  for (const entry of entries) await walk(entry, 0);
+  for (const entry of entries) await walk(entry);
   return out;
 };
 

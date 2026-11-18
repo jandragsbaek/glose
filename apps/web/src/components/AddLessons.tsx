@@ -14,6 +14,7 @@ import { importTextAtom, sourcesAtom } from "../state/graph.ts";
 import {
   blank,
   DropZone,
+  cursorIsFree,
   FillLine,
   focusAfterRender,
   focusFirstProblem,
@@ -68,6 +69,8 @@ export function AddLessons() {
   );
   const [finished, setFinished] = useState(false);
   const [perWeek, setPerWeek] = useState("5");
+  const perWeekRef = useRef(perWeek);
+  const wayInRef = useRef<HTMLDivElement>(null);
   const perWeekId = useId();
   const fileProblemId = useId();
   const partProblemId = useId();
@@ -126,7 +129,7 @@ export function AddLessons() {
     setProblem(null);
     setFinished(false);
     setChoosing(false);
-    const batch = lessonBatch(read, markdown, Math.max(1, Number(perWeek) || 5));
+    const batch = lessonBatch(read, markdown, Math.max(1, Number(perWeekRef.current) || 5));
     setLessons(batch.lessons);
     setFrom(batch.folder);
     const found = batch.found;
@@ -144,7 +147,12 @@ export function AddLessons() {
       ),
     );
     setErrors({});
-    focusAfterRender(anotherRef);
+    if (cursorIsFree(wayInRef.current)) focusAfterRender(anotherRef);
+  };
+
+  const cancelRead = () => {
+    readRef.current += 1;
+    setReading(false);
   };
 
   const pick = (input: HTMLInputElement) => {
@@ -166,6 +174,7 @@ export function AddLessons() {
 
   const changePerWeek = (value: string) => {
     setPerWeek(value);
+    perWeekRef.current = value;
     const week = Number(value);
     if (!Number.isInteger(week) || week < 1) return;
     setLessons((current) =>
@@ -193,6 +202,7 @@ export function AddLessons() {
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (busyRef.current || reading) return;
+    if (choosing && lessons.length > 0) setChoosing(false);
     if (lessons.length === 0) {
       setFileProblem({ say: (m) => m.lessons.needFiles });
       focusAfterRender(chooseRef);
@@ -252,7 +262,7 @@ export function AddLessons() {
     setProgress(null);
     setFinished(true);
     refreshSources();
-    focusAfterRender(missed > 0 ? submitRef : openRef);
+    focusAfterRender(missed > 0 ? [submitRef, openRef] : [openRef, submitRef]);
   };
 
   const firstAdded = lessons.find((lesson) => lesson.state === "added");
@@ -272,7 +282,7 @@ export function AddLessons() {
   return (
     <Panel title={t.lessons.course} initial="rubric">
       <form ref={formRef} className="add-source__form add-lessons" onSubmit={submit} noValidate>
-        <div className="panel__body">
+        <div ref={wayInRef} className="panel__body">
           <input
             ref={folderRef}
             type="file"
@@ -320,7 +330,7 @@ export function AddLessons() {
                   className="button button--quiet"
                   disabled={busy}
                   onClick={() => {
-                    readRef.current += 1;
+                    cancelRead();
                     setChoosing(false);
                     setFileProblem(null);
                     focusAfterRender(anotherRef);
@@ -354,7 +364,11 @@ export function AddLessons() {
             </div>
           )}
           <p role="status" className="add-text__status" id={fileProblemId}>
-            {fileProblem === null ? null : (
+            {fileProblem === null ? (
+              reading ? (
+                <span className="form-status">{t.lessons.reading}</span>
+              ) : null
+            ) : (
               <span className="field__error">
                 <CircleAlert className="field__error-icon" aria-hidden="true" />
                 {fileProblem.say(t)}
@@ -425,7 +439,7 @@ export function AddLessons() {
           }
         >
           {lessons.length === 0 ? (
-            <button type="submit" className="button">
+            <button type="submit" className="button" disabled={reading}>
               {t.lessons.submitAny}
             </button>
           ) : toAdd.length > 0 ? (
