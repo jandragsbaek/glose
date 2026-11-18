@@ -1,4 +1,5 @@
 import {
+  isDraftId,
   NoteNotFound,
   parseArticle,
   PassageRefused,
@@ -35,6 +36,7 @@ import * as CardExtraction from "./cardExtraction.ts";
 import * as CardJudging from "./cardJudging.ts";
 import * as Extraction from "./extraction.ts";
 import { addPoints, type Live } from "./liveSession.ts";
+import * as PageDecisions from "./pageDecisions.ts";
 import * as PointDecisions from "./pointDecisions.ts";
 import * as Probe from "./probe.ts";
 import { pointsOf } from "./sessionEntries.ts";
@@ -130,7 +132,7 @@ export class Sessions extends Context.Service<
       readonly passage: string;
       readonly title: string;
     }) => Effect.Effect<void, SourceNotFound | PassageRefused | GraphError>;
-  }
+  } & PageDecisions.PageDecisions
 >()("glose/sessions/Sessions") {}
 
 export const make = Effect.gen(function* () {
@@ -188,6 +190,8 @@ export const make = Effect.gen(function* () {
         if (node === undefined) return yield* new NoteNotFound({ id: name });
         return node.id;
       }
+      case "note-research":
+        return isDraftId(name) ? name : yield* new NoteNotFound({ id: name });
     }
   });
 
@@ -220,6 +224,17 @@ export const make = Effect.gen(function* () {
     return yield* adopt(record);
   });
 
+  const pageDecisions = yield* PageDecisions.make({
+    load,
+    save,
+    deciding,
+    beginTurn,
+    open: (subject) =>
+      Effect.flatMap(latestRecord("note-research", subject), (existing) =>
+        existing === null ? newSession("note-research", subject) : adopt(existing),
+      ),
+  });
+
   const passageOf = Effect.fn("Sessions.passageOf")(function* (source: string, id: string) {
     const article = parseArticle(yield* sources.articleText(source));
     const passage = article.passages.find((other) => other.id === id);
@@ -247,6 +262,7 @@ export const make = Effect.gen(function* () {
           return yield* SubscriptionRef.get(session.view);
         }
       }
+      if (kind === "note-research") return yield* new NoteNotFound({ id: subject });
       const session = yield* newSession(kind, subject);
       const source = kind === "card-extraction" ? null : yield* sources.get(subject);
       const opening =
@@ -335,6 +351,8 @@ export const make = Effect.gen(function* () {
     ...cardDecisions,
 
     ...pointDecisions,
+
+    ...pageDecisions,
 
     answerProbe: Effect.fn("Sessions.answerProbe")(
       function* ({ id, question, reasoning, answer, teachMe, choice, confidence }) {

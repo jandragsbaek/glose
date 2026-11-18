@@ -2,7 +2,8 @@ import { AI_CALLOUT, MARKDOWN_CODE, parseWikilink, WIKILINK } from "@glose/contr
 
 export type Inline =
   | { readonly kind: "text"; readonly at: number; readonly text: string }
-  | { readonly kind: "link"; readonly at: number; readonly target: string; readonly label: string };
+  | { readonly kind: "link"; readonly at: number; readonly target: string; readonly label: string }
+  | { readonly kind: "note"; readonly at: number; readonly label: string };
 
 export interface ListItem {
   readonly at: number;
@@ -40,7 +41,41 @@ const codeRanges = (text: string, fencedOnly: boolean) =>
 const codeAt = (ranges: ReturnType<typeof codeRanges>, at: number) =>
   ranges.find((range) => at >= range.start && at < range.end);
 
-const inlines = (text: string): ReadonlyArray<Inline> => {
+const FOOTNOTE = /(?<!\\)\[\^q(\d{1,4})\](:[ \t]?)?/g;
+
+const CODE_SPAN = /(`+)[\s\S]*?\1/g;
+
+const inCode = (text: string, at: number) =>
+  Array.from(text.matchAll(CODE_SPAN)).some(
+    (span) => at >= span.index && at < span.index + span[0].length,
+  );
+
+const withNotes = (
+  part: Extract<Inline, { kind: "text" }>,
+  paragraph: boolean,
+): ReadonlyArray<Inline> => {
+  const out: Array<Inline> = [];
+  let last = 0;
+  for (const match of part.text.matchAll(FOOTNOTE)) {
+    if (inCode(part.text, match.index)) continue;
+    const definition = paragraph && part.at === 0 && match.index === 0 && match[2] !== undefined;
+    const length = definition ? match[0].length : match[0].length - (match[2]?.length ?? 0);
+    if (match.index > last) {
+      out.push({ kind: "text", at: part.at + last, text: part.text.slice(last, match.index) });
+    }
+    out.push({ kind: "note", at: part.at + match.index, label: match[1]! });
+    last = match.index + length;
+  }
+  if (last < part.text.length) {
+    out.push({ kind: "text", at: part.at + last, text: part.text.slice(last) });
+  }
+  return out;
+};
+
+const inlines = (text: string, paragraph = false): ReadonlyArray<Inline> =>
+  wikilinked(text).flatMap((part) => (part.kind === "text" ? withNotes(part, paragraph) : [part]));
+
+const wikilinked = (text: string): ReadonlyArray<Inline> => {
   const code = codeRanges(text, false);
   const out: Array<Inline> = [];
   let last = 0;
@@ -70,7 +105,11 @@ const plainBlock = (lines: ReadonlyArray<string>, at: number): Block => {
     });
     return { kind: "list", at, items };
   }
-  return { kind: "paragraph", at, inlines: inlines(lines.map((line) => line.trim()).join(" ")) };
+  return {
+    kind: "paragraph",
+    at,
+    inlines: inlines(lines.map((line) => line.trim()).join(" "), true),
+  };
 };
 
 const aiBlock = (lines: ReadonlyArray<string>, at: number): Block => {

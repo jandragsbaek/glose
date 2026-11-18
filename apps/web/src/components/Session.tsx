@@ -22,6 +22,7 @@ import {
   useState,
 } from "react";
 
+import { hostOf } from "../domain/webAddress.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { chatGptStatusAtom } from "../state/chatgpt.ts";
 import {
@@ -31,6 +32,7 @@ import {
   stopSessionAtom,
 } from "../state/sessions.ts";
 import { CardProposals } from "./CardProposals.tsx";
+import { FoundPages } from "./FoundPages.tsx";
 import { ManageUsageLink } from "./ChatGptConnection.tsx";
 import { OpenSettingsButton } from "./SettingsWindow.tsx";
 import { Notice, Panel, SkeletonPanel, StorageProblem } from "./ui.tsx";
@@ -121,6 +123,7 @@ type Turn =
 const isUserEntry = (entry: SessionEntry) =>
   entry._tag === "UserMessage" ||
   entry._tag === "Passage" ||
+  entry._tag === "ResearchStart" ||
   (entry._tag === "Points" && entry.points.every((point) => point.origin === "user"));
 
 const turnsOf = (entries: ReadonlyArray<SessionEntry>): ReadonlyArray<Turn> => {
@@ -260,6 +263,13 @@ function UserEntry({
           {t.session.pointAdded} <PointRefs points={entry.points} />
         </p>
       );
+    case "ResearchStart":
+      return (
+        <div className="you">
+          <p className="you__who">{t.research.youAsked(t.research.asks[entry.ask])}</p>
+          {entry.question === "" ? null : <p className="you__text">{entry.question}</p>}
+        </div>
+      );
     default:
       return null;
   }
@@ -306,6 +316,16 @@ export function AiStep({
       );
     case "CardProposals":
       return <CardProposals sessionId={session.id} proposals={entry.proposals} />;
+    case "FoundPages":
+      return <FoundPages sessionId={session.id} pages={entry.pages} />;
+    case "ResearchLinks":
+      return <p className="turn__note">{t.research.linksProposed(entry.links.length)}</p>;
+    case "WebSearchOff":
+      return (
+        <Notice tone="info">
+          <p>{t.research.webSearchOff}</p>
+        </Notice>
+      );
     default:
       return null;
   }
@@ -368,6 +388,10 @@ export function ToolUses({
     sourceNotes: count("list-notes") > 0,
     probe: count("read-probe") > 0,
     article: count("read-article") > 0,
+    webSearches: count("search-web"),
+    webPages: new Set(
+      uses.filter((use) => use.tool === "read-web-page").map((use) => use.detail ?? ""),
+    ).size,
   });
   return (
     <details className="aside">
@@ -402,6 +426,21 @@ function ToolUseLine({ use }: { readonly use: Extract<SessionEntry, { _tag: "Too
       return t.session.trail.readProbe;
     case "read-article":
       return t.session.trail.readArticle;
+    case "search-web":
+      return use.detail === undefined
+        ? t.session.tools["search-web"]
+        : t.session.trail.searchWeb(use.detail);
+    case "read-web-page":
+      return use.detail === undefined || !/^https?:\/\//i.test(use.detail) ? (
+        t.session.tools["read-web-page"]
+      ) : (
+        <>
+          {t.session.trail.readWebPage}{" "}
+          <a href={use.detail} target="_blank" rel="noreferrer" className="wikilink">
+            {hostOf(use.detail)}
+          </a>
+        </>
+      );
     case "search-graph":
       return use.detail === undefined
         ? t.session.tools["search-graph"]
@@ -529,10 +568,12 @@ export function Composer({
   session,
   about,
   onClearAbout,
+  placeholder,
 }: {
   readonly session: Session;
   readonly about?: Point | undefined;
   readonly onClearAbout?: () => void;
+  readonly placeholder?: string;
 }) {
   const t = useT();
   const textId = useId();
@@ -587,7 +628,7 @@ export function Composer({
         className="composer__text"
         id={textId}
         aria-describedby={hintId}
-        placeholder={t.session.placeholder}
+        placeholder={placeholder ?? t.session.placeholder}
         value={text}
         onChange={(event) => setText(event.target.value)}
         onKeyDown={onKeyDown}

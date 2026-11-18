@@ -23,6 +23,7 @@ import * as Graph from "./graph/Graph.ts";
 import * as Notes from "./graph/Notes.ts";
 import * as Sources from "./graph/Sources.ts";
 import * as ServerInfo from "./info/ServerInfo.ts";
+import * as WebPages from "./research/WebPages.ts";
 import * as Recall from "./recall/Recall.ts";
 import * as Rpc from "./rpc.ts";
 import * as Sessions from "./sessions/Sessions.ts";
@@ -60,23 +61,27 @@ const layerHttpServer = Layer.unwrap(
 
 const layerChatGpt = ChatGpt.layer.pipe(Layer.provide([ChatGpt.layerCrypto, Credentials.layer]));
 
-export const layerApp = Layer.mergeAll(Sessions.layer, Writing.layer).pipe(
-  Layer.provideMerge(CardChecks.layer),
-  Layer.provideMerge(
-    Layer.mergeAll(
-      layerChatGpt,
-      Responses.layer,
-      Catalog.layer,
-      Recall.layer,
-      Layer.mergeAll(Versions.layer, Setup.layer).pipe(
-        Layer.provide(Git.layer),
-        Layer.provideMerge(GitHub.layer),
+export const layerAppWith = (webPages: Layer.Layer<WebPages.WebPages>) =>
+  Layer.mergeAll(Sessions.layer, Writing.layer).pipe(
+    Layer.provideMerge(CardChecks.layer),
+    Layer.provideMerge(
+      Layer.mergeAll(
+        layerChatGpt,
+        Responses.layer,
+        Catalog.layer,
+        Recall.layer,
+        webPages,
+        Layer.mergeAll(Versions.layer, Setup.layer).pipe(
+          Layer.provide(Git.layer),
+          Layer.provideMerge(GitHub.layer),
+        ),
       ),
     ),
-  ),
-  Layer.provideMerge(Layer.mergeAll(Sources.layer, Graph.layer, Notes.layer, Cards.layer)),
-  Layer.provideMerge(Settings.layer),
-);
+    Layer.provideMerge(Layer.mergeAll(Sources.layer, Graph.layer, Notes.layer, Cards.layer)),
+    Layer.provideMerge(Settings.layer),
+  );
+
+export const layerApp = layerAppWith(WebPages.layer);
 
 const layerFetchNoRedirects = FetchHttpClient.layer.pipe(
   Layer.provide(Layer.succeed(FetchHttpClient.RequestInit, { redirect: "manual" })),

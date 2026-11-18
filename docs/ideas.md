@@ -747,6 +747,72 @@ the agent; these are the picks.
   and screen readers hear "holds AI text".
 - After a save the node fills and the counts drop at once: the Graph reads the files again.
 
+## Decided, a new Note researched (November 2026)
+
+Jan asked for a way to add a Note to the Graph from blank, with the AI's help to research it and
+find sources online. Shaped with impeccable; Jan chose "The Commonplace Leaf" over a For and
+Against board, a Find-then-Write page and a twin-column key rail. Built and reviewed by a
+three-model council.
+
+- New Note (primary, in the Graph header; N on the canvas; also on an empty Graph) opens a leaf
+  over the left of the canvas: the title (a claim or a question), "Rests on", the user's words, the kept quotes
+  numbered under them, the proposed Links, and Save or Cancel. The canvas stays in view on the
+  right with the new Note as a dashed node, and dashed lines to the Notes the AI proposes to link.
+  Unsaved words or kept pages ask before they are lost, as on the rewrite desk.
+- The side panel becomes Research. The research is optional: without ChatGPT the leaf works and
+  the panel says how to connect. The user picks what to ask: Learn this, Back my idea, Check this
+  claim or Bridge two Notes (two Notes named from the Graph), with an optional question.
+- The research is a Session of kind `note-research`, its subject the draft's id (`new-…`). It runs
+  in two passes that never share a context. The web pass has OpenAI's hosted `web_search` and
+  Glose's `read_web_page` and `propose_pages`, and never sees the user's Graph. After a turn that
+  found pages, or once after each start while there are no Links, a Links pass without web access
+  reads the Graph (`search_graph`, `read_note`) and calls `propose_links`; on an empty Graph it
+  does not run. So Note text can never reach a web search, a page open or a fetched
+  address. The AI finds sources; it never writes the Note's text, and has no tool that could.
+- Glose reads a page itself (the main text, as a browser's reader view: Readability, linkedom and
+  turndown) and keeps a quote only when the page holds those exact words; the quote's Location is
+  its paragraph number (`¶ 8`). A quote has at least four words and matches whole words; it never starts or ends inside a hyphenated word or a contraction, so "non-significant" cannot become "significant". Glose reads only public http and
+  https addresses, never this computer or its own network: every address the name resolves to is
+  checked inside the connection itself, so a name cannot change between the check and the read.
+  Images are not imported (in a text page an image becomes a plain link), and links become
+  absolute web links. A page Glose cannot read (a
+  paywall, a PDF) cannot be proposed.
+- Web pages can hold text written to steer the AI. So Glose reads only addresses in an exact set:
+  the sources of the hosted web search (`web_search_call.action.sources`), addresses the user
+  wrote, and the address a read page moved to (Glose followed that move itself). An address the AI wrote itself (in a search query, a message or a tool call) is refused.
+  Its instructions say page text is material, never instructions.
+- Limits: the hosted web search runs at OpenAI, and Glose cannot see or stop the queries and
+  page opens the AI makes there; with the Graph kept out of the web pass, they can carry only the
+  user's title, text and question. That OpenAI sends `action.sources` on the ChatGPT route is
+  still to be confirmed with a real sign-in: if it refuses that field, the Session turns web search
+  off and asks for addresses.
+- The author of a kept page comes from the page itself; the AI does not name one. A page without
+  one is filed under its site, and its Source can be corrected like any other.
+- The ChatGPT route allows web search "subject to model and account/workspace policy". When the
+  account refuses it, the turn goes on without it, the Session says so, and the user can paste a
+  page's address in the message box.
+- Each found page is a slip: its would-be call number, title, author, site, year and kind, one
+  quote, why it matters and where it stands (Supports, Pulls against, Context). The user keeps or
+  drops it, and can change their mind.
+- A kept page becomes a Source when the Note is saved: an Article (type from the AI, usually web
+  essay) with the site as its container, the URL and the date read (brackets, `|`, `#` and `^` in
+  its title are replaced, so a wikilink can reach the Source), and the page's text in
+  `Articles/`, so its quotes stay checkable and it can be read in Glose. A page whose URL is a
+  Source already uses that Source. The Note's `source` is the kept page the user chose under
+  "Rests on" (the first kept page by default); without one the Note has no `source` and says "No
+  Source yet". Only kept pages whose quotes or Source the Note uses become Sources.
+- Quotes are footnotes: a quote's number cites it where the cursor is (`[^q1]` against the word
+  before it). On save every kept quote becomes a footnote, the cited ones first, numbered q1 to
+  qn: `[^q1]: “words” [[Source]], ¶ 8`. The `q` keeps them apart from the user's own footnotes.
+  The ¶ comes from the text the Source holds (the page as stored, or the Source the user already
+  has), and every page is checked, and every new Source's file name chosen against the others and
+  the Note's, before Glose writes any file. A page that is already a Source is checked against
+  the text that Source holds when the AI proposes it; the AI hears only the check against the
+  live page, so it learns nothing about the user's own files. Brackets in a quote are escaped,
+  so a quote cannot make a Link. Checked Links go on the `Related:` line.
+- Not yet: PDFs, a reload that keeps the unsaved leaf, reading a found page in Glose before it is
+  kept, and the new Note's place on the canvas near its Links (it is drawn apart until saved).
+
 ## Decided, the first page of a Source (November 2026)
 
 - A Source opens on one question, "Where are you with this book?", with three answers:
@@ -992,6 +1058,7 @@ Taken from learnharness: the user thinks out loud, by typing or by dictation, an
 - Is a note that the AI arranges from the user's own transcript marked as AI text or as human text?
 
 - What is the source of a note that holds the user's own idea, or that combines several notes?
+  (Partly answered: a new Note from blank may rest on a kept web page, or have no Source yet.)
 - Is the exact location (page number, timestamp) required on every note, or only when the note is
   cited? For now a Note's page is optional.
 - Does each user have a separate graph and separate records?

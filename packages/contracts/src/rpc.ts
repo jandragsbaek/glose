@@ -16,6 +16,7 @@ import { ChatGptStatus, ConnectChatGpt, DisconnectResult } from "./chatgpt.ts";
 import { GitHubRepository, GitHubStatus } from "./github.ts";
 import { GraphView, NoteNameTaken, NoteNotFound, SaveNote } from "./graph.ts";
 import { RecordReview, ReviewQueue } from "./recall.ts";
+import { CreateNote, PageDecision, PageRefused, StartResearch } from "./research.ts";
 import { ServerInfo } from "./server.ts";
 import {
   AddPassagePoint,
@@ -107,6 +108,10 @@ export const RPC_METHODS = {
   articlesSetPassageWords: "articles.setPassageWords",
   graphRead: "graph.read",
   notesSave: "notes.save",
+  notesCreate: "notes.create",
+  researchStart: "research.start",
+  researchKeepPage: "research.keepPage",
+  researchDropPage: "research.dropPage",
   catalogSearch: "catalog.search",
   chatgptWatch: "chatgpt.watch",
   chatgptConnect: "chatgpt.connect",
@@ -241,6 +246,30 @@ export const GloseRpcGroup = RpcGroup.make(
     payload: SaveNote,
     success: Schema.String,
     error: Schema.Union([NoteNotFound, NoteNameTaken, GraphFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.notesCreate, {
+    payload: CreateNote,
+    success: Schema.String,
+    error: Schema.Union([
+      NoteNameTaken,
+      SessionNotFound,
+      PageRefused,
+      GraphFolderNotSet,
+      StorageError,
+    ]),
+  }),
+  Rpc.make(RPC_METHODS.researchStart, {
+    payload: StartResearch,
+    success: Session,
+    error: Schema.Union([SessionBusy, GraphFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.researchKeepPage, {
+    payload: PageDecision,
+    error: Schema.Union([SessionNotFound, ProposalNotOpen, GraphFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.researchDropPage, {
+    payload: PageDecision,
+    error: Schema.Union([SessionNotFound, ProposalNotOpen, GraphFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.catalogSearch, {
     payload: CatalogSearch,

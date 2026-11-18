@@ -6,6 +6,7 @@ import {
   type SessionProblem,
 } from "@glose/contracts";
 import * as Effect from "effect/Effect";
+import type * as Redacted from "effect/Redacted";
 import * as FiberMap from "effect/FiberMap";
 import * as SubscriptionRef from "effect/SubscriptionRef";
 
@@ -14,12 +15,15 @@ import * as ChatGpt from "../chatgpt/ChatGpt.ts";
 import { Responses, type ResponsesError } from "../chatgpt/Responses.ts";
 import * as Graph from "../graph/Graph.ts";
 import * as Sources from "../graph/Sources.ts";
-import { type InputItem, runTurn } from "./agent.ts";
+import * as WebPages from "../research/WebPages.ts";
+import { type InputItem, runTurn, type WebSearch } from "./agent.ts";
 import * as CardExtraction from "./cardExtraction.ts";
 import type { CardJudging } from "./cardJudging.ts";
 import * as Extraction from "./extraction.ts";
 import { addPoints, changeNumbered, type Live, patch } from "./liveSession.ts";
 import * as Probe from "./probe.ts";
+import * as Research from "./research.ts";
+import * as ResearchLinks from "./researchLinks.ts";
 import { pointsOf } from "./sessionEntries.ts";
 import type { SessionStore } from "./sessionStore.ts";
 
@@ -59,6 +63,7 @@ export const make = Effect.fn("Sessions.makeSessionTurn")(function* ({
   const cards = yield* Cards.Cards;
   const chatGpt = yield* ChatGpt.ChatGpt;
   const responses = yield* Responses;
+  const webPages = yield* WebPages.WebPages;
   let summaries = true;
 
   const probeOf = (subject: string) =>
@@ -78,8 +83,89 @@ export const make = Effect.fn("Sessions.makeSessionTurn")(function* ({
       Effect.orElseSucceed(() => null),
     );
 
-  const rulesOf = (session: Live, { kind, subject }: Session) => {
+  const appendEntries = (session: Live, entries: ReadonlyArray<SessionEntry>) =>
+    SubscriptionRef.modify(session.view, (view) => {
+      const before = view.entries.length;
+      return [before, { ...view, entries: [...view.entries, ...entries] }];
+    });
+
+  const researchRules = (session: Live, entries: ReadonlyArray<SessionEntry>) => {
+    const webSearch: WebSearch | null = entries.some((entry) => entry._tag === "WebSearchOff")
+      ? null
+      : {
+          onRefused: patch(session, (view) => ({
+            ...view,
+            entries: [...view.entries, { _tag: "WebSearchOff" }],
+          })).pipe(Effect.as([Research.webSearchOffMessage])),
+        };
+    const known = Research.knownAddresses(session.items);
+    return {
+      instructions: Research.INSTRUCTIONS,
+      webSearch,
+      maxRounds: Research.MAX_ROUNDS,
+      onOutput: (output: ReadonlyArray<unknown>) => Research.addKnown(known, output),
+      tools: Research.tools({
+        known: (url) => Research.isKnown(known, url),
+        remember: (url) => Research.addAddress(known, url),
+        webPages,
+        sources: sources.list.pipe(Effect.orElseSucceed(() => [])),
+        articleText: (id) => sources.articleText(id).pipe(Effect.orElseSucceed(() => null)),
+        pages: SubscriptionRef.get(session.view).pipe(
+          Effect.map((view) => Research.pagesOf(view.entries)),
+        ),
+        propose: (proposed) =>
+          SubscriptionRef.modify(session.view, (view) => {
+            const before = Research.pagesOf(view.entries).length;
+            const pages = proposed.map((page, index) => ({
+              ...page,
+              id: `w${before + index + 1}`,
+              state: "open" as const,
+            }));
+            return [
+              pages.map((page) => page.id),
+              { ...view, entries: [...view.entries, { _tag: "FoundPages" as const, pages }] },
+            ];
+          }),
+      }),
+    };
+  };
+
+  const findLinks = Effect.fn("Sessions.findLinks")(function* (
+    session: Live,
+    token: Redacted.Redacted<string>,
+    model: string,
+  ) {
+    const { entries } = yield* SubscriptionRef.get(session.view);
+    const view = yield* graph.read.pipe(Effect.orElseSucceed(() => null));
+    if (view === null || !view.nodes.some((node) => node.kind === "note")) return;
+    yield* runTurn({
+      token,
+      model,
+      instructions: ResearchLinks.LINK_INSTRUCTIONS,
+      tools: ResearchLinks.linkTools({
+        graph,
+        proposeLinks: (links) =>
+          appendEntries(session, [{ _tag: "ResearchLinks", links }]).pipe(Effect.asVoid),
+      }),
+      items: [ResearchLinks.linksKickoff(entries)],
+      onDelta: () => Effect.void,
+      onEntry: (entry) =>
+        entry._tag === "ToolUse"
+          ? patch(session, (view) => ({ ...view, entries: [...view.entries, entry] }))
+          : Effect.void,
+      onItems: () => Effect.void,
+      summaries: false,
+      onSummariesRefused: Effect.void,
+    }).pipe(
+      Effect.provideService(Responses, responses),
+      Effect.catch((error) => Effect.logWarning("Finding Links for a new Note failed", error)),
+    );
+  });
+
+  const rulesOf = (session: Live, { kind, subject, entries }: Session) => {
     switch (kind) {
+      case "note-research":
+        return researchRules(session, entries);
       case "extraction":
         return {
           instructions: Extraction.INSTRUCTIONS,
@@ -114,6 +200,7 @@ export const make = Effect.fn("Sessions.makeSessionTurn")(function* ({
             probeSummary: Probe.forExtraction,
             probeWords: Probe.userWords,
           }),
+          webSearch: null,
         };
       case "probe":
         return {
@@ -128,18 +215,21 @@ export const make = Effect.fn("Sessions.makeSessionTurn")(function* ({
                 return [result, { ...view, entries }];
               }),
           }),
+          webSearch: null,
         };
       case "card-extraction":
         return {
           instructions: CardExtraction.INSTRUCTIONS,
           tools: CardExtraction.tools({ graph, cards, note: subject, propose: propose(session) }),
+          webSearch: null,
         };
     }
   };
 
   const runSessionTurn = Effect.fn("Sessions.runTurn")(
     function* (session: Live) {
-      const rules = rulesOf(session, yield* SubscriptionRef.get(session.view));
+      const before = yield* SubscriptionRef.get(session.view);
+      const rules = rulesOf(session, before);
       const token = yield* chatGpt.accessToken;
       const [model] = yield* responses.models(token);
       if (model === undefined) return yield* Effect.fail("no-model" as const);
@@ -166,6 +256,15 @@ export const make = Effect.fn("Sessions.makeSessionTurn")(function* ({
           summaries = false;
         }),
       }).pipe(Effect.provideService(Responses, responses));
+      const after = yield* SubscriptionRef.get(session.view);
+      if (
+        after.kind === "note-research" &&
+        (Research.pagesOf(after.entries).length > Research.pagesOf(before.entries).length ||
+          (Research.linksOf(after.entries).length === 0 &&
+            before.entries.at(-1)?._tag === "ResearchStart"))
+      ) {
+        yield* findLinks(session, token, model.slug);
+      }
     },
     (effect, session) =>
       effect.pipe(
@@ -236,7 +335,9 @@ export const make = Effect.fn("Sessions.makeSessionTurn")(function* ({
         : [
             kind === "extraction"
               ? Extraction.decisionsMessage(session.decisions)
-              : CardExtraction.decisionsMessage(session.decisions),
+              : kind === "note-research"
+                ? Research.decisionsMessage(session.decisions)
+                : CardExtraction.decisionsMessage(session.decisions),
           ];
     session.decisions = [];
     session.items = [...session.items, ...decisions, ...items];

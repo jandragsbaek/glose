@@ -1,10 +1,12 @@
 import { numbers, count, list } from "./format.ts";
 
+import type { ArticleType, PageProblem, ResearchAsk, Stance } from "@glose/contracts";
+
 export const graphMessages = {
   graph: {
     title: "Graph",
     empty:
-      "The Graph holds your Notes and the Links between them. It stays empty until Extraction makes the first Notes from a Source.",
+      "The Graph holds your Notes and the Links between them. Extraction makes Notes from a Source, or start one yourself with New Note.",
     counts: (notes: number, sources: number, links: number) =>
       [
         count(notes, "Note", "Notes"),
@@ -86,5 +88,103 @@ export const graphMessages = {
     discard: "Discard",
     keepWriting: "Keep writing",
     saveFailed: "Glose could not save the Note. Try again.",
+  },
+  newNote: {
+    key: "N",
+    open: "New Note",
+    title: "New Note",
+    meta: "A Note in your Graph, in your words",
+    titleLabel: "Title",
+    titlePlaceholder: "The idea, claim or question, as a full sentence",
+    restsOn: "Rests on",
+    restsOnLabel: "The Source this Note rests on",
+    noSource: "No Source yet",
+    noSourceHint:
+      "Keep a page from the research to give the Note a Source, or save it without one.",
+    textLabel: "In your words",
+    textPlaceholder: "Write what you understand. The AI does not write here.",
+    quotes: "Kept quotes",
+    quotesEmpty:
+      "When you keep a page from the research, its quotes come here. Choose a quote's number to cite it where the cursor is.",
+    cite: (n: number) => `Cite quote ${numbers.format(n)} where the cursor is`,
+    paragraph: (n: number) => `¶ ${numbers.format(n)}`,
+    wordForWord: "Word for word",
+    wordForWordHint: "Glose found these exact words on the page.",
+    citedIn: (n: number) => `Cites quote ${numbers.format(n)}`,
+    citesMissing: (cited: ReadonlyArray<number>) =>
+      `Your text cites ${cited.length === 1 ? "quote" : "quotes"} ${list.format(cited.map((n) => numbers.format(n)))}, which you no longer keep. Keep the page again, or take the ${cited.length === 1 ? "number" : "numbers"} out of the text.`,
+    links: "Links",
+    linksHint: "Notes the AI found in your Graph. Checked ones are linked from the Note.",
+    becomesSources: (n: number) =>
+      n === 0
+        ? ""
+        : `${count(n, "kept page becomes a Source", "kept pages become Sources")} when you save.`,
+    save: "Save Note",
+    saving: "Saving…",
+    pageProblems: {
+      "not-kept":
+        "A quote or the Source comes from a page you no longer keep. Keep it again, or remove the quote.",
+      unreadable:
+        "Glose could not read one of the kept pages again to store it. Try again, or drop that page.",
+      "quote-gone":
+        "A quote is no longer on its page, so Glose cannot store it. Remove the quote, or drop that page.",
+    } satisfies Record<PageProblem, string>,
+    draftNode: "New Note",
+  },
+  research: {
+    title: "Research",
+    meta: "with the AI",
+    intro: "The AI finds web pages and exact quotes, and Notes to link. You write the Note.",
+    askLegend: "Ask the AI to",
+    asks: {
+      learn: "Learn this",
+      back: "Back my idea",
+      check: "Check this claim",
+      bridge: "Bridge two Notes",
+    } satisfies Record<ResearchAsk, string>,
+    askHints: {
+      learn: "Clear, reliable pages that explain the topic.",
+      back: "Pages that support your idea, and pages that pull against it.",
+      check: "The strongest evidence on both sides of the claim.",
+      bridge: "What connects two of your Notes.",
+    } satisfies Record<ResearchAsk, string>,
+    questionLabel: "Your question",
+    questionHint: "Optional. What do you want to find out?",
+    bridgeFrom: "First Note",
+    bridgeTo: "Second Note",
+    bridgePlaceholder: "Name of a Note",
+    bridgeMissing: "Choose two Notes from your Graph.",
+    needsTitle: "Write a title or a few words first, so the AI knows what to look for.",
+    start: "Find sources",
+    again: "Search again",
+    needsChatGpt: "Research needs ChatGPT",
+    needsChatGptBody: "Connect your ChatGPT plan in Settings. You can write the Note without it.",
+    startFailed: "Glose could not start the research. Try again.",
+    youAsked: (ask: string) => `You asked: ${ask}`,
+    stances: {
+      supports: "Supports",
+      "pulls-against": "Pulls against",
+      context: "Context",
+    } satisfies Record<Stance, string>,
+    kinds: {
+      paper: "Academic paper",
+      web: "Web essay",
+      press: "Magazine or newspaper",
+    } satisfies Record<ArticleType, string>,
+    keep: "Keep",
+    kept: "Kept",
+    drop: "Drop",
+    dropped: "Dropped",
+    keepAgain: "Keep after all",
+    unkeep: "Remove",
+    moreQuotes: (n: number) => `and ${count(n, "more quote", "more quotes")} from this page`,
+    youHave: "You have this Source",
+    openPage: "Open the page",
+    pagesProposed: (n: number) => `Found ${count(n, "page", "pages")}`,
+    linksProposed: (n: number) => `Proposed ${count(n, "Link", "Links")}`,
+    webSearchOff:
+      "Web search is not available for your ChatGPT account. Paste the address of a page in the message box, and the AI reads it.",
+    placeholder: "Ask about these pages, or paste a page's address",
+    decideFailed: "Glose could not save your choice. Try again.",
   },
 };

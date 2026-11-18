@@ -6,6 +6,44 @@ const withoutOffsets = (value: unknown): unknown =>
   JSON.parse(JSON.stringify(value, (key, field: unknown) => (key === "at" ? undefined : field)));
 
 describe("parseNoteText", () => {
+  it("shows research footnotes as numbers, each definition its own paragraph", () => {
+    const blocks = parseNoteText(
+      "It works.[^q1]\n\n[^q1]: “Words” [[Web 2024 A page]], ¶ 2\n\n[^q2]: “More words” [[Web 2024 A page]], ¶ 5",
+    );
+    const kinds = blocks.map((block) =>
+      block.kind === "paragraph" ? block.inlines.map((part) => part.kind) : [],
+    );
+    assert.deepStrictEqual(kinds, [
+      ["text", "note"],
+      ["note", "text", "link", "text"],
+      ["note", "text", "link", "text"],
+    ]);
+  });
+
+  it("keeps a colon after a marker in the text, and markers in code or escaped as written", () => {
+    const [block] = parseNoteText("The finding matters[^q1]: it holds. `[^q2]` and \\[^q3].");
+    const parts = block?.kind === "paragraph" ? block.inlines : [];
+    assert.deepStrictEqual(
+      parts.map((part) => (part.kind === "text" ? part.text : part.kind)),
+      ["The finding matters", "note", ": it holds. `[^q2]` and \\[^q3]."],
+    );
+    const [item, heading, code] = parseNoteText(
+      "- [^q1]: a list item\n\n## [^q1]: A heading\n\nSee ``[^q1]`` here.",
+    );
+    const texts = (block: typeof item) =>
+      block?.kind === "list"
+        ? block.items[0]!.inlines
+        : block?.kind === "heading" || block?.kind === "paragraph"
+          ? block.inlines
+          : [];
+    assert.include(JSON.stringify(texts(item)), ": a list item");
+    assert.include(JSON.stringify(texts(heading)), ": A heading");
+    assert.deepStrictEqual(
+      texts(code).map((part) => part.kind),
+      ["text"],
+    );
+  });
+
   it("splits paragraphs and lists, and keeps wikilinks with the words they show", () => {
     assert.deepStrictEqual(
       withoutOffsets(

@@ -29,6 +29,9 @@ export class Notes extends Context.Service<
     readonly create: (
       input: NoteFileContent & { readonly title: string },
     ) => Effect.Effect<string, NoteNameTaken | GraphFolderNotSet | StorageError>;
+    readonly checkName: (
+      title: string,
+    ) => Effect.Effect<string, NoteNameTaken | GraphFolderNotSet | StorageError>;
     readonly save: (
       input: SaveNote,
     ) => Effect.Effect<string, NoteNotFound | NoteNameTaken | GraphFolderNotSet | StorageError>;
@@ -65,17 +68,26 @@ export const make = Effect.gen(function* () {
     );
   });
 
+  const checkName = Effect.fn("Notes.checkName")(function* (title: string) {
+    const { graphFolder } = (yield* settings.get).settings;
+    if (graphFolder === null) return yield* new GraphFolderNotSet();
+    const name = toFileName(title);
+    if (name === "") return yield* new NoteNameTaken({ fileName: title });
+    const taken = yield* fs.readDirectory(graphFolder).pipe(Effect.mapError(storageError));
+    if (taken.some((entry) => sameFileName(entry, `${name}${MARKDOWN}`))) {
+      return yield* new NoteNameTaken({ fileName: name });
+    }
+    return name;
+  });
+
   return Notes.of({
+    checkName,
+
     create: Effect.fn("Notes.create")(
       function* ({ title, ...content }) {
         const { graphFolder } = (yield* settings.get).settings;
         if (graphFolder === null) return yield* new GraphFolderNotSet();
-        const name = toFileName(title);
-        if (name === "") return yield* new NoteNameTaken({ fileName: title });
-        const taken = yield* fs.readDirectory(graphFolder).pipe(Effect.mapError(storageError));
-        if (taken.some((entry) => sameFileName(entry, `${name}${MARKDOWN}`))) {
-          return yield* new NoteNameTaken({ fileName: name });
-        }
+        const name = yield* checkName(title);
         yield* writeFileAtomic(
           fs,
           path.join(graphFolder, `${name}${MARKDOWN}`),

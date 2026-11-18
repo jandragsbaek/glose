@@ -2,6 +2,7 @@ import type { GraphView } from "@glose/contracts";
 import { Maximize, Minus, Plus } from "lucide-react";
 import { type ReactNode, useEffect, useRef } from "react";
 
+import type { DraftMark } from "../graph/canvasDraft.ts";
 import { GraphCanvas, type GraphCanvasEvents, type NodeLabel } from "../graph/GraphCanvas.ts";
 import { useT } from "../i18n/I18n.tsx";
 
@@ -19,6 +20,7 @@ export function GraphStage({
   trail = NO_IDS,
   cited = NO_IDS,
   home = null,
+  draft = null,
   insetTop = 0,
   insetLeft = 0,
   fitLabel,
@@ -38,6 +40,7 @@ export function GraphStage({
   readonly trail?: ReadonlyArray<string>;
   readonly cited?: ReadonlyArray<string>;
   readonly home?: ReadonlyArray<string> | null;
+  readonly draft?: DraftMark | null;
   readonly insetTop?: number;
   readonly insetLeft?: number;
   readonly fitLabel?: string;
@@ -72,13 +75,27 @@ export function GraphStage({
     canvas.setMatches(matches);
     canvas.setTrail(trail);
     canvas.setCited(cited);
+    canvas.setDraft(draft);
     canvas.setInsets(insetTop, insetLeft);
     if (!opened.current) {
       if (selectedId !== null) canvas.centerOn(selectedId);
       else if (home !== null) canvas.setHome(home);
     }
     opened.current = true;
-  }, [canvas, events, view, labels, selectedId, matches, trail, cited, home, insetTop, insetLeft]);
+  }, [
+    canvas,
+    events,
+    view,
+    labels,
+    selectedId,
+    matches,
+    trail,
+    cited,
+    home,
+    draft,
+    insetTop,
+    insetLeft,
+  ]);
 
   // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- layout, not state: labels keep clear of the controls laid over the canvas, which move as the stage resizes.
   useEffect(() => {

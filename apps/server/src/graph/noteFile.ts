@@ -3,14 +3,20 @@ import * as Yaml from "yaml";
 
 import { FRONTMATTER } from "./sourceFile.ts";
 
+export interface NoteFootnote {
+  readonly label: string;
+  readonly text: string;
+}
+
 export interface NoteFileContent {
-  readonly source: string;
+  readonly source: string | null;
   readonly page: string | null;
   readonly text: string;
   readonly draft: string | null;
   readonly aiTitle: boolean;
   readonly related: ReadonlyArray<string>;
   readonly language: Language;
+  readonly footnotes?: ReadonlyArray<NoteFootnote>;
 }
 
 const RELATED: Record<Language, string> = { en: "Related", da: "Se også" };
@@ -19,7 +25,7 @@ export const renderNoteFile = (note: NoteFileContent): string => {
   const draft = note.draft === null || textParagraphs(note.draft).length === 0 ? null : note.draft;
   const frontmatter = new Yaml.Document({
     glose: "note",
-    source: `[[${note.source}]]`,
+    ...(note.source === null ? {} : { source: `[[${note.source}]]` }),
     ...(note.page === null ? {} : { page: note.page }),
     ...(note.aiTitle || draft !== null ? { ai: true } : {}),
     ...(note.aiTitle ? { "ai-title": true } : {}),
@@ -30,6 +36,13 @@ export const renderNoteFile = (note: NoteFileContent): string => {
     ...(note.related.length === 0
       ? []
       : [`${RELATED[note.language]}: ${note.related.map((name) => `[[${name}]]`).join(", ")}`]),
+    ...((note.footnotes ?? []).length === 0
+      ? []
+      : [
+          (note.footnotes ?? [])
+            .map(({ label, text }) => `[^${label}]: ${text.replace(/\s+/g, " ").trim()}`)
+            .join("\n\n"),
+        ]),
   ];
   const body = blocks.length === 0 ? "" : `\n${blocks.join("\n\n")}\n`;
   return `---\n${frontmatter.toString()}---\n${body}`;

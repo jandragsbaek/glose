@@ -13,13 +13,17 @@
   "dependencies": {
     "@effect/platform-node": "catalog:",
     "@glose/contracts": "workspace:*",
+    "@mozilla/readability": "0.6.0",
     "effect": "catalog:",
+    "linkedom": "0.18.15",
     "ts-fsrs": "6.0.0",
+    "turndown": "7.2.5",
     "yaml": "catalog:"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
+    "@types/turndown": "5.0.6",
     "typescript": "catalog:",
     "vite-plus": "catalog:"
   }
