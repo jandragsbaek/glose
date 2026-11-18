@@ -6520,10 +6520,47 @@ a.written__title:hover {
 }
 
 .desk-frame[data-graph="open"] .desk-body {
+  position: relative;
   flex: 1 1 0;
   min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  isolation: isolate;
+}
+
+/*
+ * The crease: desk and Graph meet like the two pages of an open book. Each page darkens into the
+ * fold, the desk's over 48px and the Graph's over 20px, so the Note text 24px in stays clean. It
+ * lies over both columns and does not scroll with either.
+ */
+.desk-frame[data-graph="open"] .desk-body::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(50% - 48px);
+  z-index: 1;
+  width: 96px;
+  pointer-events: none;
+  background: linear-gradient(
+    to right,
+    transparent 0,
+    color-mix(in srgb, var(--crease) 8%, transparent) 16%,
+    color-mix(in srgb, var(--crease) 19%, transparent) 28%,
+    color-mix(in srgb, var(--crease) 39%, transparent) 38%,
+    color-mix(in srgb, var(--crease) 67%, transparent) 45.5%,
+    var(--crease) 50%,
+    color-mix(in srgb, var(--crease) 56%, transparent) 52%,
+    color-mix(in srgb, var(--crease) 25%, transparent) 56%,
+    color-mix(in srgb, var(--crease) 8%, transparent) 62%,
+    transparent 70%
+  );
+}
+
+@media (forced-colors: active) {
+  .desk-frame[data-graph="open"] .desk-body::after {
+    display: none;
+  }
 }
 
 .desk-frame[data-graph="open"] .desk-body__desk {
@@ -6542,7 +6579,7 @@ a.written__title:hover {
   grid-template-rows: minmax(200px, 40%) minmax(0, 1fr);
   min-width: 0;
   min-height: 0;
-  border-left: 1px solid var(--line);
+  border-left: 1px solid var(--line-strong);
   background: var(--paper);
 }
 

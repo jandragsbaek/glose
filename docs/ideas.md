@@ -216,6 +216,10 @@ Decided, the Graph beside the desk (November 2026), chosen with impeccable ("Tra
   Find lists its matches to choose from; a small legend names the marks; and ⌘G keeps the writer's
   line and focus. A Note opened from the Graph, a Link or Find joins the trail; reopening a stop does
   not add it again.
+- The line between the desk and the Graph is the crease of an open book: each page darkens into the
+  fold (the "Gutter", chosen by Jan with impeccable in November 2026 over a silk headband, sewing
+  thread and a strip of the binding; the idea came from his girlfriend). The shade stays clear of
+  the text.
 
 - Not yet: the University assignment's own flow and PDF, a Writing project of several files,
   publishing straight into the site's git repository, removing the old post file when a published

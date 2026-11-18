@@ -796,7 +796,7 @@
       },
       {
         "name": "The Hairline Rule",
-        "body": "Panels separate by a 1px Hairline and a white leaf on Ground. Don't add resting shadows.",
+        "body": "Panels separate by a 1px Hairline and a white leaf on Ground. Don't add resting shadows. The one exception is the Crease between the Writing Desk and the Graph beside it.",
         "section": "elevation"
       }
     ],
