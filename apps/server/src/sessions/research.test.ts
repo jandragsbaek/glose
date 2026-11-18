@@ -4,7 +4,8 @@ import { parseArticle, WIKILINK } from "@glose/contracts";
 
 import { PAGE_A } from "../testkit/research.ts";
 import { linkSafe, sourceOfPage } from "./pageDecisions.ts";
-import { addressesOf, checkQuotes, findWholeQuote, trimAddress } from "./research.ts";
+import { findWholeQuote } from "../research/wholeQuote.ts";
+import { addressesOf, checkQuotes, trimAddress } from "./research.ts";
 
 describe("addresses the user writes", () => {
   it("keeps a closing bracket that belongs to the address, and drops end punctuation", () => {
@@ -53,6 +54,19 @@ describe("quotes", () => {
     assert.isNull(
       findWholeQuote(parseArticle("It isn't over yet, they said.\n"), "t over yet, they"),
     );
+    assert.isNull(
+      findWholeQuote(
+        parseArticle("The study found non\u00ADsignificant differences between the groups.\n"),
+        "significant differences between the groups",
+      ),
+    );
+    assert.strictEqual(
+      findWholeQuote(
+        parseArticle("She said, ‘Read the full report.’ Then left.\n"),
+        "Read the full report.",
+      )?.n,
+      1,
+    );
   });
 });
 
@@ -68,6 +82,7 @@ describe("the Source a kept page becomes", () => {
     assert.strictEqual([...`[[${id}]]`.matchAll(WIKILINK)].length, 1);
     assert.strictEqual(linkSafe("a[b]c"), "a(b)c");
     assert.strictEqual(linkSafe("Methods.md"), "Methods");
+    assert.strictEqual(linkSafe("What is README.md?"), "What is README");
   });
 });
 

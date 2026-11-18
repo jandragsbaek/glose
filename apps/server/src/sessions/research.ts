@@ -1,5 +1,4 @@
 import {
-  type Article,
   type ArticleType,
   articleForAi,
   type FoundPage,
@@ -20,6 +19,7 @@ import * as Schema from "effect/Schema";
 
 import type * as WebPages from "../research/WebPages.ts";
 import { webUrl } from "../research/WebPages.ts";
+import { findWholeQuote } from "../research/wholeQuote.ts";
 import type { AgentTool, InputItem } from "./agent.ts";
 
 const LANGUAGE_NAMES: Record<Language, string> = { en: "English", da: "Danish" };
@@ -154,29 +154,6 @@ export const setPage = (
 
 export const pageLabel = (page: Pick<FoundPage, "id" | "title">) =>
   `page ${page.id.slice(1)} ("${page.title}")`;
-
-const ESCAPE = /[.*+?^${}()|[\]\\]/g;
-
-export const findWholeQuote = (
-  article: Pick<Article, "units">,
-  quote: string,
-): { readonly n: number; readonly text: string } | null => {
-  const words = quote
-    .trim()
-    .replace(/^["'“”‘’«»„…\s]+|["'“”‘’«»„…\s]+$/g, "")
-    .split(/\s+/)
-    .filter((word) => word !== "");
-  if (words.length === 0) return null;
-  const pattern = new RegExp(
-    `(?<![\\p{L}\\p{N}\\p{Pd}'’_])${words.map((word) => word.replace(ESCAPE, "\\$&")).join("\\s+")}(?![\\p{L}\\p{N}\\p{Pd}'’_])`,
-    "iu",
-  );
-  for (const unit of article.units) {
-    const match = pattern.exec(unit.plain);
-    if (match !== null) return { n: unit.n, text: match[0] };
-  }
-  return null;
-};
 
 export const checkQuotes = (
   markdown: string,

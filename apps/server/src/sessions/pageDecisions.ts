@@ -24,22 +24,17 @@ import * as Notes from "../graph/Notes.ts";
 import * as Sources from "../graph/Sources.ts";
 import * as WebPages from "../research/WebPages.ts";
 import { webUrl } from "../research/WebPages.ts";
+import { findWholeQuote } from "../research/wholeQuote.ts";
 import * as Settings from "../settings/Settings.ts";
 import type { InputItem } from "./agent.ts";
 import { type Live, type Load, patch } from "./liveSession.ts";
-import {
-  findWholeQuote,
-  kickoff,
-  pageLabel,
-  pagesOf,
-  restartMessage,
-  setPage,
-} from "./research.ts";
+import { kickoff, pageLabel, pagesOf, restartMessage, setPage } from "./research.ts";
 import type { GraphError } from "./sessionRecord.ts";
 import type { SessionStore } from "./sessionStore.ts";
 
 export const linkSafe = (text: string): string =>
   text
+    .replace(/[<>:"/\\?*\u0000-\u001F]/g, " ")
     .replace(/\[/g, "(")
     .replace(/\]/g, ")")
     .replace(/\|/g, "-")
