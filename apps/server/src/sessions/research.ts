@@ -1,7 +1,7 @@
 import {
+  type Article,
   type ArticleType,
   articleForAi,
-  findInArticle,
   type FoundPage,
   type FoundQuote,
   type Language,
@@ -155,6 +155,29 @@ export const setPage = (
 export const pageLabel = (page: Pick<FoundPage, "id" | "title">) =>
   `page ${page.id.slice(1)} ("${page.title}")`;
 
+const ESCAPE = /[.*+?^${}()|[\]\\]/g;
+
+export const findWholeQuote = (
+  article: Pick<Article, "units">,
+  quote: string,
+): { readonly n: number; readonly text: string } | null => {
+  const words = quote
+    .trim()
+    .replace(/^["'“”‘’«»„…\s]+|["'“”‘’«»„…\s]+$/g, "")
+    .split(/\s+/)
+    .filter((word) => word !== "");
+  if (words.length === 0) return null;
+  const pattern = new RegExp(
+    `(?<![\\p{L}\\p{N}])${words.map((word) => word.replace(ESCAPE, "\\$&")).join("\\s+")}(?![\\p{L}\\p{N}])`,
+    "iu",
+  );
+  for (const unit of article.units) {
+    const match = pattern.exec(unit.plain);
+    if (match !== null) return { n: unit.n, text: match[0] };
+  }
+  return null;
+};
+
 export const checkQuotes = (
   markdown: string,
   quotes: ReadonlyArray<string>,
@@ -164,7 +187,7 @@ export const checkQuotes = (
   let missing = 0;
   for (const quote of quotes.slice(0, MAX_QUOTES)) {
     const words = quote.split(/\s+/u).filter((word) => /[\p{L}\p{N}]/u.test(word));
-    const match = words.length < MIN_QUOTE_WORDS ? null : findInArticle(article, quote);
+    const match = words.length < MIN_QUOTE_WORDS ? null : findWholeQuote(article, quote);
     if (match === null) missing++;
     else if (!found.some((other) => other.text === match.text)) {
       found.push({ text: match.text.replace(/\s+/g, " "), paragraph: match.n });

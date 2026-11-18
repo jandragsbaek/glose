@@ -1,5 +1,4 @@
 import {
-  findInArticle,
   type FoundPage,
   type ImportText,
   linkKey,
@@ -28,9 +27,25 @@ import { webUrl } from "../research/WebPages.ts";
 import * as Settings from "../settings/Settings.ts";
 import type { InputItem } from "./agent.ts";
 import { type Live, type Load, patch } from "./liveSession.ts";
-import { kickoff, pageLabel, pagesOf, restartMessage, setPage } from "./research.ts";
+import {
+  findWholeQuote,
+  kickoff,
+  pageLabel,
+  pagesOf,
+  restartMessage,
+  setPage,
+} from "./research.ts";
 import type { GraphError } from "./sessionRecord.ts";
 import type { SessionStore } from "./sessionStore.ts";
+
+export const linkSafe = (text: string): string =>
+  text
+    .replace(/\[/g, "(")
+    .replace(/\]/g, ")")
+    .replace(/\|/g, "-")
+    .replace(/[#^]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
 const dateOnly = (text: string | null): string | null => {
   const value = text?.trim() ?? "";
@@ -42,9 +57,9 @@ const dateOnly = (text: string | null): string | null => {
 export const sourceOfPage = (page: FoundPage, markdown: string, today: string): ImportText => {
   const { familyName, givenName, firstPublished, site } = pageAuthorship(page);
   return {
-    familyName,
+    familyName: linkSafe(familyName).slice(0, 40).trim() || "Web",
     givenName,
-    title: page.title.trim() || site,
+    title: linkSafe(page.title).trim() || linkSafe(site),
     firstPublished,
     edition: null,
     editionYear: null,
@@ -153,7 +168,7 @@ export const make = Effect.fn("Sessions.makePageDecisions")(function* ({
     const article = parseArticle(markdown);
     const located = new Map<string, number>();
     for (const quote of quotes) {
-      const match = findInArticle(article, quote.text);
+      const match = findWholeQuote(article, quote.text);
       if (match === null) return yield* new PageRefused({ page: page.id, reason: "quote-gone" });
       located.set(quoteKey(quote), match.n);
     }
@@ -171,8 +186,11 @@ export const make = Effect.fn("Sessions.makePageDecisions")(function* ({
     const taken = new Set([noteName.toLocaleLowerCase("und")]);
     const planned: Array<ImportText> = [];
     for (const details of pages) {
-      const short = details.title.slice(0, 60).trim();
-      const site = (details.container ?? "").slice(0, 30).trim();
+      const site = linkSafe(details.container ?? "")
+        .slice(0, 30)
+        .trim();
+      const prefix = `${details.familyName} ${details.firstPublished ?? ""} `.length;
+      const short = details.title.slice(0, Math.max(10, 110 - prefix - site.length - 6)).trim();
       const titles = [
         details.title,
         ...Array.from({ length: 9 }, (_, n) => `${short} (${site})${n === 0 ? "" : ` ${n + 1}`}`),

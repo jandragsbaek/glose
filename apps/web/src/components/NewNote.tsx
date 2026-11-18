@@ -86,7 +86,7 @@ export function NewNote({
 
   const changed = title.trim() !== "" || text.trim() !== "" || kept.length > 0;
   const blocker = useBlocker({
-    shouldBlockFn: ({ next }) => changed && next.pathname !== "/graph",
+    shouldBlockFn: ({ next }) => (changed || busy) && next.pathname !== "/graph",
     enableBeforeUnload: false,
     withResolver: true,
   });
@@ -230,7 +230,7 @@ export function NewNote({
               aria-label={t.rewrite.discardQuestion}
             >
               <p>{t.rewrite.discardQuestion}</p>
-              <button type="button" className="button" onClick={discard}>
+              <button type="button" className="button" disabled={busy} onClick={discard}>
                 {t.rewrite.discard}
               </button>
               <button

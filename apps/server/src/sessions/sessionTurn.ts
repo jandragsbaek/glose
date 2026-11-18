@@ -136,6 +136,8 @@ export const make = Effect.fn("Sessions.makeSessionTurn")(function* ({
     model: string,
   ) {
     const { entries } = yield* SubscriptionRef.get(session.view);
+    const view = yield* graph.read.pipe(Effect.orElseSucceed(() => null));
+    if (view === null || !view.nodes.some((node) => node.kind === "note")) return;
     yield* runTurn({
       token,
       model,
@@ -258,7 +260,8 @@ export const make = Effect.fn("Sessions.makeSessionTurn")(function* ({
       if (
         after.kind === "note-research" &&
         (Research.pagesOf(after.entries).length > Research.pagesOf(before.entries).length ||
-          Research.linksOf(after.entries).length === 0)
+          (Research.linksOf(after.entries).length === 0 &&
+            before.entries.at(-1)?._tag === "ResearchStart"))
       ) {
         yield* findLinks(session, token, model.slug);
       }

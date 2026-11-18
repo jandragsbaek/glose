@@ -1,3 +1,4 @@
+import { parseArticle } from "@glose/contracts";
 import { Readability } from "@mozilla/readability";
 import { parseHTML } from "linkedom";
 import TurndownService from "turndown";
@@ -73,11 +74,12 @@ export const pageFromHtml = (html: string, url: string): WebPage | null => {
   const article = new Readability(document as unknown as Document, { keepClasses: false }).parse();
   const content = article?.content ?? null;
   if (content === null) return null;
-  const markdown = turndown(url)
+  const converted = turndown(url)
     .turndown(content)
     .replace(/\n{3,}/g, "\n\n")
     .trim()
     .slice(0, MAX_MARKDOWN);
+  const markdown = holdsImage(converted) ? withoutImages(converted, url) : converted;
   if (markdown === "") return null;
   const byline = clean(article?.byline)?.replace(AUTHOR_PREFIX, "") ?? null;
   const author = metaAuthor?.startsWith("http") === false ? metaAuthor : byline;
@@ -94,7 +96,8 @@ export const pageFromHtml = (html: string, url: string): WebPage | null => {
 const FENCE = /^ {0,3}(`{3,}|~{3,})/;
 const IMAGE_MARK = /!\[/g;
 const HTML_IMAGE = /<img\b[^>]*>/gi;
-const MARKDOWN_LINK = /\[([^\]]*)\]\(\s*(<[^>]*>|[^)\s]*)(?:\s+"[^"]*")?\s*\)/g;
+const MARKDOWN_LINK =
+  /\[((?:[^[\]]|\[[^[\]]*\])*)\]\(\s*(<[^>]*>|(?:[^()\s]|\([^()\s]*\))*)(?:\s+"[^"]*")?\s*\)/g;
 
 const cleanLine = (line: string, base: string): string =>
   line
@@ -112,7 +115,7 @@ const cleanMarkdown = (markdown: string, base: string): string => {
     .map((line) => {
       const marker = FENCE.exec(line)?.[1];
       if (fence !== null) {
-        if (marker !== undefined && marker.startsWith(fence)) fence = null;
+        if (line.trimStart().startsWith(fence)) fence = null;
         return line;
       }
       if (marker !== undefined) {
@@ -124,8 +127,16 @@ const cleanMarkdown = (markdown: string, base: string): string => {
     .join("\n");
 };
 
+const holdsImage = (markdown: string) =>
+  JSON.stringify(parseArticle(markdown)).includes('"kind":"image"');
+
+const withoutImages = (markdown: string, base: string): string => {
+  const cleaned = cleanMarkdown(markdown, base);
+  return holdsImage(cleaned) ? cleaned.replace(IMAGE_MARK, "[").replace(HTML_IMAGE, "") : cleaned;
+};
+
 export const pageFromText = (text: string, url: string): WebPage | null => {
-  const markdown = cleanMarkdown(text.replace(/\r\n?/g, "\n"), url).trim().slice(0, MAX_MARKDOWN);
+  const markdown = withoutImages(text.replace(/\r\n?/g, "\n"), url).trim().slice(0, MAX_MARKDOWN);
   if (markdown === "") return null;
   const heading = /^#\s+(.+)$/m.exec(markdown)?.[1]?.trim();
   return {

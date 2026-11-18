@@ -88,4 +88,12 @@ describe("pageFromText", () => {
     assert.include(page!.markdown, "![kept](code.png)");
     assert.include(page!.markdown, "[home](https://notes.example/a%20b)");
   });
+
+  it("closes a code fence the way the Reader does, so no image slips through after it", () => {
+    const page = pageFromText(
+      ["```", "code", "      ```", "![x](https://tracker.example/p.png)"].join("\n"),
+      "https://notes.example/s.md",
+    );
+    assert.notInclude(page!.markdown, "![");
+  });
 });

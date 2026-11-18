@@ -765,12 +765,13 @@ three-model council.
 - The research is a Session of kind `note-research`, its subject the draft's id (`new-…`). It runs
   in two passes that never share a context. The web pass has OpenAI's hosted `web_search` and
   Glose's `read_web_page` and `propose_pages`, and never sees the user's Graph. After a turn that
-  found pages, a Links pass without web access reads the Graph (`search_graph`, `read_note`) and
-  calls `propose_links`. So Note text can never reach a web search, a page open or a fetched
+  found pages, or once after each start while there are no Links, a Links pass without web access
+  reads the Graph (`search_graph`, `read_note`) and calls `propose_links`; on an empty Graph it
+  does not run. So Note text can never reach a web search, a page open or a fetched
   address. The AI finds sources; it never writes the Note's text, and has no tool that could.
 - Glose reads a page itself (the main text, as a browser's reader view: Readability, linkedom and
   turndown) and keeps a quote only when the page holds those exact words; the quote's Location is
-  its paragraph number (`¶ 8`). A quote has at least four words. Glose reads only public http and
+  its paragraph number (`¶ 8`). A quote has at least four words and matches whole words. Glose reads only public http and
   https addresses, never this computer or its own network: every address the name resolves to is
   checked inside the connection itself, so a name cannot change between the check and the read.
   Images are not imported (in a text page an image becomes a plain link), and links become
@@ -794,7 +795,8 @@ three-model council.
   quote, why it matters and where it stands (Supports, Pulls against, Context). The user keeps or
   drops it, and can change their mind.
 - A kept page becomes a Source when the Note is saved: an Article (type from the AI, usually web
-  essay) with the site as its container, the URL and the date read, and the page's text in
+  essay) with the site as its container, the URL and the date read (brackets, `|`, `#` and `^` in
+  its title are replaced, so a wikilink can reach the Source), and the page's text in
   `Articles/`, so its quotes stay checkable and it can be read in Glose. A page whose URL is a
   Source already uses that Source. The Note's `source` is the kept page the user chose under
   "Rests on" (the first kept page by default); without one the Note has no `source` and says "No

@@ -106,6 +106,88 @@ it.layer(NodeServices.layer)("Sessions: saving a researched Note", (it) => {
     }),
   );
 
+  it.effect("offers only quotes a reused Source holds, and tells the AI nothing about it", () =>
+    Effect.gen(function* () {
+      const { fake, layer, bodies } = yield* setUpWithPages(new Map([[URL_A, PAGE_A]]));
+      fake.answer(MODELS, MODEL_LIST);
+      fake.answer(
+        RESPONSES,
+        searchThenRead,
+        toolCall("propose_pages", {
+          pages: [
+            {
+              url: URL_A,
+              stance: "supports",
+              kind: "web",
+              why: "Both quotes are on the live page.",
+              quotes: [
+                "Retrieval practice means bringing information to mind without looking.",
+                "Students who tested themselves remembered more a week later than students who reread.",
+              ],
+            },
+          ],
+        }),
+        answer("Found it."),
+        answer(""),
+      );
+
+      const session = yield* Effect.gen(function* () {
+        yield* (yield* Sources.Sources).importText({
+          familyName: "Author",
+          givenName: "Sample",
+          title: "Retrieval practice, explained",
+          firstPublished: 2024,
+          edition: null,
+          editionYear: null,
+          publisher: null,
+          translator: null,
+          kind: "article",
+          articleType: "web",
+          otherAuthors: [],
+          container: "Learning Example",
+          published: null,
+          volume: null,
+          issue: null,
+          pages: null,
+          url: URL_A,
+          doi: null,
+          accessed: "2026-11-01",
+          part: null,
+          markdown:
+            "An older copy.\n\nStudents who tested themselves remembered more a week later than students who reread.\n",
+        });
+        const sessions = yield* Sessions;
+        const started = yield* sessions.startResearch({
+          draft: DRAFT,
+          ask: "learn",
+          title: "Testing",
+          text: "",
+          question: "",
+          notes: [],
+        });
+        return yield* afterTurn(started.id);
+      }).pipe(Effect.provide(layer));
+
+      const [page] = session.entries.flatMap((entry) =>
+        entry._tag === "FoundPages" ? entry.pages : [],
+      );
+      assert.isNotNull(page?.source);
+      assert.deepStrictEqual(page?.quotes, [
+        {
+          text: "Students who tested themselves remembered more a week later than students who reread.",
+          paragraph: 2,
+        },
+      ]);
+      const told = bodies()
+        .flatMap((body) => body.input)
+        .filter((item) => item.type === "function_call_output")
+        .map((item) => String(item["output"]))
+        .join("\n");
+      assert.notInclude(told, "older copy");
+      assert.notInclude(told, "Source");
+    }),
+  );
+
   it.effect("refuses a Note that cites a page the user did not keep", () =>
     Effect.gen(function* () {
       const { fake, layer } = yield* setUpWithPages(new Map([[URL_A, PAGE_A]]));
