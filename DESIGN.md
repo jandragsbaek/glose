@@ -1350,7 +1350,7 @@ your Free text and Notes."), and the group names it as its description. Hover fi
 Lapis Tint; checked fills it Lapis Tint, turns the name Lapis and adds a 3px Gilt underline inside
 its foot; keyboard focus draws the 2px Lapis outline inside. 160ms on the shared ease-out. The
 segments wrap in a narrow window. The kind lives in the address (`?kind=article|lesson`; Book is
-the default).
+the default). While any kind saves, the choice is locked, so one save cannot meet another.
 
 ### Catalog Results
 
