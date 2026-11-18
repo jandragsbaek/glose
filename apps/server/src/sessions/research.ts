@@ -308,10 +308,10 @@ export const tools = ({
   known,
   remember,
 }: Context): AgentTool[] => {
-  const movedFrom = new Map<string, string>();
-  const firstAddress = (url: string) => {
+  const movedFrom = new Map<string, Set<string>>();
+  const firstAddresses = (url: string): ReadonlyArray<string> => {
     const href = webUrl(url)?.href;
-    return href === undefined ? undefined : movedFrom.get(href);
+    return href === undefined ? [] : [...(movedFrom.get(href) ?? [])];
   };
   return [
     {
@@ -341,7 +341,9 @@ export const tools = ({
                 remember(page.url);
                 const from = webUrl(url)?.href;
                 const to = webUrl(page.url)?.href;
-                if (from !== undefined && to !== undefined && from !== to) movedFrom.set(to, from);
+                if (from !== undefined && to !== undefined && from !== to) {
+                  movedFrom.set(to, (movedFrom.get(to) ?? new Set()).add(from));
+                }
                 const text = articleForAi(parseArticle(page.markdown));
                 return {
                   url: page.url,
@@ -443,11 +445,15 @@ export const tools = ({
             );
             continue;
           }
-          const addresses = [page.url, asked.url, firstAddress(page.url), firstAddress(asked.url)];
+          const addresses = [
+            page.url,
+            asked.url,
+            ...firstAddresses(page.url),
+            ...firstAddresses(asked.url),
+          ];
           const source = library.find(
             (other) =>
-              other.url !== null &&
-              addresses.some((address) => address !== undefined && sameUrl(other.url!, address)),
+              other.url !== null && addresses.some((address) => sameUrl(other.url!, address)),
           );
           const stored = source === undefined ? null : yield* articleText(source.id);
           const found =

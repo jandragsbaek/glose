@@ -43,13 +43,22 @@ const codeAt = (ranges: ReturnType<typeof codeRanges>, at: number) =>
 
 const FOOTNOTE = /(?<!\\)\[\^q(\d{1,4})\](:[ \t]?)?/g;
 
-const withNotes = (part: Extract<Inline, { kind: "text" }>): ReadonlyArray<Inline> => {
+const CODE_SPAN = /(`+)[\s\S]*?\1/g;
+
+const inCode = (text: string, at: number) =>
+  Array.from(text.matchAll(CODE_SPAN)).some(
+    (span) => at >= span.index && at < span.index + span[0].length,
+  );
+
+const withNotes = (
+  part: Extract<Inline, { kind: "text" }>,
+  paragraph: boolean,
+): ReadonlyArray<Inline> => {
   const out: Array<Inline> = [];
   let last = 0;
-  const code = codeRanges(part.text, false);
   for (const match of part.text.matchAll(FOOTNOTE)) {
-    if (codeAt(code, match.index) !== undefined) continue;
-    const definition = part.at === 0 && match.index === 0 && match[2] !== undefined;
+    if (inCode(part.text, match.index)) continue;
+    const definition = paragraph && part.at === 0 && match.index === 0 && match[2] !== undefined;
     const length = definition ? match[0].length : match[0].length - (match[2]?.length ?? 0);
     if (match.index > last) {
       out.push({ kind: "text", at: part.at + last, text: part.text.slice(last, match.index) });
@@ -63,8 +72,8 @@ const withNotes = (part: Extract<Inline, { kind: "text" }>): ReadonlyArray<Inlin
   return out;
 };
 
-const inlines = (text: string): ReadonlyArray<Inline> =>
-  wikilinked(text).flatMap((part) => (part.kind === "text" ? withNotes(part) : [part]));
+const inlines = (text: string, paragraph = false): ReadonlyArray<Inline> =>
+  wikilinked(text).flatMap((part) => (part.kind === "text" ? withNotes(part, paragraph) : [part]));
 
 const wikilinked = (text: string): ReadonlyArray<Inline> => {
   const code = codeRanges(text, false);
@@ -96,7 +105,11 @@ const plainBlock = (lines: ReadonlyArray<string>, at: number): Block => {
     });
     return { kind: "list", at, items };
   }
-  return { kind: "paragraph", at, inlines: inlines(lines.map((line) => line.trim()).join(" ")) };
+  return {
+    kind: "paragraph",
+    at,
+    inlines: inlines(lines.map((line) => line.trim()).join(" "), true),
+  };
 };
 
 const aiBlock = (lines: ReadonlyArray<string>, at: number): Block => {

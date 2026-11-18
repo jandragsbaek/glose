@@ -27,6 +27,21 @@ describe("parseNoteText", () => {
       parts.map((part) => (part.kind === "text" ? part.text : part.kind)),
       ["The finding matters", "note", ": it holds. `[^q2]` and \\[^q3]."],
     );
+    const [item, heading, code] = parseNoteText(
+      "- [^q1]: a list item\n\n## [^q1]: A heading\n\nSee ``[^q1]`` here.",
+    );
+    const texts = (block: typeof item) =>
+      block?.kind === "list"
+        ? block.items[0]!.inlines
+        : block?.kind === "heading" || block?.kind === "paragraph"
+          ? block.inlines
+          : [];
+    assert.include(JSON.stringify(texts(item)), ": a list item");
+    assert.include(JSON.stringify(texts(heading)), ": A heading");
+    assert.deepStrictEqual(
+      texts(code).map((part) => part.kind),
+      ["text"],
+    );
   });
 
   it("splits paragraphs and lists, and keeps wikilinks with the words they show", () => {
