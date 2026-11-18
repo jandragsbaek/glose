@@ -1,4 +1,4 @@
-import { parseArticle } from "@glose/contracts";
+import { parseArticle, sameFileName, toFileName } from "@glose/contracts";
 
 import {
   comparePart,
@@ -7,7 +7,7 @@ import {
   partByOrder,
   partFromName,
 } from "../domain/importText.ts";
-import type { FromFiles, Origin } from "./CourseFields.tsx";
+import type { Course, FromFiles, Origin } from "./CourseFields.tsx";
 import type { Lesson } from "./LessonTable.tsx";
 
 export const pathOf = (file: File) =>
@@ -38,6 +38,7 @@ export const lessonBatch = (
       words: parseArticle(file.markdown).words,
       state: "new",
       id: null,
+      takenAs: null,
     };
   });
   const first = detailsFromMarkdown(read[0]!.markdown);
@@ -61,3 +62,18 @@ export const lessonBatch = (
     found,
   };
 };
+
+export const isHeld = (lesson: Lesson, course: Pick<Course, "family" | "year">) =>
+  lesson.state === "named" &&
+  lesson.takenAs !== null &&
+  sameFileName(
+    `${toFileName(
+      [
+        course.family.trim(),
+        Number(course.year.trim()),
+        lesson.part,
+        lesson.title.trim() === "" ? lesson.name : lesson.title.trim(),
+      ].join(" "),
+    )}.md`,
+    lesson.takenAs,
+  );

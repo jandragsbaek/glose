@@ -238,7 +238,7 @@ export const articleMessages = {
     url: "Course address (URL)",
     perWeek: "Lessons a week",
     perWeekHint: "For files whose names give no week and day.",
-    perWeekInvalid: "Write a whole number, for example 5.",
+    perWeekInvalid: "Enter a whole number of 1 or more.",
     columns: {
       part: "Week · Day",
       title: "Title",

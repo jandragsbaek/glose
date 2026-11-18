@@ -5,6 +5,9 @@ import {
   NoteNotFound,
   type SaveNote,
   StorageError,
+  isFileName,
+  sameFileName,
+  toFileName,
 } from "@glose/contracts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -16,7 +19,6 @@ import * as Semaphore from "effect/Semaphore";
 
 import * as Settings from "../settings/Settings.ts";
 import { writeFileAtomic } from "../storage.ts";
-import { isFileName, sameFileName, toFileName } from "./fileName.ts";
 import { editNoteFile, type NoteFileContent, renderNoteFile } from "./noteFile.ts";
 import { relinkWikilinks } from "./relink.ts";
 import { parseSourceFile } from "./sourceFile.ts";

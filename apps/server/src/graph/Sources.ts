@@ -17,6 +17,9 @@ import {
   SourceNameTaken,
   SourceNotFound,
   StorageError,
+  isFileName,
+  sameFileName,
+  toFileName,
 } from "@glose/contracts";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -29,7 +32,6 @@ import * as Semaphore from "effect/Semaphore";
 
 import * as Settings from "../settings/Settings.ts";
 import { writeFileAtomic } from "../storage.ts";
-import { isFileName, sameFileName, toFileName } from "./fileName.ts";
 import { parseSourceFile, renderSourceFile, type SourceFileContent } from "./sourceFile.ts";
 
 type GraphError = GraphFolderNotSet | StorageError;

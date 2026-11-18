@@ -31,7 +31,7 @@ import {
   type Origin,
   type Say,
 } from "./CourseFields.tsx";
-import { lessonBatch, pathOf } from "./lessonBatch.ts";
+import { isHeld, lessonBatch, pathOf } from "./lessonBatch.ts";
 import { type Lesson, LessonTable, PerWeek, wholeAtLeastOne } from "./LessonTable.tsx";
 import { Panel } from "./ui.tsx";
 
@@ -165,11 +165,6 @@ export function AddLessons() {
     const { [key as FromFiles]: _, ...rest } = originsRef.current;
     writeOrigins(rest);
     setErrors(({ [key]: _, ...rest }) => rest);
-    if (key === "family" || key === "year") {
-      setLessons((current) =>
-        current.map((lesson) => (lesson.state === "named" ? { ...lesson, state: "new" } : lesson)),
-      );
-    }
   };
 
   const change = (key: string, patch: Partial<Lesson>) =>
@@ -179,7 +174,6 @@ export function AddLessons() {
           ? lesson
           : {
               ...lesson,
-              ...(lesson.state === "named" && patch.state === undefined ? { state: "new" } : {}),
               ...patch,
             },
       ),
@@ -197,7 +191,6 @@ export function AddLessons() {
           : {
               ...lesson,
               part: partByOrder(lesson.order, week),
-              ...(lesson.state === "named" ? { state: "new" as const } : {}),
             },
       ),
     );
@@ -213,8 +206,9 @@ export function AddLessons() {
     badParts.length > 0 ? t.lessons.badPart : null,
     clashes.size > 0 ? t.lessons.clash([...clashes].join(", ")) : null,
   ].filter((line): line is string => line !== null);
+  const held = (lesson: Lesson) => isHeld(lesson, course);
   const toAdd = lessons.filter(
-    (lesson) => lesson.state !== "added" && lesson.state !== "named" && !taken(lesson.part),
+    (lesson) => lesson.state !== "added" && !held(lesson) && !taken(lesson.part),
   );
   const added = lessons.filter((lesson) => lesson.state === "added").length;
 
@@ -240,7 +234,7 @@ export function AddLessons() {
       !wholeAtLeastOne(perWeek);
     if (Object.keys(found).length > 0 || partProblems.length > 0 || perWeekBad) {
       setProblem({ say: (m) => m.addSource.checkFields });
-      focusFirstProblem(formRef.current);
+      focusFirstProblem(formRef.current, "[data-held]");
       return;
     }
     setProblem(null);
@@ -277,7 +271,10 @@ export function AddLessons() {
         const error = Cause.findErrorOption(exit.cause);
         const nameTaken = Option.isSome(error) && error.value._tag === "SourceNameTaken";
         if (nameTaken) named += 1;
-        change(lesson.key, { state: nameTaken ? "named" : "failed" });
+        change(lesson.key, {
+          state: nameTaken ? "named" : "failed",
+          takenAs: nameTaken ? error.value.fileName : null,
+        });
       }
     }
     busyRef.current = false;
@@ -289,7 +286,7 @@ export function AddLessons() {
   };
 
   const firstAdded = lessons.find((lesson) => lesson.state === "added");
-  const waiting = lessons.some((lesson) => lesson.state === "named");
+  const waiting = lessons.some(held);
   const locked = busy || (lessons.length > 0 && toAdd.length === 0 && !waiting && finished);
   const byOrder = lessons.some((lesson) => !lesson.partByName && lesson.state !== "added");
   const showDrop = lessons.length === 0 || choosing;
@@ -422,6 +419,7 @@ export function AddLessons() {
             clashes={clashes}
             problemId={partProblemId}
             busy={busy}
+            held={held}
             onChange={change}
           />
         )}

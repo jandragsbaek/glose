@@ -16,6 +16,7 @@ export interface Lesson {
   readonly words: number;
   readonly state: LessonState;
   readonly id: string | null;
+  readonly takenAs: string | null;
   readonly order: number;
   readonly partByName: boolean;
 }
@@ -26,6 +27,7 @@ export function LessonTable({
   clashes,
   problemId,
   busy,
+  held,
   onChange,
 }: {
   readonly lessons: ReadonlyArray<Lesson>;
@@ -33,6 +35,7 @@ export function LessonTable({
   readonly clashes: ReadonlySet<string>;
   readonly problemId: string;
   readonly busy: boolean;
+  readonly held: (lesson: Lesson) => boolean;
   readonly onChange: (name: string, patch: Partial<Lesson>) => void;
 }) {
   const t = useT();
@@ -58,7 +61,11 @@ export function LessonTable({
         <tbody>
           {lessons.map((lesson, index) => {
             const state: LessonState =
-              lesson.state === "new" && taken(lesson.part) ? "taken" : lesson.state;
+              lesson.state === "named" && !held(lesson)
+                ? "new"
+                : lesson.state === "new" && taken(lesson.part)
+                  ? "taken"
+                  : lesson.state;
             const wrong = !PART.test(lesson.part) || clashes.has(lesson.part);
             return (
               <tr
@@ -90,6 +97,7 @@ export function LessonTable({
                       twice.has(lesson.name) ? lesson.path : lesson.name,
                     )}
                     aria-invalid={state === "named" ? true : undefined}
+                    data-held={state === "named" ? "" : undefined}
                     aria-describedby={state === "named" ? `${baseId}-${index}-state` : undefined}
                     disabled={state === "added" || busy}
                     onChange={(event) => onChange(lesson.key, { title: event.target.value })}

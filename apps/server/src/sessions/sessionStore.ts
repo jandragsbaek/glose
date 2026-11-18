@@ -1,4 +1,10 @@
-import { GraphFolderNotSet, publicEntries, type Session, SessionNotFound } from "@glose/contracts";
+import {
+  GraphFolderNotSet,
+  publicEntries,
+  type Session,
+  SessionNotFound,
+  isFileName,
+} from "@glose/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Option from "effect/Option";
@@ -6,7 +12,6 @@ import * as Path from "effect/Path";
 import * as Semaphore from "effect/Semaphore";
 import * as SubscriptionRef from "effect/SubscriptionRef";
 
-import { isFileName } from "../graph/fileName.ts";
 import { GLOSE_DIR } from "../graph/GraphFolder.ts";
 import * as Sources from "../graph/Sources.ts";
 import * as Settings from "../settings/Settings.ts";

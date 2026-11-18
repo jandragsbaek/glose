@@ -240,7 +240,7 @@ export const articleMessages: typeof english = {
     url: "Kursets adresse (URL)",
     perWeek: "Lektioner om ugen",
     perWeekHint: "Til filer, hvis navne ikke giver uge og dag.",
-    perWeekInvalid: "Skriv et helt tal, fx 5.",
+    perWeekInvalid: "Skriv et helt tal på mindst 1.",
     columns: {
       part: "Uge · Dag",
       title: "Titel",

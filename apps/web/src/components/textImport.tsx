@@ -43,9 +43,11 @@ export const handCursorOn = (around: HTMLElement | null, to: RefObject<HTMLEleme
   });
 };
 
-export const focusFirstProblem = (root: HTMLElement | null) =>
+export const focusFirstProblem = (root: HTMLElement | null, skip?: string) =>
   requestAnimationFrame(() => {
-    const target = root?.querySelector<HTMLElement>('[aria-invalid="true"]:not(:disabled)');
+    const target = root?.querySelector<HTMLElement>(
+      `[aria-invalid="true"]:not(:disabled)${skip === undefined ? "" : `:not(${skip})`}`,
+    );
     target?.closest("details")?.setAttribute("open", "");
     target?.focus();
   });
