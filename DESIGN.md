@@ -562,10 +562,11 @@ them by role:
 - **Accent** (`--accent`): Lapis as a mark on Paper: links, focus outlines, the caret, rings,
   edges, underlines, the Graph's trail and lit nodes.
 
-Gilt, Rubric, Verdigris and the neutrals keep their names and jobs in every theme. Two shared
+Gilt, Rubric, Verdigris and the neutrals keep their names and jobs in every theme. Three shared
 tokens follow the appearance: **Veil** (`--veil`, Ink at 32% in light, black at 58% in dark)
-behind a sheet and the Settings window, and **Halo** (`--halo`, Accent at 18% in light, 30% in
-dark) around a focused input.
+behind a sheet and the Settings window, **Halo** (`--halo`, Accent at 18% in light, 30% in
+dark) around a focused input, and **Crease** (`--crease`, Ink at 18% in light, black at 72% in
+dark), the deepest shade of the fold between the Writing Desk and the Graph beside it.
 
 **Dark.** The scene is the same desk in the evening: long reading under a lamp. Ground is a
 near-black tinted with the theme's hue, Paper one step lighter (a leaf still lifts off the desk),
@@ -805,7 +806,7 @@ Check every new screen in Danish.
 ## Elevation & Depth
 
 Flat by default. Depth comes from the step between Ground and Paper and from 1px hairlines.
-There are two shadows, both responses to state.
+There are two shadows, both responses to state, and one shade at rest: the Crease.
 
 ### Shadow Vocabulary
 
@@ -814,6 +815,14 @@ There are two shadows, both responses to state.
   keyboard focus, with a lapis border.
 
 Elsewhere, focus is a 2px lapis outline at 2px offset (gold on the rail).
+
+**The Crease.** With the Graph beside the Writing Desk, the two halves meet like the pages of an
+open book. The line between them is a Strong Hairline, and each page darkens into it: a gradient of
+Crease laid over the fold (96px wide, `pointer-events: none`, it does not scroll), the desk's side
+over 48px and the Graph's over 20px, so the Note text 24px in stays clean. It is the one resting
+shade in Glose, and only here, where the screen is a spread; it is hidden in forced colors. What
+sits in the shade keeps its contrast: the desk's scrollbar thumb is Mute, and the Graph canvas's
+focus outline sits 4px in.
 
 The Review stack shows depth the same way: the Cards still to come are paper edges under the
 leaf, each narrower, with hairline borders and no shadow.
@@ -840,7 +849,7 @@ The apparatus sits under the leaf behind a 2px Ink rule, not a shadow.
 ### Named Rules
 
 **The Hairline Rule.** Panels separate by a 1px Hairline and a white leaf on Ground. Don't add
-resting shadows.
+resting shadows. The one exception is the Crease between the Writing Desk and the Graph beside it.
 
 ## Shapes
 
@@ -1869,8 +1878,9 @@ it never writes or cites (citing stays in the Cite Slip). From a 1200px window o
   `aria-controls`. It is off until the Graph has loaded. Each piece remembers whether its panel is
   open (a setting of this computer, not of the file). ⌘G works anywhere on the desk except in the Cite
   Slip and dialogs.
-- **Split:** the desk and the panel are two equal columns under the bar, a Hairline between, each
-  scrolling on its own. Opening or closing keeps the line the writer was at (the caret if in view,
+- **Split:** the desk and the panel are two equal columns under the bar, each scrolling on its own,
+  meeting at the Crease (see Elevation & Depth): a Strong Hairline, each page shaded into it like
+  the fold of an open book. Opening or closing keeps the line the writer was at (the caret if in view,
   else the top line) at the same height; closing from inside the panel returns focus to the text
   (Write) or the toggle (Proof).
 - **Stage:** the top 40% of the panel (at least 200px; 34% and 170px under an 800px-tall window) on
@@ -2063,8 +2073,8 @@ Skeleton bars (14px, 2px corners) shimmer Tint to Ground over 1.4s inside a pane
 
 - **Don't** decorate data, Note text, inputs or buttons (no initials, flourishes or gilt there).
 - **Don't** use red alone to mean anything; color never carries a message by itself.
-- **Don't** add resting shadows or new fields of color beyond the lapis rail, spine, primary and
-  the Settings window's spine.
+- **Don't** add resting shadows (the Crease beside the Writing Desk is the one resting shade) or
+  new fields of color beyond the lapis rail, spine, primary and the Settings window's spine.
 - **Don't** use Cinzel Decorative beyond a single heading initial, or Courier Prime beyond call
   numbers, step numbers, question numbers, repository names, a code the user types elsewhere,
   paragraph and note numbers, and a lesson's week·day.

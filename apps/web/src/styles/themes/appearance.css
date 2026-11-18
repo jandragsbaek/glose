@@ -6,9 +6,11 @@
 [data-appearance="light"] {
   --veil: color-mix(in srgb, var(--ink) 32%, transparent);
   --halo: color-mix(in srgb, var(--accent) 18%, transparent);
+  --crease: color-mix(in srgb, var(--ink) 18%, transparent);
 }
 
 [data-appearance="dark"] {
   --veil: color-mix(in srgb, #000 58%, transparent);
   --halo: color-mix(in srgb, var(--accent) 30%, transparent);
+  --crease: color-mix(in srgb, #000 72%, transparent);
 }
