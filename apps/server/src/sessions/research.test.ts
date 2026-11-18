@@ -67,6 +67,18 @@ describe("quotes", () => {
       )?.n,
       1,
     );
+    assert.isNull(
+      findWholeQuote(
+        parseArticle("The rule will apply to the U.S.’s largest cities first.\n"),
+        "will apply to the U.S.",
+      ),
+    );
+    assert.isNull(
+      findWholeQuote(
+        parseArticle("We compared the groups’ results over time.\n"),
+        "We compared the groups",
+      ),
+    );
   });
 });
 

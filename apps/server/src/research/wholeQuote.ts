@@ -4,7 +4,7 @@ const ESCAPE = /[.*+?^${}()|[\]\\]/g;
 
 const WORD_PART = "\\p{L}\\p{N}\\p{Pd}_\\u00AD";
 const QUOTE_START = `(?<![${WORD_PART}])(?<!['’](?=[\\p{L}\\p{N}]))`;
-const QUOTE_END = `(?![${WORD_PART}])(?!(?<=[\\p{L}\\p{N}])['’])`;
+const QUOTE_END = `(?![${WORD_PART}])(?!(?<=[\\p{L}\\p{N}])['’])(?!['’][\\p{L}\\p{N}])`;
 
 export const findWholeQuote = (
   article: Pick<Article, "units">,
