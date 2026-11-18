@@ -32,6 +32,9 @@ export const linksKickoff = (entries: ReadonlyArray<SessionEntry>): InputItem =>
     role: "user",
     content: [
       start?._tag === "ResearchStart" ? `The new Note: "${start.title}"` : null,
+      start?._tag === "ResearchStart" && start.text !== undefined
+        ? `Its text so far:\n"""\n${start.text}\n"""`
+        : null,
       start?._tag === "ResearchStart" && start.question !== ""
         ? `Their question: ${start.question}`
         : null,

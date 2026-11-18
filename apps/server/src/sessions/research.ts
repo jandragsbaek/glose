@@ -168,7 +168,7 @@ export const findWholeQuote = (
     .filter((word) => word !== "");
   if (words.length === 0) return null;
   const pattern = new RegExp(
-    `(?<![\\p{L}\\p{N}])${words.map((word) => word.replace(ESCAPE, "\\$&")).join("\\s+")}(?![\\p{L}\\p{N}])`,
+    `(?<![\\p{L}\\p{N}\\p{Pd}'’_])${words.map((word) => word.replace(ESCAPE, "\\$&")).join("\\s+")}(?![\\p{L}\\p{N}\\p{Pd}'’_])`,
     "iu",
   );
   for (const unit of article.units) {

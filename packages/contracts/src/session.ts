@@ -184,6 +184,7 @@ export const SessionEntry = Schema.Union([
   Schema.TaggedStruct("ResearchStart", {
     ask: ResearchAsk,
     title: Schema.String,
+    text: Schema.optionalKey(Schema.String),
     question: Schema.String,
     notes: Schema.Array(Schema.String),
   }),

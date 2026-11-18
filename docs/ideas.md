@@ -771,7 +771,7 @@ three-model council.
   address. The AI finds sources; it never writes the Note's text, and has no tool that could.
 - Glose reads a page itself (the main text, as a browser's reader view: Readability, linkedom and
   turndown) and keeps a quote only when the page holds those exact words; the quote's Location is
-  its paragraph number (`¶ 8`). A quote has at least four words and matches whole words. Glose reads only public http and
+  its paragraph number (`¶ 8`). A quote has at least four words and matches whole words; it never starts or ends inside a hyphenated word or a contraction, so "non-significant" cannot become "significant". Glose reads only public http and
   https addresses, never this computer or its own network: every address the name resolves to is
   checked inside the connection itself, so a name cannot change between the check and the read.
   Images are not imported (in a text page an image becomes a plain link), and links become

@@ -45,6 +45,8 @@ export const linkSafe = (text: string): string =>
     .replace(/\|/g, "-")
     .replace(/[#^]/g, " ")
     .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\.md$/i, "")
     .trim();
 
 const dateOnly = (text: string | null): string | null => {
@@ -329,6 +331,7 @@ export const make = Effect.fn("Sessions.makePageDecisions")(function* ({
           _tag: "ResearchStart",
           ask: input.ask,
           title: input.title,
+          ...(input.text === "" ? {} : { text: input.text }),
           question: input.question,
           notes: input.notes,
         },

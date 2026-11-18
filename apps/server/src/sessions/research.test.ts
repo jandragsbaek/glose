@@ -46,6 +46,13 @@ describe("quotes", () => {
       checkQuotes("She never said this would work.\n", ["ever said this would"]).missing,
       1,
     );
+    const finding = parseArticle(
+      "The study found non-significant differences between the groups.\n",
+    );
+    assert.isNull(findWholeQuote(finding, "significant differences between the groups"));
+    assert.isNull(
+      findWholeQuote(parseArticle("It isn't over yet, they said.\n"), "t over yet, they"),
+    );
   });
 });
 
@@ -60,6 +67,7 @@ describe("the Source a kept page becomes", () => {
     const id = `${details.familyName} 2024 ${details.title}`;
     assert.strictEqual([...`[[${id}]]`.matchAll(WIKILINK)].length, 1);
     assert.strictEqual(linkSafe("a[b]c"), "a(b)c");
+    assert.strictEqual(linkSafe("Methods.md"), "Methods");
   });
 });
 
