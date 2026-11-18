@@ -143,6 +143,8 @@ export const sourceMessages = {
     },
     partBreak: ". ",
     filled: "Filled in from Open Library. Check the marked fields against your copy.",
+    emptied:
+      "Open Library had no value for some fields an earlier book filled, so they are empty now.",
     keptTyped: "Fields you typed yourself are kept.",
     undoFill: "Undo",
     fromCatalog: "From Open Library",

@@ -146,6 +146,8 @@ export const sourceMessages: Pick<Messages, "source" | "sources" | "addSource"> 
     },
     partBreak: ". ",
     filled: "Udfyldt fra Open Library. Tjek de mærkede felter mod dit eksemplar.",
+    emptied:
+      "Open Library havde ingen værdi for nogle felter, som en tidligere bog udfyldte, så de er tomme nu.",
     keptTyped: "Felter, du selv har skrevet i, er beholdt.",
     undoFill: "Fortryd",
     fromCatalog: "Fra Open Library",

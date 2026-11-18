@@ -46,11 +46,11 @@ export const droppedFiles = async (event: DragEvent): Promise<ReadonlyArray<File
   const out: File[] = [];
   const walk = async (entry: FileSystemEntry, depth: number): Promise<void> => {
     if (entry.isFile) {
-      out.push(
-        await new Promise<File>((resolve, reject) =>
-          (entry as FileSystemFileEntry).file(resolve, reject),
-        ),
+      const file = await new Promise<File>((resolve, reject) =>
+        (entry as FileSystemFileEntry).file(resolve, reject),
       );
+      Object.defineProperty(file, "webkitRelativePath", { value: entry.fullPath.slice(1) });
+      out.push(file);
     } else if (entry.isDirectory && depth < 2) {
       const reader = (entry as FileSystemDirectoryEntry).createReader();
       const children = await new Promise<FileSystemEntry[]>((resolve, reject) =>
@@ -188,15 +188,17 @@ export function TextField({
 
 export function FillLine({
   children,
+  marked = true,
   onUndo,
 }: {
   readonly children: ReactNode;
+  readonly marked?: boolean;
   readonly onUndo?: (() => void) | undefined;
 }) {
   const t = useT();
   return (
     <div className="fill-line">
-      <span className="fill-line__dot" aria-hidden="true" />
+      {marked ? <span className="fill-line__dot" aria-hidden="true" /> : null}
       <p className="fill-line__text">{children}</p>
       {onUndo === undefined ? null : (
         <button type="button" className="link-button fill-line__undo" onClick={onUndo}>

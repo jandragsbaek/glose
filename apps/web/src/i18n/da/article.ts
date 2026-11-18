@@ -222,6 +222,9 @@ export const articleMessages: typeof english = {
     needPasted: "Indsæt teksten, og vælg så Brug denne tekst.",
     backToFile: "Vælg en fil i stedet",
     keep: (name: string) => `Behold ${name}`,
+    keepPasted: "Behold den indsatte tekst",
+    fromPaste: "Fra den indsatte tekst",
+    filledFromPaste: "Udfyldt fra den indsatte tekst. Tjek de mærkede felter.",
   },
   lessons: {
     chooseFolder: "Vælg kursusmappen",
@@ -263,6 +266,9 @@ export const articleMessages: typeof english = {
     needFiles: "Vælg lektionsfilerne først.",
     filled: "Udfyldt fra filerne. Tjek de mærkede felter.",
     fromFolder: "Fra mappens navn",
+    filledFolder: "Udfyldt fra mappens navn. Tjek det mærkede felt.",
+    filledBoth: "Udfyldt fra filerne og mappens navn. Tjek de mærkede felter.",
+    noMarkdown: "Der er ingen Markdown-filer der. Vælg en mappe med .md-lektionsfiler.",
     yearGuess: "I år, som et gæt. Ret det for et ældre kursus.",
     another: "Vælg andre filer",
     keep: (n: number) =>

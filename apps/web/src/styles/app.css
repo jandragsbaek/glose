@@ -8092,10 +8092,6 @@ h4.article__heading {
   min-width: 16em;
 }
 
-.fill-status:empty {
-  display: none;
-}
-
 /* More details: the fields a Citation rarely needs, folded under a summary that names them. */
 .more-details__summary {
   display: inline-flex;
@@ -8147,8 +8143,18 @@ h4.article__heading {
 }
 
 .form-problem:empty,
-.form-status:empty {
-  display: none;
+.form-status:empty,
+.fill-status:empty {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.panel__foot,
+.add-source__fields {
+  position: relative;
 }
 
 .form-status {

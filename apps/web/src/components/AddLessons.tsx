@@ -57,6 +57,7 @@ export function AddLessons() {
   const anotherRef = useRef<HTMLButtonElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const busyRef = useRef(false);
+  const readRef = useRef(0);
   const [lessons, setLessons] = useState<ReadonlyArray<Lesson>>([]);
   const [from, setFrom] = useState<string | null>(null);
   const [choosing, setChoosing] = useState(false);
@@ -94,19 +95,21 @@ export function AddLessons() {
   const onFiles = async (files: ReadonlyArray<File>) => {
     if (busyRef.current) return;
     const markdown = files.filter((file) => isMarkdownName(file.name));
-    setSkipped(files.length - markdown.length);
     if (markdown.length === 0) {
-      setFileProblem({ say: (m) => m.lessons.needFiles });
+      setFileProblem({ say: (m) => m.lessons.noMarkdown });
       return;
     }
+    const request = ++readRef.current;
     let read;
     try {
       const texts = await readFiles(markdown);
       read = byFileName(texts.map((text, index) => ({ ...text, path: pathOf(markdown[index]!) })));
     } catch {
-      setFileProblem({ say: (m) => m.importText.readFailed });
+      if (request === readRef.current) setFileProblem({ say: (m) => m.importText.readFailed });
       return;
     }
+    if (request !== readRef.current || busyRef.current) return;
+    setSkipped(files.length - markdown.length);
     setFileProblem(null);
     setProblem(null);
     setFinished(false);
@@ -214,7 +217,10 @@ export function AddLessons() {
     const found: Partial<Record<CourseField, Say>> = {};
     if (course.name.trim() === "") found.name = (m) => m.importText.needField;
     if (course.family.trim() === "") found.family = (m) => m.importText.needField;
-    if (!YEAR.test(course.year.trim())) found.year = (m) => m.importText.needYear;
+    if (!YEAR.test(course.year.trim())) {
+      found.year =
+        course.year.trim() === "" ? (m) => m.importText.needField : (m) => m.addSource.yearInvalid;
+    }
     setErrors(found);
     if (Object.keys(found).length > 0 || partProblems.length > 0) {
       setProblem({ say: (m) => m.addSource.checkFields });
@@ -266,6 +272,15 @@ export function AddLessons() {
   const locked = busy || (lessons.length > 0 && toAdd.length === 0 && finished);
   const byOrder = lessons.some((lesson) => !lesson.partByName && lesson.state !== "added");
   const showDrop = lessons.length === 0 || choosing;
+  const fromFile = Object.values(origins).includes("file");
+  const fromFolder = Object.values(origins).includes("folder");
+  const fillSaid = fromFile
+    ? fromFolder
+      ? t.lessons.filledBoth
+      : t.lessons.filled
+    : fromFolder
+      ? t.lessons.filledFolder
+      : null;
 
   return (
     <Panel title={t.lessons.course} initial="rubric">
@@ -316,7 +331,9 @@ export function AddLessons() {
                 <button
                   type="button"
                   className="button button--quiet"
+                  disabled={busy}
                   onClick={() => {
+                    readRef.current += 1;
                     setChoosing(false);
                     setFileProblem(null);
                     focusAfterRender(anotherRef);
@@ -363,15 +380,13 @@ export function AddLessons() {
         </div>
         <div className="panel__body add-source__fields">
           <div role="status" className="fill-status">
-            {Object.values(origins).every((origin) => origin === "guess") ? null : (
-              <FillLine>{t.lessons.filled}</FillLine>
-            )}
+            {fillSaid === null ? null : <FillLine>{fillSaid}</FillLine>}
           </div>
           <CourseFields
             course={course}
             origins={origins}
             errors={errors}
-            locked={locked}
+            locked={locked || added > 0}
             onChange={changeCourse}
           />
         </div>
@@ -439,7 +454,11 @@ export function AddLessons() {
                   : t.lessons.submit(toAdd.length)}
             </button>
           ) : null}
-          {finished && firstAdded?.id != null ? (
+          {busy ? (
+            <button type="button" className="button button--quiet" disabled>
+              {t.addSource.cancel}
+            </button>
+          ) : finished && firstAdded?.id != null ? (
             <>
               <Link
                 to="/sources/$sourceId"
@@ -453,10 +472,6 @@ export function AddLessons() {
                 {t.lessons.seeSources}
               </Link>
             </>
-          ) : busy ? (
-            <button type="button" className="button button--quiet" disabled>
-              {t.addSource.cancel}
-            </button>
           ) : (
             <Link to="/sources" className="button button--quiet">
               {t.addSource.cancel}

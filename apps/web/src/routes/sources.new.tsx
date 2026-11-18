@@ -252,9 +252,9 @@ function AddBook() {
       <form ref={formRef} className="add-source__form" onSubmit={submit} noValidate>
         <div className="panel__body add-source__fields">
           <div role="status" className="fill-status">
-            {fill === null || fill.filled.length === 0 ? null : (
-              <FillLine onUndo={undoFill}>
-                {t.addSource.filled}
+            {fill === null || (fill.filled.length === 0 && fill.replaced.length === 0) ? null : (
+              <FillLine marked={fill.filled.length > 0} onUndo={undoFill}>
+                {fill.filled.length > 0 ? t.addSource.filled : t.addSource.emptied}
                 {fill.kept.length === 0 ? null : ` ${t.addSource.keptTyped}`}
               </FillLine>
             )}

@@ -68,7 +68,9 @@ export function LessonTable({
                   <input
                     className="input add-lessons__part"
                     value={lesson.part}
-                    aria-label={t.lessons.partLabel(lesson.name)}
+                    aria-label={t.lessons.partLabel(
+                      twice.has(lesson.name) ? lesson.path : lesson.name,
+                    )}
                     aria-invalid={wrong ? true : undefined}
                     aria-describedby={wrong ? problemId : undefined}
                     inputMode="decimal"
@@ -82,7 +84,9 @@ export function LessonTable({
                   <input
                     className="input add-lessons__title"
                     value={lesson.title}
-                    aria-label={t.lessons.titleLabel(lesson.name)}
+                    aria-label={t.lessons.titleLabel(
+                      twice.has(lesson.name) ? lesson.path : lesson.name,
+                    )}
                     disabled={state === "added" || busy}
                     onChange={(event) => onChange(lesson.key, { title: event.target.value })}
                   />

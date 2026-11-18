@@ -774,13 +774,14 @@ Add Source (`/sources/new`) is one column up to 760px for every kind, so switchi
 moves the page: the Kind Choice with its one-line hint 8px under it, then, 20px below, one panel
 for the kind ("The book", "The article", "The course"). The panel's first body is the way in (the
 catalog search, or the Drop Zone); under a Hairline the second holds the data, fields 16px apart;
-the Panel Foot ends it. Course lessons sets its table across the panel between the way in and the
-course data. Each kind keeps what the user typed while another kind is shown. One Lapis button per
+the Panel Foot ends it. Course lessons puts the course data first and then sets its table across
+the panel, just above the foot. Each kind keeps what the user typed while another kind is shown. One Lapis button per
 state: for an Article and Course lessons, the way in while it is open, then the foot's submit
 (secondary until then); a book has no way in to wait for (the fields work alone), so its Search is
 secondary and Add Source is the primary from the start. A control that removes itself hands the
-cursor on: Undo to Family name, "Show all" to the chosen record, "Keep" and a read folder to
-"Choose other files".
+cursor on: Undo to Family name, "Show all" to the chosen record, "Keep" and a read file or folder
+to "Choose another" or "Choose other files". A replacement still being read never overrides
+"Keep", and Add waits for it.
 
 A focus screen (today only Review, at `/review`) fills the window without the rail and the page
 header. A 64px bar (12px 32px padding) holds the title left, a centred progress line and the way
@@ -907,7 +908,9 @@ Firm and plain, ink-outlined.
   dot at the input's right end (30px right padding) until the user edits it. The Fill Line above the
   fields is its key; screen readers hear where the value came from. A new file or folder replaces
   only values Glose filled, never what the user typed; Undo puts back only the fields the user has
-  not touched since.
+  not touched since, and stays offered when a chosen book only emptied fields (the line then has
+  no dot and says so). The line names its origin: the file, the pasted text, the files, the folder
+  name, or both. Empty status and alert lines stay in the accessibility tree, visually hidden.
 - **Checking a form:** the browser's own bubbles are off (`noValidate`). A failed submit puts the
   Rubric line under each field that needs a value or a fix, one summary in the Panel Foot, and the
   cursor in the first such field. When the way in is missing (no text, no lesson files), only that
@@ -1373,7 +1376,7 @@ Initial) under the course data, just above the foot, set like the register's tab
 cells 6px 12px (20px at the panel edges), a Hairline under each, Mute 600 13px heads, Words aligned
 right. Columns: "Week · Day" as a 64px field in Courier Prime 700 ("1.3"), the title as a field
 (at least 14em) with its file name in Mute 12px under it (its folder path when two files share a
-name), words, and the state (empty while a
+name, chosen or dropped; the fields' accessible names use the same path), words, and the state (empty while a
 lesson is new). Fields in the table
 are 5px 8px at 14px.
 
@@ -1391,7 +1394,9 @@ are 5px 8px at 14px.
   course name, then "Teacher or provider" (600 14px) over the family and given name, then year and
   address. A course name taken from the folder says so ("From the folder name"); a year Glose
   could not read is this year, unmarked, with the hint "This year, as a guess. Change it for an
-  older course." While the lessons are added, every control in the panel is locked, Cancel too;
+  older course." Once a lesson is added, the course data locks, so a retry cannot split the
+  course. While the lessons are added, every control in the panel is locked, Cancel and the done
+  links too;
   the status counts from 1 ("Adding lesson 1 of 20…"), and the summary counts every added lesson,
   retries included. The Panel
   Foot: "Add 20 lessons" (primary; "Adding lesson 3 of 20…" while it works), then "Open Week 1 · Day
