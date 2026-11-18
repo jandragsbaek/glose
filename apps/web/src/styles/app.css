@@ -3977,7 +3977,7 @@ a.written__title:hover {
 
 /*
  * The Settings window: a small bound volume laid over the page. A lapis spine with gilt bands
- * holds the sections in the rail's own vocabulary; one Paper-headed leaf scrolls every panel.
+ * holds the pages in the rail's own vocabulary; one Paper-headed leaf shows the chosen page.
  */
 .settings-window {
   width: min(1040px, calc(100vw - 64px));
@@ -4103,7 +4103,7 @@ a.written__title:hover {
   color: var(--on-field);
 }
 
-.settings-window__section-link[aria-current="true"] {
+.settings-window__section-link[aria-current="page"] {
   background: var(--field-raised);
   color: var(--on-field);
 }
@@ -4116,7 +4116,7 @@ a.written__title:hover {
   transition: color 160ms var(--ease-out);
 }
 
-.settings-window__section-link[aria-current="true"] .settings-window__icon {
+.settings-window__section-link[aria-current="page"] .settings-window__icon {
   color: var(--gold);
 }
 
@@ -4170,27 +4170,13 @@ a.written__title:hover {
   overflow-y: auto;
   background: var(--ground);
   overscroll-behavior: contain;
-  overflow-anchor: none;
-  container-type: size;
 }
 
-.settings-window__body:focus {
-  outline: none;
-}
-
-.settings-window__column {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+.settings-window__page {
   max-width: 760px;
 }
 
-/* The last section reaches the top of the leaf too, so a jump to any section lands on it. */
-.settings-window__column > :last-child {
-  min-height: 100cqh;
-}
-
-.settings-window__column > [data-section]:focus {
+.settings-window__page:focus {
   outline: none;
 }
 
