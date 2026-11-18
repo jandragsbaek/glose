@@ -20,6 +20,15 @@ describe("parseNoteText", () => {
     ]);
   });
 
+  it("keeps a colon after a marker in the text, and markers in code or escaped as written", () => {
+    const [block] = parseNoteText("The finding matters[^q1]: it holds. `[^q2]` and \\[^q3].");
+    const parts = block?.kind === "paragraph" ? block.inlines : [];
+    assert.deepStrictEqual(
+      parts.map((part) => (part.kind === "text" ? part.text : part.kind)),
+      ["The finding matters", "note", ": it holds. `[^q2]` and \\[^q3]."],
+    );
+  });
+
   it("splits paragraphs and lists, and keeps wikilinks with the words they show", () => {
     assert.deepStrictEqual(
       withoutOffsets(

@@ -307,172 +307,187 @@ export const tools = ({
   propose,
   known,
   remember,
-}: Context): AgentTool[] => [
-  {
-    name: "read_web_page",
-    entry: "read-web-page",
-    description:
-      "Read a web page's main text, as Glose stores it if the user keeps the page: every paragraph after its number (¶ 8). Quote only from this text.",
-    parameters: {
-      type: "object",
-      properties: {
-        url: { type: "string", description: "The page's full http or https address." },
+}: Context): AgentTool[] => {
+  const movedFrom = new Map<string, string>();
+  const firstAddress = (url: string) => {
+    const href = webUrl(url)?.href;
+    return href === undefined ? undefined : movedFrom.get(href);
+  };
+  return [
+    {
+      name: "read_web_page",
+      entry: "read-web-page",
+      description:
+        "Read a web page's main text, as Glose stores it if the user keeps the page: every paragraph after its number (¶ 8). Quote only from this text.",
+      parameters: {
+        type: "object",
+        properties: {
+          url: { type: "string", description: "The page's full http or https address." },
+        },
+        required: ["url"],
+        additionalProperties: false,
       },
-      required: ["url"],
-      additionalProperties: false,
+      detail: (args) => Option.getOrUndefined(decodeReadPage(args))?.url.trim(),
+      run: (args) =>
+        Option.match(decodeReadPage(args), {
+          onNone: () => Effect.succeed({ error: "Give the page's address." }),
+          onSome: ({ url }) =>
+            Effect.flatMap(
+              known(url) ? Effect.void : Effect.fail(UNKNOWN),
+              (): Effect.Effect<WebPages.WebPage, WebPages.PageUnreadable | UnknownAddress> =>
+                webPages.read(url),
+            ).pipe(
+              Effect.map((page) => {
+                remember(page.url);
+                const from = webUrl(url)?.href;
+                const to = webUrl(page.url)?.href;
+                if (from !== undefined && to !== undefined && from !== to) movedFrom.set(to, from);
+                const text = articleForAi(parseArticle(page.markdown));
+                return {
+                  url: page.url,
+                  title: page.title,
+                  author: page.author,
+                  site: page.site,
+                  published: page.published,
+                  text: text.slice(0, MAX_PAGE_TEXT),
+                  ...(text.length > MAX_PAGE_TEXT
+                    ? { cut: "Only the start of the page is shown." }
+                    : {}),
+                };
+              }),
+              Effect.catchTags({
+                PageUnreadable: (error) => Effect.succeed({ error: UNREADABLE[error.reason] }),
+                UnknownAddress: () => Effect.succeed({ error: UNKNOWN_ADDRESS }),
+              }),
+            ),
+        }),
     },
-    detail: (args) => Option.getOrUndefined(decodeReadPage(args))?.url.trim(),
-    run: (args) =>
-      Option.match(decodeReadPage(args), {
-        onNone: () => Effect.succeed({ error: "Give the page's address." }),
-        onSome: ({ url }) =>
-          Effect.flatMap(
-            known(url) ? Effect.void : Effect.fail(UNKNOWN),
-            (): Effect.Effect<WebPages.WebPage, WebPages.PageUnreadable | UnknownAddress> =>
-              webPages.read(url),
-          ).pipe(
-            Effect.map((page) => {
-              remember(page.url);
-              const text = articleForAi(parseArticle(page.markdown));
-              return {
-                url: page.url,
-                title: page.title,
-                author: page.author,
-                site: page.site,
-                published: page.published,
-                text: text.slice(0, MAX_PAGE_TEXT),
-                ...(text.length > MAX_PAGE_TEXT
-                  ? { cut: "Only the start of the page is shown." }
-                  : {}),
-              };
-            }),
-            Effect.catchTags({
-              PageUnreadable: (error) => Effect.succeed({ error: UNREADABLE[error.reason] }),
-              UnknownAddress: () => Effect.succeed({ error: UNKNOWN_ADDRESS }),
-            }),
-          ),
-      }),
-  },
-  {
-    name: "propose_pages",
-    entry: null,
-    description: `Show web pages to the user, who keeps or drops each one. A kept page becomes a Source in their Graph when they save the Note. At most ${MAX_PAGES} per call; read each with read_web_page first.`,
-    parameters: {
-      type: "object",
-      properties: {
-        pages: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              url: { type: "string", description: "The address you read with read_web_page." },
-              stance: {
-                type: "string",
-                enum: ["supports", "pulls-against", "context"],
-                description:
-                  "Whether the page supports the Note's idea or claim, pulls against it, or gives context.",
+    {
+      name: "propose_pages",
+      entry: null,
+      description: `Show web pages to the user, who keeps or drops each one. A kept page becomes a Source in their Graph when they save the Note. At most ${MAX_PAGES} per call; read each with read_web_page first.`,
+      parameters: {
+        type: "object",
+        properties: {
+          pages: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                url: { type: "string", description: "The address you read with read_web_page." },
+                stance: {
+                  type: "string",
+                  enum: ["supports", "pulls-against", "context"],
+                  description:
+                    "Whether the page supports the Note's idea or claim, pulls against it, or gives context.",
+                },
+                kind: {
+                  type: "string",
+                  enum: ["paper", "web", "press"],
+                  description:
+                    "paper: a research paper or its abstract. press: a newspaper or magazine piece. web: any other web page.",
+                },
+                why: {
+                  type: "string",
+                  description: "One sentence on why it matters for this Note.",
+                },
+                quotes: {
+                  type: "array",
+                  items: { type: "string" },
+                  description: `1 to ${MAX_QUOTES} exact quotes from the page's text, character for character.`,
+                },
               },
-              kind: {
-                type: "string",
-                enum: ["paper", "web", "press"],
-                description:
-                  "paper: a research paper or its abstract. press: a newspaper or magazine piece. web: any other web page.",
-              },
-              why: { type: "string", description: "One sentence on why it matters for this Note." },
-              quotes: {
-                type: "array",
-                items: { type: "string" },
-                description: `1 to ${MAX_QUOTES} exact quotes from the page's text, character for character.`,
-              },
+              required: ["url", "stance", "kind", "why", "quotes"],
+              additionalProperties: false,
             },
-            required: ["url", "stance", "kind", "why", "quotes"],
-            additionalProperties: false,
           },
         },
+        required: ["pages"],
+        additionalProperties: false,
       },
-      required: ["pages"],
-      additionalProperties: false,
+      run: Effect.fn("Research.proposePages")(function* (args: unknown) {
+        const proposed = Option.getOrNull(decodePropose(args))?.pages;
+        if (proposed === undefined || proposed.length === 0) {
+          return { error: "Give at least one page." };
+        }
+        const shownBefore = yield* pages;
+        const library = yield* sources;
+        const shown: Array<ProposedPage> = [];
+        const notes: Array<string> = [];
+        for (const [index, asked] of proposed.slice(0, MAX_PAGES).entries()) {
+          const which = `Page ${index + 1} of this call`;
+          const before = [...shownBefore, ...shown];
+          if (before.some((page) => sameUrl(page.url, asked.url))) {
+            notes.push(`${which} was proposed before.`);
+            continue;
+          }
+          if (!known(asked.url)) {
+            notes.push(`${which}: ${UNKNOWN_ADDRESS}`);
+            continue;
+          }
+          const read = yield* webPages.read(asked.url).pipe(Effect.option);
+          if (Option.isNone(read)) {
+            notes.push(`${which} could not be read, so it is not shown.`);
+            continue;
+          }
+          const page = read.value;
+          remember(page.url);
+          if (before.some((other) => sameUrl(other.url, page.url))) {
+            notes.push(`${which} was proposed before.`);
+            continue;
+          }
+          const { found: onPage, missing } = checkQuotes(page.markdown, asked.quotes);
+          if (onPage.length === 0) {
+            notes.push(
+              `${which} is not shown: none of its quotes is word for word on the page. Read it again and copy whole sentences exactly.`,
+            );
+            continue;
+          }
+          const addresses = [page.url, asked.url, firstAddress(page.url), firstAddress(asked.url)];
+          const source = library.find(
+            (other) =>
+              other.url !== null &&
+              addresses.some((address) => address !== undefined && sameUrl(other.url!, address)),
+          );
+          const stored = source === undefined ? null : yield* articleText(source.id);
+          const found =
+            source === undefined
+              ? onPage
+              : stored === null
+                ? []
+                : checkQuotes(
+                    stored,
+                    onPage.map((quote) => quote.text),
+                  ).found;
+          if (missing > 0) {
+            notes.push(
+              `${missing} quote(s) of ${which} are not word for word, so they are not shown.`,
+            );
+          }
+          shown.push({
+            url: page.url,
+            title: page.title,
+            site: page.site ?? new URL(page.url).hostname,
+            author: page.author,
+            published: page.published,
+            articleType: asked.kind satisfies ArticleType,
+            stance: asked.stance satisfies Stance,
+            why: asked.why.trim(),
+            quotes: found,
+            source: source?.id ?? null,
+          });
+        }
+        if (shown.length === 0) return { error: notes.join(" ") || "No page could be shown." };
+        const ids = yield* propose(shown);
+        return {
+          shown: ids.map((id, index) => ({ page: Number(id.slice(1)), url: shown[index]?.url })),
+          ...(notes.length === 0 ? {} : { notes }),
+          ...(proposed.length > MAX_PAGES
+            ? { skipped: `Only the first ${MAX_PAGES} were read.` }
+            : {}),
+          next: "The user now keeps or drops each page. You will hear what they decided.",
+        };
+      }),
     },
-    run: Effect.fn("Research.proposePages")(function* (args: unknown) {
-      const proposed = Option.getOrNull(decodePropose(args))?.pages;
-      if (proposed === undefined || proposed.length === 0) {
-        return { error: "Give at least one page." };
-      }
-      const shownBefore = yield* pages;
-      const library = yield* sources;
-      const shown: Array<ProposedPage> = [];
-      const notes: Array<string> = [];
-      for (const [index, asked] of proposed.slice(0, MAX_PAGES).entries()) {
-        const which = `Page ${index + 1} of this call`;
-        const before = [...shownBefore, ...shown];
-        if (before.some((page) => sameUrl(page.url, asked.url))) {
-          notes.push(`${which} was proposed before.`);
-          continue;
-        }
-        if (!known(asked.url)) {
-          notes.push(`${which}: ${UNKNOWN_ADDRESS}`);
-          continue;
-        }
-        const read = yield* webPages.read(asked.url).pipe(Effect.option);
-        if (Option.isNone(read)) {
-          notes.push(`${which} could not be read, so it is not shown.`);
-          continue;
-        }
-        const page = read.value;
-        remember(page.url);
-        if (before.some((other) => sameUrl(other.url, page.url))) {
-          notes.push(`${which} was proposed before.`);
-          continue;
-        }
-        const { found: onPage, missing } = checkQuotes(page.markdown, asked.quotes);
-        if (onPage.length === 0) {
-          notes.push(
-            `${which} is not shown: none of its quotes is word for word on the page. Read it again and copy whole sentences exactly.`,
-          );
-          continue;
-        }
-        const source = library.find(
-          (other) =>
-            other.url !== null && (sameUrl(other.url, page.url) || sameUrl(other.url, asked.url)),
-        );
-        const stored = source === undefined ? null : yield* articleText(source.id);
-        const found =
-          source === undefined
-            ? onPage
-            : stored === null
-              ? []
-              : checkQuotes(
-                  stored,
-                  onPage.map((quote) => quote.text),
-                ).found;
-        if (missing > 0) {
-          notes.push(
-            `${missing} quote(s) of ${which} are not word for word, so they are not shown.`,
-          );
-        }
-        shown.push({
-          url: page.url,
-          title: page.title,
-          site: page.site ?? new URL(page.url).hostname,
-          author: page.author,
-          published: page.published,
-          articleType: asked.kind satisfies ArticleType,
-          stance: asked.stance satisfies Stance,
-          why: asked.why.trim(),
-          quotes: found,
-          source: source?.id ?? null,
-        });
-      }
-      if (shown.length === 0) return { error: notes.join(" ") || "No page could be shown." };
-      const ids = yield* propose(shown);
-      return {
-        shown: ids.map((id, index) => ({ page: Number(id.slice(1)), url: shown[index]?.url })),
-        ...(notes.length === 0 ? {} : { notes }),
-        ...(proposed.length > MAX_PAGES
-          ? { skipped: `Only the first ${MAX_PAGES} were read.` }
-          : {}),
-        next: "The user now keeps or drops each page. You will hear what they decided.",
-      };
-    }),
-  },
-];
+  ];
+};

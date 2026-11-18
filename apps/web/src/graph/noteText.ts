@@ -41,17 +41,21 @@ const codeRanges = (text: string, fencedOnly: boolean) =>
 const codeAt = (ranges: ReturnType<typeof codeRanges>, at: number) =>
   ranges.find((range) => at >= range.start && at < range.end);
 
-const FOOTNOTE = /\[\^q(\d{1,4})\]:?/g;
+const FOOTNOTE = /(?<!\\)\[\^q(\d{1,4})\](:[ \t]?)?/g;
 
 const withNotes = (part: Extract<Inline, { kind: "text" }>): ReadonlyArray<Inline> => {
   const out: Array<Inline> = [];
   let last = 0;
+  const code = codeRanges(part.text, false);
   for (const match of part.text.matchAll(FOOTNOTE)) {
+    if (codeAt(code, match.index) !== undefined) continue;
+    const definition = part.at === 0 && match.index === 0 && match[2] !== undefined;
+    const length = definition ? match[0].length : match[0].length - (match[2]?.length ?? 0);
     if (match.index > last) {
       out.push({ kind: "text", at: part.at + last, text: part.text.slice(last, match.index) });
     }
     out.push({ kind: "note", at: part.at + match.index, label: match[1]! });
-    last = match.index + match[0].length;
+    last = match.index + length;
   }
   if (last < part.text.length) {
     out.push({ kind: "text", at: part.at + last, text: part.text.slice(last) });
