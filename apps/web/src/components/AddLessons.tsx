@@ -37,7 +37,7 @@ import { Panel } from "./ui.tsx";
 
 const FROM_FILES = ["name", "family", "given", "year"] as const satisfies ReadonlyArray<FromFiles>;
 
-export function AddLessons() {
+export function AddLessons({ onSaving }: { readonly onSaving: (saving: boolean) => void }) {
   const t = useT();
   const importText = useAtomSet(importTextAtom, { mode: "promiseExit" });
   const sources = AsyncResult.getOrElse(useAtomValue(sourcesAtom), () => []);
@@ -116,6 +116,13 @@ export function AddLessons() {
         return;
       }
       const texts = await readFiles(markdown);
+      const empty = texts.filter((text) => text.markdown.trim() === "").map((text) => text.name);
+      if (empty.length > 0) {
+        if (request === readRef.current) {
+          setFileProblem({ say: (m) => m.lessons.emptyFiles(empty.join(", ")) });
+        }
+        return;
+      }
       read = byFileName(texts.map((text, index) => ({ ...text, path: pathOf(markdown[index]!) })));
     } catch {
       if (request === readRef.current) setFileProblem({ say: (m) => m.importText.readFailed });
@@ -239,6 +246,7 @@ export function AddLessons() {
     }
     setProblem(null);
     busyRef.current = true;
+    onSaving(true);
     const batch = toAdd;
     const all = batch.length;
     setProgress({ done: 0, all });
@@ -278,6 +286,7 @@ export function AddLessons() {
       }
     }
     busyRef.current = false;
+    onSaving(false);
     setProgress(null);
     setFinished(true);
     refreshSources();

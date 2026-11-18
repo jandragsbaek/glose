@@ -41,11 +41,12 @@ function AddSource() {
   const navigate = useNavigate();
   const kind = Route.useSearch().kind ?? "book";
   const hintId = useId();
+  const [saving, setSaving] = useState(false);
   return (
     <Page title={t.addSource.title}>
       <div className="add-source">
         <div className="add-source__kind">
-          <fieldset className="kind-choice" aria-describedby={hintId}>
+          <fieldset className="kind-choice" aria-describedby={hintId} disabled={saving}>
             <legend className="sr-only">{t.kinds.label}</legend>
             {KINDS.map((option) => (
               <label key={option} className="kind-choice__option">
@@ -71,13 +72,13 @@ function AddSource() {
           </p>
         </div>
         <div hidden={kind !== "book"}>
-          <AddBook />
+          <AddBook onSaving={setSaving} />
         </div>
         <div hidden={kind !== "article"}>
-          <AddArticle />
+          <AddArticle onSaving={setSaving} />
         </div>
         <div hidden={kind !== "lesson"}>
-          <AddLessons />
+          <AddLessons onSaving={setSaving} />
         </div>
       </div>
     </Page>
@@ -128,7 +129,7 @@ type Failure = "fields" | "storage" | { readonly nameTaken: string };
 
 const FOLDED: ReadonlyArray<FieldName> = ["edition", "translator"];
 
-function AddBook() {
+function AddBook({ onSaving }: { readonly onSaving: (saving: boolean) => void }) {
   const t = useT();
   const navigate = useNavigate();
   const createSource = useAtomSet(createSourceAtom, { mode: "promiseExit" });
@@ -200,8 +201,10 @@ function AddBook() {
     };
     setFailure(null);
     setBusy(true);
+    onSaving(true);
     const exit = await createSource({ payload: details, reactivityKeys: KEYS.sources });
     setBusy(false);
+    onSaving(false);
     if (Exit.isSuccess(exit)) {
       await navigate({ to: "/sources/$sourceId", params: { sourceId: exit.value.id } });
       return;

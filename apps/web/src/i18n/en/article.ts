@@ -270,6 +270,8 @@ export const articleMessages = {
     filledFolder: "Filled in from the folder name. Check the marked field.",
     filledBoth: "Filled in from the files and the folder name. Check the marked fields.",
     reading: "Reading the files…",
+    emptyFiles: (names: string) =>
+      `These lesson files are empty: ${names}. Fix them, then choose again.`,
     noMarkdown: "There are no Markdown files there. Choose a folder or files that end in .md.",
     yearGuess: "This year, as a guess. Change it for an older course.",
     another: "Choose other files",

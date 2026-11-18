@@ -40,13 +40,12 @@ import {
   type TextFile,
   TextField,
   today,
-  YEAR,
 } from "./textImport.tsx";
 import { Panel } from "./ui.tsx";
 
 type Say = (t: Messages) => string;
 
-export function AddArticle() {
+export function AddArticle({ onSaving }: { readonly onSaving: (saving: boolean) => void }) {
   const t = useT();
   const navigate = useNavigate();
   const importText = useAtomSet(importTextAtom, { mode: "promiseExit" });
@@ -179,7 +178,7 @@ export function AddArticle() {
     const empty = (["familyName", "title"] as const).filter((name) => values[name].trim() === "");
     const lacking: ReadonlyArray<ArticleField> = [
       ...empty,
-      ...(year === null || !YEAR.test(year) ? (["published"] as const) : []),
+      ...(year === null ? (["published"] as const) : []),
     ];
     setMissing(lacking);
     if (lacking.length > 0) {
@@ -217,8 +216,10 @@ export function AddArticle() {
       markdown: text.markdown,
     };
     setBusy(true);
+    onSaving(true);
     const exit = await importText({ payload, reactivityKeys: KEYS.sources });
     setBusy(false);
+    onSaving(false);
     if (Exit.isSuccess(exit)) {
       await navigate({
         to: "/sources/$sourceId",
