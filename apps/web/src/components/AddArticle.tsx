@@ -13,6 +13,7 @@ import { CircleAlert, FileText } from "lucide-react";
 import { type ChangeEvent, type FormEvent, useId, useRef, useState } from "react";
 
 import { detailsFromMarkdown, isMarkdownName } from "../domain/importText.ts";
+import type { Messages } from "../i18n/en.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { importTextAtom, KEYS } from "../state/graph.ts";
 import {
@@ -77,6 +78,8 @@ const SHOWN_OF: Record<ArticleType, ReadonlyArray<ArticleField>> = {
   press: ["url"],
 };
 
+type Say = (t: Messages) => string;
+
 export function AddArticle() {
   const t = useT();
   const navigate = useNavigate();
@@ -94,8 +97,9 @@ export function AddArticle() {
   const [type, setType] = useState<ArticleType>("web");
   const [values, setValues] = useState<ArticleValues>({ ...EMPTY_ARTICLE, accessed: today() });
   const [filled, setFilled] = useState<ReadonlyArray<ArticleField>>([]);
-  const [problem, setProblem] = useState<string | null>(null);
-  const [submitProblem, setSubmitProblem] = useState<string | null>(null);
+  const [problem, setProblem] = useState<{ readonly say: Say } | null>(null);
+  const [submitProblem, setSubmitProblem] = useState<{ readonly say: Say } | null>(null);
+  const [choosing, setChoosing] = useState(false);
   const [missing, setMissing] = useState<ReadonlyArray<ArticleField>>([]);
   const [more, setMore] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -103,11 +107,13 @@ export function AddArticle() {
 
   const take = (found: TextFile) => {
     if (found.markdown.trim() === "") {
-      setProblem(t.importText.empty);
+      setProblem({ say: (m) => m.importText.empty });
       return;
     }
     setProblem(null);
     setText(found);
+    setChoosing(false);
+    setPasting(false);
     focusAfterRender(anotherRef);
     const details = detailsFromMarkdown(found.markdown);
     const next: Partial<ArticleValues> = {
@@ -145,14 +151,14 @@ export function AddArticle() {
     const file = files[0];
     if (file === undefined) return;
     if (!isMarkdownName(file.name)) {
-      setProblem(t.importText.notMarkdown(file.name));
+      setProblem({ say: (m) => m.importText.notMarkdown(file.name) });
       return;
     }
     try {
       const [found] = await readFiles([file]);
       if (found !== undefined) take(found);
     } catch {
-      setProblem(t.importText.readFailed);
+      setProblem({ say: (m) => m.importText.readFailed });
     }
   };
 
@@ -169,7 +175,7 @@ export function AddArticle() {
     if (text === null) {
       setMissing([]);
       setSubmitProblem(null);
-      setProblem(pasting ? t.importText.needPasted : t.importText.needText);
+      setProblem({ say: (m) => (pasting ? m.importText.needPasted : m.importText.needText) });
       focusAfterRender(pasting ? pasteRef : chooseRef);
       return;
     }
@@ -180,7 +186,7 @@ export function AddArticle() {
     ];
     setMissing(lacking);
     if (lacking.length > 0) {
-      setSubmitProblem(t.addSource.checkFields);
+      setSubmitProblem({ say: (m) => m.addSource.checkFields });
       focusFirstProblem(formRef.current);
       return;
     }
@@ -225,11 +231,12 @@ export function AddArticle() {
       return;
     }
     const error = Cause.findErrorOption(exit.cause);
-    setSubmitProblem(
-      Option.isSome(error) && error.value._tag === "SourceNameTaken"
-        ? t.addSource.nameTaken(error.value.fileName)
-        : `${t.errors.storage} ${t.errors.storageRecovery}`,
-    );
+    const taken = Option.isSome(error) && error.value._tag === "SourceNameTaken";
+    const fileName = taken ? error.value.fileName : "";
+    setSubmitProblem({
+      say: (m) =>
+        taken ? m.addSource.nameTaken(fileName) : `${m.errors.storage} ${m.errors.storageRecovery}`,
+    });
   };
 
   const errorOf = (name: ArticleField) =>
@@ -271,7 +278,7 @@ export function AddArticle() {
   return (
     <Panel title={t.importText.article} initial="rubric">
       <div className="panel__body">
-        {text === null ? (
+        {text === null || choosing ? (
           pasting ? (
             <div className="field">
               <label className="field__label" htmlFor={pasteId}>
@@ -341,6 +348,18 @@ export function AddArticle() {
               >
                 {t.importText.paste}
               </button>
+              {text === null ? null : (
+                <button
+                  type="button"
+                  className="button button--quiet"
+                  onClick={() => {
+                    setChoosing(false);
+                    focusAfterRender(anotherRef);
+                  }}
+                >
+                  {t.importText.keep(text.name)}
+                </button>
+              )}
             </DropZone>
           )
         ) : (
@@ -358,8 +377,9 @@ export function AddArticle() {
               ref={anotherRef}
               type="button"
               className="button button--small"
+              disabled={busy}
               onClick={() => {
-                setText(null);
+                setChoosing(true);
                 setPasting(false);
                 focusAfterRender(chooseRef);
               }}
@@ -372,7 +392,7 @@ export function AddArticle() {
           {problem === null ? null : (
             <span className="field__error">
               <CircleAlert className="field__error-icon" aria-hidden="true" />
-              {problem}
+              {problem.say(t)}
             </span>
           )}
         </p>
@@ -427,10 +447,10 @@ export function AddArticle() {
             </MoreDetails>
           </fieldset>
         </div>
-        <FormFoot problem={submitProblem}>
+        <FormFoot problem={submitProblem === null ? null : submitProblem.say(t)}>
           <button
             type="submit"
-            className={text === null ? "button" : "button button--primary"}
+            className={text === null || choosing ? "button" : "button button--primary"}
             disabled={busy}
           >
             {busy ? t.importText.adding : t.importText.submit}

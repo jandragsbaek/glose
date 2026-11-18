@@ -776,7 +776,11 @@ for the kind ("The book", "The article", "The course"). The panel's first body i
 catalog search, or the Drop Zone); under a Hairline the second holds the data, fields 16px apart;
 the Panel Foot ends it. Course lessons sets its table across the panel between the way in and the
 course data. Each kind keeps what the user typed while another kind is shown. One Lapis button per
-state: the way in while it is open, then the foot's submit (secondary until then).
+state: for an Article and Course lessons, the way in while it is open, then the foot's submit
+(secondary until then); a book has no way in to wait for (the fields work alone), so its Search is
+secondary and Add Source is the primary from the start. A control that removes itself hands the
+cursor on: Undo to Family name, "Show all" to the chosen record, "Keep" and a read folder to
+"Choose other files".
 
 A focus screen (today only Review, at `/review`) fills the window without the rail and the page
 header. A 64px bar (12px 32px padding) holds the title left, a centred progress line and the way
@@ -1365,14 +1369,15 @@ textarea, onto "Choose another", back onto the choose button.
 ### Lesson Table
 
 On Add Source for Course lessons, the files read from the folder, across "The course" panel (rubric
-Initial, the count as Meta) under the Drop Zone, set like the register's table: 14px tabular,
+Initial) under the course data, just above the foot, set like the register's table: 14px tabular,
 cells 6px 12px (20px at the panel edges), a Hairline under each, Mute 600 13px heads, Words aligned
 right. Columns: "Week · Day" as a 64px field in Courier Prime 700 ("1.3"), the title as a field
-(at least 14em) with its file name in Mute 12px under it, words, and the state (empty while a
+(at least 14em) with its file name in Mute 12px under it (its folder path when two files share a
+name), words, and the state (empty while a
 lesson is new). Fields in the table
 are 5px 8px at 14px.
 
-- **State marks:** a 15px icon and Mute 13px words, in a fixed cell: a dash and "New"; a Mute
+- **State marks:** a 15px icon and Mute 13px words, in a fixed cell (empty while new): a Mute
   circle-alert and "Already in your Graph"; a Verdigris check and "Added"; a Rubric circle-alert and
   "Not added" in Rubric.
 - **Locked rows:** an added lesson reads as text: its fields lose border and fill and turn Mute, so
@@ -1382,9 +1387,13 @@ are 5px 8px at 14px.
   fields point to it.
 - **Lessons a week:** only when a file's name gives no week and day, one line under the table: the
   label, a 72px field and its Mute hint, 12px apart.
-- The course data follows in the same panel, with its own Fill Line: the course name, then
-  "Teacher or provider" (600 14px) over the family and given name, then year and address. While
-  the lessons are added, every control in the panel is locked. The Panel
+- The course data comes first in the panel, under the chosen row, with its own Fill Line: the
+  course name, then "Teacher or provider" (600 14px) over the family and given name, then year and
+  address. A course name taken from the folder says so ("From the folder name"); a year Glose
+  could not read is this year, unmarked, with the hint "This year, as a guess. Change it for an
+  older course." While the lessons are added, every control in the panel is locked, Cancel too;
+  the status counts from 1 ("Adding lesson 1 of 20…"), and the summary counts every added lesson,
+  retries included. The Panel
   Foot: "Add 20 lessons" (primary; "Adding lesson 3 of 20…" while it works), then "Open Week 1 · Day
   1" and "See them in Sources" when done.
 

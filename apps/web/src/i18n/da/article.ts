@@ -221,6 +221,7 @@ export const articleMessages: typeof english = {
     needField: "Udfyld dette felt.",
     needPasted: "Indsæt teksten, og vælg så Brug denne tekst.",
     backToFile: "Vælg en fil i stedet",
+    keep: (name: string) => `Behold ${name}`,
   },
   lessons: {
     chooseFolder: "Vælg kursusmappen",
@@ -261,6 +262,8 @@ export const articleMessages: typeof english = {
     seeSources: "Se dem under Kilder",
     needFiles: "Vælg lektionsfilerne først.",
     filled: "Udfyldt fra filerne. Tjek de mærkede felter.",
+    fromFolder: "Fra mappens navn",
+    yearGuess: "I år, som et gæt. Ret det for et ældre kursus.",
     another: "Vælg andre filer",
     keep: (n: number) =>
       n === 1 ? "Behold lektionen" : `Behold de ${numbers.format(n)} lektioner`,

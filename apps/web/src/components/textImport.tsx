@@ -24,7 +24,7 @@ export const focusAfterRender = (ref: RefObject<HTMLElement | null>, frames = 10
 
 export const focusFirstProblem = (root: HTMLElement | null) =>
   requestAnimationFrame(() => {
-    const target = root?.querySelector<HTMLElement>('[aria-invalid="true"]');
+    const target = root?.querySelector<HTMLElement>('[aria-invalid="true"]:not(:disabled)');
     target?.closest("details")?.setAttribute("open", "");
     target?.focus();
   });

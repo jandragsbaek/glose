@@ -10,6 +10,7 @@ import { AddArticle } from "../components/AddArticle.tsx";
 import { AddLessons } from "../components/AddLessons.tsx";
 import {
   FillLine,
+  focusAfterRender,
   focusFirstProblem,
   FormFoot,
   MoreDetails,
@@ -101,8 +102,21 @@ interface Fill {
   readonly record: CatalogRecord;
   readonly filled: ReadonlyArray<FieldName>;
   readonly kept: ReadonlyArray<FieldName>;
+  readonly replaced: ReadonlyArray<FieldName>;
   readonly before: { readonly values: FormValues; readonly fill: Fill | null };
 }
+
+const forget = (fill: Fill | null, name: FieldName): Fill | null =>
+  fill === null
+    ? null
+    : {
+        ...fill,
+        filled: fill.filled.filter((other) => other !== name),
+        replaced: fill.replaced.filter((other) => other !== name),
+        before: { ...fill.before, fill: forget(fill.before.fill, name) },
+      };
+
+type FieldProblem = "need" | "year";
 
 type Search =
   | { readonly _tag: "Idle" }
@@ -118,7 +132,7 @@ function AddBook() {
   const t = useT();
   const navigate = useNavigate();
   const createSource = useAtomSet(createSourceAtom, { mode: "promiseExit" });
-  const [errors, setErrors] = useState<Partial<Record<FieldName, string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<FieldName, FieldProblem>>>({});
   const [failure, setFailure] = useState<Failure | null>(null);
   const [busy, setBusy] = useState(false);
   const [values, setValues] = useState<FormValues>(EMPTY_FORM);
@@ -139,6 +153,7 @@ function AddBook() {
       record,
       filled: filled.filled,
       kept: filled.kept,
+      replaced: filled.replaced,
       before: { values, fill },
     });
     setValues(filled.values);
@@ -150,20 +165,21 @@ function AddBook() {
 
   const undoFill = () => {
     if (fill === null) return;
-    const untouched = fill.filled.map((name) => [name, fill.before.values[name]] as const);
+    const untouched = fill.replaced.map((name) => [name, fill.before.values[name]] as const);
     setValues((current) => ({ ...current, ...Object.fromEntries(untouched) }));
     setFill(fill.before.fill);
+    focusAfterRender(firstFieldRef);
   };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const found: Partial<Record<FieldName, string>> = {};
+    const found: Partial<Record<FieldName, FieldProblem>> = {};
     for (const name of REQUIRED) {
-      if (text(values, name) === null) found[name] = t.importText.needField;
+      if (text(values, name) === null) found[name] = "need";
     }
     for (const name of YEAR_FIELDS) {
       const value = text(values, name);
-      if (value !== null && !YEAR.test(value)) found[name] = t.addSource.yearInvalid;
+      if (value !== null && !YEAR.test(value)) found[name] = "year";
     }
     setErrors(found);
     if (Object.keys(found).length > 0) {
@@ -210,17 +226,19 @@ function AddBook() {
       hint={options.hint}
       wide={options.wide ?? false}
       inputMode={YEAR_FIELDS.some((other) => other === name) ? "numeric" : undefined}
-      error={errors[name]}
+      error={
+        errors[name] === undefined
+          ? undefined
+          : errors[name] === "year"
+            ? t.addSource.yearInvalid
+            : t.importText.needField
+      }
       value={values[name]}
       filledFrom={fill?.filled.includes(name) ? t.addSource.fromCatalog : undefined}
       onChange={(value) => {
         setValues((current) => ({ ...current, [name]: value }));
         setErrors(({ [name]: _, ...rest }) => rest);
-        setFill((current) =>
-          current === null
-            ? null
-            : { ...current, filled: current.filled.filter((n) => n !== name) },
-        );
+        setFill((current) => forget(current, name));
       }}
       inputRef={name === "familyName" ? firstFieldRef : undefined}
     />
@@ -295,6 +313,7 @@ function FindBook({
   const [search, setSearch] = useState<Search>({ _tag: "Idle" });
   const [folded, setFolded] = useState(false);
   const latest = useRef(0);
+  const listRef = useRef<HTMLUListElement>(null);
   const inputId = useId();
   const hintId = `${inputId}-hint`;
 
@@ -313,7 +332,8 @@ function FindBook({
   };
 
   const records = search._tag === "Found" ? search.records : [];
-  const showOnlyChosen = folded && records.some((record) => record.id === chosen);
+  const showOnlyChosen =
+    folded && records.length > 1 && records.some((record) => record.id === chosen);
   const shown = showOnlyChosen ? records.filter((record) => record.id === chosen) : records;
 
   return (
@@ -352,7 +372,7 @@ function FindBook({
           <p className="status">{t.addSource.noResults}</p>
         ) : null}
         {shown.length > 0 ? (
-          <ul className="catalog-results" aria-label={t.addSource.results}>
+          <ul ref={listRef} className="catalog-results" aria-label={t.addSource.results}>
             {shown.map((record) => (
               <li key={record.id}>
                 <CatalogChoice
@@ -371,7 +391,12 @@ function FindBook({
           <button
             type="button"
             className="link-button find-book__more"
-            onClick={() => setFolded(false)}
+            onClick={() => {
+              setFolded(false);
+              requestAnimationFrame(() =>
+                listRef.current?.querySelector<HTMLElement>('[aria-pressed="true"]')?.focus(),
+              );
+            }}
           >
             {t.addSource.showResults(records.length)}
           </button>

@@ -8260,11 +8260,7 @@ h4.article__heading {
   border-top: 1px solid var(--line);
 }
 
-.add-lessons__part-problem:empty {
-  display: none;
-}
-
-.add-lessons__part-problem {
+.add-lessons__part-problem > p {
   padding: 12px 20px 0;
 }
 

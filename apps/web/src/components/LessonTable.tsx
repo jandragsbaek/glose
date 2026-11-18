@@ -6,7 +6,9 @@ import { PART } from "./textImport.tsx";
 type LessonState = "new" | "taken" | "added" | "failed";
 
 export interface Lesson {
+  readonly key: string;
   readonly name: string;
+  readonly path: string;
   readonly markdown: string;
   readonly part: string;
   readonly title: string;
@@ -33,6 +35,11 @@ export function LessonTable({
   readonly onChange: (name: string, patch: Partial<Lesson>) => void;
 }) {
   const t = useT();
+  const twice = new Set(
+    lessons
+      .map((lesson) => lesson.name)
+      .filter((name, index, names) => names.indexOf(name) !== index),
+  );
   return (
     <div className="add-lessons__table-wrap">
       <table className="add-lessons__table">
@@ -53,7 +60,7 @@ export function LessonTable({
             const wrong = !PART.test(lesson.part) || clashes.has(lesson.part);
             return (
               <tr
-                key={lesson.name}
+                key={lesson.key}
                 data-state={state}
                 data-clash={clashes.has(lesson.part) ? "" : undefined}
               >
@@ -67,7 +74,7 @@ export function LessonTable({
                     inputMode="decimal"
                     disabled={state === "added" || busy}
                     onChange={(event) =>
-                      onChange(lesson.name, { part: event.target.value, partByName: true })
+                      onChange(lesson.key, { part: event.target.value, partByName: true })
                     }
                   />
                 </td>
@@ -77,9 +84,11 @@ export function LessonTable({
                     value={lesson.title}
                     aria-label={t.lessons.titleLabel(lesson.name)}
                     disabled={state === "added" || busy}
-                    onChange={(event) => onChange(lesson.name, { title: event.target.value })}
+                    onChange={(event) => onChange(lesson.key, { title: event.target.value })}
                   />
-                  <span className="add-lessons__file">{lesson.name}</span>
+                  <span className="add-lessons__file">
+                    {twice.has(lesson.name) ? lesson.path : lesson.name}
+                  </span>
                 </td>
                 <td className="num">{lesson.words}</td>
                 <td className="add-lessons__state">

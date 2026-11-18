@@ -219,6 +219,7 @@ export const articleMessages = {
     needField: "Fill this in.",
     needPasted: "Paste the text, then choose Use this text.",
     backToFile: "Choose a file instead",
+    keep: (name: string) => `Keep ${name}`,
   },
   lessons: {
     chooseFolder: "Choose the course folder",
@@ -259,6 +260,8 @@ export const articleMessages = {
     seeSources: "See them in Sources",
     needFiles: "Choose the lesson files first.",
     filled: "Filled in from the files. Check the marked fields.",
+    fromFolder: "From the folder name",
+    yearGuess: "This year, as a guess. Change it for an older course.",
     another: "Choose other files",
     keep: (n: number) => `Keep the ${count(n, "lesson", "lessons")}`,
     someFiles: (n: number) => count(n, "lesson file", "lesson files"),

@@ -36,17 +36,20 @@ export const fillFromCatalog = (
   readonly values: FormValues;
   readonly filled: ReadonlyArray<FieldName>;
   readonly kept: ReadonlyArray<FieldName>;
+  readonly replaced: ReadonlyArray<FieldName>;
 } => {
   const values = { ...current };
   const filled: Array<FieldName> = [];
   const kept: Array<FieldName> = [];
+  const replaced: Array<FieldName> = [];
   for (const name of FIELD_NAMES) {
     if (current[name].trim() === "" || filledBefore.includes(name)) {
       values[name] = record[name];
       if (record[name] !== "") filled.push(name);
+      if (current[name] !== record[name]) replaced.push(name);
     } else if (current[name] !== record[name]) {
       kept.push(name);
     }
   }
-  return { values, filled, kept };
+  return { values, filled, kept, replaced };
 };
