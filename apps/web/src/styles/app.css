@@ -104,10 +104,16 @@ a:hover {
 
 /* Frame */
 
+/* While the frame shows, the window never scrolls down; only regions inside the frame do. The two
+   rules work as a pair: position makes the frame the containing block for absolute elements with
+   no nearer positioned ancestor (such as .sr-only labels deep in a long list), and the clip keeps
+   them from growing the document below the window. */
 .frame {
+  position: relative;
   display: grid;
   grid-template-columns: var(--rail) minmax(0, 1fr);
   height: 100%;
+  overflow-y: clip;
 }
 
 .rail {
