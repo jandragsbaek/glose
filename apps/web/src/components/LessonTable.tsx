@@ -122,6 +122,9 @@ function LessonStateMark({ state }: { readonly state: Exclude<LessonState, "new"
   );
 }
 
+export const wholeAtLeastOne = (value: string) =>
+  value.trim() !== "" && Number.isInteger(Number(value)) && Number(value) >= 1;
+
 export function PerWeek({
   value,
   locked,
@@ -133,7 +136,7 @@ export function PerWeek({
 }) {
   const t = useT();
   const id = useId();
-  const valid = Number.isInteger(Number(value)) && Number(value) >= 1;
+  const valid = wholeAtLeastOne(value);
   return (
     <div className="panel__body add-lessons__per-week">
       <label className="field__label" htmlFor={id}>

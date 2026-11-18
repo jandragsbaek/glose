@@ -8393,6 +8393,11 @@ h4.article__heading {
   color: var(--mute);
 }
 
+.add-lessons__table th:last-child,
+.add-lessons__state {
+  width: 13em;
+}
+
 .lesson-state[data-state="named"] {
   white-space: normal;
 }

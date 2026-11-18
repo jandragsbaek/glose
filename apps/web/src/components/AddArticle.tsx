@@ -62,6 +62,7 @@ export function AddArticle() {
   const [pasted, setPasted] = useState("");
   const [type, setTypeState] = useState<ArticleType>("web");
   const typeRef = useRef(type);
+  const kindChangesRef = useRef(0);
   const wayInRef = useRef<HTMLDivElement>(null);
   const setType = (next: ArticleType) => {
     typeRef.current = next;
@@ -92,7 +93,7 @@ export function AddArticle() {
     setFilled(next);
   };
 
-  const take = (found: TextFile, pasted = false, typeAtStart = typeRef.current) => {
+  const take = (found: TextFile, pasted = false, kindChangesAtStart = kindChangesRef.current) => {
     if (found.markdown.trim() === "") {
       setProblem({ say: (m) => m.importText.empty });
       return;
@@ -113,7 +114,9 @@ export function AddArticle() {
     setMissing([]);
     setSubmitProblem(null);
     const nextType =
-      details.doi !== null && typeRef.current === typeAtStart ? "paper" : typeRef.current;
+      details.doi !== null && kindChangesRef.current === kindChangesAtStart
+        ? "paper"
+        : typeRef.current;
     setType(nextType);
     if (keys.some((key) => key === "otherAuthors" || folded(nextType).includes(key))) {
       setMore(true);
@@ -123,7 +126,7 @@ export function AddArticle() {
   const onFiles = async (pending: Promise<ReadonlyArray<File>>) => {
     if (busy) return;
     const request = ++readRef.current;
-    const typeAtStart = typeRef.current;
+    const kindChangesAtStart = kindChangesRef.current;
     setProblem(null);
     setReading(true);
     try {
@@ -134,7 +137,8 @@ export function AddArticle() {
         return;
       }
       const [found] = await readFiles([file]);
-      if (request === readRef.current && found !== undefined) take(found, false, typeAtStart);
+      if (request === readRef.current && found !== undefined)
+        take(found, false, kindChangesAtStart);
     } catch {
       if (request === readRef.current) setProblem({ say: (m) => m.importText.readFailed });
     } finally {
@@ -417,7 +421,10 @@ export function AddArticle() {
                     name="article-type"
                     value={option}
                     checked={type === option}
-                    onChange={() => setType(option)}
+                    onChange={() => {
+                      kindChangesRef.current += 1;
+                      setType(option);
+                    }}
                   />
                   <span>{t.kinds.articleTypes[option]}</span>
                 </label>

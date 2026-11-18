@@ -782,7 +782,7 @@ secondary and Add Source is the primary from the start. A control that removes i
 cursor on: Undo to Family name, "Show all" to the chosen record, "Keep" and a read file or folder
 to "Choose another" or "Choose other files". A file or folder still being read never overrides a
 newer choice (another file, pasted text, "Keep", the article's kind, "Lessons a week"; a DOI in
-the file sets the kind to Academic paper only if the user did not change it meanwhile), and Add
+the file sets the kind to Academic paper only if the user did not touch the kind meanwhile), and Add
 waits for it in both kinds while the status line says "Reading the file…" / "Reading the files…"
 (a new read clears an old file error first).
 After a read the cursor moves on only if it is still at the way in. Add with the chooser open
@@ -1389,7 +1389,9 @@ are 5px 8px at 14px.
   circle-alert and "Already in your Graph"; a Verdigris check and "Added"; a Rubric circle-alert and
   "Not added" in Rubric; a lesson whose Source file name is taken says, in Rubric, "A Source has
   this file name. Change the title.", its title field points to it, the cursor goes to the first
-  such title, and the lesson waits out of the retry until its title or week·day is changed.
+  such title, and the lesson waits out of the retry until a part of its file name changes: its
+  title or week·day, or the course's family name or year. The State column keeps a 13em width, so
+  a long message never moves the title field.
 - **Locked rows:** an added lesson reads as text: its fields lose border and fill and turn Mute, so
   the row cannot be edited and does not look like a form.
 - **Clash:** two lessons with the same week and day turn their Week · Day fields Rubric, and at once
@@ -1397,7 +1399,8 @@ are 5px 8px at 14px.
   fields point to it.
 - **Lessons a week:** only when a file's name gives no week and day, one line under the table: the
   label, a 72px field and its Mute hint, 12px apart. A value that is not a whole number turns the
-  hint into its Rubric error ("Write a whole number, for example 5.") and changes nothing.
+  hint into its Rubric error ("Write a whole number, for example 5.") and changes nothing; Add
+  stops there with the cursor in that field while a lesson takes its week·day from it.
 - The course data comes first in the panel, under the chosen row, with its own Fill Line: the
   course name, then "Teacher or provider" (600 14px) over the family and given name, then year and
   address. A course name taken from the folder says so ("From the folder name"); a year Glose

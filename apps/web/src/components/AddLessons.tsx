@@ -32,7 +32,7 @@ import {
   type Say,
 } from "./CourseFields.tsx";
 import { lessonBatch, pathOf } from "./lessonBatch.ts";
-import { type Lesson, LessonTable, PerWeek } from "./LessonTable.tsx";
+import { type Lesson, LessonTable, PerWeek, wholeAtLeastOne } from "./LessonTable.tsx";
 import { Panel } from "./ui.tsx";
 
 const FROM_FILES = ["name", "family", "given", "year"] as const satisfies ReadonlyArray<FromFiles>;
@@ -165,6 +165,11 @@ export function AddLessons() {
     const { [key as FromFiles]: _, ...rest } = originsRef.current;
     writeOrigins(rest);
     setErrors(({ [key]: _, ...rest }) => rest);
+    if (key === "family" || key === "year") {
+      setLessons((current) =>
+        current.map((lesson) => (lesson.state === "named" ? { ...lesson, state: "new" } : lesson)),
+      );
+    }
   };
 
   const change = (key: string, patch: Partial<Lesson>) =>
@@ -182,14 +187,18 @@ export function AddLessons() {
 
   const changePerWeek = (value: string) => {
     setPerWeek(value);
+    if (!wholeAtLeastOne(value)) return;
     const week = Number(value);
-    if (!Number.isInteger(week) || week < 1) return;
     perWeekRef.current = value;
     setLessons((current) =>
       current.map((lesson) =>
         lesson.partByName || lesson.state === "added"
           ? lesson
-          : { ...lesson, part: partByOrder(lesson.order, week) },
+          : {
+              ...lesson,
+              part: partByOrder(lesson.order, week),
+              ...(lesson.state === "named" ? { state: "new" as const } : {}),
+            },
       ),
     );
   };
@@ -226,7 +235,10 @@ export function AddLessons() {
         course.year.trim() === "" ? (m) => m.importText.needField : (m) => m.addSource.yearInvalid;
     }
     setErrors(found);
-    if (Object.keys(found).length > 0 || partProblems.length > 0) {
+    const perWeekBad =
+      lessons.some((lesson) => !lesson.partByName && lesson.state !== "added") &&
+      !wholeAtLeastOne(perWeek);
+    if (Object.keys(found).length > 0 || partProblems.length > 0 || perWeekBad) {
       setProblem({ say: (m) => m.addSource.checkFields });
       focusFirstProblem(formRef.current);
       return;
