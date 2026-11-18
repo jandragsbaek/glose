@@ -12,127 +12,156 @@ import * as Option from "effect/Option";
 import { CircleAlert, FileText } from "lucide-react";
 import { type ChangeEvent, type FormEvent, useId, useRef, useState } from "react";
 
+import {
+  type ArticleField,
+  articleValuesOf,
+  type ArticleValues,
+  EMPTY_ARTICLE,
+  FIELDS_OF,
+  fillFromFile,
+  folded,
+  SHOWN_OF,
+  TYPES,
+} from "../domain/articleForm.ts";
 import { detailsFromMarkdown, isMarkdownName } from "../domain/importText.ts";
+import type { Messages } from "../i18n/en.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { importTextAtom, KEYS } from "../state/graph.ts";
 import {
   blank,
   DropZone,
+  FillLine,
+  focusAfterRender,
+  focusFirstProblem,
+  FormFoot,
+  handCursorOn,
+  MoreDetails,
   readFiles,
   type TextFile,
   TextField,
   today,
-  YEAR,
 } from "./textImport.tsx";
-import { Notice, Panel } from "./ui.tsx";
+import { Panel } from "./ui.tsx";
 
-const ARTICLE_FIELDS = [
-  "familyName",
-  "givenName",
-  "otherAuthors",
-  "title",
-  "published",
-  "container",
-  "volume",
-  "issue",
-  "pages",
-  "doi",
-  "url",
-  "accessed",
-] as const;
-type ArticleField = (typeof ARTICLE_FIELDS)[number];
-type ArticleValues = Record<ArticleField, string>;
+type Say = (t: Messages) => string;
 
-const EMPTY_ARTICLE: ArticleValues = {
-  familyName: "",
-  givenName: "",
-  otherAuthors: "",
-  title: "",
-  published: "",
-  container: "",
-  volume: "",
-  issue: "",
-  pages: "",
-  doi: "",
-  url: "",
-  accessed: "",
-};
-
-const TYPES = ["paper", "web", "press"] as const satisfies ReadonlyArray<ArticleType>;
-
-const FIELDS_OF: Record<ArticleType, ReadonlyArray<ArticleField>> = {
-  paper: ["volume", "issue", "pages", "doi", "url"],
-  web: ["url", "accessed"],
-  press: ["pages", "url"],
-};
-
-export function AddArticle() {
+export function AddArticle({ onSaving }: { readonly onSaving: (saving: boolean) => void }) {
   const t = useT();
   const navigate = useNavigate();
   const importText = useAtomSet(importTextAtom, { mode: "promiseExit" });
   const fileRef = useRef<HTMLInputElement>(null);
+  const chooseRef = useRef<HTMLButtonElement>(null);
+  const pasteRef = useRef<HTMLTextAreaElement>(null);
+  const anotherRef = useRef<HTMLButtonElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const pasteId = useId();
+  const problemId = useId();
   const [text, setText] = useState<TextFile | null>(null);
   const [pasting, setPasting] = useState(false);
   const [pasted, setPasted] = useState("");
-  const [type, setType] = useState<ArticleType>("web");
+  const [type, setTypeState] = useState<ArticleType>("web");
+  const typeRef = useRef(type);
+  const kindChangesRef = useRef(0);
+  const wayInRef = useRef<HTMLDivElement>(null);
+  const setType = (next: ArticleType) => {
+    typeRef.current = next;
+    setTypeState(next);
+  };
   const [values, setValues] = useState<ArticleValues>({ ...EMPTY_ARTICLE, accessed: today() });
   const [filled, setFilled] = useState<ReadonlyArray<ArticleField>>([]);
-  const [problem, setProblem] = useState<string | null>(null);
-  const [submitProblem, setSubmitProblem] = useState<string | null>(null);
-  const [yearMissing, setYearMissing] = useState(false);
+  const [problem, setProblem] = useState<{ readonly say: Say } | null>(null);
+  const [submitProblem, setSubmitProblem] = useState<{ readonly say: Say } | null>(null);
+  const [choosing, setChoosing] = useState(false);
+  const [fromPaste, setFromPaste] = useState(false);
+  const [reading, setReading] = useState(false);
+  const readRef = useRef(0);
+  const valuesRef = useRef(values);
+  const filledRef = useRef(filled);
+  const [missing, setMissing] = useState<ReadonlyArray<ArticleField>>([]);
+  const [more, setMore] = useState(false);
   const [busy, setBusy] = useState(false);
   const article = text === null ? null : parseArticle(text.markdown);
 
-  const take = (found: TextFile) => {
+  const writeValues = (next: ArticleValues) => {
+    valuesRef.current = next;
+    setValues(next);
+  };
+
+  const writeFilled = (next: ReadonlyArray<ArticleField>) => {
+    filledRef.current = next;
+    setFilled(next);
+  };
+
+  const take = (found: TextFile, pasted = false, kindChangesAtStart = kindChangesRef.current) => {
     if (found.markdown.trim() === "") {
-      setProblem(t.importText.empty);
+      setProblem({ say: (m) => m.importText.empty });
       return;
     }
     setProblem(null);
     setText(found);
+    setFromPaste(pasted);
+    setChoosing(false);
+    setPasting(false);
+    if (pasted) focusAfterRender(anotherRef);
+    else handCursorOn(wayInRef.current, anotherRef);
     const details = detailsFromMarkdown(found.markdown);
-    const next: Partial<ArticleValues> = {
-      ...(details.family === null ? {} : { familyName: details.family }),
-      ...(details.given === null ? {} : { givenName: details.given }),
-      ...(details.otherAuthors.length === 0
-        ? {}
-        : { otherAuthors: details.otherAuthors.join("\n") }),
-      ...(details.title === null ? {} : { title: details.title }),
-      ...(details.published === null ? {} : { published: details.published }),
-      ...(details.container === null ? {} : { container: details.container }),
-      ...(details.url === null ? {} : { url: details.url }),
-      ...(details.doi === null ? {} : { doi: details.doi }),
-    };
-    const keys = (Object.keys(next) as ArticleField[]).filter(
-      (key) => values[key].trim() === "" || filled.includes(key),
-    );
-    setValues((current) => ({
-      ...current,
-      ...Object.fromEntries(keys.map((key) => [key, next[key] ?? ""])),
-    }));
-    setFilled(keys);
-    if (details.doi !== null) setType("paper");
+    const next = articleValuesOf(details);
+    const fill = fillFromFile(valuesRef.current, filledRef.current, next);
+    writeValues(fill.values);
+    writeFilled(fill.filled);
+    const keys = fill.filled;
+    setMissing([]);
+    setSubmitProblem(null);
+    const nextType =
+      details.doi !== null && kindChangesRef.current === kindChangesAtStart
+        ? "paper"
+        : typeRef.current;
+    setType(nextType);
+    if (keys.some((key) => key === "otherAuthors" || folded(nextType).includes(key))) {
+      setMore(true);
+    }
   };
 
-  const onFiles = async (files: ReadonlyArray<File>) => {
-    const file = files[0];
-    if (file === undefined) return;
-    if (!isMarkdownName(file.name)) {
-      setProblem(t.importText.notMarkdown(file.name));
-      return;
-    }
+  const onFiles = async (pending: Promise<ReadonlyArray<File>>) => {
+    if (busy) return;
+    const request = ++readRef.current;
+    const kindChangesAtStart = kindChangesRef.current;
+    setProblem(null);
+    setReading(true);
     try {
+      const [file] = await pending;
+      if (request !== readRef.current || file === undefined) return;
+      if (!isMarkdownName(file.name)) {
+        setProblem({ say: (m) => m.importText.notMarkdown(file.name) });
+        return;
+      }
       const [found] = await readFiles([file]);
-      if (found !== undefined) take(found);
+      if (request === readRef.current && found !== undefined)
+        take(found, false, kindChangesAtStart);
     } catch {
-      setProblem(t.importText.readFailed);
+      if (request === readRef.current) setProblem({ say: (m) => m.importText.readFailed });
+    } finally {
+      if (request === readRef.current) setReading(false);
     }
+  };
+
+  const cancelRead = () => {
+    readRef.current += 1;
+    setReading(false);
+  };
+
+  const keep = () => {
+    cancelRead();
+    setChoosing(false);
+    setPasting(false);
+    setProblem(null);
+    focusAfterRender(anotherRef);
   };
 
   const set = (name: ArticleField) => (value: string) => {
-    setValues((current) => ({ ...current, [name]: value }));
-    setFilled((current) => current.filter((other) => other !== name));
+    writeValues({ ...valuesRef.current, [name]: value });
+    writeFilled(filledRef.current.filter((other) => other !== name));
+    setMissing((current) => current.filter((other) => other !== name));
   };
 
   const year = /\b(\d{4})\b/.exec(values.published)?.[1] ?? null;
@@ -140,15 +169,23 @@ export function AddArticle() {
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (text === null) {
-      setSubmitProblem(t.importText.needText);
+      setMissing([]);
+      setSubmitProblem(null);
+      setProblem({ say: (m) => (pasting ? m.importText.needPasted : m.importText.needText) });
+      focusAfterRender(pasting ? pasteRef : chooseRef);
       return;
     }
-    if (year === null || !YEAR.test(year)) {
-      setYearMissing(true);
-      setSubmitProblem(t.importText.needYear);
+    const empty = (["familyName", "title"] as const).filter((name) => values[name].trim() === "");
+    const lacking: ReadonlyArray<ArticleField> = [
+      ...empty,
+      ...(year === null ? (["published"] as const) : []),
+    ];
+    setMissing(lacking);
+    if (lacking.length > 0) {
+      setSubmitProblem({ say: (m) => m.addSource.checkFields });
+      focusFirstProblem(formRef.current);
       return;
     }
-    setYearMissing(false);
     setSubmitProblem(null);
     const shown = new Set(FIELDS_OF[type]);
     const kept = (name: ArticleField) => (shown.has(name) ? blank(values[name]) : null);
@@ -179,8 +216,10 @@ export function AddArticle() {
       markdown: text.markdown,
     };
     setBusy(true);
+    onSaving(true);
     const exit = await importText({ payload, reactivityKeys: KEYS.sources });
     setBusy(false);
+    onSaving(false);
     if (Exit.isSuccess(exit)) {
       await navigate({
         to: "/sources/$sourceId",
@@ -190,12 +229,16 @@ export function AddArticle() {
       return;
     }
     const error = Cause.findErrorOption(exit.cause);
-    setSubmitProblem(
-      Option.isSome(error) && error.value._tag === "SourceNameTaken"
-        ? t.addSource.nameTaken(error.value.fileName)
-        : t.errors.storage,
-    );
+    const taken = Option.isSome(error) && error.value._tag === "SourceNameTaken";
+    const fileName = taken ? error.value.fileName : "";
+    setSubmitProblem({
+      say: (m) =>
+        taken ? m.addSource.nameTaken(fileName) : `${m.errors.storage} ${m.errors.storageRecovery}`,
+    });
   };
+
+  const errorOf = (name: ArticleField) =>
+    name === "published" ? t.importText.needYear : t.importText.needField;
 
   const field = (
     name: ArticleField,
@@ -207,10 +250,17 @@ export function AddArticle() {
       label={label}
       value={values[name]}
       onChange={set(name)}
-      filled={filled.includes(name)}
+      filledFrom={
+        filled.includes(name)
+          ? fromPaste
+            ? t.importText.fromPaste
+            : t.importText.fromFile
+          : undefined
+      }
       {...options}
-      {...(name === "published" && yearMissing ? { error: t.importText.needYear } : {})}
-      {...(name === "otherAuthors" ? { multiline: true } : {})}
+      error={missing.includes(name) ? errorOf(name) : undefined}
+      multiline={name === "otherAuthors"}
+      {...(name === "url" ? { inputMode: "url" as const } : {})}
     />
   );
 
@@ -230,171 +280,199 @@ export function AddArticle() {
   };
 
   return (
-    <form className="form narrow" onSubmit={submit} noValidate>
-      <Panel title={t.importText.text} initial="rubric">
-        <div className="panel__body">
-          {text === null ? (
-            pasting ? (
-              <div className="field">
-                <label className="field__label" htmlFor={pasteId}>
-                  {t.importText.pasteLabel}
-                </label>
-                <textarea
-                  id={pasteId}
-                  className="textarea add-text__paste"
-                  value={pasted}
-                  onChange={(event) => setPasted(event.target.value)}
-                  spellCheck={false}
-                />
-                <div className="button-row">
-                  <button
-                    type="button"
-                    className="button button--primary"
-                    disabled={pasted.trim() === ""}
-                    onClick={() => take({ name: t.importText.pasted, markdown: pasted })}
-                  >
-                    {t.importText.usePasted}
-                  </button>
-                  <button
-                    type="button"
-                    className="button button--quiet"
-                    onClick={() => setPasting(false)}
-                  >
-                    {t.addSource.cancel}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <DropZone onFiles={(files) => void onFiles(files)} hint={t.importText.dropHint}>
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept=".md,.markdown,.mdown,.txt,text/markdown,text/plain"
-                  className="sr-only"
-                  tabIndex={-1}
-                  onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                    void onFiles([...(event.target.files ?? [])])
-                  }
-                />
+    <Panel title={t.importText.article} initial="rubric">
+      <div ref={wayInRef} className="panel__body">
+        {text === null || choosing ? (
+          pasting ? (
+            <div className="field">
+              <label className="field__label" htmlFor={pasteId}>
+                {t.importText.pasteLabel}
+              </label>
+              <textarea
+                ref={pasteRef}
+                id={pasteId}
+                className="textarea add-text__paste"
+                value={pasted}
+                onChange={(event) => setPasted(event.target.value)}
+                spellCheck={false}
+              />
+              <div className="button-row">
                 <button
                   type="button"
                   className="button button--primary"
-                  onClick={() => fileRef.current?.click()}
+                  disabled={pasted.trim() === ""}
+                  onClick={() => {
+                    cancelRead();
+                    take({ name: t.importText.pasted, markdown: pasted }, true);
+                  }}
                 >
-                  <FileText className="button__icon" aria-hidden="true" />
-                  {t.importText.chooseFile}
+                  {t.importText.usePasted}
                 </button>
                 <button
                   type="button"
                   className="button button--quiet"
-                  onClick={() => setPasting(true)}
+                  onClick={() => {
+                    setPasting(false);
+                    setProblem(null);
+                    focusAfterRender(chooseRef);
+                  }}
                 >
-                  {t.importText.paste}
+                  {t.importText.backToFile}
                 </button>
-              </DropZone>
-            )
-          ) : (
-            <div className="add-text__chosen">
-              <FileText className="add-text__icon" aria-hidden="true" />
-              <div className="add-text__file">
-                <p className="add-text__name">{text.name}</p>
-                <p className="add-text__meta">
-                  {article === null
-                    ? null
-                    : t.importText.chosenMeta(article.units.length, article.words)}
-                </p>
               </div>
+            </div>
+          ) : (
+            <DropZone onFiles={(files) => void onFiles(files)} hint={t.importText.dropHint}>
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".md,.markdown,.mdown,.txt,text/markdown,text/plain"
+                className="sr-only"
+                tabIndex={-1}
+                aria-hidden="true"
+                onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                  void onFiles(Promise.resolve([...(event.currentTarget.files ?? [])]));
+                  event.currentTarget.value = "";
+                }}
+              />
+              <button
+                ref={chooseRef}
+                type="button"
+                aria-describedby={problem === null ? undefined : problemId}
+                className="button button--primary"
+                onClick={() => fileRef.current?.click()}
+              >
+                <FileText className="button__icon" aria-hidden="true" />
+                {t.importText.chooseFile}
+              </button>
               <button
                 type="button"
-                className="button button--small"
+                className="button button--quiet"
                 onClick={() => {
-                  setText(null);
-                  setPasted("");
+                  cancelRead();
+                  setPasting(true);
+                  setProblem(null);
+                  focusAfterRender(pasteRef);
                 }}
               >
-                {t.importText.another}
+                {t.importText.paste}
               </button>
+              {text === null ? null : (
+                <button type="button" className="button button--quiet" onClick={keep}>
+                  {fromPaste ? t.importText.keepPasted : t.importText.keep(text.name)}
+                </button>
+              )}
+            </DropZone>
+          )
+        ) : (
+          <div className="add-text__chosen">
+            <FileText className="add-text__icon" aria-hidden="true" />
+            <div className="add-text__file">
+              <p className="add-text__name">{fromPaste ? t.importText.pasted : text.name}</p>
+              <p className="add-text__meta">
+                {article === null
+                  ? null
+                  : t.importText.chosenMeta(article.units.length, article.words)}
+              </p>
             </div>
+            <button
+              ref={anotherRef}
+              type="button"
+              className="button button--small"
+              disabled={busy}
+              onClick={() => {
+                setChoosing(true);
+                setPasting(false);
+                focusAfterRender(chooseRef);
+              }}
+            >
+              {t.importText.another}
+            </button>
+          </div>
+        )}
+        <p role="status" className="add-text__status" id={problemId}>
+          {problem === null ? (
+            reading ? (
+              <span className="form-status">{t.importText.reading}</span>
+            ) : null
+          ) : (
+            <span className="field__error">
+              <CircleAlert className="field__error-icon" aria-hidden="true" />
+              {problem.say(t)}
+            </span>
           )}
-          <p role="status" className="add-text__status">
-            {problem === null ? null : (
-              <span className="field__error">
-                <CircleAlert className="field__error-icon" aria-hidden="true" />
-                {problem}
-              </span>
+        </p>
+      </div>
+      <form ref={formRef} className="add-source__form" onSubmit={submit} noValidate>
+        <div className="panel__body add-source__fields">
+          <div role="status" className="fill-status">
+            {filled.length === 0 ? null : (
+              <FillLine>
+                {fromPaste ? t.importText.filledFromPaste : t.importText.filledFromFile}
+              </FillLine>
             )}
-          </p>
-        </div>
-      </Panel>
-      {filled.length === 0 ? null : (
-        <Notice tone="info">
-          <p>{t.importText.filledFromFile}</p>
-        </Notice>
-      )}
-      <Panel title={t.addSource.author} initial="accent">
-        <div className="panel__body">
+          </div>
+          <fieldset className="add-text__type">
+            <legend className="field__label">{t.importText.type}</legend>
+            <div className="segmented">
+              {TYPES.map((option) => (
+                <label key={option}>
+                  <input
+                    type="radio"
+                    name="article-type"
+                    value={option}
+                    checked={type === option}
+                    onChange={() => {
+                      kindChangesRef.current += 1;
+                      setType(option);
+                    }}
+                  />
+                  <span>{t.kinds.articleTypes[option]}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
           <fieldset className="fieldset">
             <legend className="sr-only">{t.addSource.author}</legend>
             {field("familyName", t.addSource.familyName, { required: true })}
             {field("givenName", t.addSource.givenName)}
-            {field("otherAuthors", t.importText.otherAuthors, {
-              wide: true,
-              hint: t.importText.otherAuthorsHint,
-            })}
           </fieldset>
-        </div>
-      </Panel>
-      <Panel title={t.importText.details} initial="rubric">
-        <div className="panel__body">
-          <fieldset className="segmented add-text__types">
-            <legend className="sr-only">{t.importText.type}</legend>
-            {TYPES.map((option) => (
-              <label key={option}>
-                <input
-                  type="radio"
-                  name="article-type"
-                  value={option}
-                  checked={type === option}
-                  onChange={() => setType(option)}
-                />
-                <span>{t.kinds.articleTypes[option]}</span>
-              </label>
-            ))}
-          </fieldset>
-          <fieldset className="fieldset add-text__fields">
-            <legend className="sr-only">{t.importText.details}</legend>
+          <fieldset className="fieldset">
+            <legend className="sr-only">{t.addSource.work}</legend>
             {field("title", t.addSource.titleField, { required: true, wide: true })}
-            {field("published", t.importText.published, { hint: t.importText.publishedHint })}
+            {field("published", t.importText.published, {
+              required: true,
+              hint: t.importText.publishedHint,
+            })}
             {field("container", t.importText.containers[type])}
-            {FIELDS_OF[type].map((name) =>
-              field(name, extraLabels[name], {
-                ...(name === "url" ? { wide: true } : {}),
-                ...(name === "accessed" ? { hint: t.importText.accessedHint } : {}),
-              }),
-            )}
+            {SHOWN_OF[type].map((name) => field(name, extraLabels[name], { wide: true }))}
+            <MoreDetails summary={t.importText.more[type]} open={more} onToggle={setMore}>
+              {field("otherAuthors", t.importText.otherAuthors, {
+                wide: true,
+                hint: t.importText.otherAuthorsHint,
+              })}
+              {folded(type).map((name) =>
+                field(name, extraLabels[name], {
+                  ...(name === "url" ? { wide: true } : {}),
+                  ...(name === "accessed" ? { hint: t.importText.accessedHint } : {}),
+                }),
+              )}
+            </MoreDetails>
           </fieldset>
         </div>
-      </Panel>
-      <p role="alert" className="add-text__submit-problem">
-        {submitProblem === null ? null : (
-          <span className="field__error">
-            <CircleAlert className="field__error-icon" aria-hidden="true" />
-            {submitProblem}
-          </span>
-        )}
-      </p>
-      <div className="button-row">
-        <button
-          type="submit"
-          className="button button--primary"
-          disabled={busy || values.familyName.trim() === "" || values.title.trim() === ""}
-        >
-          {busy ? t.importText.adding : t.importText.submit}
-        </button>
-        <Link to="/sources" className="button">
-          {t.addSource.cancel}
-        </Link>
-      </div>
-    </form>
+        <FormFoot problem={submitProblem === null ? null : submitProblem.say(t)}>
+          <button
+            type="submit"
+            className={text === null || choosing ? "button" : "button button--primary"}
+            disabled={busy || reading}
+          >
+            {busy ? t.importText.adding : t.importText.submit}
+          </button>
+          <Link to="/sources" className="button button--quiet">
+            {t.addSource.cancel}
+          </Link>
+        </FormFoot>
+      </form>
+    </Panel>
   );
 }

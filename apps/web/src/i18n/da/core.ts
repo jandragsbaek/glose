@@ -30,6 +30,7 @@ export const coreMessages: Pick<
   common: {
     retry: "Prøv igen",
     optional: "valgfri",
+    required: "skal udfyldes",
     loading: "Indlæser",
   },
   errors: {

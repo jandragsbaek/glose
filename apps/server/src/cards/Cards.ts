@@ -5,6 +5,9 @@ import {
   type CardText,
   GraphFolderNotSet,
   StorageError,
+  isFileName,
+  sameFileName,
+  toFileName,
 } from "@glose/contracts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -15,7 +18,6 @@ import * as Path from "effect/Path";
 import * as Semaphore from "effect/Semaphore";
 import * as NodeCrypto from "node:crypto";
 
-import { isFileName, sameFileName, toFileName } from "../graph/fileName.ts";
 import * as Settings from "../settings/Settings.ts";
 import { writeFileAtomic } from "../storage.ts";
 import { type CardFileContent, editCardFile, parseCardFile, renderCardFile } from "./cardFile.ts";

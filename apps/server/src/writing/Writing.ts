@@ -19,6 +19,9 @@ import {
   WritingProjectNotFound,
   WritingReview,
   WritingReviewUnavailable,
+  isFileName,
+  sameFileName,
+  toFileName,
 } from "@glose/contracts";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -32,7 +35,6 @@ import * as Schema from "effect/Schema";
 import * as ChatGpt from "../chatgpt/ChatGpt.ts";
 import { Responses } from "../chatgpt/Responses.ts";
 import { askStructured, strictObject } from "../chatgpt/structured.ts";
-import { isFileName, sameFileName, toFileName } from "../graph/fileName.ts";
 import * as Graph from "../graph/Graph.ts";
 import * as Sources from "../graph/Sources.ts";
 import * as Settings from "../settings/Settings.ts";

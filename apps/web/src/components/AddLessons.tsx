@@ -1,57 +1,94 @@
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { BOOK_TEXT_DETAILS, parseArticle } from "@glose/contracts";
+import { BOOK_TEXT_DETAILS } from "@glose/contracts";
 import { Link } from "@tanstack/react-router";
 import * as Cause from "effect/Cause";
 import * as Exit from "effect/Exit";
 import * as Option from "effect/Option";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
-import { Check, CircleAlert, FolderOpen, Minus } from "lucide-react";
-import { type FormEvent, useRef, useState } from "react";
+import { CircleAlert, FolderOpen } from "lucide-react";
+import { type FormEvent, useId, useRef, useState } from "react";
 
-import {
-  byFileName,
-  comparePart,
-  detailsFromMarkdown,
-  isMarkdownName,
-  lessonTitle,
-  partByOrder,
-  partFromName,
-} from "../domain/importText.ts";
+import { byFileName, isMarkdownName, partByOrder } from "../domain/importText.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { importTextAtom, sourcesAtom } from "../state/graph.ts";
-import { blank, DropZone, PART, readFiles, TextField, YEAR } from "./textImport.tsx";
+import {
+  blank,
+  DropZone,
+  FillLine,
+  focusAfterRender,
+  focusFirstProblem,
+  FormFoot,
+  handCursorOn,
+  PART,
+  readFiles,
+  YEAR,
+} from "./textImport.tsx";
+import {
+  type Course,
+  type CourseField,
+  CourseFields,
+  type FromFiles,
+  type Origin,
+  type Say,
+} from "./CourseFields.tsx";
+import { isHeld, lessonBatch, pathOf } from "./lessonBatch.ts";
+import { type Lesson, LessonTable, PerWeek, wholeAtLeastOne } from "./LessonTable.tsx";
 import { Panel } from "./ui.tsx";
 
-type LessonState = "new" | "taken" | "added" | "failed";
+const FROM_FILES = ["name", "family", "given", "year"] as const satisfies ReadonlyArray<FromFiles>;
 
-interface Lesson {
-  readonly name: string;
-  readonly markdown: string;
-  readonly part: string;
-  readonly title: string;
-  readonly words: number;
-  readonly state: LessonState;
-  readonly id: string | null;
-  readonly order: number;
-  readonly partByName: boolean;
-}
-
-export function AddLessons() {
+export function AddLessons({ onSaving }: { readonly onSaving: (saving: boolean) => void }) {
   const t = useT();
   const importText = useAtomSet(importTextAtom, { mode: "promiseExit" });
   const sources = AsyncResult.getOrElse(useAtomValue(sourcesAtom), () => []);
   const refreshSources = useAtomRefresh(sourcesAtom);
   const folderRef = useRef<HTMLInputElement>(null);
   const filesRef = useRef<HTMLInputElement>(null);
+  const chooseRef = useRef<HTMLButtonElement>(null);
+  const anotherRef = useRef<HTMLButtonElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const busyRef = useRef(false);
+  const readRef = useRef(0);
   const [lessons, setLessons] = useState<ReadonlyArray<Lesson>>([]);
+  const [from, setFrom] = useState<string | null>(null);
+  const [choosing, setChoosing] = useState(false);
   const [skipped, setSkipped] = useState(0);
-  const [course, setCourse] = useState({ name: "", family: "", given: "", year: "", url: "" });
-  const [problem, setProblem] = useState<string | null>(null);
+  const [course, setCourse] = useState<Course>({
+    name: "",
+    family: "",
+    given: "",
+    year: "",
+    url: "",
+  });
+  const [origins, setOrigins] = useState<Partial<Record<FromFiles, Origin>>>({});
+  const [errors, setErrors] = useState<Partial<Record<CourseField, Say>>>({});
+  const [fileProblem, setFileProblem] = useState<{ readonly say: Say } | null>(null);
+  const [problem, setProblem] = useState<{ readonly say: Say } | null>(null);
   const [progress, setProgress] = useState<{ readonly done: number; readonly all: number } | null>(
     null,
   );
-  const [finished, setFinished] = useState<{ added: number; skipped: number } | null>(null);
+  const [finished, setFinished] = useState(false);
   const [perWeek, setPerWeek] = useState("5");
+  const perWeekRef = useRef(perWeek);
+  const wayInRef = useRef<HTMLDivElement>(null);
+  const fileProblemId = useId();
+  const partProblemId = useId();
+  const [reading, setReading] = useState(false);
+  const courseRef = useRef(course);
+  const originsRef = useRef(origins);
+  const submitRef = useRef<HTMLButtonElement>(null);
+  const openRef = useRef<HTMLAnchorElement>(null);
+  const busy = progress !== null;
+
+  const writeCourse = (next: Course) => {
+    courseRef.current = next;
+    setCourse(next);
+  };
+
+  const writeOrigins = (next: Partial<Record<FromFiles, Origin>>) => {
+    originsRef.current = next;
+    setOrigins(next);
+  };
 
   const taken = (part: string) =>
     sources.some(
@@ -62,87 +99,161 @@ export function AddLessons() {
         source.part === part,
     );
 
-  const onFiles = async (files: ReadonlyArray<File>) => {
-    const markdown = files.filter((file) => isMarkdownName(file.name));
-    setSkipped(files.length - markdown.length);
-    if (markdown.length === 0) {
-      setProblem(t.lessons.needFiles);
+  const onFiles = async (pending: Promise<ReadonlyArray<File>>) => {
+    if (busyRef.current) return;
+    const request = ++readRef.current;
+    setFileProblem(null);
+    setReading(true);
+    let files: ReadonlyArray<File>;
+    let markdown: ReadonlyArray<File>;
+    let read;
+    try {
+      files = await pending;
+      if (request !== readRef.current) return;
+      markdown = files.filter((file) => isMarkdownName(file.name));
+      if (markdown.length === 0) {
+        setFileProblem({ say: (m) => m.lessons.noMarkdown });
+        return;
+      }
+      const texts = await readFiles(markdown);
+      const empty = texts.filter((text) => text.markdown.trim() === "").map((text) => text.name);
+      if (empty.length > 0) {
+        if (request === readRef.current) {
+          setFileProblem({ say: (m) => m.lessons.emptyFiles(empty.join(", ")) });
+        }
+        return;
+      }
+      read = byFileName(texts.map((text, index) => ({ ...text, path: pathOf(markdown[index]!) })));
+    } catch {
+      if (request === readRef.current) setFileProblem({ say: (m) => m.importText.readFailed });
       return;
+    } finally {
+      if (request === readRef.current) setReading(false);
     }
+    if (request !== readRef.current || busyRef.current) return;
+    setSkipped(files.length - markdown.length);
+    setFileProblem(null);
     setProblem(null);
-    setFinished(null);
-    const read = byFileName(await readFiles(markdown));
-    const week = Math.max(1, Number(perWeek) || 5);
-    const next = read.map((file, index): Lesson => {
-      const article = parseArticle(file.markdown);
-      const named = partFromName(file.name);
-      return {
-        name: file.name,
-        markdown: file.markdown,
-        order: index,
-        partByName: named !== null,
-        part: named ?? partByOrder(index, week),
-        title: lessonTitle(file.name, file.markdown),
-        words: article.words,
-        state: "new",
-        id: null,
-      };
+    setFinished(false);
+    setChoosing(false);
+    const batch = lessonBatch(read, markdown, Math.max(1, Number(perWeekRef.current) || 5));
+    setLessons(batch.lessons);
+    setFrom(batch.folder);
+    const found = batch.found;
+    const current = courseRef.current;
+    const replace = FROM_FILES.filter(
+      (key) => current[key].trim() === "" || originsRef.current[key] !== undefined,
+    );
+    writeCourse({
+      ...current,
+      ...Object.fromEntries(replace.map((key) => [key, found[key].value])),
     });
-    setLessons([...next].sort((a, b) => comparePart(a.part, b.part)));
-    const first = detailsFromMarkdown(read[0]!.markdown);
-    const folder = (
-      markdown[0] as File & { readonly webkitRelativePath?: string }
-    ).webkitRelativePath?.split("/")[0];
-    setCourse((current) => ({
-      name: current.name || first.container || folder || "",
-      family: current.family || first.family || "",
-      given: current.given || first.given || "",
-      year: current.year || first.year || String(new Date().getFullYear()),
-      url: current.url,
-    }));
+    writeOrigins(
+      Object.fromEntries(
+        replace.filter((key) => found[key].value !== "").map((key) => [key, found[key].origin]),
+      ),
+    );
+    setErrors({});
+    handCursorOn(wayInRef.current, anotherRef);
   };
 
-  const change = (index: number, patch: Partial<Lesson>) =>
+  const cancelRead = () => {
+    readRef.current += 1;
+    setReading(false);
+  };
+
+  const pick = (input: HTMLInputElement) => {
+    void onFiles(Promise.resolve([...(input.files ?? [])]));
+    input.value = "";
+  };
+
+  const changeCourse = (key: CourseField) => (value: string) => {
+    writeCourse({ ...courseRef.current, [key]: value });
+    const { [key as FromFiles]: _, ...rest } = originsRef.current;
+    writeOrigins(rest);
+    setErrors(({ [key]: _, ...rest }) => rest);
+  };
+
+  const change = (key: string, patch: Partial<Lesson>) =>
     setLessons((current) =>
-      current.map((lesson, at) => (at === index ? { ...lesson, ...patch } : lesson)),
+      current.map((lesson) =>
+        lesson.key !== key
+          ? lesson
+          : {
+              ...lesson,
+              ...patch,
+            },
+      ),
     );
 
   const changePerWeek = (value: string) => {
     setPerWeek(value);
+    if (!wholeAtLeastOne(value)) return;
     const week = Number(value);
-    if (!Number.isInteger(week) || week < 1) return;
+    perWeekRef.current = value;
     setLessons((current) =>
       current.map((lesson) =>
         lesson.partByName || lesson.state === "added"
           ? lesson
-          : { ...lesson, part: partByOrder(lesson.order, week) },
+          : {
+              ...lesson,
+              part: partByOrder(lesson.order, week),
+            },
       ),
     );
   };
 
-  const ready =
-    course.name.trim() !== "" && course.family.trim() !== "" && YEAR.test(course.year.trim());
   const badParts = lessons.filter((lesson) => !PART.test(lesson.part));
   const clashes = new Set(
     lessons
       .map((lesson) => lesson.part)
       .filter((part, index, parts) => parts.indexOf(part) !== index),
   );
-  const toAdd = lessons.filter((lesson) => lesson.state !== "added" && !taken(lesson.part));
+  const partProblems = [
+    badParts.length > 0 ? t.lessons.badPart : null,
+    clashes.size > 0 ? t.lessons.clash([...clashes].join(", ")) : null,
+  ].filter((line): line is string => line !== null);
+  const held = (lesson: Lesson) => isHeld(lesson, course);
+  const toAdd = lessons.filter(
+    (lesson) => lesson.state !== "added" && !held(lesson) && !taken(lesson.part),
+  );
+  const added = lessons.filter((lesson) => lesson.state === "added").length;
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (lessons.length === 0) return setProblem(t.lessons.needFiles);
-    if (!ready) return setProblem(t.lessons.needCourse);
-    if (badParts.length > 0) return setProblem(t.lessons.badPart);
-    if (clashes.size > 0) return setProblem(t.lessons.clash([...clashes].join(", ")));
+    if (busyRef.current || reading) return;
+    if (choosing && lessons.length > 0) setChoosing(false);
+    if (lessons.length === 0) {
+      setFileProblem({ say: (m) => m.lessons.needFiles });
+      focusAfterRender(chooseRef);
+      return;
+    }
+    const found: Partial<Record<CourseField, Say>> = {};
+    if (course.name.trim() === "") found.name = (m) => m.importText.needField;
+    if (course.family.trim() === "") found.family = (m) => m.importText.needField;
+    if (!YEAR.test(course.year.trim())) {
+      found.year =
+        course.year.trim() === "" ? (m) => m.importText.needField : (m) => m.addSource.yearInvalid;
+    }
+    setErrors(found);
+    const perWeekBad =
+      lessons.some((lesson) => !lesson.partByName && lesson.state !== "added") &&
+      !wholeAtLeastOne(perWeek);
+    if (Object.keys(found).length > 0 || partProblems.length > 0 || perWeekBad) {
+      setProblem({ say: (m) => m.addSource.checkFields });
+      focusFirstProblem(formRef.current, "[data-held]");
+      return;
+    }
     setProblem(null);
-    let added = 0;
-    let missed = 0;
-    const all = toAdd.length;
+    busyRef.current = true;
+    onSaving(true);
+    const batch = toAdd;
+    const all = batch.length;
     setProgress({ done: 0, all });
-    for (const [index, lesson] of lessons.entries()) {
-      if (lesson.state === "added" || taken(lesson.part)) continue;
+    let missed = 0;
+    let named = 0;
+    for (const [index, lesson] of batch.entries()) {
+      setProgress({ done: index, all });
       const exit = await importText({
         payload: {
           ...BOOK_TEXT_DETAILS,
@@ -162,233 +273,228 @@ export function AddLessons() {
         },
       });
       if (Exit.isSuccess(exit)) {
-        added += 1;
-        change(index, { state: "added", id: exit.value.id });
+        change(lesson.key, { state: "added", id: exit.value.id });
       } else {
         missed += 1;
         const error = Cause.findErrorOption(exit.cause);
-        change(index, {
-          state:
-            Option.isSome(error) && error.value._tag === "SourceNameTaken" ? "taken" : "failed",
+        const nameTaken = Option.isSome(error) && error.value._tag === "SourceNameTaken";
+        if (nameTaken) named += 1;
+        change(lesson.key, {
+          state: nameTaken ? "named" : "failed",
+          takenAs: nameTaken ? error.value.fileName : null,
         });
       }
-      setProgress({ done: added + missed, all });
     }
+    busyRef.current = false;
+    onSaving(false);
     setProgress(null);
-    setFinished({ added, skipped: missed + (lessons.length - all) });
+    setFinished(true);
     refreshSources();
+    if (named > 0) focusFirstProblem(formRef.current);
+    else focusAfterRender(missed > 0 ? [submitRef, openRef] : [openRef, submitRef]);
   };
 
   const firstAdded = lessons.find((lesson) => lesson.state === "added");
-  const locked = lessons.length > 0 && toAdd.length === 0 && finished !== null;
+  const waiting = lessons.some(held);
+  const locked = busy || (lessons.length > 0 && toAdd.length === 0 && !waiting && finished);
+  const byOrder = lessons.some((lesson) => !lesson.partByName && lesson.state !== "added");
+  const showDrop = lessons.length === 0 || choosing;
+  const fromFile = Object.values(origins).includes("file");
+  const fromFolder = Object.values(origins).includes("folder");
+  const fillSaid = fromFile
+    ? fromFolder
+      ? t.lessons.filledBoth
+      : t.lessons.filled
+    : fromFolder
+      ? t.lessons.filledFolder
+      : null;
 
   return (
-    <form className="form add-lessons" onSubmit={submit} noValidate>
-      <Panel
-        title={t.lessons.files}
-        initial="rubric"
-        meta={lessons.length === 0 ? undefined : t.lessons.count(lessons.length)}
-      >
-        <div className="panel__body">
-          <DropZone onFiles={(files) => void onFiles(files)} hint={t.lessons.dropHint}>
-            <input
-              ref={folderRef}
-              type="file"
-              className="sr-only"
-              tabIndex={-1}
-              multiple
-              {...({ webkitdirectory: "" } as Record<string, string>)}
-              onChange={(event) => void onFiles([...(event.target.files ?? [])])}
-            />
-            <input
-              ref={filesRef}
-              type="file"
-              className="sr-only"
-              tabIndex={-1}
-              multiple
-              accept=".md,.markdown,.mdown,.txt,text/markdown"
-              onChange={(event) => void onFiles([...(event.target.files ?? [])])}
-            />
-            <button
-              type="button"
-              className="button button--primary"
-              onClick={() => folderRef.current?.click()}
-            >
-              <FolderOpen className="button__icon" aria-hidden="true" />
-              {t.lessons.chooseFolder}
-            </button>
-            <button type="button" className="button" onClick={() => filesRef.current?.click()}>
-              {t.lessons.chooseFiles}
-            </button>
-          </DropZone>
+    <Panel title={t.lessons.course} initial="rubric">
+      <form ref={formRef} className="add-source__form add-lessons" onSubmit={submit} noValidate>
+        <div ref={wayInRef} className="panel__body">
+          <input
+            ref={folderRef}
+            type="file"
+            className="sr-only"
+            tabIndex={-1}
+            aria-hidden="true"
+            multiple
+            {...({ webkitdirectory: "" } as Record<string, string>)}
+            onChange={(event) => pick(event.currentTarget)}
+          />
+          <input
+            ref={filesRef}
+            type="file"
+            className="sr-only"
+            tabIndex={-1}
+            aria-hidden="true"
+            multiple
+            accept=".md,.markdown,.mdown,.txt,text/markdown"
+            onChange={(event) => pick(event.currentTarget)}
+          />
+          {showDrop ? (
+            <DropZone onFiles={(files) => void onFiles(files)} hint={t.lessons.dropHint}>
+              <button
+                ref={chooseRef}
+                type="button"
+                className="button button--primary"
+                disabled={busy}
+                aria-describedby={fileProblem === null ? undefined : fileProblemId}
+                onClick={() => folderRef.current?.click()}
+              >
+                <FolderOpen className="button__icon" aria-hidden="true" />
+                {t.lessons.chooseFolder}
+              </button>
+              <button
+                type="button"
+                className="button button--quiet"
+                disabled={busy}
+                onClick={() => filesRef.current?.click()}
+              >
+                {t.lessons.chooseFiles}
+              </button>
+              {lessons.length > 0 ? (
+                <button
+                  type="button"
+                  className="button button--quiet"
+                  disabled={busy}
+                  onClick={() => {
+                    cancelRead();
+                    setChoosing(false);
+                    setFileProblem(null);
+                    focusAfterRender(anotherRef);
+                  }}
+                >
+                  {t.lessons.keep(lessons.length)}
+                </button>
+              ) : null}
+            </DropZone>
+          ) : (
+            <div className="add-text__chosen">
+              <FolderOpen className="add-text__icon" aria-hidden="true" />
+              <div className="add-text__file">
+                <p className="add-text__name">{from ?? t.lessons.someFiles(lessons.length)}</p>
+                {from === null ? null : (
+                  <p className="add-text__meta">{t.lessons.count(lessons.length)}</p>
+                )}
+              </div>
+              <button
+                ref={anotherRef}
+                type="button"
+                className="button button--small"
+                disabled={locked || added > 0}
+                onClick={() => {
+                  setChoosing(true);
+                  focusAfterRender(chooseRef);
+                }}
+              >
+                {t.lessons.another}
+              </button>
+            </div>
+          )}
+          <p role="status" className="add-text__status" id={fileProblemId}>
+            {fileProblem === null ? (
+              reading ? (
+                <span className="form-status">{t.lessons.reading}</span>
+              ) : null
+            ) : (
+              <span className="field__error">
+                <CircleAlert className="field__error-icon" aria-hidden="true" />
+                {fileProblem.say(t)}
+              </span>
+            )}
+          </p>
           {skipped === 0 ? null : (
             <p className="field__hint add-lessons__skipped">{t.lessons.skippedFiles(skipped)}</p>
           )}
         </div>
-        {lessons.length === 0 ? null : (
-          <div className="add-lessons__table-wrap">
-            <table className="add-lessons__table">
-              <thead>
-                <tr>
-                  <th scope="col">{t.lessons.columns.part}</th>
-                  <th scope="col">{t.lessons.columns.title}</th>
-                  <th scope="col">{t.lessons.columns.file}</th>
-                  <th scope="col" className="num">
-                    {t.lessons.columns.words}
-                  </th>
-                  <th scope="col">{t.lessons.columns.state}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {lessons.map((lesson, index) => {
-                  const state: LessonState =
-                    lesson.state === "new" && taken(lesson.part) ? "taken" : lesson.state;
-                  return (
-                    <tr
-                      key={lesson.name}
-                      data-state={state}
-                      data-clash={clashes.has(lesson.part) ? "" : undefined}
-                    >
-                      <td>
-                        <input
-                          className="input add-lessons__part"
-                          value={lesson.part}
-                          aria-label={t.lessons.partLabel(lesson.name)}
-                          aria-invalid={PART.test(lesson.part) ? undefined : true}
-                          inputMode="decimal"
-                          disabled={state === "added"}
-                          onChange={(event) =>
-                            change(index, { part: event.target.value, partByName: true })
-                          }
-                        />
-                      </td>
-                      <td>
-                        <input
-                          className="input add-lessons__title"
-                          value={lesson.title}
-                          aria-label={t.lessons.titleLabel(lesson.name)}
-                          disabled={state === "added"}
-                          onChange={(event) => change(index, { title: event.target.value })}
-                        />
-                      </td>
-                      <td className="add-lessons__file">{lesson.name}</td>
-                      <td className="num">{lesson.words}</td>
-                      <td className="add-lessons__state">
-                        <LessonStateMark state={state} />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+        <div className="panel__body add-source__fields">
+          <div role="status" className="fill-status">
+            {fillSaid === null ? null : <FillLine>{fillSaid}</FillLine>}
           </div>
-        )}
-      </Panel>
-      <Panel title={t.lessons.course} initial="accent">
-        <div className="panel__body">
-          <fieldset className="fieldset">
-            <legend className="sr-only">{t.lessons.course}</legend>
-            <TextField
-              disabled={locked}
-              label={t.lessons.courseName}
-              value={course.name}
-              onChange={(name) => setCourse((current) => ({ ...current, name }))}
-              hint={t.lessons.courseHint}
-              required
-              wide
-            />
-            <TextField
-              disabled={locked}
-              label={t.addSource.familyName}
-              value={course.family}
-              onChange={(family) => setCourse((current) => ({ ...current, family }))}
-              hint={t.lessons.teacherHint}
-              required
-            />
-            <TextField
-              disabled={locked}
-              label={t.addSource.givenName}
-              value={course.given}
-              onChange={(given) => setCourse((current) => ({ ...current, given }))}
-            />
-            <TextField
-              disabled={locked}
-              label={t.lessons.year}
-              value={course.year}
-              onChange={(year) => setCourse((current) => ({ ...current, year }))}
-              required
-              inputMode="numeric"
-            />
-            <TextField
-              disabled={locked}
-              label={t.lessons.perWeek}
-              value={perWeek}
-              onChange={changePerWeek}
-              hint={t.lessons.perWeekHint}
-              inputMode="numeric"
-            />
-            <TextField
-              disabled={locked}
-              label={t.lessons.url}
-              value={course.url}
-              onChange={(url) => setCourse((current) => ({ ...current, url }))}
-              wide
-              inputMode="url"
-            />
-          </fieldset>
+          <CourseFields
+            course={course}
+            origins={origins}
+            errors={errors}
+            locked={locked || added > 0}
+            onChange={changeCourse}
+          />
         </div>
-      </Panel>
-      <p role="status" className="add-lessons__status">
-        {progress === null ? null : t.lessons.adding(progress.done, progress.all)}
-        {finished === null ? null : t.lessons.done(finished.added, finished.skipped)}
-        {problem === null ? null : (
-          <span className="field__error">
-            <CircleAlert className="field__error-icon" aria-hidden="true" />
-            {problem}
-          </span>
+        {lessons.length === 0 ? null : (
+          <LessonTable
+            lessons={lessons}
+            taken={taken}
+            clashes={clashes}
+            problemId={partProblemId}
+            busy={busy}
+            held={held}
+            onChange={change}
+          />
         )}
-      </p>
-      <div className="button-row">
-        {toAdd.length > 0 ? (
-          <button type="submit" className="button button--primary" disabled={progress !== null}>
-            {progress === null
-              ? finished === null
-                ? t.lessons.submit(toAdd.length)
-                : t.lessons.retry(toAdd.length)
-              : t.lessons.adding(progress.done, progress.all)}
-          </button>
-        ) : null}
-        {finished !== null && firstAdded?.id != null ? (
-          <>
-            <Link
-              to="/sources/$sourceId"
-              params={{ sourceId: firstAdded.id }}
-              search={{}}
-              className={toAdd.length > 0 ? "button" : "button button--primary"}
+        <div aria-live="polite" className="add-lessons__part-problem" id={partProblemId}>
+          {partProblems.map((line) => (
+            <p key={line} className="field__error">
+              <CircleAlert className="field__error-icon" aria-hidden="true" />
+              {line}
+            </p>
+          ))}
+        </div>
+        {byOrder ? <PerWeek value={perWeek} locked={locked} onChange={changePerWeek} /> : null}
+        <FormFoot
+          problem={problem === null ? null : problem.say(t)}
+          status={
+            progress !== null
+              ? t.lessons.adding(Math.min(progress.done + 1, progress.all), progress.all)
+              : finished
+                ? t.lessons.done(added, lessons.length - added)
+                : null
+          }
+        >
+          {lessons.length === 0 ? (
+            <button type="submit" className="button" disabled={reading}>
+              {t.lessons.submitAny}
+            </button>
+          ) : toAdd.length > 0 ? (
+            <button
+              ref={submitRef}
+              type="submit"
+              className={showDrop ? "button" : "button button--primary"}
+              disabled={busy || reading}
             >
-              {t.lessons.openFirst(firstAdded.part)}
+              {busy
+                ? t.importText.adding
+                : finished
+                  ? t.lessons.retry(toAdd.length)
+                  : t.lessons.submit(toAdd.length)}
+            </button>
+          ) : null}
+          {busy ? (
+            <button type="button" className="button button--quiet" disabled>
+              {t.addSource.cancel}
+            </button>
+          ) : finished && firstAdded?.id != null ? (
+            <>
+              <Link
+                ref={openRef}
+                to="/sources/$sourceId"
+                params={{ sourceId: firstAdded.id }}
+                search={{}}
+                className={toAdd.length > 0 ? "button" : "button button--primary"}
+              >
+                {t.lessons.openFirst(firstAdded.part)}
+              </Link>
+              <Link to="/sources" className="button button--quiet">
+                {t.lessons.seeSources}
+              </Link>
+            </>
+          ) : (
+            <Link to="/sources" className="button button--quiet">
+              {t.addSource.cancel}
             </Link>
-            <Link to="/sources" className="button">
-              {t.lessons.seeSources}
-            </Link>
-          </>
-        ) : (
-          <Link to="/sources" className="button">
-            {t.addSource.cancel}
-          </Link>
-        )}
-      </div>
-    </form>
-  );
-}
-
-function LessonStateMark({ state }: { readonly state: LessonState }) {
-  const t = useT();
-  const Icon = state === "added" ? Check : state === "new" ? Minus : CircleAlert;
-  return (
-    <span className="lesson-state" data-state={state}>
-      <Icon className="lesson-state__icon" aria-hidden="true" />
-      {t.lessons.states[state]}
-    </span>
+          )}
+        </FormFoot>
+      </form>
+    </Panel>
   );
 }

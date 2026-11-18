@@ -124,9 +124,11 @@ export const sourceMessages = {
   },
   addSource: {
     title: "Add Source",
-    find: "Find the book",
+    book: "The book",
     findHint:
-      "Search Open Library, an open book catalog. Choosing a book fills in the form below. An ISBN finds your exact edition.",
+      "Searches Open Library, an open book catalog. A result fills in the fields below; you can also type them yourself. An ISBN finds your exact edition.",
+    showResults: (n: number) => `Show all ${count(n, "result", "results")}`,
+    checkFields: "Some fields above need a value or a fix. The first one has the cursor.",
     searchLabel: "Title, author or ISBN",
     search: "Search",
     searching: "Searching Open Library",
@@ -140,16 +142,12 @@ export const sourceMessages = {
       return parts.length === 0 ? "" : `Edition: ${parts.join(", ")}`;
     },
     partBreak: ". ",
-    notYourCopy:
-      "Not your copy? Search by the ISBN printed in your book to get that exact edition.",
-    filledTitle: (title: string) => `Filled in from Open Library: ${title}`,
-    filled:
-      "Check the fields marked From Open Library against your copy. The title, publisher and edition year must be those of the book you read.",
+    filled: "Filled in from Open Library. Check the marked fields against your copy.",
+    emptied:
+      "Open Library had no value for some fields an earlier book filled, so they are empty now.",
     keptTyped: "Fields you typed yourself are kept.",
     undoFill: "Undo",
     fromCatalog: "From Open Library",
-    intro:
-      "A book you are reading or have read. A Citation needs complete data, so fill in what you have. Glose shows what is missing.",
     author: "Author",
     work: "Work",
     familyName: "Family name",
@@ -160,6 +158,8 @@ export const sourceMessages = {
     edition: "Edition",
     editionHint: "As printed in your copy, for example 2nd.",
     editionYear: "Edition year",
+    editionYearHint: "The year of the copy you read.",
+    more: "Edition and translator",
     publisher: "Publisher",
     translator: "Translator",
     yearInvalid: "Write the year as digits, for example 1958.",

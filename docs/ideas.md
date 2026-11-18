@@ -816,6 +816,35 @@ the agent; these are the picks.
 - Not yet: PDF, copying a course's images (an image the file names but Glose did not copy shows as a
   line saying so), the Kind column on the Sources page, Cards from Passages, and editing the text.
 
+## Decided, a simpler Add Source (November 2026)
+
+- Add Source was crowded: four panels per kind, each with its own ornament, a notice and a "From
+  …" line on every filled field, and "optional" on almost every label. Jan chose "One leaf" with
+  impeccable over two steps (find first, then check) and a call-number slip beside the form.
+- Each kind is one panel at form width ("The book", "The article", "The course"): the way in on top
+  (the Catalog search, the file, the folder), the data under it, and the buttons in its foot.
+  Switching the kind never changes the width.
+- The kind choice is three joined segments with one line under them that says what Glose does with
+  the kind.
+- Most fields are optional, so the few that must be filled say "required". A value Glose filled in
+  carries a small Lapis dot; one line above the fields says where the dotted values came from, with
+  Undo for a Catalog fill.
+- Fields a Citation rarely needs fold under a line that names them: a book's edition and
+  translator; an Article's other authors and the data its type rarely has (volume, issue, pages and
+  address for a paper; the date accessed for a web essay; pages for a magazine or newspaper piece).
+  The fold opens by itself when Glose fills one of them.
+- An Article's year of publication was always needed for the call number; the form now says so.
+  Cancel goes back to Sources from every kind.
+- Course lessons asks for "Lessons a week" only when a file's name gives no week and day. The file
+  name sits under each lesson's title in the table. The course data comes before the table, so a
+  long course does not push it down; what Glose read from the files is marked like any other
+  filled value, and a year it could not read is shown as a guess.
+- Each kind keeps what the user typed while another kind is shown. A new file or folder replaces
+  only the values Glose filled; Undo of a Catalog fill puts back only fields the user has not
+  touched since. After a Catalog choice the results fold to the chosen book.
+- The three kinds check a form the same way, in Glose's own words: a line under each field that
+  needs a value or a fix, one line in the foot, and the cursor in the first such field.
+
 ## Decided, the Probe (November 2026)
 
 - The Probe works from all three starts of `reading-start` (see "Decided, the first page of a

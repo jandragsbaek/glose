@@ -18,3 +18,4 @@ export * from "./rpc.ts";
 export * from "./articleInline.ts";
 export * from "./article.ts";
 export * from "./articleEdit.ts";
+export * from "./fileName.ts";

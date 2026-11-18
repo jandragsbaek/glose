@@ -42,4 +42,13 @@ describe("fillFromCatalog", () => {
     });
     assert.deepStrictEqual(second.kept, ["familyName", "translator"]);
   });
+
+  it("counts a field an earlier record filled and this one empties as replaced, not filled", () => {
+    const first = fillFromCatalog(EMPTY_FORM, [], HUMAN_CONDITION);
+    const second = fillFromCatalog(first.values, first.filled, { ...BARNDOM, publisher: "" });
+
+    assert.strictEqual(second.values.publisher, "");
+    assert.isFalse(second.filled.includes("publisher"));
+    assert.isTrue(second.replaced.includes("publisher"));
+  });
 });
