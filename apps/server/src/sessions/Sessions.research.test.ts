@@ -105,13 +105,14 @@ it.layer(NodeServices.layer)("Sessions: research for a new Note", (it) => {
         RESPONSES,
         searchThenRead,
         proposePages,
+        answer("One strong page."),
         toolCall("propose_links", {
           links: [
             { note: NOTE.toLowerCase(), why: "Both are about attention." },
             { note: "No such Note", why: "Made up." },
           ],
         }),
-        answer("One strong page."),
+        answer(""),
       );
 
       const { session, note } = yield* Effect.gen(function* () {
@@ -143,11 +144,18 @@ it.layer(NodeServices.layer)("Sessions: research for a new Note", (it) => {
         return { session: yield* afterTurn(session.id), note };
       }).pipe(Effect.provide(layer));
 
-      const [first, afterRead] = bodies();
+      const [first, afterRead, , links] = bodies();
       assert.deepStrictEqual(
         first!.tools.map((tool) => tool.type),
         ["namespace", "web_search"],
       );
+      assert.notInclude(JSON.stringify(first!.tools), "read_note");
+      assert.deepStrictEqual(
+        links!.tools.map((tool) => tool.type),
+        ["namespace"],
+      );
+      assert.include(JSON.stringify(links!.tools), "read_note");
+      assert.notInclude(JSON.stringify(links!.input), "Students who tested");
       assert.deepInclude(session.entries, {
         _tag: "ToolUse",
         tool: "search-web",
@@ -263,14 +271,35 @@ it.layer(NodeServices.layer)("Sessions: research for a new Note", (it) => {
     }),
   );
 
-  it.effect("reads no address the AI made up, so Note text cannot leave in a URL", () =>
+  it.effect("reads no address the AI wrote itself, in a search query or a refused proposal", () =>
     Effect.gen(function* () {
       const { fake, layer, bodies } = yield* setUpWithPages(new Map([[URL_A, PAGE_A]]));
       fake.answer(MODELS, MODEL_LIST);
+      const leak = `${URL_A}?q=Leroy+found+that+attention+lingers`;
       fake.answer(
         RESPONSES,
-        toolCall("read_web_page", { url: `${URL_A}?q=Leroy+found+that+attention+lingers` }),
+        {
+          status: 200,
+          sse: true,
+          body: [
+            {
+              type: "response.output_item.done",
+              item: {
+                id: "ws_2",
+                type: "web_search_call",
+                status: "completed",
+                action: { type: "search", query: leak, sources: [{ type: "url", url: URL_A }] },
+              },
+            },
+            ...toolCall("read_web_page", { url: leak }).body,
+          ],
+        },
+        toolCall("propose_pages", {
+          pages: [{ url: leak, stance: "supports", kind: "web", why: "x", quotes: ["a b c d"] }],
+        }),
         answer("I cannot read that."),
+        toolCall("read_web_page", { url: leak }),
+        answer("Still not."),
       );
 
       yield* Effect.gen(function* () {
@@ -284,10 +313,104 @@ it.layer(NodeServices.layer)("Sessions: research for a new Note", (it) => {
           notes: [],
         });
         yield* afterTurn(started.id);
+        yield* sessions.send({ id: started.id, text: "Try again." });
+        yield* afterTurn(started.id);
       }).pipe(Effect.provide(layer));
 
-      const output = bodies()[1]!.input.find((item) => item.type === "function_call_output");
-      assert.include(String(output?.["output"]), "Glose reads only addresses");
+      const outputs = bodies().flatMap((body) =>
+        body.input.filter((item) => item.type === "function_call_output"),
+      );
+      const last = outputs.at(-1);
+      assert.include(String(outputs[0]?.["output"]), "Glose reads only addresses");
+      assert.include(String(last?.["output"]), "Glose reads only addresses");
+    }),
+  );
+
+  it.effect("gives two kept pages with the same title their own Source files", () =>
+    Effect.gen(function* () {
+      const intro = (url: string, words: string): WebPage => ({
+        url,
+        title: "Introduction",
+        author: null,
+        site: "Same Site",
+        published: "2020",
+        markdown: `${words} is the sentence that this page holds for the test.\n`,
+      });
+      const urlOne = "https://same.example/one";
+      const urlTwo = "https://same.example/two";
+      const { fake, layer } = yield* setUpWithPages(
+        new Map([
+          [urlOne, intro(urlOne, "First")],
+          [urlTwo, intro(urlTwo, "Second")],
+        ]),
+      );
+      fake.answer(MODELS, MODEL_LIST);
+      fake.answer(
+        RESPONSES,
+        {
+          status: 200,
+          sse: true,
+          body: [
+            {
+              type: "response.output_item.done",
+              item: {
+                id: "ws_3",
+                type: "web_search_call",
+                status: "completed",
+                action: {
+                  type: "search",
+                  query: "same",
+                  sources: [{ url: urlOne }, { url: urlTwo }],
+                },
+              },
+            },
+            ...toolCall("propose_pages", {
+              pages: [urlOne, urlTwo].map((url, index) => ({
+                url,
+                stance: "context",
+                kind: "web",
+                why: "Same title.",
+                quotes: [
+                  `${index === 0 ? "First" : "Second"} is the sentence that this page holds`,
+                ],
+              })),
+            }).body,
+          ],
+        },
+        answer("Two pages."),
+        answer(""),
+      );
+
+      const sources = yield* Effect.gen(function* () {
+        const sessions = yield* Sessions;
+        const started = yield* sessions.startResearch({
+          draft: DRAFT,
+          ask: "learn",
+          title: "Same",
+          text: "",
+          question: "",
+          notes: [],
+        });
+        const session = yield* afterTurn(started.id);
+        yield* sessions.keepPage({ id: session.id, page: "w1" });
+        yield* sessions.keepPage({ id: session.id, page: "w2" });
+        const pages = session.entries.flatMap((entry) =>
+          entry._tag === "FoundPages" ? entry.pages : [],
+        );
+        yield* sessions.createNote({
+          title: "Same Site 2020 Introduction",
+          text: "",
+          session: session.id,
+          restsOn: "w1",
+          quotes: pages.map((page) => ({ page: page.id, ...page.quotes[0]! })),
+          links: [],
+        });
+        return yield* (yield* Sources.Sources).list;
+      }).pipe(Effect.provide(layer));
+
+      const ids = sources.filter((source) => source.container === "Same Site").map((s) => s.id);
+      assert.strictEqual(ids.length, 2);
+      assert.notInclude(ids, "Same Site 2020 Introduction");
     }),
   );
 

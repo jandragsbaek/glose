@@ -5,7 +5,7 @@ import * as Layer from "effect/Layer";
 import * as NodeHttp from "node:http";
 import * as NodeHttps from "node:https";
 import * as NodeNet from "node:net";
-import type * as NodeStream from "node:stream";
+import * as NodeStream from "node:stream";
 import * as NodeZlib from "node:zlib";
 
 import { pageFromHtml, pageFromText, type WebPage } from "./pageText.ts";
@@ -85,21 +85,26 @@ const get = (url: URL, signal: AbortSignal) =>
     request.end();
   });
 
-const decoded = (response: NodeHttp.IncomingMessage): NodeStream.Readable => {
-  switch (response.headers["content-encoding"]) {
+const decoderFor = (encoding: string | undefined): NodeStream.Transform | null => {
+  switch (encoding) {
     case "gzip":
     case "x-gzip":
-      return response.pipe(NodeZlib.createGunzip());
+      return NodeZlib.createGunzip();
     case "deflate":
-      return response.pipe(NodeZlib.createInflate());
+      return NodeZlib.createInflate();
     case "br":
-      return response.pipe(NodeZlib.createBrotliDecompress());
+      return NodeZlib.createBrotliDecompress();
     default:
-      return response;
+      return null;
   }
 };
 
-const readCapped = async (response: NodeHttp.IncomingMessage): Promise<string | null> => {
+const decoded = (response: NodeHttp.IncomingMessage): NodeStream.Readable => {
+  const decoder = decoderFor(response.headers["content-encoding"]);
+  return decoder === null ? response : NodeStream.pipeline(response, decoder, () => {});
+};
+
+export const readCapped = async (response: NodeHttp.IncomingMessage): Promise<string | null> => {
   const chunks: Array<Buffer> = [];
   let size = 0;
   for await (const chunk of decoded(response)) {

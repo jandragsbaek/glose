@@ -762,10 +762,12 @@ three-model council.
 - The side panel becomes Research. The research is optional: without ChatGPT the leaf works and
   the panel says how to connect. The user picks what to ask: Learn this, Back my idea, Check this
   claim or Bridge two Notes (two Notes named from the Graph), with an optional question.
-- The research is a Session of kind `note-research`, its subject the draft's id (`new-…`). The AI
-  has OpenAI's hosted `web_search` and Glose's tools: `read_web_page`, `propose_pages`,
-  `propose_links`, `search_graph` and `read_note`. The AI finds sources; it never writes the
-  Note's text, and has no tool that could.
+- The research is a Session of kind `note-research`, its subject the draft's id (`new-…`). It runs
+  in two passes that never share a context. The web pass has OpenAI's hosted `web_search` and
+  Glose's `read_web_page` and `propose_pages`, and never sees the user's Graph. After a turn that
+  found pages, a Links pass without web access reads the Graph (`search_graph`, `read_note`) and
+  calls `propose_links`. So Note text can never reach a web search, a page open or a fetched
+  address. The AI finds sources; it never writes the Note's text, and has no tool that could.
 - Glose reads a page itself (the main text, as a browser's reader view: Readability, linkedom and
   turndown) and keeps a quote only when the page holds those exact words; the quote's Location is
   its paragraph number (`¶ 8`). A quote has at least four words. Glose reads only public http and
@@ -773,10 +775,15 @@ three-model council.
   checked inside the connection itself, so a name cannot change between the check and the read.
   Images are not imported, and links become absolute web links. A page Glose cannot read (a
   paywall, a PDF) cannot be proposed.
-- Web pages can hold text written to steer the AI. So the AI reads only addresses that came from
-  its web searches, from the user, or that are written in a page it read; an address it makes up
-  (with the user's Note text in it, say) is refused. Its instructions say page text is material,
-  never instructions, and that nothing from the Graph goes into an address or a search.
+- Web pages can hold text written to steer the AI. So Glose reads only addresses in an exact set:
+  the sources of the hosted web search (`web_search_call.action.sources`) and addresses the user
+  wrote. An address the AI wrote itself (in a search query, a message or a tool call) is refused.
+  Its instructions say page text is material, never instructions.
+- Limits: the hosted web search runs at OpenAI, and Glose cannot see or stop the queries and
+  page opens the AI makes there; with the Graph kept out of the web pass, they can carry only the
+  user's title, text and question. That OpenAI sends `action.sources` on the ChatGPT route is
+  still to be confirmed with a real sign-in: if it refuses that field, the Session turns web search
+  off and asks for addresses.
 - The author of a kept page comes from the page itself; the AI does not name one. A page without
   one is filed under its site, and its Source can be corrected like any other.
 - The ChatGPT route allows web search "subject to model and account/workspace policy". When the
@@ -795,7 +802,9 @@ three-model council.
   before it). On save every kept quote becomes a footnote, the cited ones first, numbered q1 to
   qn: `[^q1]: “words” [[Source]], ¶ 8`. The `q` keeps them apart from the user's own footnotes.
   The ¶ comes from the text the Source holds (the page as stored, or the Source the user already
-  has), and every page is checked before Glose writes any file. Brackets in a quote are escaped,
+  has), and every page is checked, and every new Source's file name chosen against the others and
+  the Note's, before Glose writes any file. A page that is already a Source is checked against
+  the text that Source holds when the AI proposes it. Brackets in a quote are escaped,
   so a quote cannot make a Link. Checked Links go on the `Related:` line.
 - Not yet: PDFs, a reload that keeps the unsaved leaf, reading a found page in Glose before it is
   kept, and the new Note's place on the canvas near its Links (it is drawn apart until saved).

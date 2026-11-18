@@ -37,6 +37,7 @@ function GraphSection() {
   const graph = useAtomValue(graphAtom);
   const refresh = useAtomRefresh(graphAtom);
   const [starting, setStarting] = useState(false);
+  const [returned, setReturned] = useState(false);
   return AsyncResult.matchWithError(graph, {
     onInitial: () => <GraphLoading />,
     onError: () => <GraphProblem onRetry={refresh} />,
@@ -49,6 +50,7 @@ function GraphSection() {
             <button
               type="button"
               className="button button--primary"
+              autoFocus={returned}
               onClick={() => setStarting(true)}
             >
               <Plus size={16} aria-hidden="true" />
@@ -68,7 +70,10 @@ function GraphSection() {
         <GraphWithSources
           view={value}
           startNew={value.nodes.length === 0}
-          onEmpty={() => setStarting(false)}
+          onEmpty={() => {
+            setStarting(false);
+            setReturned(true);
+          }}
         />
       ),
   });
@@ -151,15 +156,13 @@ function GraphPage({
   const [newText, setNewText] = useState("");
   const [linked, setLinked] = useState<ReadonlySet<string>>(NO_LINKS);
   const [leafWidth, setLeafWidth] = useState(0);
-  const [research, setResearch] = useState<{ readonly draft: string; readonly id: string } | null>(
-    null,
-  );
+  const [research, setResearch] = useState<ReadonlyMap<string, string>>(new Map());
   const opener = useRef<HTMLButtonElement>(null);
   const newOpener = useRef<HTMLButtonElement>(null);
   const openedOnCanvas = useRef(false);
   const findId = useId();
 
-  const researchId = desk?.kind === "new" && research?.draft === desk.draft ? research.id : null;
+  const researchId = desk?.kind === "new" ? (research.get(desk.draft) ?? null) : null;
   const researchSession = AsyncResult.getOrElse(
     useAtomValue(researchId === null ? noSessionAtom : sessionAtom(researchId)),
     () => null,
@@ -428,7 +431,7 @@ function GraphPage({
               title={newTitle}
               text={newText}
               notes={view.nodes.filter((node) => node.kind === "note").map((node) => node.id)}
-              onStarted={(draft, id) => setResearch({ draft, id })}
+              onStarted={(draft, id) => setResearch((now) => new Map(now).set(draft, id))}
             />
           ) : selected === undefined ? (
             <SourceList index={index} view={view} unwritten={unwritten} onShow={show} />

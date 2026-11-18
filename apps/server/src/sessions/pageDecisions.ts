@@ -157,25 +157,42 @@ export const make = Effect.fn("Sessions.makePageDecisions")(function* ({
     }
     return {
       located,
-      write:
-        known === undefined
-          ? importSource(sourceOfPage(page, markdown, today))
-          : Effect.succeed(known.id),
+      known: known?.id ?? null,
+      details: sourceOfPage(page, markdown, today),
     };
   });
 
-  const importSource = (details: ImportText) =>
-    sources.importText(details).pipe(
-      Effect.catchTags({
-        SourceNameTaken: () =>
-          sources.importText({ ...details, title: `${details.title} (${details.container})` }),
-      }),
-      Effect.catchTags({
-        SourceNameTaken: (taken) =>
-          Effect.fail(new StorageError({ detail: `A Source named ${taken.fileName} exists.` })),
-      }),
-      Effect.map((source) => source.id),
-    );
+  const planNames = Effect.fn("Sessions.planSourceNames")(function* (
+    noteName: string,
+    pages: ReadonlyArray<ImportText>,
+  ) {
+    const taken = new Set([noteName.toLocaleLowerCase("und")]);
+    const planned: Array<ImportText> = [];
+    for (const details of pages) {
+      const titles = [
+        details.title,
+        ...Array.from(
+          { length: 9 },
+          (_, n) => `${details.title} (${details.container})${n === 0 ? "" : ` ${n + 1}`}`,
+        ),
+      ];
+      let chosen: ImportText | null = null;
+      for (const title of titles) {
+        const id = yield* sources.freeId({ ...details, title });
+        if (id === null || taken.has(id.toLocaleLowerCase("und"))) continue;
+        taken.add(id.toLocaleLowerCase("und"));
+        chosen = { ...details, title };
+        break;
+      }
+      if (chosen === null) {
+        return yield* new StorageError({
+          detail: `No free file name for the Source ${details.title}.`,
+        });
+      }
+      planned.push(chosen);
+    }
+    return planned;
+  });
 
   const createNote = Effect.fn("Sessions.createNote")(
     function* (input: {
@@ -212,9 +229,23 @@ export const make = Effect.fn("Sessions.makePageDecisions")(function* ({
         const quotes = input.quotes.filter((quote) => quote.page === id);
         prepared.set(id, yield* prepare(byId.get(id)!, quotes, today, library));
       }
-      yield* notes.checkName(input.title);
+      const noteName = yield* notes.checkName(input.title);
+      const fresh = [...prepared].filter(([, page]) => page.known === null);
+      const planned = yield* planNames(
+        noteName,
+        fresh.map(([, page]) => page.details),
+      );
       const sourceIds = new Map<string, string>();
-      for (const [id, { write }] of prepared) sourceIds.set(id, yield* write);
+      for (const [id, page] of prepared) if (page.known !== null) sourceIds.set(id, page.known);
+      for (const [index, [id]] of fresh.entries()) {
+        const source = yield* sources.importText(planned[index]!).pipe(
+          Effect.catchTags({
+            SourceNameTaken: (taken) =>
+              Effect.fail(new StorageError({ detail: `A Source named ${taken.fileName} exists.` })),
+          }),
+        );
+        sourceIds.set(id, source.id);
+      }
 
       const view = yield* graph.read;
       const names = new Map(

@@ -58,6 +58,9 @@ export class Sources extends Context.Service<
       readonly from: ReadingStep;
     }) => Effect.Effect<Source, SourceNotFound | GraphError>;
     readonly importText: (input: ImportText) => Effect.Effect<Source, SourceNameTaken | GraphError>;
+    readonly freeId: (
+      details: Pick<ImportText, "familyName" | "firstPublished" | "title" | "kind" | "part">,
+    ) => Effect.Effect<string | null, GraphError>;
     readonly setPlace: (input: {
       readonly id: string;
       readonly place: number;
@@ -298,6 +301,13 @@ export const make = Effect.gen(function* () {
       },
       (effect) => writing.withPermit(effect),
     ),
+
+    freeId: Effect.fn("Sources.freeId")(function* (details) {
+      const folder = yield* graphFolder;
+      return yield* newId(folder, details, details.kind === "lesson" ? details.part : null).pipe(
+        Effect.catchTags({ SourceNameTaken: () => Effect.succeed(null) }),
+      );
+    }),
 
     importText: Effect.fn("Sources.importText")(function* ({ markdown, ...details }) {
       const folder = yield* graphFolder;

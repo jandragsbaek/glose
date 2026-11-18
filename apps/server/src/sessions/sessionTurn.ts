@@ -6,6 +6,7 @@ import {
   type SessionProblem,
 } from "@glose/contracts";
 import * as Effect from "effect/Effect";
+import type * as Redacted from "effect/Redacted";
 import * as FiberMap from "effect/FiberMap";
 import * as SubscriptionRef from "effect/SubscriptionRef";
 
@@ -22,6 +23,7 @@ import * as Extraction from "./extraction.ts";
 import { addPoints, changeNumbered, type Live, patch } from "./liveSession.ts";
 import * as Probe from "./probe.ts";
 import * as Research from "./research.ts";
+import * as ResearchLinks from "./researchLinks.ts";
 import { pointsOf } from "./sessionEntries.ts";
 import type { SessionStore } from "./sessionStore.ts";
 
@@ -96,19 +98,17 @@ export const make = Effect.fn("Sessions.makeSessionTurn")(function* ({
             entries: [...view.entries, { _tag: "WebSearchOff" }],
           })).pipe(Effect.as([Research.webSearchOffMessage])),
         };
-    let seen = JSON.stringify(session.items.filter(Research.isSourceOfAddresses));
+    const known = Research.knownAddresses(session.items);
     return {
       instructions: Research.INSTRUCTIONS,
       webSearch,
       maxRounds: Research.MAX_ROUNDS,
-      onOutput: (output: ReadonlyArray<Readonly<Record<string, unknown>>>) => {
-        seen += JSON.stringify(output.filter(Research.isSourceOfAddresses));
-      },
+      onOutput: (output: ReadonlyArray<unknown>) => Research.addKnown(known, output),
       tools: Research.tools({
-        known: (url) => Research.knownIn(seen, url),
-        graph,
+        known: (url) => Research.isKnown(known, url),
         webPages,
         sources: sources.list.pipe(Effect.orElseSucceed(() => [])),
+        articleText: (id) => sources.articleText(id).pipe(Effect.orElseSucceed(() => null)),
         pages: SubscriptionRef.get(session.view).pipe(
           Effect.map((view) => Research.pagesOf(view.entries)),
         ),
@@ -125,11 +125,39 @@ export const make = Effect.fn("Sessions.makeSessionTurn")(function* ({
               { ...view, entries: [...view.entries, { _tag: "FoundPages" as const, pages }] },
             ];
           }),
-        proposeLinks: (links) =>
-          appendEntries(session, [{ _tag: "ResearchLinks", links }]).pipe(Effect.asVoid),
       }),
     };
   };
+
+  const findLinks = Effect.fn("Sessions.findLinks")(function* (
+    session: Live,
+    token: Redacted.Redacted<string>,
+    model: string,
+  ) {
+    const { entries } = yield* SubscriptionRef.get(session.view);
+    yield* runTurn({
+      token,
+      model,
+      instructions: ResearchLinks.LINK_INSTRUCTIONS,
+      tools: ResearchLinks.linkTools({
+        graph,
+        proposeLinks: (links) =>
+          appendEntries(session, [{ _tag: "ResearchLinks", links }]).pipe(Effect.asVoid),
+      }),
+      items: [ResearchLinks.linksKickoff(entries)],
+      onDelta: () => Effect.void,
+      onEntry: (entry) =>
+        entry._tag === "ToolUse"
+          ? patch(session, (view) => ({ ...view, entries: [...view.entries, entry] }))
+          : Effect.void,
+      onItems: () => Effect.void,
+      summaries: false,
+      onSummariesRefused: Effect.void,
+    }).pipe(
+      Effect.provideService(Responses, responses),
+      Effect.catch((error) => Effect.logWarning("Finding Links for a new Note failed", error)),
+    );
+  });
 
   const rulesOf = (session: Live, { kind, subject, entries }: Session) => {
     switch (kind) {
@@ -197,7 +225,8 @@ export const make = Effect.fn("Sessions.makeSessionTurn")(function* ({
 
   const runSessionTurn = Effect.fn("Sessions.runTurn")(
     function* (session: Live) {
-      const rules = rulesOf(session, yield* SubscriptionRef.get(session.view));
+      const before = yield* SubscriptionRef.get(session.view);
+      const rules = rulesOf(session, before);
       const token = yield* chatGpt.accessToken;
       const [model] = yield* responses.models(token);
       if (model === undefined) return yield* Effect.fail("no-model" as const);
@@ -224,6 +253,13 @@ export const make = Effect.fn("Sessions.makeSessionTurn")(function* ({
           summaries = false;
         }),
       }).pipe(Effect.provideService(Responses, responses));
+      const after = yield* SubscriptionRef.get(session.view);
+      if (
+        after.kind === "note-research" &&
+        Research.pagesOf(after.entries).length > Research.pagesOf(before.entries).length
+      ) {
+        yield* findLinks(session, token, model.slug);
+      }
     },
     (effect, session) =>
       effect.pipe(

@@ -1,6 +1,9 @@
 import { assert, describe, it } from "@effect/vitest";
+import * as NodeHttp from "node:http";
+import type * as NodeNet from "node:net";
+import * as NodeZlib from "node:zlib";
 
-import { isPublicAddress, webUrl } from "./WebPages.ts";
+import { isPublicAddress, readCapped, webUrl } from "./WebPages.ts";
 
 describe("isPublicAddress", () => {
   it("refuses this computer and its own networks", () => {
@@ -49,5 +52,32 @@ describe("webUrl", () => {
     assert.isNull(webUrl("file:///etc/passwd"));
     assert.isNull(webUrl("https://user:secret@a.example/"));
     assert.isNull(webUrl("not an address"));
+  });
+});
+
+describe("readCapped", () => {
+  it("ends with an error when a compressed body stops and the request is aborted", async () => {
+    const server = NodeHttp.createServer((_, response) => {
+      response.writeHead(200, { "content-type": "text/html", "content-encoding": "gzip" });
+      response.write(NodeZlib.gzipSync("<p>start</p>").subarray(0, 10));
+    });
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const { port } = server.address() as NodeNet.AddressInfo;
+    const abort = new AbortController();
+    const response = await new Promise<NodeHttp.IncomingMessage>((resolve, reject) =>
+      NodeHttp.get(`http://127.0.0.1:${port}/`, { signal: abort.signal }, resolve).on(
+        "error",
+        reject,
+      ),
+    );
+    const reading = readCapped(response).then(
+      () => "ended",
+      () => "failed",
+    );
+    abort.abort();
+    const outcome = await reading;
+    server.closeAllConnections();
+    server.close();
+    assert.strictEqual(outcome, "failed");
   });
 });

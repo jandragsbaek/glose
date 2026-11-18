@@ -57,4 +57,15 @@ describe("pageFromText", () => {
     assert.strictEqual(page?.title, "Notes on spacing");
     assert.strictEqual(page?.site, "notes.example");
   });
+
+  it("keeps no images and makes links absolute, as for HTML", () => {
+    const page = pageFromText(
+      "# Notes\n\n![](http://tracker.example/pixel) See [next](/next) and [this](javascript:alert(1)).\n\n<img src=x>",
+      "https://notes.example/s.md",
+    );
+    assert.notInclude(page!.markdown, "tracker.example");
+    assert.notInclude(page!.markdown, "<img");
+    assert.include(page!.markdown, "[next](https://notes.example/next)");
+    assert.notInclude(page!.markdown, "javascript:");
+  });
 });
