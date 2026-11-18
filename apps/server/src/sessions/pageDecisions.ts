@@ -133,21 +133,23 @@ export const make = Effect.fn("Sessions.makePageDecisions")(function* ({
         (source) => source.url !== null && webUrl(source.url)?.href === webUrl(page.url)?.href,
       );
     const markdown =
-      known === undefined
-        ? (yield* webPages.read(page.url).pipe(
-            Effect.catchTags({
-              PageUnreadable: () =>
-                Effect.fail(new PageRefused({ page: page.id, reason: "unreadable" })),
-            }),
-          )).markdown
-        : yield* sources.articleText(known.id).pipe(
-            Effect.catchTags({
-              SourceNotFound: () =>
-                Effect.fail(new PageRefused({ page: page.id, reason: "quote-gone" })),
-              PassageRefused: () =>
-                Effect.fail(new PageRefused({ page: page.id, reason: "quote-gone" })),
-            }),
-          );
+      known !== undefined && quotes.length === 0
+        ? ""
+        : known === undefined
+          ? (yield* webPages.read(page.url).pipe(
+              Effect.catchTags({
+                PageUnreadable: () =>
+                  Effect.fail(new PageRefused({ page: page.id, reason: "unreadable" })),
+              }),
+            )).markdown
+          : yield* sources.articleText(known.id).pipe(
+              Effect.catchTags({
+                SourceNotFound: () =>
+                  Effect.fail(new PageRefused({ page: page.id, reason: "quote-gone" })),
+                PassageRefused: () =>
+                  Effect.fail(new PageRefused({ page: page.id, reason: "quote-gone" })),
+              }),
+            );
     const article = parseArticle(markdown);
     const located = new Map<string, number>();
     for (const quote of quotes) {
@@ -169,12 +171,11 @@ export const make = Effect.fn("Sessions.makePageDecisions")(function* ({
     const taken = new Set([noteName.toLocaleLowerCase("und")]);
     const planned: Array<ImportText> = [];
     for (const details of pages) {
+      const short = details.title.slice(0, 60).trim();
+      const site = (details.container ?? "").slice(0, 30).trim();
       const titles = [
         details.title,
-        ...Array.from(
-          { length: 9 },
-          (_, n) => `${details.title} (${details.container})${n === 0 ? "" : ` ${n + 1}`}`,
-        ),
+        ...Array.from({ length: 9 }, (_, n) => `${short} (${site})${n === 0 ? "" : ` ${n + 1}`}`),
       ];
       let chosen: ImportText | null = null;
       for (const title of titles) {

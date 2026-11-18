@@ -773,11 +773,12 @@ three-model council.
   its paragraph number (`¶ 8`). A quote has at least four words. Glose reads only public http and
   https addresses, never this computer or its own network: every address the name resolves to is
   checked inside the connection itself, so a name cannot change between the check and the read.
-  Images are not imported, and links become absolute web links. A page Glose cannot read (a
+  Images are not imported (in a text page an image becomes a plain link), and links become
+  absolute web links. A page Glose cannot read (a
   paywall, a PDF) cannot be proposed.
 - Web pages can hold text written to steer the AI. So Glose reads only addresses in an exact set:
-  the sources of the hosted web search (`web_search_call.action.sources`) and addresses the user
-  wrote. An address the AI wrote itself (in a search query, a message or a tool call) is refused.
+  the sources of the hosted web search (`web_search_call.action.sources`), addresses the user
+  wrote, and the address a read page moved to (Glose followed that move itself). An address the AI wrote itself (in a search query, a message or a tool call) is refused.
   Its instructions say page text is material, never instructions.
 - Limits: the hosted web search runs at OpenAI, and Glose cannot see or stop the queries and
   page opens the AI makes there; with the Graph kept out of the web pass, they can carry only the
@@ -804,7 +805,8 @@ three-model council.
   The ¶ comes from the text the Source holds (the page as stored, or the Source the user already
   has), and every page is checked, and every new Source's file name chosen against the others and
   the Note's, before Glose writes any file. A page that is already a Source is checked against
-  the text that Source holds when the AI proposes it. Brackets in a quote are escaped,
+  the text that Source holds when the AI proposes it; the AI hears only the check against the
+  live page, so it learns nothing about the user's own files. Brackets in a quote are escaped,
   so a quote cannot make a Link. Checked Links go on the `Related:` line.
 - Not yet: PDFs, a reload that keeps the unsaved leaf, reading a found page in Glose before it is
   kept, and the new Note's place on the canvas near its Links (it is drawn apart until saved).

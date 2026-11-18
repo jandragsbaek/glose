@@ -304,9 +304,14 @@ export const make = Effect.gen(function* () {
 
     freeId: Effect.fn("Sources.freeId")(function* (details) {
       const folder = yield* graphFolder;
-      return yield* newId(folder, details, details.kind === "lesson" ? details.part : null).pipe(
-        Effect.catchTags({ SourceNameTaken: () => Effect.succeed(null) }),
-      );
+      const id = yield* newId(
+        folder,
+        details,
+        details.kind === "lesson" ? details.part : null,
+      ).pipe(Effect.catchTags({ SourceNameTaken: () => Effect.succeed(null) }));
+      if (id === null) return null;
+      const article = yield* fs.exists(articleOf(folder, id)).pipe(Effect.mapError(storageError));
+      return article ? null : id;
     }),
 
     importText: Effect.fn("Sources.importText")(function* ({ markdown, ...details }) {

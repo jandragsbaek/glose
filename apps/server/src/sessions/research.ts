@@ -197,6 +197,7 @@ export interface Context {
   readonly pages: Effect.Effect<ReadonlyArray<FoundPage>>;
   readonly propose: (pages: ReadonlyArray<ProposedPage>) => Effect.Effect<ReadonlyArray<string>>;
   readonly known: (url: string) => boolean;
+  readonly remember: (url: string) => void;
 }
 
 const UNREADABLE: Record<WebPages.UnreadableReason, string> = {
@@ -214,12 +215,28 @@ const sameUrl = (a: string, b: string) => webUrl(a)?.href === webUrl(b)?.href;
 class UnknownAddress extends Data.TaggedError("UnknownAddress") {}
 const UNKNOWN = new UnknownAddress();
 const UNKNOWN_ADDRESS =
-  "Glose reads only addresses that your web searches found or that the user gave. Use one of those, exactly as it appears.";
+  "Glose reads only addresses that your web searches found, that the user gave, or that a page you read moved to. Use one of those, exactly as it appears. If your searches gave you no addresses, ask the user for the addresses of pages to read.";
 
 const ADDRESS_IN_TEXT = /https?:\/\/[^\s<>"'`]+/gi;
 
+const count = (text: string, mark: string) => text.split(mark).length - 1;
+
+export const trimAddress = (raw: string): string => {
+  let address = raw;
+  for (;;) {
+    const last = address.at(-1);
+    if (last === undefined) return address;
+    if (".,;:!?'\"".includes(last)) address = address.slice(0, -1);
+    else if (last === ")" && count(address, ")") > count(address, "("))
+      address = address.slice(0, -1);
+    else if (last === "]" && count(address, "]") > count(address, "["))
+      address = address.slice(0, -1);
+    else return address;
+  }
+};
+
 const addressesInText = (text: string): ReadonlyArray<string> =>
-  Array.from(text.matchAll(ADDRESS_IN_TEXT), (match) => match[0].replace(/[).,;:!?\]]+$/, ""));
+  Array.from(text.matchAll(ADDRESS_IN_TEXT), (match) => trimAddress(match[0]));
 
 const SearchSources = Schema.Struct({
   type: Schema.Literal("web_search_call"),
@@ -272,6 +289,11 @@ export const addKnown = (known: Set<string>, items: ReadonlyArray<unknown>): voi
   }
 };
 
+export const addAddress = (known: Set<string>, url: string): void => {
+  const href = webUrl(url)?.href;
+  if (href !== undefined) known.add(href);
+};
+
 export const isKnown = (known: ReadonlySet<string>, url: string): boolean => {
   const href = webUrl(url)?.href;
   return href !== undefined && known.has(href);
@@ -284,6 +306,7 @@ export const tools = ({
   pages,
   propose,
   known,
+  remember,
 }: Context): AgentTool[] => [
   {
     name: "read_web_page",
@@ -309,6 +332,7 @@ export const tools = ({
               webPages.read(url),
           ).pipe(
             Effect.map((page) => {
+              remember(page.url);
               const text = articleForAi(parseArticle(page.markdown));
               return {
                 url: page.url,
@@ -380,7 +404,8 @@ export const tools = ({
       const notes: Array<string> = [];
       for (const [index, asked] of proposed.slice(0, MAX_PAGES).entries()) {
         const which = `Page ${index + 1} of this call`;
-        if (shownBefore.some((page) => sameUrl(page.url, asked.url))) {
+        const before = [...shownBefore, ...shown];
+        if (before.some((page) => sameUrl(page.url, asked.url))) {
           notes.push(`${which} was proposed before.`);
           continue;
         }
@@ -394,21 +419,29 @@ export const tools = ({
           continue;
         }
         const page = read.value;
+        remember(page.url);
+        if (before.some((other) => sameUrl(other.url, page.url))) {
+          notes.push(`${which} was proposed before.`);
+          continue;
+        }
+        const { found: onPage, missing } = checkQuotes(page.markdown, asked.quotes);
+        if (onPage.length === 0) {
+          notes.push(
+            `${which} is not shown: none of its quotes is word for word on the page. Read it again and copy whole sentences exactly.`,
+          );
+          continue;
+        }
         const source = library.find((other) => other.url !== null && sameUrl(other.url, page.url));
         const stored = source === undefined ? null : yield* articleText(source.id);
-        if (source !== undefined && stored === null) {
-          notes.push(
-            `${which} is a Source the user has already, without its text, so Glose cannot check quotes against it. Do not propose it.`,
-          );
-          continue;
-        }
-        const { found, missing } = checkQuotes(stored ?? page.markdown, asked.quotes);
-        if (found.length === 0) {
-          notes.push(
-            `${which} is not shown: none of its quotes is word for word in the text Glose holds. Read it again and copy whole sentences exactly.`,
-          );
-          continue;
-        }
+        const found =
+          source === undefined
+            ? onPage
+            : stored === null
+              ? []
+              : checkQuotes(
+                  stored,
+                  onPage.map((quote) => quote.text),
+                ).found;
         if (missing > 0) {
           notes.push(
             `${missing} quote(s) of ${which} are not word for word, so they are not shown.`,

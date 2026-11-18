@@ -41,6 +41,7 @@ export function NewNote({
   onStay,
   onClose,
   onSaved,
+  onSaving,
 }: {
   readonly title: string;
   readonly onTitle: (title: string) => void;
@@ -53,6 +54,7 @@ export function NewNote({
   readonly onStay: () => void;
   readonly onClose: () => void;
   readonly onSaved: (id: string) => void | Promise<void>;
+  readonly onSaving: (saving: boolean) => void;
 }) {
   const t = useT();
   const create = useAtomSet(createNoteAtom, { mode: "promiseExit" });
@@ -123,6 +125,7 @@ export function NewNote({
     }
     setProblem(null);
     setBusy(true);
+    onSaving(true);
     const exit = await create({
       payload: {
         title: finalTitle,
@@ -135,6 +138,7 @@ export function NewNote({
       reactivityKeys: [...KEYS.sources, ...CARD_KEYS.cards],
     });
     setBusy(false);
+    onSaving(false);
     if (Exit.isSuccess(exit)) {
       void onSaved(exit.value);
       return;

@@ -5,7 +5,6 @@ import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 
 import * as Sources from "../graph/Sources.ts";
-import type { WebPage } from "../research/WebPages.ts";
 import {
   afterTurn,
   answer,
@@ -16,80 +15,16 @@ import {
   setUpWithPages,
   toolCall,
 } from "../testkit/sessions.ts";
-import { footnoteOf } from "./pageDecisions.ts";
+import {
+  DRAFT,
+  PAGE_A,
+  PAGE_B,
+  proposePages,
+  searchThenRead,
+  URL_A,
+  URL_B,
+} from "../testkit/research.ts";
 import { Sessions } from "./Sessions.ts";
-
-const URL_A = "https://learning.example/retrieval";
-const URL_B = "https://study.example/rereading";
-
-const PAGE_A: WebPage = {
-  url: URL_A,
-  title: "Retrieval practice, explained",
-  author: "Sample Author",
-  site: "Learning Example",
-  published: "2024-03-01T10:00:00Z",
-  markdown:
-    "# Retrieval practice\n\nRetrieval practice means bringing information to mind without looking.\n\nStudents who tested themselves remembered more a week later than students who reread.\n",
-};
-
-const PAGE_B: WebPage = {
-  url: URL_B,
-  title: "When rereading is enough",
-  author: null,
-  site: "Study Example",
-  published: null,
-  markdown: "For simple facts read once, rereading did as well as a test.\n",
-};
-
-const DRAFT = "new-abc123def";
-
-const searchThenRead = {
-  status: 200,
-  sse: true,
-  body: [
-    {
-      type: "response.output_item.done",
-      item: {
-        id: "ws_1",
-        type: "web_search_call",
-        status: "completed",
-        action: {
-          type: "search",
-          query: "testing effect rereading",
-          sources: [
-            { type: "url", url: URL_A },
-            { type: "url", url: URL_B },
-          ],
-        },
-      },
-    },
-    ...toolCall("read_web_page", { url: URL_A }).body,
-  ],
-};
-
-const proposePages = toolCall("propose_pages", {
-  pages: [
-    {
-      url: URL_A,
-      stance: "supports",
-      kind: "web",
-      why: "It reports the finding.",
-      author: null,
-      quotes: [
-        "“Students who tested themselves remembered more a week later than students who reread.”",
-        "Words that are not on the page.",
-      ],
-    },
-    {
-      url: URL_B,
-      stance: "pulls-against",
-      kind: "web",
-      why: "It finds no gain for simple facts.",
-      author: null,
-      quotes: ["Rereading always wins."],
-    },
-  ],
-});
 
 it.layer(NodeServices.layer)("Sessions: research for a new Note", (it) => {
   it.effect("offers web search, keeps only quotes that are on the page, and saves the Note", () =>
@@ -298,8 +233,10 @@ it.layer(NodeServices.layer)("Sessions: research for a new Note", (it) => {
           pages: [{ url: leak, stance: "supports", kind: "web", why: "x", quotes: ["a b c d"] }],
         }),
         answer("I cannot read that."),
+        answer(""),
         toolCall("read_web_page", { url: leak }),
         answer("Still not."),
+        answer(""),
       );
 
       yield* Effect.gen(function* () {
@@ -326,131 +263,56 @@ it.layer(NodeServices.layer)("Sessions: research for a new Note", (it) => {
     }),
   );
 
-  it.effect("gives two kept pages with the same title their own Source files", () =>
+  it.effect("lets the AI propose the address a page moved to", () =>
     Effect.gen(function* () {
-      const intro = (url: string, words: string): WebPage => ({
-        url,
-        title: "Introduction",
-        author: null,
-        site: "Same Site",
-        published: "2020",
-        markdown: `${words} is the sentence that this page holds for the test.\n`,
-      });
-      const urlOne = "https://same.example/one";
-      const urlTwo = "https://same.example/two";
+      const short = "https://doi.example/10.1/abc";
       const { fake, layer } = yield* setUpWithPages(
         new Map([
-          [urlOne, intro(urlOne, "First")],
-          [urlTwo, intro(urlTwo, "Second")],
+          [short, PAGE_A],
+          [URL_A, PAGE_A],
         ]),
       );
       fake.answer(MODELS, MODEL_LIST);
       fake.answer(
         RESPONSES,
-        {
-          status: 200,
-          sse: true,
-          body: [
+        toolCall("read_web_page", { url: short }),
+        toolCall("propose_pages", {
+          pages: [
             {
-              type: "response.output_item.done",
-              item: {
-                id: "ws_3",
-                type: "web_search_call",
-                status: "completed",
-                action: {
-                  type: "search",
-                  query: "same",
-                  sources: [{ url: urlOne }, { url: urlTwo }],
-                },
-              },
+              url: URL_A,
+              stance: "supports",
+              kind: "web",
+              why: "It moved here.",
+              quotes: [
+                "Students who tested themselves remembered more a week later than students who reread.",
+              ],
             },
-            ...toolCall("propose_pages", {
-              pages: [urlOne, urlTwo].map((url, index) => ({
-                url,
-                stance: "context",
-                kind: "web",
-                why: "Same title.",
-                quotes: [
-                  `${index === 0 ? "First" : "Second"} is the sentence that this page holds`,
-                ],
-              })),
-            }).body,
           ],
-        },
-        answer("Two pages."),
+        }),
+        answer("Found it."),
         answer(""),
       );
 
-      const sources = yield* Effect.gen(function* () {
-        const sessions = yield* Sessions;
-        const started = yield* sessions.startResearch({
-          draft: DRAFT,
-          ask: "learn",
-          title: "Same",
-          text: "",
-          question: "",
-          notes: [],
-        });
-        const session = yield* afterTurn(started.id);
-        yield* sessions.keepPage({ id: session.id, page: "w1" });
-        yield* sessions.keepPage({ id: session.id, page: "w2" });
-        const pages = session.entries.flatMap((entry) =>
-          entry._tag === "FoundPages" ? entry.pages : [],
-        );
-        yield* sessions.createNote({
-          title: "Same Site 2020 Introduction",
-          text: "",
-          session: session.id,
-          restsOn: "w1",
-          quotes: pages.map((page) => ({ page: page.id, ...page.quotes[0]! })),
-          links: [],
-        });
-        return yield* (yield* Sources.Sources).list;
-      }).pipe(Effect.provide(layer));
-
-      const ids = sources.filter((source) => source.container === "Same Site").map((s) => s.id);
-      assert.strictEqual(ids.length, 2);
-      assert.notInclude(ids, "Same Site 2020 Introduction");
-    }),
-  );
-
-  it.effect("refuses a Note that cites a page the user did not keep", () =>
-    Effect.gen(function* () {
-      const { fake, layer } = yield* setUpWithPages(new Map([[URL_A, PAGE_A]]));
-      fake.answer(MODELS, MODEL_LIST);
-      fake.answer(RESPONSES, searchThenRead, proposePages, answer("Found one."));
-
-      const error = yield* Effect.gen(function* () {
+      const session = yield* Effect.gen(function* () {
         const sessions = yield* Sessions;
         const started = yield* sessions.startResearch({
           draft: DRAFT,
           ask: "learn",
           title: "Testing",
           text: "",
-          question: "",
+          question: `Read ${short}.`,
           notes: [],
         });
-        yield* afterTurn(started.id);
-        return yield* Effect.flip(
-          sessions.createNote({
-            title: "Testing",
-            text: "",
-            session: started.id,
-            restsOn: "w1",
-            quotes: [],
-            links: [],
-          }),
-        );
+        return yield* afterTurn(started.id);
       }).pipe(Effect.provide(layer));
 
-      assert.deepInclude(error, { _tag: "PageRefused", page: "w1", reason: "not-kept" });
+      const found = session.entries.flatMap((entry) =>
+        entry._tag === "FoundPages" ? entry.pages : [],
+      );
+      assert.deepStrictEqual(
+        found.map((page) => page.url),
+        [URL_A],
+      );
     }),
   );
-
-  it("keeps a quote's wikilink syntax as text, so it draws no Link", () => {
-    assert.strictEqual(
-      footnoteOf("See [[Busyness]] here", "Web 2024 A page", 3),
-      "“See \\[\\[Busyness\\]\\] here” [[Web 2024 A page]], ¶ 3",
-    );
-  });
 });

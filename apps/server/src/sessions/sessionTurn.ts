@@ -106,6 +106,7 @@ export const make = Effect.fn("Sessions.makeSessionTurn")(function* ({
       onOutput: (output: ReadonlyArray<unknown>) => Research.addKnown(known, output),
       tools: Research.tools({
         known: (url) => Research.isKnown(known, url),
+        remember: (url) => Research.addAddress(known, url),
         webPages,
         sources: sources.list.pipe(Effect.orElseSucceed(() => [])),
         articleText: (id) => sources.articleText(id).pipe(Effect.orElseSucceed(() => null)),
@@ -256,7 +257,8 @@ export const make = Effect.fn("Sessions.makeSessionTurn")(function* ({
       const after = yield* SubscriptionRef.get(session.view);
       if (
         after.kind === "note-research" &&
-        Research.pagesOf(after.entries).length > Research.pagesOf(before.entries).length
+        (Research.pagesOf(after.entries).length > Research.pagesOf(before.entries).length ||
+          Research.linksOf(after.entries).length === 0)
       ) {
         yield* findLinks(session, token, model.slug);
       }

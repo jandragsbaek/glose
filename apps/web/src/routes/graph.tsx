@@ -156,6 +156,7 @@ function GraphPage({
   const [newText, setNewText] = useState("");
   const [linked, setLinked] = useState<ReadonlySet<string>>(NO_LINKS);
   const [leafWidth, setLeafWidth] = useState(0);
+  const [saving, setSaving] = useState(false);
   const [research, setResearch] = useState<ReadonlyMap<string, string>>(new Map());
   const opener = useRef<HTMLButtonElement>(null);
   const newOpener = useRef<HTMLButtonElement>(null);
@@ -218,6 +219,7 @@ function GraphPage({
     setDesk({ kind: "new", draft: newDraftId() });
   };
   const want = (wanted: Wanted) => {
+    if (desk?.kind === "new" && saving) return;
     const same =
       (wanted.kind === "new" && desk?.kind === "new") ||
       (wanted.kind === "rewrite" && desk?.kind === "rewrite" && desk.id === wanted.id);
@@ -411,6 +413,7 @@ function GraphPage({
                 leaving={requested !== null}
                 onStay={() => setRequested(null)}
                 onClose={closeDesk}
+                onSaving={setSaving}
                 onSaved={async (id) => {
                   setDesk(null);
                   await select(id);

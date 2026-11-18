@@ -58,14 +58,34 @@ describe("pageFromText", () => {
     assert.strictEqual(page?.site, "notes.example");
   });
 
-  it("keeps no images and makes links absolute, as for HTML", () => {
+  it("keeps no image, only links, and makes links absolute, as for HTML", () => {
     const page = pageFromText(
       "# Notes\n\n![](http://tracker.example/pixel) See [next](/next) and [this](javascript:alert(1)).\n\n<img src=x>",
       "https://notes.example/s.md",
     );
-    assert.notInclude(page!.markdown, "tracker.example");
+    assert.notInclude(page!.markdown, "![");
     assert.notInclude(page!.markdown, "<img");
     assert.include(page!.markdown, "[next](https://notes.example/next)");
     assert.notInclude(page!.markdown, "javascript:");
+  });
+
+  it("turns every image form into a plain link, and leaves code as written", () => {
+    const page = pageFromText(
+      [
+        "![a [b] c](https://x.example/p.png) ![pixel][t]",
+        "",
+        "[t]: https://tracker.example/pixel.png",
+        "",
+        "[home](<https://notes.example/a b>)",
+        "",
+        "```",
+        "![kept](code.png)",
+        "```",
+      ].join("\n"),
+      "https://notes.example/s.md",
+    );
+    assert.notInclude(page!.markdown.split("```")[0]!, "![");
+    assert.include(page!.markdown, "![kept](code.png)");
+    assert.include(page!.markdown, "[home](https://notes.example/a%20b)");
   });
 });

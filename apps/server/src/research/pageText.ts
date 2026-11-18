@@ -91,14 +91,38 @@ export const pageFromHtml = (html: string, url: string): WebPage | null => {
   };
 };
 
-const MARKDOWN_IMAGE = /!\[[^\]]*\]\([^)]*\)|<img\b[^>]*>/gi;
-const MARKDOWN_LINK = /\[([^\]]*)\]\(([^)\s]*)(?:\s+"[^"]*")?\)/g;
+const FENCE = /^ {0,3}(`{3,}|~{3,})/;
+const IMAGE_MARK = /!\[/g;
+const HTML_IMAGE = /<img\b[^>]*>/gi;
+const MARKDOWN_LINK = /\[([^\]]*)\]\(\s*(<[^>]*>|[^)\s]*)(?:\s+"[^"]*")?\s*\)/g;
 
-const cleanMarkdown = (markdown: string, base: string): string =>
-  markdown.replace(MARKDOWN_IMAGE, "").replace(MARKDOWN_LINK, (_, text: string, href: string) => {
-    const target = absolute(href, base);
-    return target === null ? text : `[${text}](${target})`;
-  });
+const cleanLine = (line: string, base: string): string =>
+  line
+    .replace(HTML_IMAGE, "")
+    .replace(IMAGE_MARK, "[")
+    .replace(MARKDOWN_LINK, (_, text: string, href: string) => {
+      const target = absolute(href.replace(/^<|>$/g, ""), base);
+      return target === null ? text : `[${text}](${target})`;
+    });
+
+const cleanMarkdown = (markdown: string, base: string): string => {
+  let fence: string | null = null;
+  return markdown
+    .split("\n")
+    .map((line) => {
+      const marker = FENCE.exec(line)?.[1];
+      if (fence !== null) {
+        if (marker !== undefined && marker.startsWith(fence)) fence = null;
+        return line;
+      }
+      if (marker !== undefined) {
+        fence = marker;
+        return line;
+      }
+      return cleanLine(line, base);
+    })
+    .join("\n");
+};
 
 export const pageFromText = (text: string, url: string): WebPage | null => {
   const markdown = cleanMarkdown(text.replace(/\r\n?/g, "\n"), url).trim().slice(0, MAX_MARKDOWN);
