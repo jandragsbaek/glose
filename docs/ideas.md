@@ -73,11 +73,14 @@ The core loop depends on the stage the user is in. Stages known so far:
   window in T3 Code. The rail's Settings item opens it, and so does every "Open Settings" where
   the AI needs ChatGPT. Esc, the close button or a click beside the window puts the user back on
   the same page.
-- The window holds all settings in one scrolling column (Interface language, Appearance, Graph
-  folder, Backup, ChatGPT, Your website). A list of the sections at its side marks the one in view and
-  jumps to a section on a click. Chosen by Jan from three designs on the Impeccable decision page.
-- The address keeps the window: `?settings=<section>` on any page with the rail (not the Review
-  focus screen) opens it at that section (`language`, `appearance`, `graph-folder`, `backup`,
+- The window shows one page of settings at a time, after T3 Code's settings pages: Interface
+  language, Appearance, Graph folder, Backup, ChatGPT and Your website. The list of pages at its
+  side marks the page shown and opens another on a click. Jan asked for pages in place of the
+  first design, one scrolling column of every section (November 2026).
+- A page the user leaves keeps its state while the window is open, so a ChatGPT sign-in and its
+  outcome stay while the user looks at another page.
+- The address keeps the window: `?settings=<page>` on any page with the rail (not the Review
+  focus screen) opens it at that page (`language`, `appearance`, `graph-folder`, `backup`,
   `chatgpt`, `site`). There is no `/settings` page.
 
 ## Decided, themes with light and dark (November 2026)

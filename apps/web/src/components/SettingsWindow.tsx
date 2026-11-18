@@ -11,7 +11,7 @@ import {
   CloudUpload,
   X,
 } from "lucide-react";
-import { type ReactNode, useId, useRef, useState } from "react";
+import { type ReactNode, useId, useLayoutEffect, useRef, useState } from "react";
 
 import { LANGUAGES, useT } from "../i18n/I18n.tsx";
 import { KEYS, setLanguageAtom, settingsAtom } from "../state/graph.ts";
@@ -83,44 +83,25 @@ export function OpenSettingsButton({
 
 export function SettingsWindow() {
   const section = useSearch({ strict: false, select: (search) => search.settings });
-  return section === undefined ? null : <SettingsDialog start={section} />;
+  return section === undefined ? null : <SettingsDialog shown={section} />;
 }
-
-const PROBE_BAND = 96;
 
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-function sectionNode(leaf: HTMLElement, section: SettingsSection) {
-  return leaf.querySelector<HTMLElement>(`[data-section="${section}"]`);
+function showFromTop(leaf: HTMLElement | null, section: SettingsSection) {
+  if (leaf === null) return;
+  leaf.scrollTop = 0;
+  leaf.querySelector<HTMLElement>(`[data-section="${section}"]`)?.focus({ preventScroll: true });
 }
 
-function sectionTop(leaf: HTMLElement, node: HTMLElement) {
-  return Math.max(0, node.offsetTop - Number.parseFloat(getComputedStyle(leaf).paddingTop));
-}
-
-function sectionInView(leaf: HTMLElement): SettingsSection {
-  const probe = leaf.scrollTop + PROBE_BAND;
-  let found: SettingsSection = SETTINGS_SECTIONS[0];
-  for (const section of SETTINGS_SECTIONS) {
-    const node = sectionNode(leaf, section);
-    if (node !== null && sectionTop(leaf, node) <= probe + 1) found = section;
-  }
-  return found;
-}
-
-function SettingsDialog({ start }: { readonly start: SettingsSection }) {
+function SettingsDialog({ shown }: { readonly shown: SettingsSection }) {
   const t = useT();
   const navigate = useNavigate();
   const titleId = useId();
-  const sectionsId = useId();
+  const pagesId = useId();
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const leafRef = useRef<HTMLDivElement>(null);
   const veilPressed = useRef(false);
-  const travel = useRef<number | null>(null);
-  const layout = useRef<ResizeObserver | null>(null);
-  const pinnedTop = useRef(0);
-  const pinnedHeight = useRef(0);
-  const [current, setCurrent] = useState<SettingsSection>(start);
   const [closing, setClosing] = useState(false);
 
   const leave = () =>
@@ -135,48 +116,22 @@ function SettingsDialog({ start }: { readonly start: SettingsSection }) {
     else setClosing(true);
   };
 
-  const release = () => {
-    layout.current?.disconnect();
-    layout.current = null;
-    travel.current = null;
-  };
-
-  const pin = () => {
-    const leaf = leafRef.current;
-    const target = leaf === null ? null : sectionNode(leaf, start);
-    if (leaf === null || target === null) return;
-    leaf.scrollTop = Math.min(sectionTop(leaf, target), leaf.scrollHeight - leaf.clientHeight);
-    pinnedTop.current = leaf.scrollTop;
-    pinnedHeight.current = leaf.scrollHeight;
-  };
-
   const openDialog = (node: HTMLDialogElement | null) => {
     dialogRef.current = node;
-    const leaf = leafRef.current;
-    if (node === null || node.open || leaf === null) return;
-    node.showModal();
-    pin();
-    (sectionNode(leaf, start) ?? leaf).focus({ preventScroll: true });
-    layout.current = new ResizeObserver(pin);
-    if (leaf.firstElementChild !== null) layout.current.observe(leaf.firstElementChild);
+    if (node !== null && !node.open) node.showModal();
   };
 
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- scroll and focus, not state: a page can take focus only once it is no longer hidden, so the shown page starts at the top and takes focus after it renders.
+  useLayoutEffect(() => showFromTop(leafRef.current, shown), [shown]);
+
   const goTo = (section: SettingsSection) => {
-    release();
-    setCurrent(section);
-    void navigate({
-      to: ".",
-      search: (prev) => ({ ...prev, settings: section }),
-      replace: true,
-    });
-    const leaf = leafRef.current;
-    const node = leaf === null ? null : sectionNode(leaf, section);
-    if (leaf === null || node === null) return;
-    node.focus({ preventScroll: true });
-    const top = Math.min(sectionTop(leaf, node), leaf.scrollHeight - leaf.clientHeight);
-    if (Math.abs(top - leaf.scrollTop) < 1) return;
-    travel.current = top;
-    leaf.scrollTo({ top, behavior: reducedMotion() ? "auto" : "smooth" });
+    if (section === shown) showFromTop(leafRef.current, section);
+    else
+      void navigate({
+        to: ".",
+        search: (prev) => ({ ...prev, settings: section }),
+        replace: true,
+      });
   };
 
   return (
@@ -186,9 +141,7 @@ function SettingsDialog({ start }: { readonly start: SettingsSection }) {
       aria-labelledby={titleId}
       ref={openDialog}
       onClose={(event) => {
-        if (event.target !== event.currentTarget) return;
-        release();
-        leave();
+        if (event.target === event.currentTarget) leave();
       }}
       onCancel={(event) => {
         if (event.target !== event.currentTarget) return;
@@ -218,8 +171,8 @@ function SettingsDialog({ start }: { readonly start: SettingsSection }) {
                 <button
                   type="button"
                   className="settings-window__section-link"
-                  aria-current={section === current ? "true" : undefined}
-                  aria-controls={`${sectionsId}-${section}`}
+                  aria-current={section === shown ? "page" : undefined}
+                  aria-controls={`${pagesId}-${section}`}
                   onClick={() => goTo(section)}
                 >
                   <Icon className="settings-window__icon" aria-hidden="true" />
@@ -246,37 +199,8 @@ function SettingsDialog({ start }: { readonly start: SettingsSection }) {
             <X className="settings-window__close-icon" aria-hidden="true" />
           </button>
         </header>
-        <div
-          ref={leafRef}
-          className="settings-window__body"
-          tabIndex={-1}
-          onWheel={release}
-          onPointerDown={release}
-          onKeyDown={(event) => {
-            if (travel.current !== null) {
-              event.currentTarget.scrollTo({ top: travel.current, behavior: "instant" });
-            }
-            release();
-          }}
-          onFocus={(event) => {
-            const section = event.target.closest<HTMLElement>("[data-section]")?.dataset.section;
-            if (layout.current === null && travel.current === null && isSection(section)) {
-              setCurrent(section);
-            }
-          }}
-          onScroll={(event) => {
-            const leaf = event.currentTarget;
-            if (layout.current !== null && Math.abs(leaf.scrollTop - pinnedTop.current) > 1) {
-              if (leaf.scrollHeight === pinnedHeight.current) release();
-              else pin();
-            }
-            if (travel.current === null && layout.current === null) setCurrent(sectionInView(leaf));
-          }}
-          onScrollEnd={() => {
-            travel.current = null;
-          }}
-        >
-          <SettingsPanels idPrefix={sectionsId} />
+        <div ref={leafRef} className="settings-window__body">
+          <SettingsPages idPrefix={pagesId} shown={shown} />
         </div>
       </div>
     </dialog>
@@ -300,7 +224,40 @@ function sectionTitle(t: ReturnType<typeof useT>, section: SettingsSection) {
   }
 }
 
-function SettingsPanels({ idPrefix }: { readonly idPrefix: string }) {
+function SettingsPage({
+  section,
+  idPrefix,
+  shown,
+  children,
+}: {
+  readonly section: SettingsSection;
+  readonly idPrefix: string;
+  readonly shown: SettingsSection;
+  readonly children: ReactNode;
+}) {
+  const t = useT();
+  return (
+    <div
+      className="settings-window__page"
+      data-section={section}
+      id={`${idPrefix}-${section}`}
+      tabIndex={-1}
+      role="group"
+      aria-label={sectionTitle(t, section)}
+      hidden={section !== shown}
+    >
+      {children}
+    </div>
+  );
+}
+
+function SettingsPages({
+  idPrefix,
+  shown,
+}: {
+  readonly idPrefix: string;
+  readonly shown: SettingsSection;
+}) {
   const t = useT();
   const settings = useAtomValue(settingsAtom);
   const setLanguage = useAtomSet(setLanguageAtom);
@@ -309,14 +266,8 @@ function SettingsPanels({ idPrefix }: { readonly idPrefix: string }) {
     () => null,
   );
   return (
-    <div className="settings-window__column">
-      <div
-        data-section="language"
-        id={`${idPrefix}-language`}
-        tabIndex={-1}
-        role="group"
-        aria-label={sectionTitle(t, "language")}
-      >
+    <>
+      <SettingsPage section="language" idPrefix={idPrefix} shown={shown}>
         <Panel title={t.settings.language} initial="rubric" level={3}>
           <div className="panel__body">
             <fieldset className="fieldset settings-window__fieldset">
@@ -340,63 +291,33 @@ function SettingsPanels({ idPrefix }: { readonly idPrefix: string }) {
             </fieldset>
           </div>
         </Panel>
-      </div>
-      <div
-        data-section="appearance"
-        id={`${idPrefix}-appearance`}
-        tabIndex={-1}
-        role="group"
-        aria-label={sectionTitle(t, "appearance")}
-      >
+      </SettingsPage>
+      <SettingsPage section="appearance" idPrefix={idPrefix} shown={shown}>
         <AppearancePanel />
-      </div>
-      <div
-        data-section="graph-folder"
-        id={`${idPrefix}-graph-folder`}
-        tabIndex={-1}
-        role="group"
-        aria-label={sectionTitle(t, "graph-folder")}
-      >
+      </SettingsPage>
+      <SettingsPage section="graph-folder" idPrefix={idPrefix} shown={shown}>
         <Panel title={t.settings.graphFolder} initial="rubric" level={3}>
           <div className="panel__body field">
             <code className="call settings-window__path">{current?.graphFolder}</code>
             <p className="field__hint">{t.settings.graphFolderHint}</p>
           </div>
         </Panel>
-      </div>
-      <div
-        data-section="backup"
-        id={`${idPrefix}-backup`}
-        tabIndex={-1}
-        role="group"
-        aria-label={sectionTitle(t, "backup")}
-      >
+      </SettingsPage>
+      <SettingsPage section="backup" idPrefix={idPrefix} shown={shown}>
         <BackupPanel />
-      </div>
-      <div
-        data-section="chatgpt"
-        id={`${idPrefix}-chatgpt`}
-        tabIndex={-1}
-        role="group"
-        aria-label={sectionTitle(t, "chatgpt")}
-      >
+      </SettingsPage>
+      <SettingsPage section="chatgpt" idPrefix={idPrefix} shown={shown}>
         <Panel title={t.chatgpt.title} initial="rubric" level={3}>
           <div className="panel__body stack">
             <p className="field__hint">{t.chatgpt.intro}</p>
             <ChatGptConnection />
           </div>
         </Panel>
-      </div>
-      <div
-        data-section="site"
-        id={`${idPrefix}-site`}
-        tabIndex={-1}
-        role="group"
-        aria-label={sectionTitle(t, "site")}
-      >
+      </SettingsPage>
+      <SettingsPage section="site" idPrefix={idPrefix} shown={shown}>
         <SitePanel folder={current?.siteFolder ?? null} />
-      </div>
-    </div>
+      </SettingsPage>
+    </>
   );
 }
 
