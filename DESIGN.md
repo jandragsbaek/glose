@@ -506,7 +506,7 @@ alone never carries a meaning. The Probe's faint highlight under the user's word
 same rule: the gloss beside it gives the triangle and the words. The Reader Foot notice too: Rubric
 Wash and Rubric Line, a Rubric triangle and Ink words.
 
-**The Gilt Marker Rule.** Gold says "here": the current Section, the section in view on the
+**The Gilt Marker Rule.** Gold says "here": the current Section, the section shown on the
 Settings window's spine, the current step (in the Step Bar and under a Reading mark), a spine's
 bands, focus on lapis. It has one more job: the triangle
 icon of a Check that warns on a Recall slip, always beside Ink words ("Could be better · …"). On

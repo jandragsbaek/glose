@@ -88,6 +88,12 @@ export function SettingsWindow() {
 
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+function showFromTop(leaf: HTMLElement | null, section: SettingsSection) {
+  if (leaf === null) return;
+  leaf.scrollTop = 0;
+  leaf.querySelector<HTMLElement>(`[data-section="${section}"]`)?.focus({ preventScroll: true });
+}
+
 function SettingsDialog({ shown }: { readonly shown: SettingsSection }) {
   const t = useT();
   const navigate = useNavigate();
@@ -116,19 +122,17 @@ function SettingsDialog({ shown }: { readonly shown: SettingsSection }) {
   };
 
   // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- scroll and focus, not state: a page can take focus only once it is no longer hidden, so the shown page starts at the top and takes focus after it renders.
-  useLayoutEffect(() => {
-    const leaf = leafRef.current;
-    if (leaf === null) return;
-    leaf.scrollTop = 0;
-    leaf.querySelector<HTMLElement>(`[data-section="${shown}"]`)?.focus({ preventScroll: true });
-  }, [shown]);
+  useLayoutEffect(() => showFromTop(leafRef.current, shown), [shown]);
 
-  const goTo = (section: SettingsSection) =>
-    void navigate({
-      to: ".",
-      search: (prev) => ({ ...prev, settings: section }),
-      replace: true,
-    });
+  const goTo = (section: SettingsSection) => {
+    if (section === shown) showFromTop(leafRef.current, section);
+    else
+      void navigate({
+        to: ".",
+        search: (prev) => ({ ...prev, settings: section }),
+        replace: true,
+      });
+  };
 
   return (
     <dialog
