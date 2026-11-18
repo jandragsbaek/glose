@@ -562,7 +562,7 @@ them by role:
 - **Accent** (`--accent`): Lapis as a mark on Paper: links, focus outlines, the caret, rings,
   edges, underlines, the Graph's trail and lit nodes.
 
-Gilt, Rubric, Verdigris and the neutrals keep their names and jobs in every theme. Two shared
+Gilt, Rubric, Verdigris and the neutrals keep their names and jobs in every theme. Three shared
 tokens follow the appearance: **Veil** (`--veil`, Ink at 32% in light, black at 58% in dark)
 behind a sheet and the Settings window, **Halo** (`--halo`, Accent at 18% in light, 30% in
 dark) around a focused input, and **Crease** (`--crease`, Ink at 18% in light, black at 72% in
@@ -820,7 +820,9 @@ Elsewhere, focus is a 2px lapis outline at 2px offset (gold on the rail).
 open book. The line between them is a Strong Hairline, and each page darkens into it: a gradient of
 Crease laid over the fold (96px wide, `pointer-events: none`, it does not scroll), the desk's side
 over 48px and the Graph's over 20px, so the Note text 24px in stays clean. It is the one resting
-shade in Glose, and only here, where the screen is a spread; it is hidden in forced colors.
+shade in Glose, and only here, where the screen is a spread; it is hidden in forced colors. What
+sits in the shade keeps its contrast: the desk's scrollbar thumb is Mute, and the Graph canvas's
+focus outline sits 4px in.
 
 The Review stack shows depth the same way: the Cards still to come are paper edges under the
 leaf, each narrower, with hairline borders and no shadow.
@@ -2071,8 +2073,8 @@ Skeleton bars (14px, 2px corners) shimmer Tint to Ground over 1.4s inside a pane
 
 - **Don't** decorate data, Note text, inputs or buttons (no initials, flourishes or gilt there).
 - **Don't** use red alone to mean anything; color never carries a message by itself.
-- **Don't** add resting shadows (the Crease beside the Writing Desk is the one resting shade) or new fields of color beyond the lapis rail, spine, primary and
-  the Settings window's spine.
+- **Don't** add resting shadows (the Crease beside the Writing Desk is the one resting shade) or
+  new fields of color beyond the lapis rail, spine, primary and the Settings window's spine.
 - **Don't** use Cinzel Decorative beyond a single heading initial, or Courier Prime beyond call
   numbers, step numbers, question numbers, repository names, a code the user types elsewhere,
   paragraph and note numbers, and a lesson's week·day.

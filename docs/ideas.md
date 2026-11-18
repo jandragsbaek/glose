@@ -218,8 +218,8 @@ Decided, the Graph beside the desk (November 2026), chosen with impeccable ("Tra
   not add it again.
 - The line between the desk and the Graph is the crease of an open book: each page darkens into the
   fold (the "Gutter", chosen by Jan with impeccable in November 2026 over a silk headband, sewing
-  thread and a strip of the binding; the idea came from his girlfriend). The shade stays clear of
-  the text.
+  thread and a strip of the binding; the idea came from his girlfriend). The shade keeps the Note
+  text in the Graph clean.
 
 - Not yet: the University assignment's own flow and PDF, a Writing project of several files,
   publishing straight into the site's git repository, removing the old post file when a published
