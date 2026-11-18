@@ -27,13 +27,14 @@ export const notesWordCount = (notes: string, videoId: string | null): number =>
   wordCount(withoutStamps(notes, videoId));
 
 const wordsAfter = (notes: string, stamp: Stamp, next: Stamp | undefined) => {
-  const blank = /\n[ \t]*\n/.exec(notes.slice(stamp.end));
+  const start = stamp.end + (/^\s*/.exec(notes.slice(stamp.end))?.[0].length ?? 0);
+  const blank = /\n[ \t]*\n/.exec(notes.slice(start));
   const end = Math.min(
-    blank === null ? notes.length : stamp.end + blank.index,
+    blank === null ? notes.length : start + blank.index,
     next === undefined ? notes.length : next.start,
   );
   return notes
-    .slice(stamp.end, end)
+    .slice(Math.min(start, end), end)
     .replace(WIKILINK, (_, name: string, shown?: string) => shown ?? name)
     .replace(LINK, "$1")
     .replace(MARKDOWN_MARKS, "")

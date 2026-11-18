@@ -8,7 +8,14 @@ import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { type Cue, cueAt, cuesOf, notesWordCount, videoIdOf, youtubeAt } from "../domain/video.ts";
 import { useLanguage, useT } from "../i18n/I18n.tsx";
 import { finishWatchingAtom, writeWatchNotesAtom } from "../state/graph.ts";
-import { draftOf, finishNotes, keepDraft, restoreDraft, saveNotes } from "../state/watchNotes.ts";
+import {
+  draftOf,
+  finishNotes,
+  keepDraft,
+  restoreDraft,
+  savedOver,
+  saveNotes,
+} from "../state/watchNotes.ts";
 import { SaveLine, type SaveState } from "./ReaderMargin.tsx";
 import { StepBar } from "./StepBar.tsx";
 import { Notice, Page, Panel } from "./ui.tsx";
@@ -24,12 +31,17 @@ function useNotes(source: Source) {
   const writeNotes = useAtomSet(writeWatchNotesAtom, { mode: "promiseExit" });
   const finishWatching = useAtomSet(finishWatchingAtom, { mode: "promiseExit" });
   const [text, setText] = useState(
-    () => restoreDraft(source.id, source.freeText) ?? source.freeText,
+    () =>
+      restoreDraft(source.id, source.freeText) ??
+      savedOver(source.id, source.freeText, source.modified) ??
+      source.freeText,
   );
   const [state, setState] = useState<SaveState>("idle");
   const mounted = useRef(true);
-  const write = (finish: boolean) => async (freeText: string) =>
-    Exit.isSuccess(await writeNotes({ id: source.id, freeText, finish }));
+  const write = (finish: boolean) => async (freeText: string) => {
+    const exit = await writeNotes({ id: source.id, freeText, finish });
+    return Exit.isSuccess(exit) ? exit.value.modified : false;
+  };
   const advance = async () =>
     Exit.isSuccess(await finishWatching({ id: source.id, from: "free-text" }));
   const settle = (ok: boolean) => {
@@ -45,6 +57,10 @@ function useNotes(source: Source) {
       finish ? finishNotes(source.id, write(true), advance) : saveNotes(source.id, write(false))
     ).then(settle);
   };
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- the queue's record, not state: once the Source shows the words a save wrote, the record of that save is retired.
+  useEffect(() => {
+    savedOver(source.id, source.freeText, source.modified);
+  }, [source.id, source.freeText, source.modified]);
   const saveRef = useRef(save);
   // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- a ref, not state: the timer and the last save on leaving call the newest writer.
   useEffect(() => {

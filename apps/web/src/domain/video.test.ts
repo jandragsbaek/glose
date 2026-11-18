@@ -15,6 +15,8 @@ const NOTES = [
   "",
   "A new paragraph without a time.",
   LINK("6:02", 362),
+  "",
+  "Words a blank line below their time.",
   `${LINK("0:42", 42)} People buy [why](https://example.com) you do it, as [[Sinek 2009|Sinek]] says in [[Start with why]].`,
 ].join("\n");
 
@@ -25,7 +27,7 @@ describe("The timestamps of watch notes", () => {
       [
         ["0:42", "People buy why you do it, as Sinek says in Start with why."],
         ["4:10", "The golden circle: why, how, what."],
-        ["6:02", ""],
+        ["6:02", "Words a blank line below their time."],
       ],
     );
   });

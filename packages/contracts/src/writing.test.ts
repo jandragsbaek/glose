@@ -172,7 +172,7 @@ describe("Citations of a Video", () => {
   it("cites the time in the video, the channel and the address", () => {
     assert.strictEqual(
       noteCitation(SINEK, "12:34"),
-      "Simon Sinek, “Start with why,” TEDx Talks, YouTube video (2009), 12:34.",
+      "Simon Sinek, “Start with why,” TEDx Talks, YouTube video (2009), 12:34. https://www.youtube.com/watch?v=u4ZoJKF_VuA",
     );
     assert.strictEqual(shortCitation(SINEK, "12:34", "apa"), "Sinek, 2009, 12:34");
     assert.strictEqual(shortCitation(SINEK, "1:02:03", "chicago"), "Sinek 2009, 1:02:03");

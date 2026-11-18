@@ -75,7 +75,7 @@ describe("Timestamps", () => {
       `Nor a link to another video, [4:10](https://www.youtube.com/watch?v=AAAAAAAAAAA&t=250s),`,
       `nor a link whose time is not its label, [4:40](https://www.youtube.com/watch?v=${ID}&t=250s),`,
       `[4:40](https://youtu.be/${ID}#t=250) or [4:40](https://www.youtube.com/watch?v=${ID}&time_continue=250),`,
-      `[1:00](https://www.youtube.com/watch?v=${ID}&t=60&t=120),`,
+      `[1:00](https://www.youtube.com/watch?v=${ID}&t=60&t=120), [4:10](https://youtu.be/${ID}), [0:00](https://youtu.be/${ID}?t=1&t=2), [0:00](https://youtu.be/${ID}?t=), [1:00](https://youtu.be/${ID}?t=&t=60),`,
       "nor code: `[12:34]` and",
       "```",
       "[1:00]",

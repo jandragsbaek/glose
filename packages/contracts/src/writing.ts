@@ -288,7 +288,8 @@ const textCitation = (source: CitedSource, page: string | null) => {
 const videoCitation = (source: CitedSource, page: string | null) => {
   const channel = source.container == null ? "" : ` ${source.container},`;
   const location = page === null ? "" : `, ${locationText(source, page, "note")}`;
-  return `${authorName(source)}, “${source.title},”${channel} YouTube video (${yearText(source)})${location}.`;
+  const url = source.url == null ? "" : ` ${source.url}`;
+  return `${authorName(source)}, “${source.title},”${channel} YouTube video (${yearText(source)})${location}.${url}`;
 };
 
 export const noteCitation = (source: CitedSource, page: string | null): string => {

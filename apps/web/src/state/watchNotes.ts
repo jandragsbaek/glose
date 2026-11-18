@@ -5,7 +5,15 @@ interface Draft {
 
 const STORE = "glose.watchNotes.";
 const drafts = new Map<string, Draft>();
-const written = new Map<string, string>();
+interface Written {
+  readonly text: string;
+  readonly over: ReadonlyArray<string>;
+  readonly revision: number;
+}
+
+export type WriteNotes = (text: string) => Promise<number | false>;
+
+const written = new Map<string, Written>();
 let queue: Promise<unknown> = Promise.resolve();
 
 const same = (a: string, b: string) => a.trimEnd() === b.trimEnd();
@@ -61,8 +69,23 @@ export const restoreDraft = (sourceId: string, saved: string): string | undefine
   return left.text;
 };
 
-export const keepDraft = (sourceId: string, text: string, base: string): void => {
+export const savedOver = (
+  sourceId: string,
+  saved: string,
+  revision: number,
+): string | undefined => {
   const last = written.get(sourceId);
+  if (last === undefined) return undefined;
+  const older =
+    revision < last.revision ||
+    (revision === last.revision && last.over.some((base) => same(base, saved)));
+  if (older && !same(last.text, saved)) return last.text;
+  if (!older) written.delete(sourceId);
+  return undefined;
+};
+
+export const keepDraft = (sourceId: string, text: string, base: string): void => {
+  const last = written.get(sourceId)?.text;
   put(sourceId, {
     text,
     bases: drafts.get(sourceId)?.bases ?? (last === undefined ? [base] : [base, last]),
@@ -75,26 +98,28 @@ const enqueue = (job: () => Promise<boolean>): Promise<boolean> => {
   return next;
 };
 
-const writeDraft = async (sourceId: string, write: (text: string) => Promise<boolean>) => {
+const writeDraft = async (sourceId: string, write: WriteNotes) => {
   const draft = drafts.get(sourceId);
   if (draft === undefined) return true;
   put(sourceId, { text: draft.text, bases: [...draft.bases, draft.text] });
-  const ok = await write(draft.text);
-  if (ok) written.set(sourceId, draft.text);
+  const revision = await write(draft.text);
+  const ok = revision !== false;
+  if (ok) {
+    const before = written.get(sourceId)?.over ?? [];
+    written.set(sourceId, { text: draft.text, over: [...before, ...draft.bases], revision });
+  }
   const newer = drafts.get(sourceId);
   if (ok && newer !== undefined && newer.text === draft.text) forget(sourceId);
   else if (ok && newer !== undefined) put(sourceId, { text: newer.text, bases: [draft.text] });
   return ok;
 };
 
-export const saveNotes = (
-  sourceId: string,
-  write: (text: string) => Promise<boolean>,
-): Promise<boolean> => enqueue(() => writeDraft(sourceId, write));
+export const saveNotes = (sourceId: string, write: WriteNotes): Promise<boolean> =>
+  enqueue(() => writeDraft(sourceId, write));
 
 export const finishNotes = (
   sourceId: string,
-  write: (text: string) => Promise<boolean>,
+  write: WriteNotes,
   advance: () => Promise<boolean>,
 ): Promise<boolean> =>
   enqueue(() => (drafts.has(sourceId) ? writeDraft(sourceId, write) : advance()));

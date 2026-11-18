@@ -90,7 +90,7 @@ const linkSeconds = (address: string): number | null | undefined => {
     ...url.searchParams.getAll("start"),
     ...url.searchParams.getAll("time_continue"),
     ...fragment.getAll("t"),
-  ].filter((time) => time !== "");
+  ];
   if (times.length === 0) return null;
   const seconds = times.map((time) => {
     const match = LINK_TIME.exec(time);
@@ -114,7 +114,7 @@ const STAMP = /\[([0-9:]{4,12})\](?:\(([^()\s]+)\))?/g;
 const linkAgrees = (address: string, videoId: string | null, seconds: number) => {
   if (videoId === null || youtubeId(address) !== videoId) return false;
   const time = linkSeconds(address);
-  return time === null || time === seconds;
+  return time !== undefined && (time ?? 0) === seconds;
 };
 
 const INDENTED_CODE =

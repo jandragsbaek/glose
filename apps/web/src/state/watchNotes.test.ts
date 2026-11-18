@@ -1,6 +1,6 @@
 import { afterEach, assert, describe, it, vi } from "@effect/vitest";
 
-import { draftOf, finishNotes, keepDraft, saveNotes } from "./watchNotes.ts";
+import { draftOf, finishNotes, keepDraft, savedOver, saveNotes } from "./watchNotes.ts";
 
 const memoryStorage = () => {
   const items = new Map<string, string>();
@@ -21,35 +21,36 @@ afterEach(() => {
 });
 
 const later = () => {
-  let open: (ok: boolean) => void = () => undefined;
-  const promise = new Promise<boolean>((resolve) => {
+  let open: (revision: number | false) => void = () => undefined;
+  const promise = new Promise<number | false>((resolve) => {
     open = resolve;
   });
   return { promise, open };
 };
 
 describe("Watch notes saved from two views", () => {
-  it("writes only the newest words, then finishes after the slow save without writing again", async () => {
+  it("writes the newest words after a slow save, then finishes without writing again", async () => {
     const written: Array<string> = [];
     const slow = later();
     const write = (finish: boolean) => async (text: string) => {
       written.push(`${finish ? "finish" : "save"}: ${text}`);
-      return written.length === 1 ? slow.promise : true;
+      return written.length === 1 ? slow.promise : 2;
     };
 
     keepDraft("video", "A", "");
     const first = saveNotes("video", write(false));
+    await Promise.resolve();
     keepDraft("video", "A and B, typed in the other view", "");
     const second = saveNotes("video", write(false));
-    keepDraft("video", "A and B and C", "");
     const finished = finishNotes("video", write(true), async () => {
       written.push("advance");
       return true;
     });
-    slow.open(true);
+    keepDraft("video", "A and B and C", "");
+    slow.open(1);
     await Promise.all([first, second, finished]);
 
-    assert.deepStrictEqual(written, ["save: A and B and C", "advance"]);
+    assert.deepStrictEqual(written, ["save: A", "save: A and B and C", "advance"]);
     assert.isTrue(await finished);
     assert.isUndefined(draftOf("video"));
   });
@@ -61,7 +62,7 @@ describe("Watch notes saved from two views", () => {
       "obsidian",
       async () => {
         steps.push("write");
-        return true;
+        return 1;
       },
       async () => {
         steps.push("advance");
@@ -81,7 +82,7 @@ describe("Watch notes saved from two views", () => {
       "typed",
       async (text) => {
         steps.push(`write and finish: ${text}`);
-        return true;
+        return 1;
       },
       async () => {
         steps.push("advance");
@@ -106,9 +107,9 @@ describe("Watch notes saved from two views", () => {
     });
     const second = saveNotes("second", async (text) => {
       events.push(`start ${text}`);
-      return true;
+      return 1;
     });
-    slow.open(true);
+    slow.open(1);
     await Promise.all([first, second]);
 
     assert.deepStrictEqual(events, ["start First notes", "end First notes", "start Second notes"]);
@@ -122,7 +123,7 @@ describe("Watch notes saved from two views", () => {
       throw new Error("The connection dropped.");
     });
     const kept = draftOf("lost");
-    const next = await saveNotes("lost", async () => true);
+    const next = await saveNotes("lost", async () => 1);
 
     assert.deepStrictEqual(
       [failed, threw, kept, next],
@@ -177,7 +178,7 @@ describe("Watch notes saved from two views", () => {
     vi.stubGlobal("localStorage", memoryStorage());
     const before = await reloaded();
     before.keepDraft("quick", "A", "");
-    await before.saveNotes("quick", async () => true);
+    await before.saveNotes("quick", async () => 1);
     before.keepDraft("quick", "A and B", "");
 
     const after = await reloaded();
@@ -218,5 +219,27 @@ describe("Watch notes saved from two views", () => {
     const after = await reloaded();
 
     assert.isUndefined(after.restoreDraft("blank", "Saved words"));
+  });
+
+  it("opens a new view on the words just saved while the Source shown is older than the save", async () => {
+    keepDraft("refreshing", "Old words and new ones", "Old words");
+    await saveNotes("refreshing", async () => 20);
+    keepDraft("refreshing", "Old words and new ones, and more", "Old words");
+    await saveNotes("refreshing", async () => 30);
+
+    assert.strictEqual(
+      savedOver("refreshing", "Old words", 10),
+      "Old words and new ones, and more",
+    );
+    assert.isUndefined(savedOver("refreshing", "Old words and new ones, and more", 30));
+    assert.isUndefined(savedOver("refreshing", "Old words", 10));
+  });
+
+  it("never puts saved words over a newer file, even when another editor restored the old text", async () => {
+    keepDraft("restored", "Typed in Glose", "Old words");
+    await saveNotes("restored", async () => 20);
+
+    assert.isUndefined(savedOver("restored", "Old words", 40));
+    assert.isUndefined(savedOver("restored", "Old words", 10));
   });
 });

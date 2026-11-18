@@ -14,7 +14,6 @@ export interface Player {
   readonly src: string | null;
   readonly state: PlayerState;
   readonly time: number;
-  readonly playing: boolean;
   readonly now: () => number | null;
   readonly play: (seconds: number) => void;
   readonly toggle: () => void;
@@ -50,7 +49,6 @@ export function useYouTubePlayer(videoId: string | null, start: number, language
   const [node, setNode] = useState<HTMLIFrameElement | null>(null);
   const [state, setState] = useState<PlayerState>("loading");
   const [time, setTime] = useState(start);
-  const [playing, setPlaying] = useState(false);
   const clock = useRef<Clock>({ time: start, at: 0, playing: false });
   const ready = useRef(false);
   const going = useRef(false);
@@ -93,7 +91,6 @@ export function useYouTubePlayer(videoId: string | null, start: number, language
       setTime(now);
       if (typeof playerState === "number") {
         going.current = playerState === PLAYING || playerState === BUFFERING;
-        setPlaying(going.current);
       }
     };
     const onMessage = (event: MessageEvent) => {
@@ -123,7 +120,6 @@ export function useYouTubePlayer(videoId: string | null, start: number, language
       if (name === "onError") {
         clock.current = { ...clock.current, playing: false };
         going.current = false;
-        setPlaying(false);
         setState(NOT_EMBEDDABLE.has(numberOr(info, 0)) ? "blocked" : "failed");
         return;
       }
@@ -152,7 +148,6 @@ export function useYouTubePlayer(videoId: string | null, start: number, language
     src,
     state,
     time,
-    playing,
     now,
     play: (seconds) => {
       if (!ready.current) {

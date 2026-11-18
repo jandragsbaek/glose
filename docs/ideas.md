@@ -976,8 +976,9 @@ Sheet keeps the book's Reading Stage, adds one new mark to the Markdown, and nee
 - A Note with a timestamp shows it on its call number (`SIN 2009 · 4:10`) and has "Watch from 4:10"
   in the Graph, which opens the Watch view there (`/sources/<Source>?t=250`). From the later steps,
   "Watch the video" opens it too (`?watch=1`).
-- Citations of a Video name the speaker, the title, the channel, the year and "YouTube video" or
-  "[Video]", with the address; a time is cited as it is (APA "Sinek, 2009, 4:10"). A missing
+- Citations of a Video name the speaker, the title, the year and "YouTube video" or "[Video]", with
+  the address; Chicago, Harvard and footnotes name the channel too, while APA names YouTube as
+  the site, as APA 7 does; a time is cited as it is (APA "Sinek, 2009, 4:10"). A missing
   channel warns, as a missing publisher does for a book. A Reference to a time is written
   `[[Source]]{4:10}`, without "p.".
 - Without internet, or when the owner does not allow the video outside YouTube, the screen says so
