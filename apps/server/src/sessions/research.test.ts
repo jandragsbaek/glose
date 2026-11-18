@@ -75,6 +75,19 @@ describe("quotes", () => {
     );
     assert.isNull(
       findWholeQuote(
+        parseArticle("The rule will apply to the U.S.’s largest cities first.\n"),
+        "will apply to the U.S",
+      ),
+    );
+    assert.strictEqual(
+      findWholeQuote(
+        parseArticle("她说‘Read the full report.’然后离开。\n"),
+        "Read the full report.",
+      )?.n,
+      1,
+    );
+    assert.isNull(
+      findWholeQuote(
         parseArticle("We compared the groups’ results over time.\n"),
         "We compared the groups",
       ),
