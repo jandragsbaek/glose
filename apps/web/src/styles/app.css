@@ -6563,19 +6563,21 @@ a.written__title:hover {
   }
 }
 
-/* What sits in the shade keeps its contrast: the desk's scrollbar thumb, and the canvas focus
-   outline, set in past the darkest part. */
+/* What sits in the shade keeps its contrast: the desk's own scrollbar thumb (scrollbar-color is
+   inherited, so scrollers inside the desk keep the usual thumb), and the canvas focus outline, set
+   in past the darkest part. */
 .desk-frame[data-graph="open"] .desk-body__desk {
+  min-height: 0;
+  overflow-y: auto;
   scrollbar-color: var(--mute) transparent;
+}
+
+.desk-frame[data-graph="open"] .desk-body__desk * {
+  scrollbar-color: var(--line-strong) transparent;
 }
 
 .desk-frame[data-graph="open"] .graph__canvas:focus-visible {
   outline-offset: -4px;
-}
-
-.desk-frame[data-graph="open"] .desk-body__desk {
-  min-height: 0;
-  overflow-y: auto;
 }
 
 .desk-bar__graph[aria-pressed="true"] {
