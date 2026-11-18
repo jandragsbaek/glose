@@ -1,4 +1,5 @@
 import {
+  type AddVideo,
   BOOK_TEXT_DETAILS,
   GraphFolderNotSet,
   hasOwnText,
@@ -20,6 +21,9 @@ import {
   isFileName,
   sameFileName,
   toFileName,
+  videoAddress,
+  VideoNotFound,
+  youtubeId,
 } from "@glose/contracts";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -58,6 +62,9 @@ export class Sources extends Context.Service<
       readonly from: ReadingStep;
     }) => Effect.Effect<Source, SourceNotFound | GraphError>;
     readonly importText: (input: ImportText) => Effect.Effect<Source, SourceNameTaken | GraphError>;
+    readonly addVideo: (
+      input: AddVideo,
+    ) => Effect.Effect<Source, SourceNameTaken | VideoNotFound | GraphError>;
     readonly freeId: (
       details: Pick<ImportText, "familyName" | "firstPublished" | "title" | "kind" | "part">,
     ) => Effect.Effect<string | null, GraphError>;
@@ -263,7 +270,7 @@ export const make = Effect.gen(function* () {
         const folder = yield* graphFolder;
         const readingStep =
           finish && source.readingStep === "free-text"
-            ? nextReadingStep(source.readingStart, "free-text")
+            ? nextReadingStep(source.readingStart, "free-text", source.kind)
             : source.readingStep;
         return yield* writeSource(folder, id, { ...source, freeText, readingStep }).pipe(
           Effect.mapError(storageError),
@@ -327,9 +334,32 @@ export const make = Effect.gen(function* () {
       );
       return yield* writeSource(folder, id, {
         ...details,
-        kind: details.kind === "book" ? "article" : details.kind,
+        kind: hasOwnText(details.kind) ? details.kind : "article",
         readingPlace: null,
         readingStep: "read",
+        readingStart: null,
+        freeText: "",
+        added: yield* Clock.currentTimeMillis,
+      }).pipe(Effect.mapError(storageError));
+    }),
+
+    addVideo: Effect.fn("Sources.addVideo")(function* ({ url, container, ...details }) {
+      const video = youtubeId(url);
+      if (video === null) return yield* new VideoNotFound({ reason: "not-youtube" });
+      const folder = yield* graphFolder;
+      const id = yield* newId(folder, details);
+      return yield* writeSource(folder, id, {
+        ...BOOK_TEXT_DETAILS,
+        edition: null,
+        editionYear: null,
+        publisher: null,
+        translator: null,
+        ...details,
+        kind: "video",
+        container,
+        url: videoAddress(video),
+        readingPlace: null,
+        readingStep: "free-text",
         readingStart: null,
         freeText: "",
         added: yield* Clock.currentTimeMillis,

@@ -375,4 +375,79 @@ it.layer(NodeServices.layer)("Sources", (it) => {
       }),
     ),
   );
+
+  it.effect("adds a Video with its watch page, and its watch notes lead to Extraction", () =>
+    withGraph(({ folder, sources }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* TestClock.setTime(new Date(2026, 10, 18, 9, 30).getTime());
+        const video = yield* sources.addVideo({
+          familyName: "Sinek",
+          givenName: "Simon",
+          title: "Start with why",
+          firstPublished: 2009,
+          container: "TEDx Talks",
+          url: "https://youtu.be/u4ZoJKF_VuA?si=share&t=42",
+        });
+        const notes = "[0:42](https://www.youtube.com/watch?v=u4ZoJKF_VuA&t=42s) People buy why.";
+        const watched = yield* sources.saveFreeText({
+          id: video.id,
+          freeText: notes,
+          finish: true,
+        });
+        const markdown = yield* fs.readFileString(path.join(folder, `${video.id}.md`));
+
+        assert.strictEqual(video.id, "Sinek 2009 Start with why");
+        assert.deepStrictEqual(
+          [video.kind, video.readingStep, video.hasText, watched.readingStep],
+          ["video", "free-text", false, "extraction"],
+        );
+        assert.strictEqual(
+          markdown,
+          [
+            "---",
+            "glose: source",
+            "kind: video",
+            "author-family: Sinek",
+            "author-given: Simon",
+            "title: Start with why",
+            "first-published: 2009",
+            "container: TEDx Talks",
+            "url: https://www.youtube.com/watch?v=u4ZoJKF_VuA",
+            "reading-step: extraction",
+            "added: 2026-11-18",
+            "---",
+            "",
+            notes,
+            "",
+          ].join("\n"),
+        );
+      }),
+    ),
+  );
+
+  it.effect("refuses a Video whose address is not a YouTube video, and writes no file", () =>
+    withGraph(({ folder, sources }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const refused = yield* Effect.flip(
+          sources.addVideo({
+            familyName: "Sinek",
+            givenName: null,
+            title: "Start with why",
+            firstPublished: 2009,
+            container: null,
+            url: "https://vimeo.com/76979871",
+          }),
+        );
+
+        assert.strictEqual(refused._tag, "VideoNotFound");
+        assert.deepStrictEqual(
+          (yield* fs.readDirectory(folder)).filter((name) => name.endsWith(".md")),
+          [],
+        );
+      }),
+    ),
+  );
 });

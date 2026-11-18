@@ -1,5 +1,7 @@
-import { RPC_METHODS } from "@glose/contracts";
+import { type AdvanceReading, RPC_METHODS, type SaveFreeText } from "@glose/contracts";
+import * as Effect from "effect/Effect";
 import * as Atom from "effect/reactivity/Atom";
+import * as Reactivity from "effect/reactivity/Reactivity";
 
 import { GloseClient } from "../rpc/client.ts";
 
@@ -33,6 +35,23 @@ export const chooseStartAtom = GloseClient.mutation(RPC_METHODS.sourcesChooseSta
 export const saveNoteAtom = GloseClient.mutation(RPC_METHODS.notesSave);
 export const advanceReadingAtom = GloseClient.mutation(RPC_METHODS.sourcesAdvance);
 
+export const writeWatchNotesAtom = GloseClient.runtime.fn<typeof SaveFreeText.Type>()(
+  Effect.fnUntraced(function* (payload) {
+    const client = yield* GloseClient;
+    return yield* Reactivity.mutation(
+      client(RPC_METHODS.sourcesSaveFreeText, payload),
+      KEYS.sources,
+    );
+  }),
+);
+
+export const finishWatchingAtom = GloseClient.runtime.fn<typeof AdvanceReading.Type>()(
+  Effect.fnUntraced(function* (payload) {
+    const client = yield* GloseClient;
+    return yield* Reactivity.mutation(client(RPC_METHODS.sourcesAdvance, payload), KEYS.sources);
+  }),
+);
+
 export const searchCatalogAtom = GloseClient.mutation(RPC_METHODS.catalogSearch);
 
 export const ARTICLE_KEYS = { articles: ["articles"] } as const;
@@ -42,6 +61,8 @@ export const articleAtom = Atom.family((id: string) =>
 );
 
 export const importTextAtom = GloseClient.mutation(RPC_METHODS.sourcesImportText);
+export const addVideoAtom = GloseClient.mutation(RPC_METHODS.sourcesAddVideo);
+export const lookupVideoAtom = GloseClient.mutation(RPC_METHODS.sourcesLookupVideo);
 export const setPlaceAtom = GloseClient.mutation(RPC_METHODS.sourcesSetPlace);
 export const markPassageAtom = GloseClient.mutation(RPC_METHODS.articlesMarkPassage);
 export const removePassageAtom = GloseClient.mutation(RPC_METHODS.articlesRemovePassage);

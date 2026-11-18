@@ -4,7 +4,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { Plus, TriangleAlert } from "lucide-react";
 
-import { StepBar } from "../components/StepBar.tsx";
+import { StepBar, stepName } from "../components/StepBar.tsx";
 import {
   CallNumber,
   Page,
@@ -173,7 +173,9 @@ function NotesWithAiText() {
 }
 
 const readingStepName = (t: ReturnType<typeof useT>, source: Source) =>
-  source.readingStep === "done" ? t.today.continue.done : t.steps.names[source.readingStep];
+  source.readingStep === "done"
+    ? t.today.continue.done
+    : stepName(t, source.readingStep, source.kind);
 
 function CurrentSource({ source }: { readonly source: Source }) {
   const t = useT();

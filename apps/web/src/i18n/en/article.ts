@@ -15,16 +15,19 @@ export const articleMessages = {
       book: "Book",
       article: "Article",
       lesson: "Course lessons",
+      video: "Video",
     } satisfies Record<SourceKind, string>,
     one: {
       book: "Book",
       article: "Article",
       lesson: "Course lesson",
+      video: "Video",
     } satisfies Record<SourceKind, string>,
     hints: {
       book: "You read it elsewhere. Glose keeps your Free text and Notes.",
       article: "One Markdown file or pasted text. You read it in Glose.",
       lesson: "A folder of lesson files from a course. Each lesson is a Source.",
+      video: "A talk or another video on YouTube. You watch it in Glose and stamp the times.",
     } satisfies Record<SourceKind, string>,
     articleTypes: {
       paper: "Academic paper",

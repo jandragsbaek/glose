@@ -5,6 +5,7 @@ import * as Stream from "effect/Stream";
 import * as CardChecks from "./cards/CardChecks.ts";
 import * as Cards from "./cards/Cards.ts";
 import * as Catalog from "./catalog/Catalog.ts";
+import * as Videos from "./catalog/Videos.ts";
 import * as ChatGpt from "./chatgpt/ChatGpt.ts";
 import * as GitHub from "./github/GitHub.ts";
 import * as Graph from "./graph/Graph.ts";
@@ -27,6 +28,7 @@ export const layer = GloseRpcGroup.toLayer(
     const graph = yield* Graph.Graph;
     const notes = yield* Notes.Notes;
     const catalog = yield* Catalog.Catalog;
+    const videos = yield* Videos.Videos;
     const chatGpt = yield* ChatGpt.ChatGpt;
     const sessions = yield* Sessions.Sessions;
     const cards = yield* Cards.Cards;
@@ -49,6 +51,8 @@ export const layer = GloseRpcGroup.toLayer(
       [RPC_METHODS.sourcesAdvance]: (input) => sources.advance(input),
       [RPC_METHODS.sourcesImportText]: (input) => sources.importText(input),
       [RPC_METHODS.sourcesSetPlace]: (input) => sources.setPlace(input),
+      [RPC_METHODS.sourcesAddVideo]: (input) => sources.addVideo(input),
+      [RPC_METHODS.sourcesLookupVideo]: ({ url }) => videos.lookup(url),
       [RPC_METHODS.articlesGet]: ({ id }) =>
         sources.articleText(id).pipe(Effect.map((markdown) => ({ markdown }))),
       [RPC_METHODS.articlesMarkPassage]: (input) => sources.markPassage(input),

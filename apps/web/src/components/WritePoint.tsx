@@ -20,12 +20,14 @@ type SaveProblem = { readonly kind: "taken"; readonly name: string } | { readonl
 export function WritePoint({
   session,
   point,
+  video,
   shown,
   about,
   onAbout,
 }: {
   readonly session: Session;
   readonly point: Point;
+  readonly video: boolean;
   readonly shown: boolean;
   readonly about: boolean;
   readonly onAbout: () => void;
@@ -120,7 +122,7 @@ export function WritePoint({
         ) : (
           <AiText scope="title">{titleInput}</AiText>
         )}
-        <PointSource point={point} />
+        <PointSource point={point} video={video} />
         <label className="sr-only" htmlFor={textId}>
           {aiText ? t.extraction.draftLabel : t.extraction.textLabel}
         </label>
@@ -144,10 +146,11 @@ export function WritePoint({
         </AiText>
         <div className="write__row">
           <label className="write__page" htmlFor={pageId}>
-            {t.extraction.page}
+            {video ? t.watch.time : t.extraction.page}
             <input
               id={pageId}
               className="input"
+              placeholder={video ? t.watch.timePlaceholder : undefined}
               value={page}
               onChange={(event) => setPage(event.target.value)}
             />

@@ -20,3 +20,4 @@ export * from "./articleInline.ts";
 export * from "./article.ts";
 export * from "./articleEdit.ts";
 export * from "./fileName.ts";
+export * from "./video.ts";

@@ -113,7 +113,7 @@ export const writingMessages: Pick<Messages, "writing"> = {
     format: { h2: "Overskrift", h3: "Underoverskrift", strong: "Fed", em: "Kursiv" },
     citeShort: "Henvis",
     citeFind: "Find en note, en kilde eller en forfatter",
-    citePageFromNote: (page: string) => `Tomt felt bruger s. ${page} fra noten.`,
+    citePageFromNote: (location: string) => `Tomt felt bruger ${location} fra noten.`,
     citePageMissing: "Noten har ingen side. Tilføj den her.",
     citePageSource: "En kilde har ingen side i sig selv. Tilføj den side, du henviser til.",
     citeSave: "Gem",

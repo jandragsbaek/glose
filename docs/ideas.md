@@ -29,7 +29,8 @@ Working notes from early conversations. Nothing here is final.
   AI-tekst (AI text), Kildehenvisning (Citation), Kortudtræk (Card Extraction), Foreslået kort
   (Proposed Card), Tjek (Check), Vurdering (Grade), Gennemgang (Review), Glemt / Husket
   (Forgot / Recalled), Med besvær, Normalt, Med det samme (With effort, Normal, At once), and
-  Punkt, Kernepunkter (Point, Core points), and Placering (Location).
+  Punkt, Kernepunkter (Point, Core points), Placering (Location), and Video, Se (Watch) and
+  Tidsstempel (timestamp).
 
 ## First start
 
@@ -121,7 +122,7 @@ Decided, the Sources page (November 2026):
 - A Source file holds `added` (a date, `2026-11-13`), written when Glose creates the Source. A
   Source without it counts from the file's creation time, else its last change; Glose writes that
   date into the file the next time it saves the Source.
-- Not yet: a Kind (book, video, article, lesson) column and filter. Articles and Course lessons
+- Not yet: a Kind (book, article, lesson, video) column and filter. Articles and Course lessons
   exist now (see "Decided, Articles and Course lessons").
 
 ## Writing projects
@@ -534,8 +535,9 @@ Decided, a Graph from GitHub at first start (November 2026):
   Links. Without a selection it lists the Sources. Search fades everything except matching names.
 - Double-clicking a Source opens its Reading Stage; double-clicking a Note opens it on the rewrite
   desk (see "Decided, the AI mark on the Graph"). A Note has no page of its own yet.
-- `pnpm dev:demo` opens Glose on the demo Graph (`demo/Graph`): eleven Sources, two of them Danish
-  and one a sample Article with Passages, with 104 linked Notes of clearly sample content.
+- `pnpm dev:demo` opens Glose on the demo Graph (`demo/Graph`): twelve Sources, two of them Danish,
+  one a sample Article with Passages and one a Video with sample watch notes, with 105 linked Notes
+  of clearly sample content.
   `demo/Course export (sample)` holds five sample lesson files to try Add Source → Course lessons. It runs on a copy in the temp folder with its
   own computer settings, so the user's Graph and settings stay untouched.
 
@@ -917,6 +919,75 @@ three-model council.
   touched since. After a Catalog choice the results fold to the chosen book.
 - The three kinds check a form the same way, in Glose's own words: a line under each field that
   needs a value or a fix, one line in the foot, and the cursor in the first such field.
+
+## Decided, Videos and timestamps (November 2026)
+
+Jan asked to add a YouTube video, such as a conference talk, as a Source, and to make Notes that
+refer to timestamps in it, the way books are worked through; no transcripts. He left the pick to
+the agent's best recommendation from impeccable: "The Cue Sheet", over a timeline ruler with
+Moment slips kept in their own file and a Reader-like page with slips beside the video. The Cue
+Sheet keeps the book's Reading Stage, adds one new mark to the Markdown, and needs no new term.
+
+- A Video is a fourth kind of Source (`kind: video`): a talk or another video on YouTube. Add Source
+  has a Video segment: the YouTube address on top (Look up asks YouTube's oEmbed for the title and
+  the channel; nothing else is fetched, and no key is needed), then the speaker (family name
+  required), the title, the year (required, for the call number) and the channel or event. The
+  speaker is often not the channel, so Glose fills only the title and the channel, marked. The
+  Source file keeps the watch page as `url` (`https://www.youtube.com/watch?v=<id>`), whatever
+  form of address the user pasted, and `container` is the channel or event.
+- Its Reading Stage is Watch → Extraction → Probe, always: the AI has not seen the video, so a
+  Probe-first start has nothing to rest on. Watch is the Free text step, named for what happens.
+- The Watch step plays the video in Glose (YouTube's embedded player, from youtube-nocookie.com)
+  as a plate on Paper, with the watch notes in the margin beside it. The watch notes are the
+  Source's Free text. Ctrl+Enter (⌘↵) or the Stamp button puts the second the video is at where
+  the cursor is; Ctrl+Shift+Enter plays or pauses and Alt+Enter plays from the timestamp before
+  the cursor, without leaving the notes.
+- YouTube's code runs only inside the player's own frame, on YouTube's origin, never in Glose's
+  page, so it cannot reach the Graph: Glose
+  talks to the frame with window messages (play, pause, go to a second; it hears the time and the
+  player's state), and believes only messages from that frame. A player that has not answered
+  after 15 seconds counts as offline.
+- Every view of a Video's notes (the Watch step, the Free text on a later step) shares one draft
+  per Video, and the notes of all Videos are saved through one queue of their own, one at a time
+  and apart from other Free text saves, so words typed just before the view changes are written,
+  in order. "Done watching" writes words not yet saved; with none, it only moves the step on, so
+  lines added in another editor meanwhile stay. Leaving the page starts a save at once. Words not
+  yet saved are also kept in the app's local storage, so a reload in the moment before a save
+  loses nothing: the next view of the Video brings them back when the file holds the text they
+  were typed on (or the text a save was writing). Not yet: the desktop app starts its server on a
+  new port each launch, and local storage belongs to one port, so after a quit and relaunch only
+  the save started on leaving protects those words. A port kept from launch to launch would fix
+  this for every local-storage setting of the app.
+- A timestamp is a Markdown link to that second on YouTube,
+  `[12:34](https://www.youtube.com/watch?v=<id>&t=754s)`, so it works in Obsidian and any other
+  editor; a bare `[12:34]` typed by hand counts too. A link counts only when it is this Video and
+  every time it carries (`t`, `start`, `time_continue`, `#t=`) is the time it shows, so the file and Glose never disagree; a timestamp in code
+  does not count. In Glose it shows as its time in Courier, and a
+  click plays the video from there.
+- Under the video, Timestamps lists every moment of the notes in the order of the video, each with
+  the words after it, the one playing marked with the Gilt edge; a click plays from there. "Done
+  watching" leads to Extraction.
+- A Point from the watch notes takes the timestamp its quote comes after as its Location, checked
+  in code like a paragraph number; the AI reads the notes with timestamps written short
+  (`[12:34]`), names the timestamp it quotes from, and is told it has not seen the video. A quote
+  stays inside one timestamp's words. When the same words come after two timestamps and the AI
+  names neither, the Point gets no Location rather than a wrong one. A Note keeps the time as `page: "12:34"`, quoted so a
+  YAML 1.1 reader keeps it a time. The Location field says Time for a Video.
+- A Note with a timestamp shows it on its call number (`SIN 2009 · 4:10`) and has "Watch from 4:10"
+  in the Graph, which opens the Watch view there (`/sources/<Source>?t=250`). From the later steps,
+  "Watch the video" opens it too (`?watch=1`).
+- Citations of a Video name the speaker, the title, the channel, the year and "YouTube video" or
+  "[Video]", with the address; a time is cited as it is (APA "Sinek, 2009, 4:10"). A missing
+  channel warns, as a missing publisher does for a book. A Reference to a time is written
+  `[[Source]]{4:10}`, without "p.".
+- Without internet, or when the owner does not allow the video outside YouTube, the screen says so
+  and offers "Open on YouTube"; a timestamp then opens YouTube at its second, and the notes still
+  save. The player speaks the interface language, and reloads at the same second when it changes.
+- A time is read as a time only for a Video: a book's Location `3:16` stays "p. 3:16".
+- Add Source binds a look-up to its address: a new address drops the answer for the old one and
+  empties the fields that answer filled; an answer never overwrites what the user typed meanwhile.
+- Not yet: other video sites, the video's chapters, playback speed keys, and timestamps inside a
+  Note's own text opening the video in Glose.
 
 ## Decided, the Probe (November 2026)
 

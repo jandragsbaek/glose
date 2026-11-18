@@ -8,6 +8,7 @@ import { type FormEvent, useId, useRef, useState } from "react";
 
 import { AddArticle } from "../components/AddArticle.tsx";
 import { AddLessons } from "../components/AddLessons.tsx";
+import { AddVideo } from "../components/AddVideo.tsx";
 import {
   FillLine,
   focusAfterRender,
@@ -27,13 +28,15 @@ import {
 import { useT } from "../i18n/I18n.tsx";
 import { createSourceAtom, KEYS, searchCatalogAtom } from "../state/graph.ts";
 
-type AddKind = "book" | "article" | "lesson";
-const KINDS = ["book", "article", "lesson"] as const satisfies ReadonlyArray<AddKind>;
+type AddKind = "book" | "article" | "lesson" | "video";
+const KINDS = ["book", "article", "lesson", "video"] as const satisfies ReadonlyArray<AddKind>;
 
 export const Route = createFileRoute("/sources/new")({
   component: AddSource,
   validateSearch: (search: Record<string, unknown>): { readonly kind?: AddKind } =>
-    search.kind === "article" || search.kind === "lesson" ? { kind: search.kind } : {},
+    search.kind === "article" || search.kind === "lesson" || search.kind === "video"
+      ? { kind: search.kind }
+      : {},
 });
 
 function AddSource() {
@@ -79,6 +82,9 @@ function AddSource() {
         </div>
         <div hidden={kind !== "lesson"}>
           <AddLessons onSaving={setSaving} />
+        </div>
+        <div hidden={kind !== "video"}>
+          <AddVideo onSaving={setSaving} />
         </div>
       </div>
     </Page>

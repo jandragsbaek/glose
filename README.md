@@ -28,7 +28,7 @@ mise install
 pnpm install
 pnpm dev            # browser: server on :4310, web on http://localhost:5183
 pnpm dev:desktop    # the same, in an Electron window
-pnpm dev:demo       # the browser app on the demo Graph: 10 Sources, 104 linked Notes
+pnpm dev:demo       # the browser app on the demo Graph: 12 Sources, 105 linked Notes
 ```
 
 `pnpm dev:demo` (and `pnpm dev:demo:desktop`) copy `demo/Graph` to the temp folder and give the

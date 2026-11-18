@@ -52,6 +52,11 @@ A **Source** that is one lesson of a course, imported as Markdown with the cours
 It brings its own text, read in Glose; the course is where it appeared, as a journal is for a paper.
 _Avoid_: module, unit, chapter, lecture
 
+**Video**:
+A **Source** that is a talk or another video on YouTube, watched in Glose. It brings no text; its
+**Free text** is written while watching, with timestamps, and a timestamp is its **Location**.
+_Avoid_: clip, recording, talk (as the term), media
+
 **Passage**:
 Words of an **Article** or a **Course lesson** that the user marks while reading. The user's own
 words on it are kept with it. A **Passage** can be taken deeper in the **Probe**, or become a
@@ -156,8 +161,12 @@ The text the tool builds from a **Reference** in the style the **Writing project
 ## Relationships
 
 - Every **Note** has a **Source**; **Links** join **Notes** into the **Graph**
-- A **Source** is a book (read elsewhere), an **Article** or a **Course lesson**; the last two bring
-  their text, so the Reading **Stage** starts by reading it in Glose and marking **Passages**
+- A **Source** is a book (read elsewhere), an **Article**, a **Course lesson** or a **Video**; an
+  **Article** and a **Course lesson** bring their text, so the Reading **Stage** starts by reading it
+  in Glose and marking **Passages**; a **Video** starts by watching it in Glose and writing the
+  **Free text** beside it
+- A **Point** from words of a **Video**'s **Free text** takes the timestamp before those words as
+  its **Location**
 - A new **Source** can be filled in from a **Catalog**; the **Source** file, not the **Catalog**,
   is the truth
 - A **Probe** is a **Session**; the user's **Reasoning** in it is kept

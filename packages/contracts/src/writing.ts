@@ -1,7 +1,8 @@
 import * as Schema from "effect/Schema";
 
 import { type GraphNode, linkKey, MARKDOWN_CODE } from "./graph.ts";
-import type { Source } from "./source.ts";
+import { citedByContainer, type Source } from "./source.ts";
+import { isTimestamp } from "./video.ts";
 
 export const WritingProjectType = Schema.Literals(["blog-post", "assignment"]);
 export type WritingProjectType = typeof WritingProjectType.Type;
@@ -120,8 +121,10 @@ export const parseLocation = (raw: string | undefined): string | null => {
   return text === "" ? null : text;
 };
 
-export const referenceToken = (target: string, location: string | null): string =>
-  location === null ? `[[${target}]]` : `[[${target}]]{p. ${location}}`;
+export const referenceToken = (target: string, location: string | null, video = false): string =>
+  location === null
+    ? `[[${target}]]`
+    : `[[${target}]]{${video && isTimestamp(location) ? location : `p. ${location}`}}`;
 
 export const findReferences = (body: string): ReadonlyArray<ReferenceToken> => {
   const code = Array.from(body.matchAll(MARKDOWN_CODE), (match) => ({
@@ -168,6 +171,8 @@ export type CitedSource = Pick<
 
 const hasOwnTextKind = (source: CitedSource) =>
   source.kind === "article" || source.kind === "lesson";
+
+const isVideo = (source: CitedSource) => source.kind === "video";
 
 export type ReferenceProblem =
   | "not-found"
@@ -229,7 +234,7 @@ export const resolveReferences = (
     if (problems.length === 0 && source !== null) {
       if (page === null) problems.push("no-location");
       if (source.firstPublished === null && source.editionYear === null) problems.push("no-year");
-      if (hasOwnTextKind(source)) {
+      if (citedByContainer(source.kind ?? "book")) {
         if ((source.container ?? null) === null) problems.push("no-container");
       } else if (source.publisher === null) problems.push("no-publisher");
     }
@@ -267,7 +272,8 @@ const yearText = (source: CitedSource) => String(citedYear(source) ?? "n.d.");
 
 const PARAGRAPH = /^¶\s*(.+)$/;
 
-const locationText = (page: string, style: CitationStyle | "note") => {
+const locationText = (source: CitedSource, page: string, style: CitationStyle | "note") => {
+  if (isVideo(source) && isTimestamp(page)) return page;
   const paragraph = PARAGRAPH.exec(page)?.[1];
   if (paragraph === undefined) return style === "apa" || style === "harvard" ? `p. ${page}` : page;
   return style === "apa" || style === "harvard" ? `para. ${paragraph}` : `par. ${paragraph}`;
@@ -275,11 +281,18 @@ const locationText = (page: string, style: CitationStyle | "note") => {
 
 const textCitation = (source: CitedSource, page: string | null) => {
   const container = source.container == null ? "" : ` *${source.container}*`;
-  const location = page === null ? "" : `, ${locationText(page, "note")}`;
+  const location = page === null ? "" : `, ${locationText(source, page, "note")}`;
   return `${authorName(source)}, “${source.title},”${container} (${yearText(source)})${location}.`;
 };
 
+const videoCitation = (source: CitedSource, page: string | null) => {
+  const channel = source.container == null ? "" : ` ${source.container},`;
+  const location = page === null ? "" : `, ${locationText(source, page, "note")}`;
+  return `${authorName(source)}, “${source.title},”${channel} YouTube video (${yearText(source)})${location}.`;
+};
+
 export const noteCitation = (source: CitedSource, page: string | null): string => {
+  if (isVideo(source)) return videoCitation(source, page);
   if (hasOwnTextKind(source)) return textCitation(source, page);
   const translated = source.translator === null ? "" : `, trans. ${source.translator}`;
   const edition = source.edition === null ? "" : `, ${source.edition} ed.`;
@@ -295,11 +308,11 @@ export const shortCitation = (
 ): string => {
   switch (style) {
     case "apa":
-      return `${source.familyName}, ${yearText(source)}${page === null ? "" : `, ${locationText(page, style)}`}`;
+      return `${source.familyName}, ${yearText(source)}${page === null ? "" : `, ${locationText(source, page, style)}`}`;
     case "harvard":
-      return `${source.familyName} ${yearText(source)}${page === null ? "" : `, ${locationText(page, style)}`}`;
+      return `${source.familyName} ${yearText(source)}${page === null ? "" : `, ${locationText(source, page, style)}`}`;
     case "chicago":
-      return `${source.familyName} ${yearText(source)}${page === null ? "" : `, ${locationText(page, style)}`}`;
+      return `${source.familyName} ${yearText(source)}${page === null ? "" : `, ${locationText(source, page, style)}`}`;
   }
 };
 
@@ -318,7 +331,25 @@ const textEntry = (source: CitedSource, style: CitationStyle): string => {
   return `${name}${year} ${source.title}.${container}${url}`;
 };
 
+const videoEntry = (source: CitedSource, style: CitationStyle): string => {
+  const url = source.url == null ? "" : ` ${source.url}`;
+  if (style === "chicago") {
+    const name =
+      source.givenName === null ? source.familyName : `${source.familyName}, ${source.givenName}`;
+    const channel = source.container == null ? "" : ` ${source.container},`;
+    return `${name}. “${source.title}.”${channel} ${yearText(source)}. YouTube video.${url}`;
+  }
+  const given = initials(source.givenName);
+  const name = given === null ? source.familyName : `${source.familyName}, ${given}`;
+  const year = style === "apa" ? ` (${yearText(source)}).` : ` (${yearText(source)})`;
+  if (style === "apa") return `${name}${year} *${source.title}* [Video]. YouTube.${url}`;
+  const channel = source.container == null ? "" : ` ${source.container}.`;
+  const address = source.url == null ? "" : ` Available at: ${source.url}`;
+  return `${name}${year} *${source.title}* [Video].${channel}${address}`;
+};
+
 export const bibliographyEntry = (source: CitedSource, style: CitationStyle): string => {
+  if (isVideo(source)) return videoEntry(source, style);
   if (hasOwnTextKind(source)) return textEntry(source, style);
   const publisher = source.publisher === null ? "" : ` ${source.publisher}.`;
   switch (style) {

@@ -7,6 +7,7 @@ import {
   noteCitation,
   postFileName,
   renderBlogPost,
+  referenceToken,
   resolveReferences,
   shortCitation,
 } from "./writing.ts";
@@ -148,6 +149,64 @@ describe("Citations of an Article or a Course lesson", () => {
       [],
       [{ ...HOLM, container: null }],
     );
+    assert.deepStrictEqual(reference?.problems, ["no-container"]);
+  });
+});
+
+describe("Citations of a Video", () => {
+  const SINEK: CitedSource = {
+    id: "Sinek 2009 Start with why",
+    familyName: "Sinek",
+    givenName: "Simon",
+    title: "Start with why",
+    firstPublished: 2009,
+    edition: null,
+    editionYear: null,
+    publisher: null,
+    translator: null,
+    kind: "video",
+    container: "TEDx Talks",
+    url: "https://www.youtube.com/watch?v=u4ZoJKF_VuA",
+  };
+
+  it("cites the time in the video, the channel and the address", () => {
+    assert.strictEqual(
+      noteCitation(SINEK, "12:34"),
+      "Simon Sinek, “Start with why,” TEDx Talks, YouTube video (2009), 12:34.",
+    );
+    assert.strictEqual(shortCitation(SINEK, "12:34", "apa"), "Sinek, 2009, 12:34");
+    assert.strictEqual(shortCitation(SINEK, "1:02:03", "chicago"), "Sinek 2009, 1:02:03");
+    assert.strictEqual(
+      bibliographyEntry(SINEK, "apa"),
+      "Sinek, S. (2009). *Start with why* [Video]. YouTube. https://www.youtube.com/watch?v=u4ZoJKF_VuA",
+    );
+    assert.strictEqual(
+      bibliographyEntry(SINEK, "harvard"),
+      "Sinek, S. (2009) *Start with why* [Video]. TEDx Talks. Available at: https://www.youtube.com/watch?v=u4ZoJKF_VuA",
+    );
+    assert.strictEqual(
+      bibliographyEntry(SINEK, "chicago"),
+      "Sinek, Simon. “Start with why.” TEDx Talks, 2009. YouTube video. https://www.youtube.com/watch?v=u4ZoJKF_VuA",
+    );
+  });
+
+  it("writes a time as a time in the prose, and asks for the channel instead of a publisher", () => {
+    assert.strictEqual(
+      referenceToken(SINEK.id, "12:34", true),
+      "[[Sinek 2009 Start with why]]{12:34}",
+    );
+    assert.strictEqual(referenceToken("A book", "3:16"), "[[A book]]{p. 3:16}");
+    assert.strictEqual(referenceToken(SINEK.id, "64"), "[[Sinek 2009 Start with why]]{p. 64}");
+    assert.strictEqual(
+      shortCitation({ ...SINEK, kind: "book" }, "3:16", "apa"),
+      "Sinek, 2009, p. 3:16",
+    );
+    const [reference] = resolveReferences(
+      "A claim.[[Sinek 2009 Start with why]]{12:34}",
+      [],
+      [{ ...SINEK, container: null }],
+    );
+    assert.strictEqual(reference?.page, "12:34");
     assert.deepStrictEqual(reference?.problems, ["no-container"]);
   });
 });

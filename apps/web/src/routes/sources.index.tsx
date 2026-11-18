@@ -29,6 +29,7 @@ import {
   sourceRecords,
 } from "../domain/register.ts";
 import { wordCount, onDesk } from "../domain/source.ts";
+import { cuesOf, videoIdOf } from "../domain/video.ts";
 import { useLanguage, useT } from "../i18n/I18n.tsx";
 import { graphAtom, sourcesAtom } from "../state/graph.ts";
 
@@ -107,7 +108,7 @@ function ReadingMarks({
   const t = useT();
   const steps = readingStepsOf(start, kind);
   const at = step === "done" ? steps.length : steps.indexOf(step);
-  const label = t.sources.steps[step];
+  const label = kind === "video" && step === "free-text" ? t.watch.inStep : t.sources.steps[step];
   return (
     <span
       className="marks"
@@ -183,7 +184,9 @@ function DeskItem({ record }: { readonly record: SourceRecord }) {
             kind={source.kind}
             labelled={false}
           />
-          {t.sources.state(source.readingStep, wordCount(source.freeText), record.notes)}
+          {source.kind === "video" && source.readingStep === "free-text"
+            ? t.watch.deskState(cuesOf(source.freeText, videoIdOf(source.url)).length)
+            : t.sources.state(source.readingStep, wordCount(source.freeText), record.notes)}
         </p>
         {record.missing.length === 0 ? null : (
           <p className="inline-warning desk__missing">

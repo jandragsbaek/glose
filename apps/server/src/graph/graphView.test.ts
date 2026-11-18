@@ -136,7 +136,7 @@ describe("buildGraphView", () => {
     );
     const view = buildGraphView(files);
 
-    assert.strictEqual(view.nodes.filter((node) => node.kind === "source").length, 11);
+    assert.strictEqual(view.nodes.filter((node) => node.kind === "source").length, 12);
     assert.isTrue(view.nodes.every((node) => node.kind === "source" || node.sourceId !== null));
     assert.strictEqual(view.links.length, written);
   });

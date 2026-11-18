@@ -155,6 +155,7 @@ function ExtractionView({
                 <WritePoint
                   session={session}
                   point={point}
+                  video={source.kind === "video"}
                   shown={point.id === writing.id}
                   about={about?.id === point.id}
                   onAbout={() => setAbout(point.id)}
@@ -170,7 +171,12 @@ function ExtractionView({
               {groups.kept
                 .filter((point) => point.id !== writing?.id)
                 .map((point) => (
-                  <PointRow key={point.id} point={point} about={about?.id === point.id}>
+                  <PointRow
+                    key={point.id}
+                    point={point}
+                    video={source.kind === "video"}
+                    about={about?.id === point.id}
+                  >
                     <button
                       type="button"
                       className="button button--small"
@@ -188,6 +194,7 @@ function ExtractionView({
         ) : null}
         {groups.open.length === 0 ? null : (
           <ProposedPoints
+            video={source.kind === "video"}
             session={session}
             points={groups.open}
             aboutId={about?.id}
@@ -228,7 +235,7 @@ function ExtractionView({
             </ul>
           </div>
         )}
-        <PointsFoot session={session} dropped={groups.dropped} />
+        <PointsFoot session={session} dropped={groups.dropped} video={source.kind === "video"} />
         {source.readingStep === "extraction" ? <NextStep source={source} /> : null}
       </PointsPanel>
     </Desk>

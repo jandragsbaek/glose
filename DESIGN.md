@@ -773,8 +773,8 @@ narrows to 64px.
 
 Add Source (`/sources/new`) is one column up to 760px for every kind, so switching kinds never
 moves the page: the Kind Choice with its one-line hint 8px under it, then, 20px below, one panel
-for the kind ("The book", "The article", "The course"). The panel's first body is the way in (the
-catalog search, or the Drop Zone); under a Hairline the second holds the data, fields 16px apart;
+for the kind ("The book", "The article", "The course", "The video"). The panel's first body is the
+way in (the catalog search, the Drop Zone, or a Video's YouTube address with Look up); under a Hairline the second holds the data, fields 16px apart;
 the Panel Foot ends it. Course lessons puts the course data first and then sets its table across
 the panel, just above the foot. Each kind keeps what the user typed while another kind is shown. One Lapis button per
 state: for an Article and Course lessons, the way in while it is open, then the foot's submit
@@ -1346,17 +1346,61 @@ and the lesson after as a secondary button with a right arrow, each named by its
 ("Week 1 · Day 3"; screen readers hear "Next lesson: Week 1 · Day 3") with the lesson's title as its
 tooltip. 8px apart; it wraps. The first lesson has only the next; the last only the one before.
 
+### Watch (signature: The Cue Sheet)
+
+The Watch step of a Video (at `/sources/<id>` while it is the step, with `?watch=1` or `?t=<s>`
+from a later step): the video as a plate, its timestamps under it like a film's cue sheet, and the
+watch notes in the margin. Mode: Operate while watching, Read when going back.
+
+- **Layout:** the Page head (title; the speaker, the channel or event after a Mute "·", the call
+  number; "Open on YouTube" as a quiet action with an external-link icon, at the second the video
+  is at). Under it the Reader's Ground band: the Step Bar (Watch · Extraction · Probe; Watch's note
+  counts timestamps and words) and a Mute 13px line that names the keys ("Ctrl+Enter stamps the
+  time · Ctrl+Shift+Enter plays or pauses · Alt+Enter plays from the timestamp before the
+  cursor", ⌘ on a Mac). Then two columns, `up to 880px |
+  320–400px`, 32px apart, centred, 32px at the sides, each scrolling on its own (24px top). Below
+  1080px they stack, the notes under the cues, and the page scrolls as one.
+- **Plate:** a Paper sheet with a Hairline border and 12px padding around a 16:9 frame (2px
+  corners) that holds YouTube's player. Until the player is ready the frame is Tray with a Mute
+  13px "Loading the video" in its middle. When the video cannot play (no internet, the owner
+  refuses other sites, a removed video), the frame says why in Ink 14px under a 20px Rubric
+  triangle, with "Open on YouTube" (secondary) under it.
+- **Cues:** 28px under the plate, "Timestamps" in the panel-heading set with a lapis Initial over
+  a Hairline, then one row per timestamp in the order of the video: a button (8px 0 8px 12px, a
+  Hairline under it) of the time in the Call set in Lapis 700 (72px column) and the words after it
+  in Ink 14px, one line, cut with an ellipsis; a stamp with no words yet says "no words yet" in
+  Mute italic. The moment the video is at turns 600 and wears the 3px Gilt edge, with
+  `aria-current="time"`. Hover underlines the words; a click plays from there. Empty, one Mute
+  13px line says how to stamp.
+- **Done watching:** the Done Reading colophon, 48px under the cues: the title with a rubric
+  Initial beside a Mute tabular count ("4 timestamps · 130 words"), a Mute 14px line on what
+  Extraction does with the times, and one primary "Continue to Extraction" (or "Skip to
+  Extraction" with no notes) with a right arrow. From a later step it is "Back to the step".
+- **Watch notes:** the margin Panel (rubric Initial, the word count as meta): a Meta hint that
+  they are the Free text, then the notes field: a CodeMirror field in the Input's dress (Strong
+  Hairline, 4px, Paper, 15px/1.6, 10px 12px; focus is the Lapis border and halo) that fits the
+  window and scrolls inside, so the Stamp button stays in view. A timestamp in it is drawn as its
+  time: Courier 700 12px Lapis on Lapis Tint, 2px corners, one unit for the cursor; hover
+  underlines it; a click plays from there. The Save Line follows. Under a Hairline: the Stamp
+  button (secondary, "Stamp 12:34" with the live time and a Ctrl+↵ key cap; off until the player is
+  ready) and a Meta hint on how to play from a timestamp (a click, or Alt+Enter after it).
+- **Elsewhere:** a Note with a timestamp shows it on its call number (`SIN 2009 · 4:10`) and, in
+  the Graph's side panel, a 13px Lapis link with a 14px play icon, "Watch from 4:10". On a later
+  step the Free text panel is the watch notes without the player; a timestamp there opens the
+  Watch view at its time.
+
 ### Kind Choice
 
-The first question on Add Source: three joined segments in one Paper box with a Strong Hairline
-border and dividers (4px, 40px tall, 0 18px): Book, Article, Course lessons, each name 600 14px.
+The first question on Add Source: four joined segments in one Paper box with a Strong Hairline
+border and dividers (4px, 40px tall, 0 18px): Book, Article, Course lessons, Video, each name 600
+14px.
 The question "What are you adding?" is the group's accessible name, not shown. Under it, 8px down,
 one Mute 14px line says what Glose does with the checked kind ("You read it elsewhere. Glose keeps
 your Free text and Notes."), and the group names it as its description. Hover fills a segment
 Lapis Tint; checked fills it Lapis Tint, turns the name Lapis and adds a 3px Gilt underline inside
 its foot; keyboard focus draws the 2px Lapis outline inside. 160ms on the shared ease-out. The
-segments wrap in a narrow window. The kind lives in the address (`?kind=article|lesson`; Book is
-the default). While any kind saves, the choice is locked, so one save cannot meet another.
+segments wrap in a narrow window. The kind lives in the address (`?kind=article|lesson|video`;
+Book is the default). While any kind saves, the choice is locked, so one save cannot meet another.
 
 ### Catalog Results
 
@@ -2077,7 +2121,7 @@ Skeleton bars (14px, 2px corners) shimmer Tint to Ground over 1.4s inside a pane
   new fields of color beyond the lapis rail, spine, primary and the Settings window's spine.
 - **Don't** use Cinzel Decorative beyond a single heading initial, or Courier Prime beyond call
   numbers, step numbers, question numbers, repository names, a code the user types elsewhere,
-  paragraph and note numbers, and a lesson's week·day.
+  paragraph and note numbers, a lesson's week·day, and a timestamp in a Video.
 - **Don't** set code in an Article in Courier Prime; it is text, in the system monospace stack.
 - **Don't** mark AI text with Gilt Wash; Gilt Wash is the reader's own selection and Passages.
 - **Don't** cover the heading or the line the reader is selecting with the Mark Bar; flip it below.

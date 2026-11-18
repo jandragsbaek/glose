@@ -1,12 +1,15 @@
 import {
   choiceResult,
+  hasOwnText,
   judgmentsOf,
   type Language,
   linkKey,
+  plainStamps,
   probeFindings,
   type ReadingStart,
   type SessionEntry,
   type SourceKind,
+  youtubeId,
 } from "@glose/contracts";
 import * as Effect from "effect/Effect";
 
@@ -65,6 +68,12 @@ const START_NOTES: Record<ReadingStart, string> = {
 const TEXT_NOTE =
   "This Source is an Article or a Course lesson, read in Glose: read_article gives its text and the Passages the user marked.";
 
+const VIDEO_NOTE =
+  "This Source is a Video (a talk or another video on YouTube) that the user watched in Glose. You have not seen it, and Glose holds no transcript. Its Free text is the user's watch notes, where [12:34] marks the time in the video the words after it are about. Plan your topics from the notes and question the user on what they say and on the subject they cover. Teach only what you truly know of the subject, and say plainly that you have not seen the talk; when a teaching rests on the user's notes, name the timestamp.";
+
+const kindNote = (kind: SourceKind) =>
+  kind === "video" ? ` ${VIDEO_NOTE}` : hasOwnText(kind) ? ` ${TEXT_NOTE}` : "";
+
 export const kickoff = (
   language: Language,
   start: ReadingStart,
@@ -72,7 +81,7 @@ export const kickoff = (
 ): InputItem => ({
   type: "message",
   role: "developer",
-  content: `Start the Probe now. The user's interface language is ${LANGUAGE_NAMES[language]}. ${START_NOTES[start]}${kind === "book" ? "" : ` ${TEXT_NOTE}`}`,
+  content: `Start the Probe now. The user's interface language is ${LANGUAGE_NAMES[language]}. ${START_NOTES[start]}${kindNote(kind)}`,
 });
 
 export const readingKickoff = (language: Language): InputItem => ({
@@ -185,7 +194,10 @@ export const tools = ({ sources, graph, source, update }: Context): AgentTool[] 
           translator: found.translator,
           readingStart: found.readingStart,
           readingStep: found.readingStep,
-          freeText: found.freeText,
+          freeText:
+            found.kind === "video"
+              ? plainStamps(found.freeText, youtubeId(found.url ?? ""))
+              : found.freeText,
         })),
         Effect.orElseSucceed(() => ({ error: "The Source could not be read." })),
       ),

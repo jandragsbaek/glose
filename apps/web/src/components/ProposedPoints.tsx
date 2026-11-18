@@ -11,12 +11,14 @@ import { Notice } from "./ui.tsx";
 export function ProposedPoints({
   session,
   points,
+  video,
   aboutId,
   onKept,
   onDiscuss,
 }: {
   readonly session: Session;
   readonly points: ReadonlyArray<Point>;
+  readonly video: boolean;
   readonly aboutId: string | undefined;
   readonly onKept: (point: string) => void;
   readonly onDiscuss: (point: string) => void;
@@ -39,7 +41,7 @@ export function ProposedPoints({
         </p>
         <ol className="point-rows">
           {points.map((point) => (
-            <PointRow key={point.id} point={point} about={aboutId === point.id}>
+            <PointRow key={point.id} point={point} video={video} about={aboutId === point.id}>
               <button
                 type="button"
                 className="button button--small"

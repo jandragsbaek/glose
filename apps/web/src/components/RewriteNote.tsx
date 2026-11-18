@@ -251,10 +251,11 @@ export function RewriteNote({
               </p>
             ) : null}
             <label className="write__page rewrite__page" htmlFor={pageId}>
-              {t.rewrite.page}
+              {source?.kind === "video" ? t.watch.time : t.rewrite.page}
               <input
                 id={pageId}
                 className="input"
+                placeholder={source?.kind === "video" ? t.watch.timePlaceholder : undefined}
                 value={page}
                 onChange={(event) => setPage(event.target.value)}
               />
