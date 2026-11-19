@@ -1831,9 +1831,9 @@ Reference's gloss in the right margin beside its line, and the AI review's flags
 
 - **Bar:** two groups that wrap as wholes. The first: "Writing projects /" in Mute 600 13px, the
   title in 600 15px (it wraps; never cut), the Settings Slip chip. The second, pushed right: the
-  save state in Mute 13px, Write | Proof as a Segmented control, then the Graph toggle (from a 1200px window; see Graph
+  save state in Mute 13px, Write | Preview as a Segmented control, then the Graph toggle (from a 1200px window; see Graph
   Beside the Desk), then in Write "Cite a Note"
-  (secondary with a Key Cap, ⌘K or Ctrl+K) and "Ask the AI to check" (quiet); in Proof the post's
+  (secondary with a Key Cap, ⌘K or Ctrl+K) and "Ask the AI to check" (quiet); in Preview the post's
   path in Courier 12px Mute and "Write to site" (primary; "Choose your site" until a site folder is
   set). When the two do not fit on one row, the second drops under the first as one row. A
   one-line note under the bar reports the AI review or the Publication.
@@ -1844,7 +1844,7 @@ Reference's gloss in the right margin beside its line, and the AI review's flags
   with no chrome; Gilt Wash selection, Lapis caret, spellcheck on, `lang` from the piece.
 - **Formatting in Write:** the text shows as it will read. `## ` is a heading (700 22px/1.3, 18px
   above), `### ` a subheading (700 18px), `**bold**` 700, `*italic*` italic; one parser serves
-  Write and Proof. The marks are hidden and come back in Strong Hairline grey on the line or span
+  Write and Preview. The marks are hidden and come back in Strong Hairline grey on the line or span
   the caret is in. ⌘B and ⌘I work on the words chosen, not on
   the marks: the style comes on, or off when every chosen word has it, only for those words, and
   Glose writes the marks again so other styles stay whole (`**one** two **three**` after taking
@@ -1860,7 +1860,7 @@ Reference's gloss in the right margin beside its line, and the AI review's flags
   its tooltip and `aria-keyshortcuts`. ⌘K cites from anywhere on the desk in Write.
 - **References in the text:** a Reference is its number, raised, Courier 700 12px Lapis (Rubric
   when a check flags it); it is one atom, deleted whole. Two side by side read "⁶,⁷". A space typed
-  before it is not shown in Write nor printed in Proof or the post. A click on the number, or ⌘K
+  before it is not shown in Write nor printed in Preview or the post. A click on the number, or ⌘K
   with the caret just before it, opens the Cite Slip to change or remove it; ⌘K just after it
   cites anew. A new
   Reference sets against the word before it ("obvious⁶"), after end punctuation ("word.⁶").
@@ -1879,7 +1879,7 @@ Reference's gloss in the right margin beside its line, and the AI review's flags
   margins. From 864px to 1103px the leaf (up to 680px) keeps the glosses beside it (200 to 260px) and
   the AI's flags fold under the leaf. Below 864px both margins fold under the leaf, which keeps its
   680px measure. The glosses' placement reads the CSS's choice, so the two never disagree.
-- **Proof:** the leaf shows the post as readers will see it, in its Reference form: raised
+- **Preview:** the leaf shows the post as readers will see it, in its Reference form: raised
   numbers and a numbered note list under a Hairline (footnotes), the short Citation in brackets and
   a list of Sources (links + list), or notes under each paragraph (side notes). A flagged
   Reference's number is Rubric; the note text stays as the site will print it, and the problem
@@ -1942,7 +1942,7 @@ shadow, up to 600px wide inside the leaf; the leaf grows under it so it never ha
 The Graph laid beside the Writing Desk, to read Notes and follow their Links while writing. It reads;
 it never writes or cites (citing stays in the Cite Slip). From a 1200px window only.
 
-- **Toggle:** "Graph" in the desk bar after Write | Proof, in both modes: a secondary button with a
+- **Toggle:** "Graph" in the desk bar after Write | Preview, in both modes: a secondary button with a
   16px Lucide waypoints icon and a ⌘G (Ctrl+G) Key Cap (the cap hides under 1400px so the bar keeps
   one row). Pressed, it is Lapis Tint with a Lapis border and label, `aria-pressed` and
   `aria-controls`. It is off until the Graph has loaded. Each piece remembers whether its panel is
@@ -1952,7 +1952,7 @@ it never writes or cites (citing stays in the Cite Slip). From a 1200px window o
   meeting at the Crease (see Elevation & Depth): a Strong Hairline, each page shaded into it like
   the fold of an open book. Opening or closing keeps the line the writer was at (the caret if in view,
   else the top line) at the same height; closing from inside the panel returns focus to the text
-  (Write) or the toggle (Proof).
+  (Write) or the toggle (Preview).
 - **Stage:** the top 40% of the panel (at least 200px; 34% and 170px under an 800px-tall window) on
   Ground, a Hairline under it. The Graph canvas as on the Graph page, with three marks: Notes the
   piece cites wear a 1.5px Lapis ring; the open Note a 2.5px Gilt ring; the trail is one 3px Lapis

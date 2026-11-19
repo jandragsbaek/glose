@@ -80,7 +80,7 @@ export const writingMessages: Pick<Messages, "writing"> = {
     notSaved: "Ikke gemt",
     mode: "Visning",
     write: "Skriv",
-    proof: "Korrektur",
+    proof: "Forhåndsvisning",
     cite: "Henvis til en note",
     settingsOfPiece: "Indstillinger for teksten",
     typeLabel: "Teksten er et",
@@ -139,6 +139,8 @@ export const writingMessages: Pick<Messages, "writing"> = {
     reviewing: "AI'en læser din tekst…",
     reviewed: (claims: number, notes: number, questions: number) =>
       `AI'en markerede ${count(claims, "påstand", "påstande")}, foreslog ${count(notes, "note", "noter")} og stillede ${count(questions, "spørgsmål", "spørgsmål")}.`,
+    showQuestions: (n: number) =>
+      n === 1 ? "Læs det i forhåndsvisningen" : "Læs dem i forhåndsvisningen",
     reviewOff: "Forbind ChatGPT i Indstillinger, så AI'en kan tjekke din tekst.",
     reviewFailed: "AI'en kunne ikke tjekke teksten. Prøv igen.",
     citeTitle: "Henvis til en note",

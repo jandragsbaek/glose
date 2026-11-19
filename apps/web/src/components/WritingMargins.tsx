@@ -60,6 +60,25 @@ export function useMarginPlacement(editor: RefObject<ProseHandle | null>, mode: 
   return { leftMargin, rightMargin, editorBox, latestPlace };
 }
 
+export type ShownReview = Pick<WritingReview, "claims" | "suggestions" | "questions">;
+
+export const shownReview = (
+  review: WritingReview | null,
+  body: string,
+  references: ReadonlyArray<ResolvedReference>,
+): ShownReview | null =>
+  review === null
+    ? null
+    : {
+        claims: review.claims.filter((claim) => body.includes(claim.excerpt)),
+        suggestions: review.suggestions.filter(
+          (suggestion) =>
+            body.includes(suggestion.excerpt) &&
+            !references.some((reference) => reference.noteId === suggestion.noteId),
+        ),
+        questions: review.questions,
+      };
+
 const sourceIdOf = (reference: ResolvedReference) => reference.source?.id ?? null;
 
 export function ReviewFlags({
@@ -318,11 +337,11 @@ export function Checks({
 }
 
 export function Questions({
-  review,
+  questions,
   running,
   onAsk,
 }: {
-  readonly review: WritingReview | null;
+  readonly questions: WritingReview["questions"];
   readonly running: boolean;
   readonly onAsk: () => void;
 }) {
@@ -332,10 +351,10 @@ export function Questions({
       <h2 className="margin-heading" id="questions-title">
         {t.writing.questionsTitle}
       </h2>
-      {review === null || review.questions.length === 0 ? (
+      {questions.length === 0 ? (
         <p className="questions__empty">{t.writing.questionsEmpty}</p>
       ) : (
-        review.questions.map((question) => (
+        questions.map((question) => (
           <div key={question.question} className="question">
             <p className="question__about">
               {question.excerpt === null
