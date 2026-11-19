@@ -53,6 +53,7 @@ const GITIGNORE = [
   "desktop.ini",
   ".obsidian/workspace*.json",
   ".trash/",
+  "/Course videos/",
   "",
 ].join("\n");
 

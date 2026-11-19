@@ -16,6 +16,8 @@ const BOOK: Source = {
   translator: null,
   ...BOOK_TEXT_DETAILS,
   hasText: false,
+  videoLink: null,
+  videoFile: null,
   readingPlace: null,
   readingStep: "free-text",
   readingStart: null,

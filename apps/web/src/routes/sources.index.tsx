@@ -1,10 +1,5 @@
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
-import {
-  type ReadingStart,
-  type ReadingStep,
-  readingStepsOf,
-  type SourceKind,
-} from "@glose/contracts";
+import type { Source } from "@glose/contracts";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { Check, ChevronDown, Plus, Search, TriangleAlert } from "lucide-react";
@@ -28,8 +23,10 @@ import {
   type SourceRecord,
   sourceRecords,
 } from "../domain/register.ts";
+import { coursesOf, shelfOf } from "../domain/course.ts";
 import { wordCount, onDesk } from "../domain/source.ts";
 import { cuesOf, videoIdOf } from "../domain/video.ts";
+import { ReadingMarks } from "../components/ReadingMarks.tsx";
 import { useLanguage, useT } from "../i18n/I18n.tsx";
 import { graphAtom, sourcesAtom } from "../state/vault.ts";
 
@@ -88,40 +85,55 @@ function SourcesPage() {
     >
       <div className="stack">
         <Desk records={desk} empty={records.length === 0} />
+        <Courses sources={result.value[0]} />
         {records.length === 0 ? null : <Register records={records} />}
       </div>
     </Page>
   );
 }
 
-function ReadingMarks({
-  step,
-  start,
-  kind,
-  labelled,
-}: {
-  readonly step: ReadingStep;
-  readonly start: ReadingStart | null;
-  readonly kind: SourceKind;
-  readonly labelled: boolean;
-}) {
+function Courses({ sources }: { readonly sources: ReadonlyArray<Source> }) {
   const t = useT();
-  const steps = readingStepsOf(start, kind);
-  const at = step === "done" ? steps.length : steps.indexOf(step);
-  const label = kind === "video" && step === "free-text" ? t.watch.inStep : t.sources.steps[step];
+  const courses = coursesOf(sources);
+  if (courses.length === 0) return null;
   return (
-    <span
-      className="marks"
-      {...(labelled ? { role: "img", "aria-label": label, title: label } : { "aria-hidden": true })}
-    >
-      {steps.map((step, index) => (
-        <span
-          key={step}
-          className="marks__dot"
-          data-state={index < at ? "done" : index === at ? "current" : "later"}
-        />
-      ))}
-    </span>
+    <Panel title={t.course.courses} initial="accent" meta={t.course.coursesMeta(courses.length)}>
+      <div className="panel__body">
+        <ul className="courses">
+          {courses.map((course) => {
+            const read = course.lessons.filter((lesson) => lesson.readingStep === "done").length;
+            const teacher = [course.givenName, course.familyName].filter(Boolean).join(" ");
+            const params = { courseName: course.name };
+            return (
+              <li key={course.key} className="courses__item">
+                <Spine source={course} />
+                <div>
+                  <h3 className="courses__name">
+                    <Link to="/courses/$courseName" params={params}>
+                      {course.name}
+                    </Link>
+                  </h3>
+                  <p className="courses__line">{teacher}</p>
+                  <p className="courses__line">
+                    {t.course.courseLine(course.lessons.length, read, shelfOf(course.lessons).next)}
+                  </p>
+                  <p className="courses__action">
+                    <Link
+                      to="/courses/$courseName"
+                      params={params}
+                      className="button button--small"
+                      aria-label={t.course.courseLabel(course.name)}
+                    >
+                      {t.course.openCourse}
+                    </Link>
+                  </p>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </Panel>
   );
 }
 

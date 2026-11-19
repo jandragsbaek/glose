@@ -9449,3 +9449,422 @@ h4.article__heading {
   font: 700 0.75em var(--font-call);
   font-variant-numeric: tabular-nums;
 }
+
+/* The Course Shelf: a course's weeks as shelves of day spines, the chosen day's leaf beside them. */
+
+.course {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
+  gap: 20px;
+  align-items: start;
+}
+
+.course__hint {
+  color: var(--mute);
+  font-size: 13px;
+  max-width: 62ch;
+}
+
+.course__back {
+  margin-top: 16px;
+}
+
+.page-head__crumb {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.page-head__crumb:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.shelf {
+  list-style: none;
+  margin-top: 8px;
+}
+
+.shelf__week {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  align-items: end;
+  gap: 12px;
+  padding: 14px 0 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.shelf__week:last-child {
+  border-bottom: 0;
+}
+
+.shelf__label {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 30px;
+}
+
+.shelf__name {
+  font-weight: 600;
+}
+
+.shelf__count {
+  color: var(--mute);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The shelf board under the spines: a Strong Hairline the spines stand on. */
+.shelf__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  list-style: none;
+  padding: 0 8px;
+  background: linear-gradient(var(--line-strong), var(--line-strong)) left calc(100% - 38px) / 100%
+    3px no-repeat;
+}
+
+.shelf__day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 56px;
+}
+
+.day-spine {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  width: 44px;
+  height: 120px;
+  padding: 8px 0;
+  border: 0;
+  border-radius: 2px;
+  background: var(--field);
+  color: var(--on-field);
+  cursor: pointer;
+  transition:
+    background-color 160ms var(--ease-out),
+    border-color 160ms var(--ease-out),
+    transform 160ms var(--ease-out);
+}
+
+.day-spine:hover {
+  transform: translateY(-3px);
+}
+
+.day-spine[data-state="read"] {
+  background: var(--field-raised);
+}
+
+.day-spine__band {
+  width: 100%;
+  height: 4px;
+  border-top: 1px solid var(--gold);
+  border-bottom: 1px solid var(--gold);
+}
+
+.day-spine__call {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  padding: 6px 1px;
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 700 12px/1 var(--font-call);
+  white-space: nowrap;
+}
+
+.day-spine[data-state="empty"],
+.day-spine[data-state="next"] {
+  justify-content: center;
+  border: 1.5px dashed var(--line-strong);
+  background: transparent;
+  color: var(--mute);
+}
+
+.day-spine[data-state="next"] {
+  border: 2px solid var(--accent);
+  background: var(--tint);
+  color: var(--accent);
+}
+
+.day-spine[data-state="empty"]:hover,
+.day-spine[data-state="empty"][data-over],
+.day-spine[data-state="next"][data-over] {
+  border-color: var(--accent);
+  background: var(--tint);
+  color: var(--accent);
+}
+
+.day-spine__plus {
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+}
+
+/* The chosen day: the Gilt "here" mark under its spine. */
+.day-spine[aria-current="true"]::after {
+  content: "";
+  position: absolute;
+  left: -4px;
+  right: -4px;
+  bottom: -7px;
+  height: 3px;
+  background: var(--gold);
+}
+
+.day-spine__pieces {
+  display: flex;
+  gap: 4px;
+  min-height: 14px;
+  margin-top: 4px;
+}
+
+.day-spine__piece {
+  width: 14px;
+  height: 14px;
+  color: var(--line-strong);
+}
+
+.day-spine__piece[data-has] {
+  color: var(--accent);
+}
+
+.day-spine__day {
+  color: var(--mute);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.shelf__day:has([aria-current="true"]) .day-spine__day {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.shelf__unplaced {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.shelf__unplaced-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.shelf__unplaced ul {
+  padding-left: 18px;
+}
+
+.shelf__unplaced a {
+  color: var(--accent);
+}
+
+/* The day leaf */
+
+.course-day {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.course-day__title {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.course-day__title a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.course-day__title a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.course-day__state {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.course-day__pieces,
+.add-day__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.piece {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+}
+
+.piece__icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--accent);
+}
+
+.piece__name {
+  font-weight: 600;
+}
+
+.piece__meta {
+  color: var(--mute);
+  font-size: 13px;
+}
+
+.piece__action {
+  margin-left: auto;
+}
+
+.piece__body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding-left: 26px;
+}
+
+.piece__empty {
+  padding-left: 26px;
+  font-size: 14px;
+}
+
+.course-plate {
+  align-self: stretch;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+
+.course-plate__frame {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 2px;
+  background: var(--tray);
+}
+
+.course-day__said:empty,
+.add-day__notice:empty {
+  display: none;
+}
+
+.course-day__said,
+.add-day__notice {
+  color: var(--mute);
+  font-size: 13px;
+}
+
+.add-day__piece {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.add-day__paste {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.video-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-self: stretch;
+}
+
+.video-fields__file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+
+.video-fields__icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--accent);
+}
+
+.video-fields__name {
+  flex: 1;
+  min-width: 8em;
+  color: var(--mute);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+/* Courses on the Sources page: each course a spine and a line, opening the shelf. */
+
+.courses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 32px;
+  list-style: none;
+}
+
+.courses__item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.courses__item .spine {
+  min-height: 96px;
+}
+
+.courses__name {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.courses__name a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.courses__name a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.courses__line {
+  color: var(--mute);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.courses__action {
+  margin-top: 10px;
+}
+
+@media (max-width: 1080px) {
+  .course {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .day-spine:hover {
+    transform: none;
+  }
+}

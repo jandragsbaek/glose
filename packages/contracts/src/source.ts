@@ -97,6 +97,8 @@ export const Source = Schema.Struct({
   ...SourceDetails.fields,
   ...TextDetails.fields,
   hasText: Schema.Boolean,
+  videoLink: Schema.NullOr(Schema.String),
+  videoFile: Schema.NullOr(Schema.String),
   readingPlace: Schema.NullOr(Schema.Int),
   readingStep: ReadingStep,
   readingStart: Schema.NullOr(ReadingStart),
@@ -123,10 +125,15 @@ export const AdvanceReading = Schema.Struct({ id: Schema.String, from: ReadingSt
 
 export const SetReadingPlace = Schema.Struct({ id: Schema.String, place: Schema.Int });
 
+export const WebLink = Schema.Trim.pipe(
+  Schema.check(Schema.isPattern(/^https?:\/\/[^\s/$.?#][^\s]*$/i)),
+);
+
 export const ImportText = Schema.Struct({
   ...SourceDetails.fields,
   ...TextDetails.fields,
   markdown: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
+  videoLink: Schema.optionalKey(Schema.NullOr(WebLink)),
 });
 export type ImportText = typeof ImportText.Type;
 
@@ -139,6 +146,28 @@ export const AddVideo = Schema.Struct({
   url: Text,
 });
 export type AddVideo = typeof AddVideo.Type;
+
+export const SetLessonVideo = Schema.Struct({
+  id: Schema.String,
+  link: Schema.NullOr(WebLink),
+  removeFile: Schema.Boolean,
+});
+export type SetLessonVideo = typeof SetLessonVideo.Type;
+
+export const COURSE_VIDEO_PATH = "/course-video";
+export const COURSE_VIDEOS_DIR = "Course videos";
+export const COURSE_VIDEO_TYPES = ["mp4", "m4v", "webm", "mov", "ogv"] as const;
+
+export const courseVideoExtension = (name: string): string | null => {
+  const extension = /\.([a-z0-9]+)$/i.exec(name)?.[1]?.toLowerCase() ?? null;
+  return extension !== null && (COURSE_VIDEO_TYPES as ReadonlyArray<string>).includes(extension)
+    ? extension
+    : null;
+};
+
+export class NotALesson extends Schema.TaggedError<NotALesson>()("NotALesson", {
+  id: Schema.String,
+}) {}
 
 export const ArticleText = Schema.Struct({ markdown: Schema.String });
 export type ArticleText = typeof ArticleText.Type;

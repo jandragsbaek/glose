@@ -62,6 +62,7 @@ export const articleAtom = Atom.family((id: string) =>
 
 export const importTextAtom = GloseClient.mutation(RPC_METHODS.sourcesImportText);
 export const addVideoAtom = GloseClient.mutation(RPC_METHODS.sourcesAddVideo);
+export const setLessonVideoAtom = GloseClient.mutation(RPC_METHODS.sourcesSetLessonVideo);
 export const lookupVideoAtom = GloseClient.mutation(RPC_METHODS.sourcesLookupVideo);
 export const setPlaceAtom = GloseClient.mutation(RPC_METHODS.sourcesSetPlace);
 export const markPassageAtom = GloseClient.mutation(RPC_METHODS.articlesMarkPassage);

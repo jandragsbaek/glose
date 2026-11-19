@@ -98,7 +98,21 @@ function SourceView({ source }: { readonly source: Source }) {
   const sub = (
     <span className="button-row">
       {author}
-      {where === null || where === "" ? null : <span className="page-head__where">{where}</span>}
+      {source.kind === "lesson" && source.container !== null ? (
+        <span className="page-head__where">
+          <Link
+            to="/courses/$courseName"
+            params={{ courseName: source.container }}
+            search={source.part === null ? {} : { day: source.part }}
+            className="page-head__crumb"
+          >
+            {source.container}
+          </Link>
+          {source.part === null ? null : `, ${t.lessonPart(source.part)}`}
+        </span>
+      ) : where === null || where === "" ? null : (
+        <span className="page-head__where">{where}</span>
+      )}
       <CallNumber source={source} />
     </span>
   );

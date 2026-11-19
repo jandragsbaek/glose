@@ -473,16 +473,15 @@ export function AddLessons({ onSaving }: { readonly onSaving: (saving: boolean) 
             <button type="button" className="button button--quiet" disabled>
               {t.addSource.cancel}
             </button>
-          ) : finished && firstAdded?.id != null ? (
+          ) : finished && firstAdded !== undefined ? (
             <>
               <Link
                 ref={openRef}
-                to="/sources/$sourceId"
-                params={{ sourceId: firstAdded.id }}
-                search={{}}
+                to="/courses/$courseName"
+                params={{ courseName: course.name.trim() }}
                 className={toAdd.length > 0 ? "button" : "button button--primary"}
               >
-                {t.lessons.openFirst(firstAdded.part)}
+                {t.course.openCourse}
               </Link>
               <Link to="/sources" className="button button--quiet">
                 {t.lessons.seeSources}

@@ -21,6 +21,8 @@ const source = (
   translator: null,
   ...BOOK_TEXT_DETAILS,
   hasText: false,
+  videoLink: null,
+  videoFile: null,
   readingPlace: null,
   readingStep: "done",
   readingStart: null,

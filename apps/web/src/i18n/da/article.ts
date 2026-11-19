@@ -27,7 +27,8 @@ export const articleMessages: typeof english = {
     hints: {
       book: "Du læser den et andet sted. Glose gemmer din frie tekst og dine noter.",
       article: "Én Markdown-fil eller indsat tekst. Du læser den i Glose.",
-      lesson: "En mappe med lektionsfiler fra et kursus. Hver lektion bliver en kilde.",
+      lesson:
+        "Et kursus' lektionsfiler: hele mappen eller den første dag. Hver lektion bliver en kilde, og kurset får sin egen side.",
       video: "Et foredrag eller en anden video på YouTube. Du ser den i Glose og stempler tiderne.",
     } satisfies Record<SourceKind, string>,
     articleTypes: {
@@ -267,7 +268,6 @@ export const articleMessages: typeof english = {
       skipped === 0
         ? `${count(added, "lektion", "lektioner")} tilføjet.`
         : `${count(added, "lektion", "lektioner")} tilføjet; ${numbers.format(skipped)} var allerede i dit arkiv eller kunne ikke tilføjes.`,
-    openFirst: (part: string) => `Åbn ${lessonPart(part)}`,
     seeSources: "Se dem under Kilder",
     needFiles: "Vælg lektionsfilerne først.",
     filled: "Udfyldt fra filerne. Tjek de mærkede felter.",
