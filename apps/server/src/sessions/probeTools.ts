@@ -188,7 +188,7 @@ export const probeTools = ({ sources, source, update }: Context): AgentTool[] =>
                   }),
               next:
                 choice === undefined
-                  ? "End your turn now. The user answers with Reasoning and an answer."
+                  ? "End your turn now. The user answers in one text: their Reasoning, ending on their answer."
                   : "End your turn now. The user chooses, with their Reasoning.",
             },
             [...entries, entry],
@@ -199,7 +199,7 @@ export const probeTools = ({ sources, source, update }: Context): AgentTool[] =>
       name: "judge_answer",
       entry: null,
       description:
-        "Judge the user's answer to a question: the Reasoning and the result apart, each with why in one sentence. quote: the exact words of their Reasoning the judgment points at, or null. A choice's result must match Glose's own check of the choice. Call it again on a judged question only when the user disputed that judgment and is right.",
+        "Judge the user's answer to a question: the Reasoning and the result apart, each with why in one sentence. quote: the user's own words the judgment points at, exactly, or null. A choice's result must match Glose's own check of the choice. Call it again on a judged question only when the user disputed that judgment and is right.",
       parameters: {
         type: "object",
         properties: {
@@ -210,7 +210,7 @@ export const probeTools = ({ sources, source, update }: Context): AgentTool[] =>
           result_why: { type: "string", description: "Why, in one sentence." },
           quote: {
             type: ["string", "null"],
-            description: "Exact words of the user's Reasoning that show the misunderstanding.",
+            description: "Exact words the user wrote that show the misunderstanding.",
           },
           corrected_options: {
             type: ["array", "null"],

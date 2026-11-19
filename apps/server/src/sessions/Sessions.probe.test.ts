@@ -71,7 +71,7 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
   );
 
   it.effect(
-    "runs a Probe: asks, judges Reasoning and result apart, teaches the gap, asks again, and keeps a record",
+    "runs a Probe: asks, judges Reasoning and result apart from one answer, teaches the gap, asks again, and keeps a record",
     () =>
       Effect.gen(function* () {
         const { fake, layer, graphFolder, sourceId, bodies } = yield* setUp;
@@ -113,8 +113,8 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
           yield* sessions.answerProbe({
             id,
             question: 1,
-            reasoning: "Part of my mind stays on the old task, so I lose time.",
-            answer: "Time to refocus.",
+            reasoning: "",
+            answer: "Part of my mind stays on the old task, so I lose time to refocus.",
             teachMe: false,
           });
           yield* afterTurn(id);
@@ -162,7 +162,7 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
           type: "message",
           role: "user",
           content:
-            "(Answer to question 1)\n\nMy Reasoning:\nPart of my mind stays on the old task, so I lose time.\n\nMy answer:\nTime to refocus.",
+            "(Answer to question 1)\n\nMy answer, with how I got there:\nPart of my mind stays on the old task, so I lose time to refocus.",
         });
 
         const fs = yield* FileSystem.FileSystem;
@@ -173,7 +173,7 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
         assert.include(record, "## Q1 · Attention residue\n\nWhat lingers after a switch?");
         assert.include(
           record,
-          "**Your Reasoning:** Part of my mind stays on the old task, so I lose time.",
+          "**Your answer:** Part of my mind stays on the old task, so I lose time to refocus.",
         );
         assert.include(
           record,

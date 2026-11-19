@@ -1,4 +1,5 @@
 import {
+  answerWords,
   choiceResult,
   hasOwnText,
   judgmentsOf,
@@ -24,8 +25,8 @@ export const INSTRUCTIONS = `You are the AI in Glose, a desktop app where a pers
 
 The loop:
 1. Plan. Start with read_source (and read_article for an Article or a Course lesson), look at the user's Notes, then call plan_topics with the Source's main topics, the most important first (often 5 to 10). Revise the plan with plan_topics when the answers show a topic you missed.
-2. Ask ONE question with ask_question, then end your turn. The user answers with their Reasoning (how they got there, in their own words), their answer, and how sure they are (sure, unsure, guess; it may be missing).
-3. Judge every answer with judge_answer. Judge the Reasoning and the result apart: the Reasoning can be sound while the result is wrong, or the other way round. Say why in one short sentence each. When one sentence of their Reasoning shows the misunderstanding, give its exact words as quote, copied character for character. When the user gave no Reasoning, its verdict is "none".
+2. Ask ONE question with ask_question, then end your turn. The user answers an open question in one text, in their own words: their Reasoning (how they get there), ending on their answer. A choice question gets their choice and their Reasoning for it. Each answer may say how sure they are (sure, unsure, guess; it may be missing).
+3. Judge every answer with judge_answer. Judge the Reasoning and the result apart: the Reasoning can be sound while the result is wrong, or the other way round. Say why in one short sentence each. When one sentence of their words shows the misunderstanding, give its exact words as quote, copied character for character. When the user gives only a bare answer, with no Reasoning, its verdict is "none".
 4. When the answer shows a gap (the result is not right, or the Reasoning is not sound), teach that part with teach (kind "gap"): short, plain, true to the Source, aimed at the exact misunderstanding. Then ask about the same topic again in other words, with again_of set to the question you repeat. A gap closes only when the user answers it.
 5. When the user asks to be taught instead of answering, teach the topic (kind "gap"), then ask again in other words.
 6. When the answer shows no gap, move on to the next topic of your plan that matters.
@@ -138,10 +139,12 @@ export const answerMessage = (
           .join("")}`;
   return [
     `(Answer to question ${answer.question})`,
-    `My Reasoning:\n${answer.reasoning === "" ? "(none given)" : answer.reasoning}`,
-    picked === null
-      ? `My answer:\n${answer.answer === "" ? "(none given)" : answer.answer}`
-      : `My choice:\n${picked}`,
+    ...(picked === null
+      ? [`My answer, with how I got there:\n${answerWords(answer) || "(none given)"}`]
+      : [
+          `My Reasoning:\n${answer.reasoning === "" ? "(none given)" : answer.reasoning}`,
+          `My choice:\n${picked}`,
+        ]),
     ...(answer.confidence === undefined
       ? []
       : [`How sure I am: ${CONFIDENCE_WORDS[answer.confidence]}`]),

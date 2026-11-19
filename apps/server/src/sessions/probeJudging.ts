@@ -1,5 +1,6 @@
 import {
   answerState,
+  answerWords,
   type ChoiceSelect,
   choiceResult,
   judgmentsOf,
@@ -184,11 +185,12 @@ export const judgeAnswer = (
       entries,
     ];
   }
-  const quote = asked.quote === null ? null : findQuote(answer.reasoning, asked.quote);
+  const words = answerWords(answer);
+  const quote = asked.quote === null ? null : findQuote(words, asked.quote);
   const judgment: Judgment = {
     _tag: "ProbeJudgment",
     question: asked.question,
-    reasoning: answer.reasoning === "" ? "none" : asked.reasoning_verdict,
+    reasoning: words === "" ? "none" : asked.reasoning_verdict,
     reasoningWhy: asked.reasoning_why.trim(),
     result: asked.result_verdict,
     resultWhy: asked.result_why.trim(),
@@ -207,7 +209,7 @@ export const judgeAnswer = (
     {
       shown: true,
       ...(asked.quote !== null && quote === null
-        ? { note: "The quote is not in the user's Reasoning, so it is not shown." }
+        ? { note: "The quote is not in the user's words, so it is not shown." }
         : {}),
       next: nextStep(again, judgment, answer, openQuestion(entries)?.number ?? null),
       ...topicsNow(after),

@@ -330,7 +330,11 @@ export function AnswerView({
       {answer.answer === "" ? null : (
         <div className="probe__result">
           <p className="probe__part">{t.probe.answer}</p>
-          <p className="you__text probe__result-text">{answer.answer}</p>
+          <p className="you__text probe__result-text">
+            {quote !== null && answer.reasoning.includes(quote)
+              ? answer.answer
+              : withQuote(answer.answer, quote)}
+          </p>
         </div>
       )}
       {answer.choice === undefined ? null : (
