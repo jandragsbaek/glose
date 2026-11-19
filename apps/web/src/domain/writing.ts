@@ -225,3 +225,14 @@ export const referenceLead = (body: string, start: number): number => {
   while (lead > 0 && (body[lead - 1] === " " || body[lead - 1] === "\t")) lead -= 1;
   return lead > 0 && body[lead - 1] !== "\n" ? lead : start;
 };
+
+export const sentenceAround = (body: string, from: number, to: number) => {
+  const before = body.slice(0, from);
+  const start = Math.max(
+    before.lastIndexOf("\n") + 1,
+    ...[...before.matchAll(/[.!?]["”’)]*\s+/gu)].map((match) => match.index + match[0].length),
+  );
+  const after = body.slice(to);
+  const end = after.search(/[.!?]|\n/u);
+  return body.slice(start, end < 0 ? body.length : to + end + 1).trim();
+};

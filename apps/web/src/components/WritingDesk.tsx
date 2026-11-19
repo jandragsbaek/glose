@@ -47,6 +47,7 @@ import {
   WritingGraph,
 } from "./WritingGraph.tsx";
 import { Proof } from "./WritingProof.tsx";
+import { useDeskTries } from "./TriesSlip.tsx";
 import { useWritingSave } from "./WritingSave.ts";
 import { ReplaceSheet, SiteFolderSheet } from "./WritingSheets.tsx";
 
@@ -98,6 +99,7 @@ export function WritingDesk({
 
   const editor = useRef<ProseHandle | null>(null);
   const { leftMargin, rightMargin, editorBox, latestPlace } = useMarginPlacement(editor, mode);
+  const tries = useDeskTries(editor, editorBox, fields, (saved) => update({ tries: saved }));
 
   const graph = AsyncResult.getOrElse(useAtomValue(graphAtom), () => null);
   const sources = AsyncResult.getOrElse(useAtomValue(sourcesAtom), () => null);
@@ -375,6 +377,7 @@ export function WritingDesk({
                       language={fields.language}
                       placeholder={t.writing.placeholder(shortcut)}
                       referenceLabel={t.writing.referenceMarkLabel}
+                      {...tries.editorProps}
                       onChange={(body) => update({ body })}
                       onLayout={() => window.requestAnimationFrame(() => latestPlace.current())}
                       onCite={(from, to, typed) => openCite(from, to, null, false, typed)}
@@ -384,6 +387,7 @@ export function WritingDesk({
                       }}
                     />
                   </div>
+                  {tries.slip}
                   {cite === null || graph === null ? null : (
                     <CiteSlip
                       key={cite.opened}

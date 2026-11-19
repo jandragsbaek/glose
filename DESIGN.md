@@ -1887,6 +1887,32 @@ Reference's gloss in the right margin beside its line, and the AI review's flags
   check lines and Rubric problem lines, each with its fix); the right margin "Questions from the
   AI", each question beside a Strong Hairline under a Mute "AI · About …" line.
 
+### Tries Slip
+
+Words of a Writing project that keep the writer's other Tries. The marks are the writer's own, so
+they stay neutral; Rubric appears only for the AI's words.
+
+- **In the text:** words with Tries wear a 2px dotted Mute underline (5px offset). Hover is Lapis
+  Tint; the words the slip works on wear the selection's Gilt Wash with a Gilt underline. A word
+  the AI suggested keeps a Rubric dotted underline while it shows.
+- **Hover label:** over the words, a Paper label with a Strong Hairline (2px corners) lists the
+  other Tries in Ink 13px, then "← → flips it · Ctrl+Shift+A shows all" in Mute 12px. It takes no
+  pointer events, so it never covers the line above.
+- **Slip:** under the line the words end on, beside them, 360px (narrower in a narrow column),
+  Paper, 1px Lapis border, 4px corners, no shadow, as the Cite Slip. A head with the word count in
+  the uppercase 12px set and "N tries" in Mute; the Tries as rows (number, text 15px, "first" or
+  "AI word" on the right; the one that shows is Lapis Tint with a 2px Lapis inner edge; a × on
+  hover removes one); the field "Write another word"; the AI's words under the AI Text mark (¶
+  "Words from the AI", each row "Try it" in Rubric); and a Ground foot with "Ask the AI for words"
+  (small secondary) over the keys in Mute 13px. Notes such as "Connect ChatGPT …" sit plain under
+  the field, never under the AI mark.
+- **Refused flip:** a Try that would change the bold or italic around its words is not put in; a
+  plain Mute note under the field says "This Try would break the bold or italic around it. Change
+  the marks first." A refused flip from the arrow keys gives the keys back to the caret and the
+  live line reads the same note.
+- **Format Bar:** "Tries" follows "Cite", in On-Lapis White; it is dimmed while the selection
+  cannot be a Try (across paragraphs, or over a Reference).
+
 ### Cite Slip
 
 Citing happens in a slip under the line being written, not in a sheet, so the sentence stays in

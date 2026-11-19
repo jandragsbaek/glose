@@ -21,6 +21,14 @@ export type PublicationRecord = typeof PublicationRecord.Type;
 
 const Title = Schema.Trim.pipe(Schema.check(Schema.isNonEmpty()));
 
+export const TryGroup = Schema.Struct({
+  at: Schema.Int,
+  showing: Schema.Int,
+  tries: Schema.Array(Schema.String),
+  ai: Schema.Array(Schema.String),
+});
+export type TryGroup = typeof TryGroup.Type;
+
 export const WritingProjectFields = Schema.Struct({
   title: Title,
   type: WritingProjectType,
@@ -28,6 +36,7 @@ export const WritingProjectFields = Schema.Struct({
   referenceForm: ReferenceForm,
   citationStyle: CitationStyle,
   body: Schema.String,
+  tries: Schema.Array(TryGroup),
 });
 export type WritingProjectFields = typeof WritingProjectFields.Type;
 

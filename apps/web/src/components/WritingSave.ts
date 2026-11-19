@@ -18,6 +18,7 @@ const fieldsOf = (project: WritingProject): WritingProjectFields => ({
   referenceForm: project.referenceForm,
   citationStyle: project.citationStyle,
   body: project.body,
+  tries: project.tries,
 });
 
 export function useWritingSave(project: WritingProject, onRenamed: (id: string) => void) {

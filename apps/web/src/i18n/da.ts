@@ -3,6 +3,7 @@ import { sourceMessages } from "./da/sources.ts";
 import { readingMessages } from "./da/reading.ts";
 import { graphMessages } from "./da/graph.ts";
 import { writingMessages } from "./da/writing.ts";
+import { triesMessages } from "./da/tries.ts";
 import { recallMessages } from "./da/recall.ts";
 import { settingsMessages } from "./da/settings.ts";
 import { articleMessages } from "./da/article.ts";
@@ -15,6 +16,7 @@ export const da: Messages = {
   ...readingMessages,
   ...graphMessages,
   ...writingMessages,
+  ...triesMessages,
   ...recallMessages,
   ...settingsMessages,
   ...articleMessages,

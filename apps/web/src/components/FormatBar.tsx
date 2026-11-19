@@ -14,6 +14,7 @@ export interface FormatState {
   readonly level: number;
   readonly strong: boolean;
   readonly em: boolean;
+  readonly tryable: boolean;
 }
 
 const BUTTONS: ReadonlyArray<{
@@ -32,10 +33,12 @@ export function FormatBar({
   state,
   onFormat,
   onCite,
+  onTries,
 }: {
   readonly state: FormatState;
   readonly onFormat: (command: FormatCommand) => void;
   readonly onCite: () => void;
+  readonly onTries: () => void;
 }) {
   const t = useT();
   const mac = isMac();
@@ -95,6 +98,16 @@ export function FormatBar({
         onClick={onCite}
       >
         {t.writing.citeShort}
+      </button>
+      <button
+        type="button"
+        className="format-bar__button format-bar__button--text"
+        aria-keyshortcuts={mac ? "Meta+Shift+A" : "Control+Shift+A"}
+        title={state.tryable ? `${t.tries.open} · ${mac ? "⇧⌘A" : "Ctrl+Shift+A"}` : t.tries.cannot}
+        disabled={!state.tryable}
+        onClick={onTries}
+      >
+        {t.tries.short}
       </button>
     </div>
   );

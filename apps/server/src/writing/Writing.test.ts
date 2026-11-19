@@ -37,6 +37,7 @@ const POST: WritingProjectFields = {
   referenceForm: "footnotes",
   citationStyle: "chicago",
   body: `Newport has a name for this.[[${NOTE}]]{p. 64}`,
+  tries: [],
 };
 
 const signIn = (dirs: { readonly dataDir: string }) =>
@@ -276,6 +277,185 @@ it.layer(NodeServices.layer)("Writing", (it) => {
       const request = fake.requests.find((each) => each.url.endsWith("/responses"));
       assert.include(request?.body ?? "", "never write, rewrite");
       assert.include(request?.body ?? "", "Busyness stands in for productivity.");
+    }).pipe(Effect.scoped),
+  );
+
+  it.effect("keeps the Tries after the prose, where other Markdown readers do not show them", () =>
+    Effect.gen(function* () {
+      const { graphFolder, layer } = yield* setUp();
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const body = "The nine o'clock version had the better verb.";
+      const at = body.indexOf("better");
+      yield* Effect.gen(function* () {
+        const writing = yield* Writing;
+        const created = yield* writing.create({
+          ...POST,
+          body,
+          tries: [
+            { at, showing: 0, tries: ["better", "sharper", "1976"], ai: ["sharper"] },
+            { at: 0, showing: 0, tries: ["The"], ai: [] },
+          ],
+        });
+        const file = path.join(graphFolder, "Writing", `${created.id}.md`);
+        const markdown = yield* fs.readFileString(file);
+        assert.isTrue(
+          markdown.endsWith(
+            [
+              body,
+              "",
+              "<!-- glose:tries",
+              `- at: ${at}`,
+              "  showing: 0",
+              "  tries:",
+              "    - better",
+              "    - sharper",
+              '    - "1976"',
+              "  ai:",
+              "    - sharper",
+              "-->",
+              "",
+            ].join("\n"),
+          ),
+          markdown,
+        );
+        const read = yield* writing.get(created.id);
+        assert.strictEqual(read.body, body);
+        assert.deepStrictEqual(read.tries, [
+          { at, showing: 0, tries: ["better", "sharper", "1976"], ai: ["sharper"] },
+        ]);
+
+        yield* fs.writeFileString(file, markdown.replace("the better verb", "a better verb"));
+        assert.deepStrictEqual(
+          (yield* writing.get(created.id)).tries.map((group) => group.at),
+          [at - 2],
+        );
+        const windows = markdown.replace(/\n/g, "\r\n").replace("the better verb", "a better verb");
+        yield* fs.writeFileString(file, windows);
+        assert.deepStrictEqual(
+          (yield* writing.get(created.id)).tries.map((group) => group.at),
+          [at - 2],
+        );
+
+        const example = "```md\n<!-- glose:tries\n- at: 0\n-->\n```";
+        yield* writing.save({ ...read, body: `${example}\n\n${body}`, tries: read.tries });
+        const withExample = yield* writing.get(created.id);
+        assert.strictEqual(withExample.body, `${example}\n\n${body}`);
+        assert.deepStrictEqual(
+          withExample.tries.map((group) => group.tries[0]),
+          ["better"],
+        );
+
+        const open = "Ends in an example:\n\n```md\n<!-- glose:tries\n- at: 0\n-->";
+        yield* writing.save({ ...read, body: open, tries: [] });
+        assert.strictEqual((yield* writing.get(created.id)).body, open);
+
+        const mixed = "```\n~~~\n```\n\nThe nine o'clock version had the better verb.";
+        yield* writing.save({ ...read, body: mixed, tries: read.tries });
+        assert.deepStrictEqual((yield* writing.get(created.id)).tries.length, 1);
+
+        const unfinished = `${body}\n\n  \`\`\`js\nlet a = 1;`;
+        yield* writing.save({ ...read, body: unfinished, tries: read.tries });
+        const closed = yield* writing.get(created.id);
+        assert.strictEqual(closed.body, `${unfinished}\n\`\`\``);
+        assert.deepStrictEqual(closed.tries.length, 1);
+
+        const inline = `\`\`\` \`inline\` example \`\`\`\n\n${body}`;
+        yield* writing.save({ ...read, body: inline, tries: read.tries });
+        assert.deepStrictEqual((yield* writing.get(created.id)).tries.length, 1);
+
+        const commented = `<!--\n\`\`\`\n-->\n\n${body}`;
+        yield* writing.save({ ...read, body: commented, tries: read.tries });
+        assert.strictEqual((yield* writing.get(created.id)).body, commented);
+
+        const codeComment = `Use \`<!--\` inline now.\n\n${body}\n\n\`\`\`js\nlet a = 1;`;
+        yield* writing.save({ ...read, body: codeComment, tries: read.tries });
+        const fenced = yield* writing.get(created.id);
+        assert.strictEqual(fenced.body, `${codeComment}\n\`\`\``);
+        assert.deepStrictEqual(fenced.tries.length, 1);
+
+        const spanned = `Use \`a\nb <!--\` here.\n\n${body}\n\n\`\`\`md\n-->\n<!-- glose:tries\n-->`;
+        yield* writing.save({ ...read, body: spanned, tries: read.tries });
+        const kept = yield* writing.get(created.id);
+        assert.strictEqual(kept.body, `${spanned}\n\`\`\``);
+        assert.deepStrictEqual(kept.tries.length, 1);
+
+        const interrupted =
+          "Intro.\n\nSay `x\n```md\n<!-- glose:tries\n- at: 0\n  showing: 0\n  tries: [a, b]\n-->";
+        yield* writing.save({ ...read, body: interrupted, tries: [] });
+        assert.strictEqual((yield* writing.get(created.id)).body, interrupted);
+
+        const closing = `${body}\n\n<!-- a\nb --> \`<!--\``;
+        yield* writing.save({ ...read, body: closing, tries: read.tries });
+        assert.strictEqual((yield* writing.get(created.id)).body, closing);
+
+        const openComment = `${body}\n\n<!-- a note to self`;
+        yield* writing.save({ ...read, body: openComment, tries: read.tries });
+        const commentClosed = yield* writing.get(created.id);
+        assert.strictEqual(commentClosed.body, `${openComment}\n-->`);
+        assert.deepStrictEqual(commentClosed.tries.length, 1);
+
+        const saved = yield* writing.save({ ...read, body: "All new text.", tries: read.tries });
+        assert.deepStrictEqual(saved.tries, []);
+        assert.notInclude(yield* fs.readFileString(file), "glose:tries");
+      }).pipe(Effect.provide(layer));
+    }).pipe(Effect.scoped),
+  );
+
+  it.effect("asks the AI for words to try, and keeps only new short ones", () =>
+    Effect.gen(function* () {
+      const ask = {
+        language: "en",
+        sentence: "The nine o'clock version had the better verb.",
+        text: "better",
+        tries: ["better", "sharper"],
+      };
+      const { layer: offline } = yield* setUp();
+      const off = yield* Effect.gen(function* () {
+        return yield* (yield* Writing).tryWords(ask).pipe(Effect.flip);
+      }).pipe(Effect.provide(offline));
+      assert.strictEqual(off.reason, "off");
+
+      const { fake, layer } = yield* setUp(true);
+      const tooLong = yield* Effect.gen(function* () {
+        return yield* (yield* Writing)
+          .tryWords({ ...ask, text: "one two three four five six seven" })
+          .pipe(Effect.flip);
+      }).pipe(Effect.provide(layer));
+      assert.strictEqual(tooLong.reason, "too-long");
+
+      fake.answer(`${FAKE_OPENAI.apiUrl}/models`, {
+        status: 200,
+        body: { models: [{ slug: "gpt-test", display_name: "GPT Test", visibility: "list" }] },
+      });
+      fake.answer(`${FAKE_OPENAI.apiUrl}/responses`, {
+        status: 200,
+        sse: true,
+        body: [
+          {
+            type: "response.output_item.done",
+            item: {
+              id: "msg_1",
+              type: "message",
+              role: "assistant",
+              content: [
+                {
+                  type: "output_text",
+                  text: JSON.stringify({ words: ["livelier", "Sharper", "“truer”", "a\nb"] }),
+                },
+              ],
+            },
+          },
+          { type: "response.completed", response: {} },
+        ],
+      });
+      const words = yield* Effect.gen(function* () {
+        return yield* (yield* Writing).tryWords(ask);
+      }).pipe(Effect.provide(layer));
+      assert.deepStrictEqual(words, { words: ["livelier", "truer"] });
+      const request = fake.requests.find((each) => each.url.endsWith("/responses"));
+      assert.include(request?.body ?? "", "never write, rewrite or continue");
+      assert.include(request?.body ?? "", "the better verb");
     }).pipe(Effect.scoped),
   );
 });

@@ -68,6 +68,7 @@ function StartPiece() {
           language,
           referenceForm: "footnotes",
           citationStyle: "chicago",
+          tries: [],
           body: "",
         },
         reactivityKeys: WRITING_KEYS.list,
