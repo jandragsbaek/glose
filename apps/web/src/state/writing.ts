@@ -16,5 +16,6 @@ export const writingProjectAtom = Atom.family((id: string) =>
 export const createWritingAtom = GloseClient.mutation(RPC_METHODS.writingCreate);
 export const saveWritingAtom = GloseClient.mutation(RPC_METHODS.writingSave);
 export const reviewWritingAtom = GloseClient.mutation(RPC_METHODS.writingReview);
+export const tryWordsAtom = GloseClient.mutation(RPC_METHODS.writingTryWords);
 export const publishWritingAtom = GloseClient.mutation(RPC_METHODS.writingPublish);
 export const setSiteFolderAtom = GloseClient.mutation(RPC_METHODS.settingsSetSiteFolder);

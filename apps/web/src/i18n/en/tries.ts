@@ -1,0 +1,32 @@
+import { count } from "./format.ts";
+
+export const triesMessages = {
+  tries: {
+    short: "Tries",
+    open: "Try other words",
+    cannot: "Choose a word or a few words inside one paragraph, without a Reference.",
+    slipLabel: (text: string) => `Tries for “${text}”`,
+    words: (n: number) => count(n, "word", "words"),
+    count: (n: number) => count(n, "try", "tries"),
+    listLabel: "Your tries",
+    first: "first",
+    aiTag: "AI word",
+    newWord: "Write another word",
+    newWords: "Write these words another way",
+    remove: (text: string) => `Remove “${text}”`,
+    ask: "Ask the AI for words",
+    askAgain: "Ask for other words",
+    asking: "Asking the AI…",
+    aiGloss: "Words from the AI",
+    aiListLabel: "Words from the AI to try",
+    tryIt: "Try it",
+    noWords: "The AI found no other words. Ask again, or write your own.",
+    off: "Connect ChatGPT in Settings to ask the AI for words.",
+    failed: "The AI did not answer. Try again.",
+    tooLong: (n: number) => `The AI suggests words for up to ${count(n, "word", "words")}.`,
+    hint: "↑ ↓ show another try · Enter adds yours · Esc closes",
+    tipHint: (keys: string) => `← → flips it · ${keys} shows all`,
+    refused: "This Try would break the bold or italic around it. Change the marks first.",
+    flipped: (text: string, n: number, of: number) => `${text}, try ${n} of ${of}`,
+  },
+};

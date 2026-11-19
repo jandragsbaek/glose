@@ -1,5 +1,9 @@
 import {
+  AI_TRY_WORDS,
+  type AskTryWords,
   GraphFolderNotSet,
+  keepTryWords,
+  MAX_SUGGESTED_WORDS,
   linkKey,
   POSTS_FOLDER,
   PublicationExists,
@@ -22,6 +26,9 @@ import {
   isFileName,
   sameFileName,
   toFileName,
+  TryWords,
+  TryWordsUnavailable,
+  tryWordCount,
 } from "@glose/contracts";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -77,6 +84,7 @@ export class Writing extends Context.Service<
       WritingReview,
       WritingProjectNotFound | WritingReviewUnavailable | GraphError
     >;
+    readonly tryWords: (input: AskTryWords) => Effect.Effect<TryWords, TryWordsUnavailable>;
   }
 >()("glose/Writing") {}
 
@@ -131,6 +139,25 @@ const REVIEW_SCHEMA = strictObject({
 });
 
 const decodeReview = Schema.decodeUnknownEffect(Schema.fromJsonString(WritingReview));
+
+export const TRY_WORDS_INSTRUCTIONS = `You help a person who writes in their own words. They chose a word, or a few words, in one of their sentences and want other ways to say just that part.
+
+You never write, rewrite or continue their sentence. You suggest only what could stand in place of the chosen words.
+
+Suggest up to ${MAX_SUGGESTED_WORDS} replacements. Each one:
+- replaces only the chosen words, so the sentence still reads correctly with it in their place (grammar, tense, number, article);
+- keeps the tone of the sentence, and keeps its meaning or offers a nearby shade of it;
+- is at most ${AI_TRY_WORDS} words, with no quotes and none of the words around it;
+- is not one of the tries the writer already has;
+- is in the language of the sentence.
+
+The most useful replacement comes first.`;
+
+const TRY_WORDS_SCHEMA = strictObject({
+  words: { type: "array", items: { type: "string" } },
+});
+
+const decodeTryWords = Schema.decodeUnknownEffect(Schema.fromJsonString(TryWords));
 
 export const make = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -210,6 +237,23 @@ export const make = Effect.gen(function* () {
       return yield* new WritingProjectNameTaken({ fileName: `${id}${MARKDOWN}` });
     return id;
   });
+
+  const aiAccess = chatGpt.accessToken.pipe(
+    Effect.mapError((error): "failed" | "off" =>
+      error.reason === "unavailable" ? "failed" : "off",
+    ),
+    Effect.flatMap((token) =>
+      responses.models(token).pipe(
+        Effect.mapError(() => "failed" as const),
+        Effect.flatMap((models) => {
+          const model = models[0]?.slug;
+          return model === undefined
+            ? Effect.fail("failed" as const)
+            : Effect.succeed({ token, model });
+        }),
+      ),
+    ),
+  );
 
   const resolve = Effect.fn("Writing.resolve")(function* (body: string) {
     const view = yield* graph.read;
@@ -319,20 +363,10 @@ export const make = Effect.gen(function* () {
         )
         .slice(0, MAX_NOTES);
 
-      const token = yield* chatGpt.accessToken.pipe(
-        Effect.mapError(
-          (error) =>
-            new WritingReviewUnavailable({
-              reason: error.reason === "unavailable" ? "failed" : "off",
-            }),
-        ),
+      const { token, model } = yield* aiAccess.pipe(
+        Effect.mapError((reason) => new WritingReviewUnavailable({ reason })),
       );
       const failed = () => new WritingReviewUnavailable({ reason: "failed" });
-      const model = yield* responses.models(token).pipe(
-        Effect.map((models) => models[0]?.slug ?? null),
-        Effect.mapError(failed),
-      );
-      if (model === null) return yield* failed();
 
       const input = [
         `=== The post: ${project.title} (language: ${project.language}) ===`,
@@ -374,6 +408,37 @@ export const make = Effect.gen(function* () {
           excerpt: question.excerpt !== null && found(question.excerpt) ? question.excerpt : null,
         })),
       };
+    }),
+
+    tryWords: Effect.fn("Writing.tryWords")(function* (input) {
+      if (tryWordCount(input.text) > AI_TRY_WORDS) {
+        return yield* new TryWordsUnavailable({ reason: "too-long" });
+      }
+      const { token, model } = yield* aiAccess.pipe(
+        Effect.mapError((reason) => new TryWordsUnavailable({ reason })),
+      );
+      const answer = yield* askStructured(responses, {
+        token,
+        model,
+        instructions: TRY_WORDS_INSTRUCTIONS,
+        input: [
+          `=== The sentence (language: ${input.language}) ===`,
+          input.sentence,
+          "",
+          "=== The chosen words ===",
+          input.text,
+          "",
+          "=== The tries the writer already has ===",
+          ...input.tries,
+        ].join("\n"),
+        name: "try_words",
+        schema: TRY_WORDS_SCHEMA,
+        decode: decodeTryWords,
+      }).pipe(
+        Effect.tapError((error) => Effect.logWarning("Try words failed", error)),
+        Effect.mapError(() => new TryWordsUnavailable({ reason: "failed" })),
+      );
+      return { words: keepTryWords(answer.words, input.text, input.tries) };
     }),
   });
 });

@@ -119,6 +119,7 @@ export const layer = GloseRpcGroup.toLayer(
       [RPC_METHODS.writingCreate]: (fields) => writing.create(fields),
       [RPC_METHODS.writingSave]: (input) => writing.save(input),
       [RPC_METHODS.writingReview]: ({ id }) => writing.review(id),
+      [RPC_METHODS.writingTryWords]: (input) => writing.tryWords(input),
       [RPC_METHODS.writingPublish]: (input) => writing.publish(input),
     });
   }),

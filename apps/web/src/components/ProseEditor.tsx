@@ -16,7 +16,7 @@ import {
   type ViewUpdate,
   WidgetType,
 } from "@codemirror/view";
-import { findReferences, linkKey } from "@glose/contracts";
+import { findReferences, linkKey, type TryGroup } from "@glose/contracts";
 import { type Ref, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
 
 import { referenceLead } from "../domain/writing.ts";
@@ -28,6 +28,21 @@ import {
   setBlockStyle,
   toggleEmphasis,
 } from "./proseFormatting.ts";
+import {
+  canTry,
+  fromSaved,
+  openTriesAt,
+  triesExtension,
+  triesHint,
+  type TriesState,
+} from "./proseTries.ts";
+import {
+  leftOfPos,
+  reportTries,
+  triesHandle,
+  type TriesHandle,
+  type TriesText,
+} from "./proseTriesHandle.ts";
 
 export interface ProseHandle {
   readonly replace: (from: number, to: number, text: string, focus?: boolean) => void;
@@ -39,6 +54,8 @@ export interface ProseHandle {
   readonly bottomOf: (pos: number) => number | null;
   readonly focus: () => void;
   readonly format: (command: FormatCommand) => void;
+  readonly leftOf: (pos: number) => number | null;
+  readonly tries: TriesHandle;
 }
 
 const FORMAT: Record<FormatCommand, (view: EditorView) => boolean> = {
@@ -163,6 +180,7 @@ const wording = (text: {
   label: string;
   placeholder: string;
   referenceLabel: (n: number, flagged: boolean) => string;
+  triesHint: string;
 }) => [
   EditorView.contentAttributes.of({
     "aria-label": text.label,
@@ -171,6 +189,7 @@ const wording = (text: {
   }),
   placeholderText(text.placeholder),
   referenceMarks(text.referenceLabel),
+  triesHint(text.triesHint),
 ];
 
 const BAR_ROOM = 40;
@@ -206,7 +225,10 @@ export function ProseEditor({
   language,
   placeholder,
   referenceLabel,
+  initialTries,
+  triesText,
   onChange,
+  onTries,
   onLayout,
   onCite,
   onEditReference,
@@ -218,7 +240,10 @@ export function ProseEditor({
   readonly language: string;
   readonly placeholder: string;
   readonly referenceLabel: (n: number, flagged: boolean) => string;
+  readonly initialTries: ReadonlyArray<TryGroup>;
+  readonly triesText: TriesText;
   readonly onChange: (body: string) => void;
+  readonly onTries: (tries: TriesState) => void;
   readonly onLayout: () => void;
   readonly onCite: (from: number, to: number, typed?: boolean) => void;
   readonly onEditReference: (start: number) => void;
@@ -229,11 +254,37 @@ export function ProseEditor({
   const words = useRef(new Compartment());
   const view = useRef<EditorView | null>(null);
   const [bar, setBar] = useState<FormatState | null>(null);
-  const latest = useRef({ onChange, onLayout, onCite, onEditReference, setBar });
-  const mount = useRef({ initial, label, placeholder, referenceLabel });
+  const [said, setSaid] = useState("");
+  const latest = useRef({
+    onChange,
+    onTries,
+    onLayout,
+    onCite,
+    onEditReference,
+    setBar,
+    setSaid,
+    triesText,
+  });
+  const mount = useRef({
+    initial,
+    initialTries,
+    label,
+    placeholder,
+    referenceLabel,
+    triesHint: triesText.hint,
+  });
   // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- a ref, not state: CodeMirror's listeners, made once, call the desk's newest callbacks.
   useLayoutEffect(() => {
-    latest.current = { onChange, onLayout, onCite, onEditReference, setBar };
+    latest.current = {
+      onChange,
+      onTries,
+      onLayout,
+      onCite,
+      onEditReference,
+      setBar,
+      setSaid,
+      triesText,
+    };
   });
 
   const showBar = (editor: EditorView) => {
@@ -259,6 +310,7 @@ export function ProseEditor({
       bottom: end.bottom - box.top,
       below: barBelow(editor, start.top, end.bottom),
       left: Math.max(0, start.left - box.left),
+      tryable: canTry(editor.state),
       ...activeStyles(editor.state),
     });
   };
@@ -300,6 +352,7 @@ export function ProseEditor({
           flaggedField,
           words.current.of(wording(mount.current)),
           formattingMarks,
+          triesExtension(fromSaved(mount.current.initialTries)),
           EditorView.domEventHandlers({
             mousedown: (event, editor) => {
               const mark =
@@ -322,6 +375,7 @@ export function ProseEditor({
           }),
           EditorView.updateListener.of((update) => {
             if (update.docChanged) latest.current.onChange(update.state.doc.toString());
+            reportTries(update, latest.current);
             if (update.docChanged || update.geometryChanged || update.viewportChanged) {
               latest.current.onLayout();
             }
@@ -350,9 +404,11 @@ export function ProseEditor({
   // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- CodeMirror is outside React: its label, placeholder and Reference names follow the interface language.
   useEffect(() => {
     view.current?.dispatch({
-      effects: words.current.reconfigure(wording({ label, placeholder, referenceLabel })),
+      effects: words.current.reconfigure(
+        wording({ label, placeholder, referenceLabel, triesHint: triesText.hint }),
+      ),
     });
-  }, [label, placeholder, referenceLabel]);
+  }, [label, placeholder, referenceLabel, triesText.hint]);
 
   const format = (command: FormatCommand) => {
     const editor = view.current;
@@ -409,6 +465,8 @@ export function ProseEditor({
     },
     focus: () => view.current?.focus(),
     format,
+    leftOf: (pos) => leftOfPos(view.current, host.current, pos),
+    tries: triesHandle(() => view.current),
   }));
 
   return (
@@ -422,8 +480,14 @@ export function ProseEditor({
             const range = view.current?.state.selection.main;
             if (range !== undefined) latest.current.onCite(range.to, range.to);
           }}
+          onTries={() => {
+            if (view.current !== null) openTriesAt(view.current);
+          }}
         />
       )}
+      <p className="sr-only" aria-live="polite">
+        {said}
+      </p>
     </div>
   );
 }

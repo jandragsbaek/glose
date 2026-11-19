@@ -134,7 +134,8 @@ One answer to one due **Card**. It sets when the **Card** comes back.
 _Avoid_: recall quiz, drill
 
 **AI text**:
-Text in a **Note** or a **Card** that the AI wrote and the user has not yet rewritten.
+Text in a **Note** or a **Card** that the AI wrote and the user has not yet rewritten, and a
+**Try** the AI suggested in a **Writing project** until the user edits it.
 _Avoid_: generated text, draft, suggestion, AI content
 
 **AI mark**:
@@ -157,6 +158,11 @@ _Avoid_: locator, pinpoint, position, page (as the general term)
 
 **Citation**:
 The text the tool builds from a **Reference** in the style the **Writing project** uses.
+
+**Try**:
+One of the ways the user tried a word or a few words in a **Writing project**. The text holds the
+**Try** that shows; the others wait at the end of the file.
+_Avoid_: alternative, variant, version, suggestion
 
 ## Relationships
 

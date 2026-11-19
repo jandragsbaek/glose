@@ -3,6 +3,7 @@ import { sourceMessages } from "./en/sources.ts";
 import { readingMessages } from "./en/reading.ts";
 import { graphMessages } from "./en/graph.ts";
 import { writingMessages } from "./en/writing.ts";
+import { triesMessages } from "./en/tries.ts";
 import { recallMessages } from "./en/recall.ts";
 import { settingsMessages } from "./en/settings.ts";
 import { articleMessages } from "./en/article.ts";
@@ -14,6 +15,7 @@ export const en = {
   ...readingMessages,
   ...graphMessages,
   ...writingMessages,
+  ...triesMessages,
   ...recallMessages,
   ...settingsMessages,
   ...articleMessages,

@@ -108,6 +108,29 @@ const blocksIn = (state: EditorState, from: number, to: number) => {
     });
 };
 
+const MARK_CHAR = /[*_]/u;
+
+export const markChanges = (start: number, before: string, after: string): Array<ChangeSpec> => {
+  const changes: Array<ChangeSpec> = [];
+  let i = 0;
+  let j = 0;
+  while (i < before.length || j < after.length) {
+    if (i < before.length && j < after.length && before[i] === after[j]) {
+      i += 1;
+      j += 1;
+    } else if (j < after.length && MARK_CHAR.test(after[j] ?? "")) {
+      changes.push({ from: start + i, insert: after[j] ?? "" });
+      j += 1;
+    } else if (i < before.length && MARK_CHAR.test(before[i] ?? "")) {
+      changes.push({ from: start + i, to: start + i + 1 });
+      i += 1;
+    } else {
+      return [{ from: start, to: start + before.length, insert: after }];
+    }
+  }
+  return changes;
+};
+
 export const toggleEmphasis =
   (kind: Emphasis): StateCommand =>
   ({ state, dispatch }) => {
@@ -133,7 +156,7 @@ export const toggleEmphasis =
         on,
       );
       if (result === null) continue;
-      changes.push({ from: block.start, to: block.start + block.text.length, insert: result.text });
+      changes.push(...markChanges(block.start, block.text, result.text));
       anchor ??= block.start + shift + result.from;
       head = block.start + shift + result.to;
       shift += result.text.length - block.text.length;

@@ -222,6 +222,33 @@ Decided, the Graph beside the desk (November 2026), chosen with impeccable ("Tra
   thread and a strip of the binding; the idea came from his girlfriend). The shade keeps the Note
   text in the Graph clean.
 
+Decided, Tries on the desk (November 2026), chosen with impeccable ("Tries Slip"):
+
+- The idea comes from Jason Fried's Write_On, seen through its unofficial replica
+  (`joeysim/write-on-replica`, AGPL-3.0, ideas only): words keep every try the writer made, and
+  the writer flips through them in place instead of deleting.
+- A Try is a word or a few words inside one paragraph, never a whole paragraph (Jan: "I will
+  never select a full paragraph, but maybe a few words"). It holds no Reference.
+- Rest the pointer on words with Tries and press ← → to flip them in the text; a small label
+  over them shows the other Tries. Typing in them edits the Try that shows.
+- The Format Bar's "Tries" button, or Ctrl+Shift+A (⇧⌘A), opens the Tries Slip under the line,
+  like the Cite Slip: the Tries as rows (click one to show it, × to remove it), a field for
+  another Try (Enter adds it, ↑ ↓ show the others), and Esc to close.
+- The AI suggests words for up to six words, under the AI Text mark, never a sentence. A word
+  from the AI keeps a Rubric underline in the text until the writer edits it.
+- A flip puts the new Try in as written, and only when the bold and italic around it stay as they
+  are. A flip that would change them (bold that starts outside the words and ends inside them, or
+  a `*` that would pair with one outside) is refused, and the slip says to change the marks first.
+  Glose never moves bold or italic marks on its own.
+- The text holds the Try that shows. The others wait in an HTML comment at the end of the file
+  (`<!-- glose:tries … -->`, YAML), so the prose stays plain Markdown for every other tool, and
+  Proof, the post and the AI review read only the text. A Try whose words were changed in
+  another editor moves to the nearest place that still holds them, or is dropped.
+- When the text ends inside an open code fence or HTML comment and has Tries, saving adds the
+  closing line before the Tries block, so the block never lands inside the fence or comment.
+- A word for a Try includes an apostrophe, hyphen or underscore between letters (`can't`,
+  `AI-genereret`, `user_id`). Bold or italic that covers only words of a Try becomes part of it.
+
 - Not yet: the University assignment's own flow and PDF, a Writing project of several files,
   publishing straight into the site's git repository, removing the old post file when a published
   title changes, and the AI's suggestions shown while typing (today the writer asks for a review).

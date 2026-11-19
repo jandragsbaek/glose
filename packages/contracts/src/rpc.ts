@@ -1,3 +1,4 @@
+/* oxlint-disable jandragsbaek/max-file-lines -- the one registry of every RPC method the app has; splitting it by Section is next */
 import * as Rpc from "effect/rpc/Rpc";
 import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as Schema from "effect/Schema";
@@ -89,6 +90,7 @@ import {
   WritingReview,
   WritingReviewUnavailable,
 } from "./writing.ts";
+import { AskTryWords, TryWords, TryWordsUnavailable } from "./tries.ts";
 
 export const RPC_METHODS = {
   serverInfo: "server.info",
@@ -166,6 +168,7 @@ export const RPC_METHODS = {
   writingCreate: "writing.create",
   writingSave: "writing.save",
   writingReview: "writing.review",
+  writingTryWords: "writing.tryWords",
   writingPublish: "writing.publish",
 } as const;
 
@@ -477,6 +480,11 @@ export const GloseRpcGroup = RpcGroup.make(
       GraphFolderNotSet,
       StorageError,
     ]),
+  }),
+  Rpc.make(RPC_METHODS.writingTryWords, {
+    payload: AskTryWords,
+    success: TryWords,
+    error: TryWordsUnavailable,
   }),
   Rpc.make(RPC_METHODS.writingPublish, {
     payload: PublishWritingProject,
