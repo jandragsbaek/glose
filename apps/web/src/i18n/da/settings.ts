@@ -43,15 +43,14 @@ export const settingsMessages: Pick<
     } satisfies Record<UpdatesProblem, string>,
   },
   versions: {
-    title: "Versioner af din graf",
+    title: "Versioner af dit arkiv",
     off: "Ingen versioner",
     offReasons: {
-      "no-graph": "Glose gemmer versioner, når du har valgt en graf-mappe.",
+      "no-vault": "Glose gemmer versioner, når du har valgt et arkiv.",
       "no-git":
-        "Git er ikke installeret på denne computer. Installer Git, og start Glose igen for at gemme versioner af din graf.",
-      "other-repository":
-        "Graf-mappen ligger i et andet git-repository. Glose laver ikke commits der.",
-      failed: "Git kunne ikke oprette et repository i graf-mappen.",
+        "Git er ikke installeret på denne computer. Installer Git, og start Glose igen for at gemme versioner af dit arkiv.",
+      "other-repository": "Arkivet ligger i et andet git-repository. Glose laver ikke commits der.",
+      failed: "Git kunne ikke oprette et repository i arkivet.",
     },
     saved: (at: Date, today: boolean) =>
       `Gemt ${today ? clockTime.format(at) : shortDate.format(at)}`,
@@ -93,7 +92,7 @@ export const settingsMessages: Pick<
     lastSaved: "Sidst gemt",
     savedAt: (at: Date, today: boolean) =>
       today ? `I dag ${clockTime.format(at)}` : shortDate.format(at),
-    risk: "Hvis computeren bliver væk eller går i stykker, mister du din graf med den.",
+    risk: "Hvis computeren bliver væk eller går i stykker, mister du dit arkiv med den.",
     backUpToGitHub: "Tag backup på GitHub",
     useRemote: "Brug et andet git-remote",
     backedUpTo: "Backup på",
@@ -107,7 +106,7 @@ export const settingsMessages: Pick<
     keep: "Fortsæt backup",
     step: (n: number, of: number) => `Trin ${n} af ${of}`,
     intro:
-      "GitHub gemmer en privat kopi af alle versioner, gratis. Kun du kan se den, og senere kan du åbne din graf på en anden computer.",
+      "GitHub gemmer en privat kopi af alle versioner, gratis. Kun du kan se den, og senere kan du åbne dit arkiv på en anden computer.",
     connect: "Forbind GitHub",
     noAccount: "Ingen GitHub-konto?",
     createAccount: "Opret en gratis",
@@ -133,7 +132,7 @@ export const settingsMessages: Pick<
     remoteIntro:
       "Glose pusher til et git-remote, du allerede har, med dit eget git-login: en SSH-nøgle eller en credential helper.",
     remoteUrl: "Adresse på remote",
-    remotePlaceholder: "git@example.com:dig/glose-graf.git",
+    remotePlaceholder: "git@example.com:dig/glose-arkiv.git",
     useThisRemote: "Brug dette remote",
     checking: "Tjekker…",
     remoteDone: "Backup taget. Glose holder remote opdateret efter hvert gem.",
@@ -147,12 +146,12 @@ export const settingsMessages: Pick<
       "versions-off": "Glose gemmer ingen versioner nu, så der er intet at tage backup af.",
       "github-not-connected": "Glose er ikke forbundet til GitHub nu. Forbind igen.",
       "public-repository":
-        "Du har et offentligt repository med det navn. Glose lægger aldrig din graf, hvor alle kan læse den. Vælg et andet navn.",
+        "Du har et offentligt repository med det navn. Glose lægger aldrig dit arkiv, hvor alle kan læse det. Vælg et andet navn.",
       "github-failed": "GitHub oprettede ikke dit repository. Prøv igen om lidt.",
       unreachable:
         "Git kunne ikke nå det remote eller kunne ikke logge ind på det. Tjek adressen, og at git på denne computer kan pushe dertil.",
-      "other-graph":
-        "Det remote indeholder en anden graf. Glose blander ikke to grafer. Brug et tomt remote eller grafens eget.",
+      "other-vault":
+        "Det remote indeholder et andet arkiv. Glose blander ikke to arkiver. Brug et tomt remote eller arkivets eget.",
     },
   },
   appearance: {
@@ -170,8 +169,8 @@ export const settingsMessages: Pick<
   settings: {
     title: "Indstillinger",
     language: "Sprog i programmet",
-    graphFolder: "Graf-mappe",
-    graphFolderHint: "Skift af mappe kommer i en senere version.",
+    vaultFolder: "Arkiv",
+    vaultFolderHint: "Skift af mappe kommer i en senere version.",
     site: "Dit websted",
     siteNotChosen: "Ikke valgt endnu.",
     sections: "Dele af Indstillinger",

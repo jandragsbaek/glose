@@ -26,7 +26,7 @@ export const sourceMessages: Pick<Messages, "source" | "sources" | "addSource"> 
       `Mangler for en korrekt kildehenvisning: ${list.format(missing)}.`,
     howToFix: "Sådan tilføjer du det",
     missingHowTo:
-      "Tilføj det i kildens Markdown-fil i Graf-mappen. Redigering i Glose kommer i en senere version.",
+      "Tilføj det i kildens Markdown-fil i arkivet. Redigering i Glose kommer i en senere version.",
     details: "Bibliografiske data",
     fields: {
       author: "Forfatter",
@@ -177,6 +177,6 @@ export const sourceMessages: Pick<Messages, "source" | "sources" | "addSource"> 
     submit: "Tilføj kilde",
     cancel: "Annullér",
     nameTaken: (fileName: string) =>
-      `Graf-mappen har allerede en fil med navnet "${fileName}". Ret titlen, eller åbn den kilde, der findes.`,
+      `Arkivet har allerede en fil med navnet "${fileName}". Ret titlen, eller åbn den kilde, der findes.`,
   },
 };

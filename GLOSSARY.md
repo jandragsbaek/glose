@@ -5,9 +5,15 @@ its ubiquitous language: use these terms in code, tests, issues, PRs and commits
 
 ## Language
 
+**Vault**:
+The folder that holds the user's **Graph**, **Sources**, **Cards**, **Writing projects** and
+**Sessions**, with its own settings. The user starts a new **Vault**, opens one, or copies one
+from GitHub.
+_Avoid_: Graph folder, graph (for the folder), project, workspace, library
+
 **Graph**:
-All **Notes** and the **Links** between them. Also the **Section** that holds them.
-_Avoid_: vault, library, knowledge base, collection, zettelkasten
+All **Notes** and the **Links** between them, in a **Vault**. Also the **Section** that draws them.
+_Avoid_: vault (for the Notes and Links), library, knowledge base, collection, zettelkasten
 
 **Section**:
 One of the three top parts of the app: the **Graph**, **Writing projects** and **Recall**. Each
@@ -167,6 +173,7 @@ _Avoid_: alternative, variant, version, suggestion
 
 ## Relationships
 
+- A **Vault** holds one **Graph**; moving, sharing or backing up the folder takes all of it along
 - Every **Note** has a **Source**; **Links** join **Notes** into the **Graph**
 - A **Source** is a book (read elsewhere), an **Article**, a **Course lesson** or a **Video**; an
   **Article** and a **Course lesson** bring their text, so the Reading **Stage** starts by reading it
@@ -177,7 +184,7 @@ _Avoid_: alternative, variant, version, suggestion
 - A new **Source** can be filled in from a **Catalog**; the **Source** file, not the **Catalog**,
   is the truth
 - A **Probe** is a **Session**; the user's **Reasoning** in it is kept
-- A **Writing project** reads from the **Graph** but is not part of it
+- A **Writing project** reads from the **Graph** but is not part of it; both live in the **Vault**
 - A **Writing project** is a **Blog post** or a **University assignment**; its type decides how
   **Citations** appear and what the **Publication** is
 - A **Reference** points to a **Note** or a **Source** at a **Location**; the tool builds a

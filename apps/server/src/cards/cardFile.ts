@@ -2,7 +2,7 @@ import { type CardText, hasAiCallout, parseWikilink } from "@glose/contracts";
 import * as Option from "effect/Option";
 import * as Yaml from "yaml";
 
-import { FRONTMATTER } from "../graph/sourceFile.ts";
+import { FRONTMATTER } from "../vault/sourceFile.ts";
 
 export interface CardFileContent extends CardText {
   readonly id: string | null;

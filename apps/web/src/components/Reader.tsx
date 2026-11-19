@@ -13,7 +13,7 @@ import { ArrowLeft } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { useT } from "../i18n/I18n.tsx";
-import { articleAtom, markPassageAtom, setPlaceAtom, unsavedWordsAtom } from "../state/graph.ts";
+import { articleAtom, markPassageAtom, setPlaceAtom, unsavedWordsAtom } from "../state/vault.ts";
 import {
   extractionSessionAtom,
   goDeeperAtom,

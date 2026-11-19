@@ -4,7 +4,7 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import type * as Cards from "../cards/Cards.ts";
-import type * as Graph from "../graph/Graph.ts";
+import type * as Graph from "../vault/Graph.ts";
 import type { AgentTool, InputItem } from "./agent.ts";
 import { readNoteTool } from "./graphTools.ts";
 

@@ -7,29 +7,29 @@ export type Language = typeof Language.Type;
 
 export const Settings = Schema.Struct({
   language: Schema.NullOr(Language),
-  graphFolder: Schema.NullOr(Schema.String),
+  vaultFolder: Schema.NullOr(Schema.String),
   siteFolder: Schema.optionalKey(Schema.NullOr(Schema.String)),
 });
 export type Settings = typeof Settings.Type;
 
 export const SettingsView = Schema.Struct({
   settings: Settings,
-  suggestedGraphFolder: Schema.String,
+  suggestedVaultFolder: Schema.String,
 });
 export type SettingsView = typeof SettingsView.Type;
 
-export const GraphSettings = Schema.Struct({
+export const VaultSettings = Schema.Struct({
   recall: Schema.optionalKey(RecallSettingsFile),
 });
-export type GraphSettings = typeof GraphSettings.Type;
+export type VaultSettings = typeof VaultSettings.Type;
 
-export const GraphFolderAction = Schema.Literals(["create", "open", "clone"]);
-export type GraphFolderAction = typeof GraphFolderAction.Type;
+export const VaultFolderAction = Schema.Literals(["create", "open", "clone"]);
+export type VaultFolderAction = typeof VaultFolderAction.Type;
 
 export const CompleteSetup = Schema.Struct({
   language: Language,
-  graphFolder: Schema.String,
-  action: GraphFolderAction,
+  vaultFolder: Schema.String,
+  action: VaultFolderAction,
   remote: Schema.optionalKey(Schema.String),
 });
 export type CompleteSetup = typeof CompleteSetup.Type;
@@ -39,16 +39,16 @@ export const CheckRemote = Schema.Struct({
 });
 export type CheckRemote = typeof CheckRemote.Type;
 
-export const GraphRemoteUnavailableReason = Schema.Literals(["no-git", "unreachable"]);
-export type GraphRemoteUnavailableReason = typeof GraphRemoteUnavailableReason.Type;
+export const VaultRemoteUnavailableReason = Schema.Literals(["no-git", "unreachable"]);
+export type VaultRemoteUnavailableReason = typeof VaultRemoteUnavailableReason.Type;
 
-export class GraphRemoteUnavailable extends Schema.TaggedError<GraphRemoteUnavailable>()(
-  "GraphRemoteUnavailable",
-  { reason: GraphRemoteUnavailableReason },
+export class VaultRemoteUnavailable extends Schema.TaggedError<VaultRemoteUnavailable>()(
+  "VaultRemoteUnavailable",
+  { reason: VaultRemoteUnavailableReason },
 ) {}
 
-export class GraphFolderUnavailable extends Schema.TaggedError<GraphFolderUnavailable>()(
-  "GraphFolderUnavailable",
+export class VaultFolderUnavailable extends Schema.TaggedError<VaultFolderUnavailable>()(
+  "VaultFolderUnavailable",
   {
     path: Schema.String,
     reason: Schema.Literals([
@@ -61,8 +61,8 @@ export class GraphFolderUnavailable extends Schema.TaggedError<GraphFolderUnavai
   },
 ) {}
 
-export class GraphFolderNotSet extends Schema.TaggedError<GraphFolderNotSet>()(
-  "GraphFolderNotSet",
+export class VaultFolderNotSet extends Schema.TaggedError<VaultFolderNotSet>()(
+  "VaultFolderNotSet",
   {},
 ) {}
 

@@ -7,7 +7,7 @@ import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 
 import { type Cue, cueAt, cuesOf, notesWordCount, videoIdOf, youtubeAt } from "../domain/video.ts";
 import { useLanguage, useT } from "../i18n/I18n.tsx";
-import { finishWatchingAtom, writeWatchNotesAtom } from "../state/graph.ts";
+import { finishWatchingAtom, writeWatchNotesAtom } from "../state/vault.ts";
 import {
   draftOf,
   finishNotes,

@@ -1,5 +1,5 @@
 import {
-  type GraphFolderNotSet,
+  type VaultFolderNotSet,
   type Session,
   SessionEntry,
   SessionKind as SessionKindSchema,
@@ -8,7 +8,7 @@ import {
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-export type GraphError = GraphFolderNotSet | StorageError;
+export type VaultError = VaultFolderNotSet | StorageError;
 
 export const SessionRecord = Schema.Struct({
   version: Schema.Literal(2),

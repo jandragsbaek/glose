@@ -182,7 +182,7 @@ export const articleMessages: typeof english = {
   importText: {
     article: "Artiklen",
     chooseFile: "Vælg en Markdown-fil",
-    dropHint: "eller slip den her. Glose kopierer den ind i Articles i din grafmappe.",
+    dropHint: "eller slip den her. Glose kopierer den ind i Articles i dit arkiv.",
     paste: "Indsæt teksten i stedet",
     pasteLabel: "Artiklen som Markdown eller ren tekst",
     usePasted: "Brug denne tekst",
@@ -254,7 +254,7 @@ export const articleMessages: typeof english = {
     titleLabel: (file: string) => `Titel for ${file}`,
     states: {
       new: "Ny",
-      taken: "Allerede i din graf",
+      taken: "Allerede i dit arkiv",
       named: "En kilde har dette filnavn. Ret titlen.",
       added: "Tilføjet",
       failed: "Ikke tilføjet",
@@ -266,7 +266,7 @@ export const articleMessages: typeof english = {
     done: (added: number, skipped: number) =>
       skipped === 0
         ? `${count(added, "lektion", "lektioner")} tilføjet.`
-        : `${count(added, "lektion", "lektioner")} tilføjet; ${numbers.format(skipped)} var allerede i din graf eller kunne ikke tilføjes.`,
+        : `${count(added, "lektion", "lektioner")} tilføjet; ${numbers.format(skipped)} var allerede i dit arkiv eller kunne ikke tilføjes.`,
     openFirst: (part: string) => `Åbn ${lessonPart(part)}`,
     seeSources: "Se dem under Kilder",
     needFiles: "Vælg lektionsfilerne først.",

@@ -23,7 +23,7 @@ import {
 import { asksWhereToStart, missingDetails, wordCount } from "../domain/source.ts";
 import { videoIdOf, youtubeAt } from "../domain/video.ts";
 import { useT } from "../i18n/I18n.tsx";
-import { KEYS, saveFreeTextAtom, sourceAtom } from "../state/graph.ts";
+import { KEYS, saveFreeTextAtom, sourceAtom } from "../state/vault.ts";
 
 interface SourceSearch {
   readonly text?: 1;

@@ -9,7 +9,7 @@ import * as ServerConfig from "../config.ts";
 import * as Server from "../server.ts";
 import * as Settings from "../settings/Settings.ts";
 import { writeCredentials } from "../testkit/credentials.ts";
-import { makeDirs } from "../testkit/graph.ts";
+import { makeDirs } from "../testkit/services.ts";
 import { FAKE_OPENAI, makeFakeOpenAi, type Answer } from "../testkit/openai.ts";
 import { CardChecks } from "./CardChecks.ts";
 import { Cards } from "./Cards.ts";
@@ -73,15 +73,15 @@ const setUp = (signedIn: boolean, { expired = false } = {}) =>
         Layer.provide(NodeServices.layer),
         Layer.provide(ServerConfig.layerTest(dirs)),
       );
-    const graphFolder = path.join(dirs.homeDir, "Glose");
+    const vaultFolder = path.join(dirs.homeDir, "Glose");
     const files = yield* Effect.gen(function* () {
       yield* (yield* Settings.Settings).completeSetup({
         language: "en",
-        graphFolder,
+        vaultFolder,
         action: "create",
       });
       yield* (yield* FileSystem.FileSystem).writeFileString(
-        path.join(graphFolder, `${NOTE}.md`),
+        path.join(vaultFolder, `${NOTE}.md`),
         "---\nglose: note\n---\n\nLeroy found that attention lingers after a task switch.\n",
       );
       const cards = yield* Cards;

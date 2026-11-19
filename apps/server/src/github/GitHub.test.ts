@@ -15,7 +15,7 @@ import * as TestClock from "effect/testing/TestClock";
 
 import { Browser } from "../chatgpt/Browser.ts";
 import * as ServerConfig from "../config.ts";
-import { makeDirs } from "../testkit/graph.ts";
+import { makeDirs } from "../testkit/services.ts";
 import { GitHub, layer } from "./GitHub.ts";
 import { GitHubApi } from "./GitHubApi.ts";
 
@@ -196,14 +196,14 @@ it.layer(NodeServices.layer)("GitHub", (it) => {
         yield* signedIn("jan", "gho_token");
         answer("POST", `${FAKE.apiUrl}/user/repos`, {
           status: 201,
-          body: { private: true, clone_url: "https://github.test/jan/glose-graph.git" },
+          body: { private: true, clone_url: "https://github.test/jan/glose-vault.git" },
         });
 
-        const url = yield* service.repository("glose-graph");
+        const url = yield* service.repository("glose-vault");
 
-        assert.strictEqual(url, "https://github.test/jan/glose-graph.git");
+        assert.strictEqual(url, "https://github.test/jan/glose-vault.git");
         const made = requests.find((request) => request.method === "POST");
-        assert.include(JSON.parse(made?.body ?? "{}"), { name: "glose-graph", private: true });
+        assert.include(JSON.parse(made?.body ?? "{}"), { name: "glose-vault", private: true });
       }),
     ),
   );
@@ -214,16 +214,16 @@ it.layer(NodeServices.layer)("GitHub", (it) => {
         yield* signedIn("jan", "gho_token");
         answer(
           "GET",
-          `${FAKE.apiUrl}/repos/jan/glose-graph`,
-          { private: true, clone_url: "https://github.test/jan/glose-graph.git" },
-          { private: false, clone_url: "https://github.test/jan/glose-graph.git" },
+          `${FAKE.apiUrl}/repos/jan/glose-vault`,
+          { private: true, clone_url: "https://github.test/jan/glose-vault.git" },
+          { private: false, clone_url: "https://github.test/jan/glose-vault.git" },
         );
 
         assert.strictEqual(
-          yield* service.repository("glose-graph"),
-          "https://github.test/jan/glose-graph.git",
+          yield* service.repository("glose-vault"),
+          "https://github.test/jan/glose-vault.git",
         );
-        const refused = yield* service.repository("glose-graph").pipe(Effect.flip);
+        const refused = yield* service.repository("glose-vault").pipe(Effect.flip);
 
         assert.deepStrictEqual(refused, new RemoteRefused({ reason: "public-repository" }));
         assert.isUndefined(requests.find((request) => request.method === "POST"));
@@ -231,7 +231,7 @@ it.layer(NodeServices.layer)("GitHub", (it) => {
     ),
   );
 
-  it.effect("lists the private repositories the user can read, Graphs first", () =>
+  it.effect("lists the private repositories the user can read, Vaults first", () =>
     withGitHub(({ service, answer, signedIn }) =>
       Effect.gen(function* () {
         yield* signedIn("jan", "gho_token");
@@ -245,35 +245,35 @@ it.layer(NodeServices.layer)("GitHub", (it) => {
         answer("GET", `${FAKE.apiUrl}/user/repos`, [
           repo("jan/dotfiles", true, "2026-11-13T08:00:00Z"),
           repo("jan/website", false, "2026-11-12T22:00:00Z"),
-          repo("Jan/glose-graph", true, "2026-11-12T21:40:00Z"),
-          repo("sample-reader/speciale-graf", true, "2026-11-09T16:05:00Z"),
+          repo("Jan/glose-vault", true, "2026-11-12T21:40:00Z"),
+          repo("sample-reader/speciale-arkiv", true, "2026-11-09T16:05:00Z"),
           repo("jan/empty", true, null),
         ]);
-        answer("GET", `${FAKE.apiUrl}/repos/Jan/glose-graph/contents/.glose/settings.json`, {});
+        answer("GET", `${FAKE.apiUrl}/repos/Jan/glose-vault/contents/.glose/settings.json`, {});
         answer(
           "GET",
-          `${FAKE.apiUrl}/repos/sample-reader/speciale-graf/contents/.glose/settings.json`,
+          `${FAKE.apiUrl}/repos/sample-reader/speciale-arkiv/contents/.glose/settings.json`,
           {},
         );
 
         const listed = yield* service.repositories;
 
         assert.deepStrictEqual(
-          listed.map(({ fullName, shared, graph }) => ({ fullName, shared, graph })),
+          listed.map(({ fullName, shared, vault }) => ({ fullName, shared, vault })),
           [
-            { fullName: "Jan/glose-graph", shared: false, graph: true },
-            { fullName: "sample-reader/speciale-graf", shared: true, graph: true },
-            { fullName: "jan/dotfiles", shared: false, graph: false },
-            { fullName: "jan/empty", shared: false, graph: false },
+            { fullName: "Jan/glose-vault", shared: false, vault: true },
+            { fullName: "sample-reader/speciale-arkiv", shared: true, vault: true },
+            { fullName: "jan/dotfiles", shared: false, vault: false },
+            { fullName: "jan/empty", shared: false, vault: false },
           ],
           "no public repository; the owner's name matches without regard to case",
         );
         assert.deepStrictEqual(listed[0], {
-          fullName: "Jan/glose-graph",
+          fullName: "Jan/glose-vault",
           owner: "Jan",
-          url: "https://github.test/Jan/glose-graph.git",
+          url: "https://github.test/Jan/glose-vault.git",
           shared: false,
-          graph: true,
+          vault: true,
           pushedAt: Date.parse("2026-11-12T21:40:00Z"),
         });
         assert.isNull(listed[3]?.pushedAt);
@@ -281,7 +281,7 @@ it.layer(NodeServices.layer)("GitHub", (it) => {
     ),
   );
 
-  it.effect("finds an old Graph on a later page of repositories", () =>
+  it.effect("finds an old Vault on a later page of repositories", () =>
     withGitHub(({ service, answer, signedIn }) =>
       Effect.gen(function* () {
         yield* signedIn("jan", "gho_token");
@@ -296,14 +296,14 @@ it.layer(NodeServices.layer)("GitHub", (it) => {
           "GET",
           `${FAKE.apiUrl}/user/repos`,
           Array.from({ length: 100 }, (_, i) => repo(`project-${i}`)),
-          [repo("glose-graph")],
+          [repo("glose-vault")],
         );
-        answer("GET", `${FAKE.apiUrl}/repos/jan/glose-graph/contents/.glose/settings.json`, {});
+        answer("GET", `${FAKE.apiUrl}/repos/jan/glose-vault/contents/.glose/settings.json`, {});
 
         const listed = yield* service.repositories;
 
         assert.lengthOf(listed, 101);
-        assert.deepInclude(listed[0], { fullName: "jan/glose-graph", graph: true });
+        assert.deepInclude(listed[0], { fullName: "jan/glose-vault", vault: true });
       }),
     ),
   );
@@ -322,12 +322,12 @@ it.layer(NodeServices.layer)("GitHub", (it) => {
     withGitHub(({ service, answer, savedFile, signedIn, status }) =>
       Effect.gen(function* () {
         yield* signedIn("jan", "gho_revoked");
-        answer("GET", `${FAKE.apiUrl}/repos/jan/glose-graph`, {
+        answer("GET", `${FAKE.apiUrl}/repos/jan/glose-vault`, {
           status: 401,
           body: { message: "Bad credentials" },
         });
 
-        const refused = yield* service.repository("glose-graph").pipe(Effect.flip);
+        const refused = yield* service.repository("glose-vault").pipe(Effect.flip);
 
         assert.deepStrictEqual(refused, new RemoteRefused({ reason: "github-not-connected" }));
         assert.deepStrictEqual(yield* status, { _tag: "Disconnected", problem: "expired" });

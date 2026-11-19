@@ -1,7 +1,7 @@
 import {
   type CompleteSetup,
-  type GraphFolderUnavailable,
-  GraphRemoteUnavailable,
+  type VaultFolderUnavailable,
+  VaultRemoteUnavailable,
   type SettingsView,
   type StorageError,
 } from "@glose/contracts";
@@ -13,7 +13,7 @@ import * as Path from "effect/Path";
 
 import * as ServerConfig from "../config.ts";
 import { GitHub } from "../github/GitHub.ts";
-import * as GraphFolder from "../graph/GraphFolder.ts";
+import * as VaultFolder from "../vault/VaultFolder.ts";
 import { Git, type GitFailed, type GitMissing } from "../versions/Git.ts";
 import { Settings } from "./Settings.ts";
 
@@ -24,9 +24,9 @@ export class Setup extends Context.Service<
       input: CompleteSetup,
     ) => Effect.Effect<
       SettingsView,
-      GraphFolderUnavailable | GraphRemoteUnavailable | StorageError
+      VaultFolderUnavailable | VaultRemoteUnavailable | StorageError
     >;
-    readonly checkRemote: (url: string) => Effect.Effect<void, GraphRemoteUnavailable>;
+    readonly checkRemote: (url: string) => Effect.Effect<void, VaultRemoteUnavailable>;
   }
 >()("glose/settings/Setup") {}
 
@@ -34,7 +34,7 @@ const CLONE_TIMEOUT_MS = 15 * 60 * 1000;
 const CHECK_TIMEOUT_MS = 2 * 60 * 1000;
 
 const remoteFailed = (error: GitFailed | GitMissing) =>
-  new GraphRemoteUnavailable({
+  new VaultRemoteUnavailable({
     reason: error._tag === "GitMissing" ? "no-git" : "unreachable",
   });
 
@@ -45,18 +45,18 @@ export const make = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const { homeDir } = yield* ServerConfig.ServerConfig;
-  const graphFolders = GraphFolder.make(fs, path);
+  const vaultFolders = VaultFolder.make(fs, path);
 
   const network = (timeoutMs: number) =>
     github.gitConfig.pipe(Effect.map((config) => ({ timeoutMs, config })));
 
   const clone = Effect.fn("Setup.clone")(function* (url: string, folder: string) {
-    if (url === "") return yield* new GraphRemoteUnavailable({ reason: "unreachable" });
-    const made = yield* graphFolders.prepareEmpty(folder);
+    if (url === "") return yield* new VaultRemoteUnavailable({ reason: "unreachable" });
+    const made = yield* vaultFolders.prepareEmpty(folder);
     yield* git
       .run(homeDir, ["clone", "--quiet", "--", url, folder], yield* network(CLONE_TIMEOUT_MS))
       .pipe(
-        Effect.tapError((error) => Effect.logWarning("Glose could not copy the Graph", error)),
+        Effect.tapError((error) => Effect.logWarning("Glose could not copy the Vault", error)),
         Effect.mapError(remoteFailed),
         Effect.tapError(() =>
           made
@@ -67,12 +67,12 @@ export const make = Effect.gen(function* () {
   });
 
   return Setup.of({
-    complete: Effect.fn("Setup.complete")(function* ({ language, graphFolder, action, remote }) {
+    complete: Effect.fn("Setup.complete")(function* ({ language, vaultFolder, action, remote }) {
       if (action !== "clone")
-        return yield* settings.completeSetup({ language, graphFolder, action });
-      const folder = graphFolder.trim();
+        return yield* settings.completeSetup({ language, vaultFolder, action });
+      const folder = vaultFolder.trim();
       yield* clone(remote?.trim() ?? "", folder);
-      return yield* settings.completeSetup({ language, graphFolder: folder, action: "open" });
+      return yield* settings.completeSetup({ language, vaultFolder: folder, action: "open" });
     }),
     checkRemote: Effect.fn("Setup.checkRemote")(function* (url: string) {
       yield* git

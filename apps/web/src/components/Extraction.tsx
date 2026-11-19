@@ -7,7 +7,7 @@ import { Check } from "lucide-react";
 import { type ReactNode, useId, useState } from "react";
 
 import { useT } from "../i18n/I18n.tsx";
-import { advanceReadingAtom, KEYS } from "../state/graph.ts";
+import { advanceReadingAtom, KEYS } from "../state/vault.ts";
 import { extractionSessionAtom, sessionAtom } from "../state/sessions.ts";
 import { Desk, PointsPanel, StartExtraction } from "./ExtractionDesk.tsx";
 import { elementOf, PointRow } from "./PointRow.tsx";

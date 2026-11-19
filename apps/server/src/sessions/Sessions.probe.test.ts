@@ -17,7 +17,7 @@ import {
 } from "../testkit/sessions.ts";
 import { BOOK_TEXT_DETAILS } from "@glose/contracts";
 
-import * as Sources from "../graph/Sources.ts";
+import * as Sources from "../vault/Sources.ts";
 import { Sessions } from "./Sessions.ts";
 
 it.layer(NodeServices.layer)("Sessions", (it) => {
@@ -74,7 +74,7 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
     "runs a Probe: asks, judges Reasoning and result apart from one answer, teaches the gap, asks again, and keeps a record",
     () =>
       Effect.gen(function* () {
-        const { fake, layer, graphFolder, sourceId, bodies } = yield* setUp;
+        const { fake, layer, vaultFolder, sourceId, bodies } = yield* setUp;
         fake.answer(MODELS, MODEL_LIST, MODEL_LIST, MODEL_LIST);
         fake.answer(
           RESPONSES,
@@ -167,7 +167,7 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
 
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const record = yield* fs.readFileString(path.join(graphFolder, "Probes", `${sourceId}.md`));
+        const record = yield* fs.readFileString(path.join(vaultFolder, "Probes", `${sourceId}.md`));
         assert.include(record, "glose: probe\n");
         assert.include(record, `source: "[[${sourceId}]]"`);
         assert.include(record, "## Q1 · Attention residue\n\nWhat lingers after a switch?");
@@ -193,7 +193,7 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
     "asks a choice question: plans, talks and hints while it is open, checks the choice in code, and judges again after a dispute",
     () =>
       Effect.gen(function* () {
-        const { fake, layer, graphFolder, sourceId, bodies } = yield* setUp;
+        const { fake, layer, vaultFolder, sourceId, bodies } = yield* setUp;
         fake.answer(MODELS, MODEL_LIST, MODEL_LIST, MODEL_LIST, MODEL_LIST, MODEL_LIST);
         fake.answer(
           RESPONSES,
@@ -221,7 +221,7 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
           const { id } = yield* sessions.start({ kind: "probe", subject: sourceId });
           yield* afterTurn(id);
           const early = yield* (yield* FileSystem.FileSystem).readFileString(
-            (yield* Path.Path).join(graphFolder, "Probes", `${sourceId}.md`),
+            (yield* Path.Path).join(vaultFolder, "Probes", `${sourceId}.md`),
           );
           assert.include(early, "B. Lost time only");
           assert.notInclude(early, "(right)", "the record keeps the key until the answer");
@@ -386,7 +386,7 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
 
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const record = yield* fs.readFileString(path.join(graphFolder, "Probes", `${sourceId}.md`));
+        const record = yield* fs.readFileString(path.join(vaultFolder, "Probes", `${sourceId}.md`));
         assert.include(
           record,
           "A. Worse work on the next task *(tests: sees quality as the only cost)*\nB. Lost time only *(right)*",

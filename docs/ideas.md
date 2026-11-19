@@ -24,7 +24,7 @@ Working notes from early conversations. Nothing here is final.
   (`aria-label`, `title`, `placeholder`, `alt`, `label`) that bypass the catalogs in
   `apps/web/src/i18n`.
 - Danish interface terms, first version (to be reviewed by a Danish user): Kilde (Source), Note,
-  Graf (Graph), Link, Kort (Card), Genkaldelse (Recall), Skriveprojekt (Writing project), Fri
+  Graf (Graph), Arkiv (Vault), Link, Kort (Card), Genkaldelse (Recall), Skriveprojekt (Writing project), Fri
   tekst (Free text), Udtræk (Extraction), Sondering (Probe), Læsning (the Reading Stage),
   AI-tekst (AI text), Kildehenvisning (Citation), Kortudtræk (Card Extraction), Foreslået kort
   (Proposed Card), Tjek (Check), Vurdering (Grade), Gennemgang (Review), Glemt / Husket
@@ -34,23 +34,28 @@ Working notes from early conversations. Nothing here is final.
 
 ## First start
 
-- A short setup: interface language, Graph folder, and an optional ChatGPT connection (it can
+- A short setup: interface language, Vault, and an optional ChatGPT connection (it can
   also be made later in Settings).
-- The Graph folder works like an Obsidian vault. The setup either starts a new Graph (suggested:
-  `Glose` in the home folder; the folder must be missing or empty) or opens a folder that exists.
-  An existing Graph opens with its own settings; any other folder (Markdown from another editor,
-  say) becomes a Graph as it is.
-- Graph settings travel with the folder, in a hidden `.glose/settings.json`. Moving the folder or
-  sharing it through Dropbox or git takes the settings along. No Graph settings exist yet; the file
-  marks the folder as a Graph.
-- Computer settings stay outside the Graph, in a `settings.json` in the OS's app data folder: the
-  path of the open Graph folder and the interface language. The language is per computer so that
-  two people who share one Graph each read the interface in their own language.
+- The Vault is the folder that holds the Graph, the Sources, the Cards, the Writing projects and
+  the Sessions, like an Obsidian vault. The setup either starts a new Vault (suggested: `Glose` in
+  the home folder; the folder must be missing or empty) or opens a folder that exists.
+  An existing Vault opens with its own settings; any other folder (Markdown from another editor,
+  say) becomes a Vault as it is.
+- Vault settings travel with the folder, in a hidden `.glose/settings.json`. Moving the folder or
+  sharing it through Dropbox or git takes the settings along. No Vault settings exist yet; the file
+  marks the folder as a Vault.
+- Computer settings stay outside the Vault, in a `settings.json` in the OS's app data folder: the
+  path of the open Vault and the interface language. The language is per computer so that
+  two people who share one Vault each read the interface in their own language.
   `GLOSE_DATA_DIR` overrides the folder.
-- The setup can also copy a Graph from GitHub or another git remote; see "Decided, a Graph from
+- The setup can also copy a Vault from GitHub or another git remote; see "Decided, a Vault from
   GitHub at first start".
-- Not built yet: noticing a Graph folder that moved or went missing, a native folder picker, and
-  switching between Graphs.
+- Not built yet: noticing a Vault that moved or went missing, a native folder picker, and
+  switching between Vaults.
+- Decided, the Vault (November 2026): Jan renamed the folder from Graph to Vault ("I like that
+  terminology much better"). Graph stays the name of the Notes and their Links, and of the
+  Section that draws them. Danish: Arkiv. Computer settings saved under the old key `graphFolder`
+  still open their Vault; the backup name Glose suggests is now `glose-vault`.
 
 ## Shape
 
@@ -75,13 +80,13 @@ The core loop depends on the stage the user is in. Stages known so far:
   the AI needs ChatGPT. Esc, the close button or a click beside the window puts the user back on
   the same page.
 - The window shows one page of settings at a time, after T3 Code's settings pages: Interface
-  language, Appearance, Graph folder, Backup, ChatGPT and Your website. The list of pages at its
+  language, Appearance, Vault, Backup, ChatGPT and Your website. The list of pages at its
   side marks the page shown and opens another on a click. Jan asked for pages in place of the
   first design, one scrolling column of every section (November 2026).
 - A page the user leaves keeps its state while the window is open, so a ChatGPT sign-in and its
   outcome stay while the user looks at another page.
 - The address keeps the window: `?settings=<page>` on any page with the rail (not the Review
-  focus screen) opens it at that page (`language`, `appearance`, `graph-folder`, `backup`,
+  focus screen) opens it at that page (`language`, `appearance`, `vault-folder`, `backup`,
   `chatgpt`, `site`). There is no `/settings` page.
 
 ## Decided, themes with light and dark (November 2026)
@@ -91,7 +96,7 @@ The core loop depends on the stage the user is in. Stages known so far:
   Appearance. Jan uses dark.
 - Three themes, each a book binding: Lapis (the default, the design so far), Murex (purple) and
   Sepia (brown leather with blue-black ink). The default mode follows the computer.
-- The choice belongs to the computer, not the Graph: it is kept in the app's local storage, and
+- The choice belongs to the computer, not the Vault: it is kept in the app's local storage, and
   the desktop app remembers it so the window opens in the right colors.
 - Every color is a theme token. A test fails on a color value outside the theme files, on a theme
   without both variants, and on text that loses its contrast; the shared lint plugin gets a rule
@@ -147,7 +152,7 @@ Decided, Writing project types (November 2026):
 - Blog post Publication: a Markdown file for Jan's Bridgetown site (YAML frontmatter, kramdown
   footnotes `[^1]`), written into the site's `src/_posts/` as `YYYY-MM-DD-<slug>.md`. The site
   folder is chosen on first use and kept in Settings.
-- Writing projects live in a `Writing` folder inside the Graph folder, so Versions and the GitHub
+- Writing projects live in a `Writing` folder inside the Vault, so Versions and the GitHub
   backup keep them. The Graph does not read that folder as Notes.
 - The AI in a Blog post may suggest Notes to cite for the paragraph being written, flag a claim
   that states a fact from a Source but cites nothing, check that a quote matches its Note and that
@@ -270,7 +275,7 @@ Decided, Tries on the desk (November 2026), chosen with impeccable ("Tries Slip"
 
 Decided, the Card file (November 2026):
 
-- One file per Card, `Cards/<question>.md` in a `Cards` folder of the Graph folder. The file
+- One file per Card, `Cards/<question>.md` in a `Cards` folder of the Vault. The file
   name is the question, made file-safe; a name that is taken (in any case) gets ` 2`, ` 3`. A
   question with nothing a file name may hold is named by its id. Editing the question does not
   rename the file.
@@ -294,7 +299,7 @@ Decided, the Card file (November 2026):
 
 - `from` is a wikilink to the file the Card is made from (a Note, a Rich note, or a Source), so
   Obsidian links the Card to it. The Graph view does not show Cards: Glose reads only the top of
-  the Graph folder as the Graph.
+  the Vault as the Graph.
 - `id` stays for the life of the Card, so Reviews keep pointing at it when the file is renamed.
   A Card written by hand without an `id` gets one when Glose next writes it.
 - Glose keeps every other frontmatter field (tags, comments) when it edits a Card.
@@ -371,13 +376,13 @@ Decided, Reviews (November 2026):
   on the server only.
 - Every Review is appended as one JSON line to `.glose/recall/reviews/<computer id>/<yyyy-mm>.jsonl`
   (month in UTC): `{"card":"c-…","at":"<ISO time>","rating":"good","answerMs":3100}`. The rating
-  is `again`, `hard`, `good` or `easy`. Each computer writes only its own folder, so a Graph shared
+  is `again`, `hard`, `good` or `easy`. Each computer writes only its own folder, so a Vault shared
   through Dropbox or git has no conflicts, and git sees only added lines. A line Glose cannot read
   is skipped, so one cut-off line does not lose the record.
 - The computer id is a random id in `computer.json` in the app data folder, made on first use.
 - The log is the record. Each Card's FSRS state is replayed from the logs of every computer, in
   time order. Changed: the replayed state is cached in memory only, not in `.glose/recall/`,
-  because a cache file in a shared Graph folder would conflict between computers. A new Review
+  because a cache file in a shared Vault would conflict between computers. A new Review
   is applied to the cache at once; a changed log file (a sync) or changed settings replays the
   whole log (50,000 Reviews take about 0.6 s).
 - Because the state is replayed, a changed setting applies to past Reviews too, like Anki's
@@ -388,7 +393,7 @@ Decided, Reviews (November 2026):
 
 Decided, Recall settings (November 2026):
 
-- They travel with the Graph, in `.glose/settings.json` under `recall`, because the Reviews they
+- They travel with the Vault, in `.glose/settings.json` under `recall`, because the Reviews they
   schedule travel with it too. The file holds only what the user changed; a missing field takes
   its default, so a later Glose can improve a default the user never set. Until the Settings
   panel edits them, they can be changed by hand in that file.
@@ -443,7 +448,7 @@ The Probe and Review are different things with different goals.
 - The folder structure is mostly flat, as Obsidian practice recommends. Structure comes from links, not from folders.
 - Notes link to each other with wikilinks (`[[note name]]`).
 - The exact layout is not fixed now. It will be worked out along the way.
-- First decision, the Source file: `<Family name> <year> <Title>.md` in the Graph folder,
+- First decision, the Source file: `<Family name> <year> <Title>.md` in the Vault,
   with YAML frontmatter (`glose: source`, `author-family`, `author-given`, `title`,
   `first-published`, `edition`, `edition-year`, `publisher`, `translator`, `reading-step`,
   `reading-start`) and the user's Free text as the body (see "Decided, the first page of a
@@ -464,25 +469,25 @@ The Probe and Review are different things with different goals.
   Glose and a contact address in its `User-Agent`, as Open Library asks.
 - A Source's call number (`ARE 1958`) is the first three letters of the family name and the
   year of first publication. It is shown, not stored.
-- The Note file: `<Note title>.md` in the Graph folder, with frontmatter `glose: note`,
+- The Note file: `<Note title>.md` in the Vault, with frontmatter `glose: note`,
   `source: "[[<Source file name>]]"` and, when the user gives one, the Location as `page` (a string,
   so "47–49" and "xii" work too), then the Note text with wikilinks. The `source` field is itself a
   wikilink, so Obsidian links a Note to its Source too. AI text in it carries the AI mark (see
   "AI-written text in the graph"). Extraction writes Notes in this form (see "Decided,
   Extraction from a Source"); a title another file has, in any case, is refused, not numbered.
-- Any other Markdown file in the Graph folder is a Note without a Source. Links follow Obsidian:
+- Any other Markdown file in the Vault is a Note without a Source. Links follow Obsidian:
   `[[name]]`, `[[name|shown words]]`, `[[name#heading]]` and embeds count, names match without
   regard to case, a wikilink inside code is not a Link, and a wikilink to a missing file draws no
   Link.
 
 Decided, Versions (November 2026):
 
-- Glose keeps a full history of the Graph folder in git. Each Version is a commit. The Graph
-  folder is the repository; Glose runs the user's own `git`, so their remotes, SSH keys and
+- Glose keeps a full history of the Vault in git. Each Version is a commit. The Vault is
+  the repository; Glose runs the user's own `git`, so their remotes, SSH keys and
   credential helpers work as they do in a terminal. Without git, Glose keeps no Versions and
   says so.
-- A Graph folder that is no repository gets `git init` (branch `main`) and a `.gitignore` for
-  half-written temporaries, OS litter and Obsidian's layout files. A Graph folder inside another
+- A Vault that is no repository gets `git init` (branch `main`) and a `.gitignore` for
+  half-written temporaries, OS litter and Obsidian's layout files. A Vault inside another
   repository is left alone.
 - Glose looks at the folder every 30 seconds. A change is saved once the folder has been quiet
   for 5 minutes, so edits from Obsidian count too. The message is `Auto-save: N files` with the
@@ -491,7 +496,7 @@ Decided, Versions (November 2026):
 - End of day is the user's active choice: one line about the day names a Version, made even
   without changes. The automatic Versions stay.
 - Sync: after each save and when Glose opens, Glose fetches, rebases this computer's Versions on
-  the remote's, and pushes. Opening pulls, so the user starts on the latest Graph. The remote is
+  the remote's, and pushes. Opening pulls, so the user starts on the latest Vault. The remote is
   the branch's own, else `origin`, else the only one. When both sides changed the same lines,
   Glose undoes the rebase, keeps every Version, and shows the conflict; the user joins the
   changes with git. Without a remote the Versions stay on the computer.
@@ -512,7 +517,7 @@ Decided, Backup (November 2026):
   with impeccable over a step list in the panel and a choice followed by the step bar.
 - GitHub: Glose connects with GitHub's device flow. It shows a code; the user types it on
   github.com, and Glose continues by itself. Then Glose makes a private repository of the name the
-  user gives (suggested `glose-graph`), or uses the user's own private one of that name, and
+  user gives (suggested `glose-vault`), or uses the user's own private one of that name, and
   pushes every Version. It never pushes to a public repository.
 - The GitHub sign-in is per computer, in `github.json` beside the computer settings, readable only
   by the user. It needs the `repo` scope, so it can reach all of the user's repositories; GitHub
@@ -521,38 +526,38 @@ Decided, Backup (November 2026):
   GitHub's page of applications.
 - Another git remote: the user gives its address, and Glose uses their own git sign-in (SSH key
   or credential helper). Glose checks that git reaches it first.
-- Glose refuses a remote that holds another history, so two Graphs never mix. Stop backing up
+- Glose refuses a remote that holds another history, so two Vaults never mix. Stop backing up
   removes the remote; the Versions stay here and on the old remote.
 - Glose's OAuth app on GitHub is registered under Jan's account (Device Flow on; the callback URL
   is the unused `http://127.0.0.1/`). Its public client ID is in
   `apps/server/src/github/GitHubApi.ts`; `GLOSE_GITHUB_CLIENT_ID` replaces it.
-- Opening a backup on a second computer: see "Decided, a Graph from GitHub at first start".
+- Opening a backup on a second computer: see "Decided, a Vault from GitHub at first start".
 
-Decided, a Graph from GitHub at first start (November 2026):
+Decided, a Vault from GitHub at first start (November 2026):
 
-- The Graph folder step of the first start has a third way in, "Get it from GitHub", beside
-  starting a new Graph and opening a folder. It copies (clones) a Graph the user keeps on GitHub or
-  on another git remote: their own backup on a second computer, or a Graph another person shares
+- The Vault step of the first start has a third way in, "Get it from GitHub", beside
+  starting a new Vault and opening a folder. It copies (clones) a Vault the user keeps on GitHub or
+  on another git remote: their own backup on a second computer, or a Vault another person shares
   with them on GitHub.
 - The setup page stays one column. The step shows a short ledger, "From", and the choosing happens
   in a sheet, the Backup sheet run the other way. Jan chose this ("Ledger and sheet") with
-  impeccable over a two-column page that lists the Graphs found and over a setup in steps under the
+  impeccable over a two-column page that lists the Vaults found and over a setup in steps under the
   step bar.
 - GitHub: step 1 connects with the device code, as Backup does. Step 2 lists the private
-  repositories the account owns or that are shared with it, Graphs first (a repository holding
-  `.glose/settings.json`), the latest pushed Graph chosen. Each row names the repository as a typed
+  repositories the account owns or that are shared with it, Vaults first (a repository holding
+  `.glose/settings.json`), the latest pushed Vault chosen. Each row names the repository as a typed
   label, when it was last updated, and "Yours" or "Shared by <owner>". The rest fold under "Other
-  repositories"; one of them becomes a Graph as it is. Public repositories are not listed. Glose
+  repositories"; one of them becomes a Vault as it is. Public repositories are not listed. Glose
   reads every page of the list and looks into each private repository, one request each.
 - Another git remote: the user types its address; Glose checks with `git ls-remote` that the user's
   own git can read it before the sheet closes.
 - The folder stays in the panel: the copy goes into a new folder that must be missing or empty
-  (suggested `Glose` in the home folder). "Start using Glose" copies it ("Copying your Graph…") with
+  (suggested `Glose` in the home folder). "Start using Glose" copies it ("Copying your Vault…") with
   the user's git, signed in to GitHub through the environment as for Backup, then opens it. A
   failed copy keeps nothing, and the error stands under "From".
-- The remote stays the Graph's `origin`, so Versions sync with it from the first start: the backup
+- The remote stays the Vault's `origin`, so Versions sync with it from the first start: the backup
   is set up already.
-- Not yet: a progress count while a large Graph copies, and choosing the folder with a native
+- Not yet: a progress count while a large Vault copies, and choosing the folder with a native
   picker.
 
 ## Graph view
@@ -568,11 +573,11 @@ Decided, a Graph from GitHub at first start (November 2026):
   Links. Without a selection it lists the Sources. Search fades everything except matching names.
 - Double-clicking a Source opens its Reading Stage; double-clicking a Note opens it on the rewrite
   desk (see "Decided, the AI mark on the Graph"). A Note has no page of its own yet.
-- `pnpm dev:demo` opens Glose on the demo Graph (`demo/Graph`): twelve Sources, two of them Danish,
+- `pnpm dev:demo` opens Glose on the demo Vault (`demo/Vault`): twelve Sources, two of them Danish,
   one a sample Article with Passages and one a Video with sample watch notes, with 105 linked Notes
   of clearly sample content.
   `demo/Course export (sample)` holds five sample lesson files to try Add Source → Course lessons. It runs on a copy in the temp folder with its
-  own computer settings, so the user's Graph and settings stay untouched.
+  own computer settings, so the user's Vault and settings stay untouched.
 
 ## References in writing
 
@@ -687,20 +692,20 @@ Decided, first version (November 2026):
   Glose's tools reach the model in one namespace, `glose`, as this route requires.
 - The model is the first one OpenAI lists for the account. A model picker can come later.
 - The ChatGPT credentials are per computer, in `chatgpt.json` beside the computer settings, readable
-  by the owner only. They never go into the Graph folder, which may be shared.
+  by the owner only. They never go into the Vault, which may be shared.
 - Following OpenAI's guidelines: the button reads "Continue with ChatGPT", a one-time notice says
   "You're using your ChatGPT plan", and "Using ChatGPT plan" with a "Manage usage" link to
   ChatGPT's usage page sits next to the Session's message box. The ChatGPT logo is not used yet.
 - First Session kind: Extraction (see "Decided, Extraction from a Source"). One Extraction Session
   per Source; reopening the Source continues it.
 - Glose's own tools are plain functions in its agent loop, sent in the `glose` namespace. MCP is
-  not needed: Glose owns the loop, and OpenAI's hosted MCP would need a public address for a Graph
+  not needed: Glose owns the loop, and OpenAI's hosted MCP would need a public address for a Vault
   that is local.
 - Each request asks for a summary of the model's reasoning (`reasoning.summary: "auto"`). The
   Session shows it as "Thought for N s", folded. If ChatGPT refuses the request for its reasoning
   summary (a model or account without them), the turn is sent again without it, and later turns
   in that run of Glose do not ask.
-- A Session is kept in the Graph folder as `.glose/sessions/<id>.json`: what the user saw, and the
+- A Session is kept in the Vault as `.glose/sessions/<id>.json`: what the user saw, and the
   exact model input that the next turn continues from.
 - Developing on a headless node: the callback reaches the computer that runs the browser, so
   forward the port first (`ssh -L 1455:127.0.0.1:1455 <node>`), or sign in on a computer with a
@@ -878,8 +883,8 @@ three-model council.
 - Two new kinds of Source bring their own text as Markdown: an Article (an academic paper, a web
   essay, or a magazine or newspaper piece) and a Course lesson. PDF comes later. The Source file
   holds `kind: article` or `kind: lesson`; a Source without `kind` is a book.
-- The text is copied into `Articles/<Source file name>.md` in the Graph folder, as imported. It is
-  in a folder because Glose reads every file at the top of the Graph folder as a Note.
+- The text is copied into `Articles/<Source file name>.md` in the Vault, as imported. It is
+  in a folder because Glose reads every file at the top of the Vault as a Note.
 - Add Source asks first what is added: Book, Article or Course lessons. An Article comes from one
   `.md` file (chosen or dropped) or from pasted text; a web clipper's frontmatter (title, author,
   source, published, site) fills the form, marked "From the file". Its data follows its type: a
@@ -976,7 +981,7 @@ Sheet keeps the book's Reading Stage, adds one new mark to the Markdown, and nee
   the cursor is; Ctrl+Shift+Enter plays or pauses and Alt+Enter plays from the timestamp before
   the cursor, without leaving the notes.
 - YouTube's code runs only inside the player's own frame, on YouTube's origin, never in Glose's
-  page, so it cannot reach the Graph: Glose
+  page, so it cannot reach the Vault: Glose
   talks to the frame with window messages (play, pause, go to a second; it hears the time and the
   player's state), and believes only messages from that frame. A player that has not answered
   after 15 seconds counts as offline.
@@ -1058,7 +1063,7 @@ Sheet keeps the book's Reading Stage, adds one new mark to the Markdown, and nee
 - Kept: the Session in `.glose/sessions/<id>.json`, and a Markdown record, `Probes/<Source>.md`,
   rewritten as the Probe goes: frontmatter `glose: probe`, `source`, `started`, `finished`,
   `ai: true`; each question with the user's Reasoning and answer, the judgment and the teaching as
-  `[!ai]` callouts, and what the Probe found. Glose reads only the top of the Graph folder as the
+  `[!ai]` callouts, and what the Probe found. Glose reads only the top of the Vault as the
   Graph, so the record is no Note. Only the transcript is kept, never audio. Gaps do not become
   Cards; they go to Extraction.
 - Dictation: the ChatGPT plan route does not allow the transcription API ("Audio/video input, the
@@ -1186,7 +1191,7 @@ Taken from learnharness: the user thinks out loud, by typing or by dictation, an
   (Partly answered: a new Note from blank may rest on a kept web page, or have no Source yet.)
 - Is the exact location (page number, timestamp) required on every note, or only when the note is
   cited? For now a Note's page is optional.
-- Does each user have a separate graph and separate records?
+- Does each user have a separate Vault and separate records?
 - Which reference system does the university require?
 - How does the tool check that a quote matches the source when it does not have the full text of the book?
 - Beyond the Blog post help decided above (Notes to cite, flags, quote and page checks, closing questions), may the AI suggest other words or point at weak sentences?

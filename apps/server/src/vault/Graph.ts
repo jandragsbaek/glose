@@ -1,4 +1,4 @@
-import { GraphFolderNotSet, type GraphView, StorageError } from "@glose/contracts";
+import { VaultFolderNotSet, type GraphView, StorageError } from "@glose/contracts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -11,7 +11,7 @@ import { buildGraphView } from "./graphView.ts";
 export class Graph extends Context.Service<
   Graph,
   {
-    readonly read: Effect.Effect<GraphView, GraphFolderNotSet | StorageError>;
+    readonly read: Effect.Effect<GraphView, VaultFolderNotSet | StorageError>;
   }
 >()("glose/Graph") {}
 
@@ -26,15 +26,15 @@ export const make = Effect.gen(function* () {
 
   return Graph.of({
     read: Effect.gen(function* () {
-      const { graphFolder } = (yield* settings.get).settings;
-      if (graphFolder === null) return yield* new GraphFolderNotSet();
-      const entries = yield* fs.readDirectory(graphFolder).pipe(Effect.mapError(storageError));
+      const { vaultFolder } = (yield* settings.get).settings;
+      if (vaultFolder === null) return yield* new VaultFolderNotSet();
+      const entries = yield* fs.readDirectory(vaultFolder).pipe(Effect.mapError(storageError));
       const names = entries.filter((entry) => entry.endsWith(MARKDOWN) && !entry.startsWith("."));
       const files = yield* Effect.forEach(
         names,
         (entry) =>
           fs
-            .readFileString(path.join(graphFolder, entry))
+            .readFileString(path.join(vaultFolder, entry))
             .pipe(Effect.map((markdown) => ({ name: entry.slice(0, -MARKDOWN.length), markdown }))),
         { concurrency: 16 },
       ).pipe(Effect.mapError(storageError));

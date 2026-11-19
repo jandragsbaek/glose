@@ -8,7 +8,7 @@ import * as Path from "effect/Path";
 
 import * as ServerConfig from "../config.ts";
 import * as Settings from "../settings/Settings.ts";
-import { makeDirs } from "../testkit/graph.ts";
+import { makeDirs } from "../testkit/services.ts";
 import * as Catalog from "./Catalog.ts";
 
 const withCatalog = <A, E>(
@@ -42,7 +42,7 @@ const withCatalog = <A, E>(
     return yield* Effect.gen(function* () {
       yield* (yield* Settings.Settings).completeSetup({
         language: "da",
-        graphFolder: path.join(dirs.homeDir, "Glose"),
+        vaultFolder: path.join(dirs.homeDir, "Glose"),
         action: "create",
       });
       return yield* test(yield* Catalog.Catalog, requests);

@@ -19,7 +19,7 @@ export const GitHubRepository = Schema.Struct({
   owner: Schema.String,
   url: Schema.String,
   shared: Schema.Boolean,
-  graph: Schema.Boolean,
+  vault: Schema.Boolean,
   pushedAt: Schema.NullOr(Schema.Number),
 });
 export type GitHubRepository = typeof GitHubRepository.Type;

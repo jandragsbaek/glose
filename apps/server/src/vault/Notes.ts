@@ -1,6 +1,6 @@
 import {
   CARDS_FOLDER,
-  GraphFolderNotSet,
+  VaultFolderNotSet,
   NoteNameTaken,
   NoteNotFound,
   type SaveNote,
@@ -28,15 +28,15 @@ export class Notes extends Context.Service<
   {
     readonly create: (
       input: NoteFileContent & { readonly title: string },
-    ) => Effect.Effect<string, NoteNameTaken | GraphFolderNotSet | StorageError>;
+    ) => Effect.Effect<string, NoteNameTaken | VaultFolderNotSet | StorageError>;
     readonly checkName: (
       title: string,
-    ) => Effect.Effect<string, NoteNameTaken | GraphFolderNotSet | StorageError>;
+    ) => Effect.Effect<string, NoteNameTaken | VaultFolderNotSet | StorageError>;
     readonly save: (
       input: SaveNote,
-    ) => Effect.Effect<string, NoteNotFound | NoteNameTaken | GraphFolderNotSet | StorageError>;
+    ) => Effect.Effect<string, NoteNotFound | NoteNameTaken | VaultFolderNotSet | StorageError>;
   }
->()("glose/graph/Notes") {}
+>()("glose/vault/Notes") {}
 
 const MARKDOWN = ".md";
 
@@ -69,11 +69,11 @@ export const make = Effect.gen(function* () {
   });
 
   const checkName = Effect.fn("Notes.checkName")(function* (title: string) {
-    const { graphFolder } = (yield* settings.get).settings;
-    if (graphFolder === null) return yield* new GraphFolderNotSet();
+    const { vaultFolder } = (yield* settings.get).settings;
+    if (vaultFolder === null) return yield* new VaultFolderNotSet();
     const name = toFileName(title);
     if (name === "") return yield* new NoteNameTaken({ fileName: title });
-    const taken = yield* fs.readDirectory(graphFolder).pipe(Effect.mapError(storageError));
+    const taken = yield* fs.readDirectory(vaultFolder).pipe(Effect.mapError(storageError));
     if (taken.some((entry) => sameFileName(entry, `${name}${MARKDOWN}`))) {
       return yield* new NoteNameTaken({ fileName: name });
     }
@@ -85,12 +85,12 @@ export const make = Effect.gen(function* () {
 
     create: Effect.fn("Notes.create")(
       function* ({ title, ...content }) {
-        const { graphFolder } = (yield* settings.get).settings;
-        if (graphFolder === null) return yield* new GraphFolderNotSet();
+        const { vaultFolder } = (yield* settings.get).settings;
+        if (vaultFolder === null) return yield* new VaultFolderNotSet();
         const name = yield* checkName(title);
         yield* writeFileAtomic(
           fs,
-          path.join(graphFolder, `${name}${MARKDOWN}`),
+          path.join(vaultFolder, `${name}${MARKDOWN}`),
           renderNoteFile(content),
         ).pipe(Effect.mapError(storageError));
         return name;
@@ -100,10 +100,10 @@ export const make = Effect.gen(function* () {
 
     save: Effect.fn("Notes.save")(
       function* ({ id, title, aiTitle, page, body, aiNote }) {
-        const { graphFolder } = (yield* settings.get).settings;
-        if (graphFolder === null) return yield* new GraphFolderNotSet();
+        const { vaultFolder } = (yield* settings.get).settings;
+        if (vaultFolder === null) return yield* new VaultFolderNotSet();
         if (!isFileName(id)) return yield* new NoteNotFound({ id });
-        const file = path.join(graphFolder, `${id}${MARKDOWN}`);
+        const file = path.join(vaultFolder, `${id}${MARKDOWN}`);
         if (!(yield* fs.exists(file).pipe(Effect.mapError(storageError)))) {
           return yield* new NoteNotFound({ id });
         }
@@ -112,7 +112,7 @@ export const make = Effect.gen(function* () {
 
         const name = toFileName(title);
         if (name === "") return yield* new NoteNameTaken({ fileName: title });
-        const entries = yield* fs.readDirectory(graphFolder).pipe(Effect.mapError(storageError));
+        const entries = yield* fs.readDirectory(vaultFolder).pipe(Effect.mapError(storageError));
         const own = `${id}${MARKDOWN}`;
         if (
           entries.some(
@@ -130,12 +130,12 @@ export const make = Effect.gen(function* () {
         if (name === id) return id;
 
         yield* fs
-          .rename(file, path.join(graphFolder, `${name}${MARKDOWN}`))
+          .rename(file, path.join(vaultFolder, `${name}${MARKDOWN}`))
           .pipe(Effect.mapError(storageError));
-        const cards = path.join(graphFolder, CARDS_FOLDER);
+        const cards = path.join(vaultFolder, CARDS_FOLDER);
         const folders = (yield* fs.exists(cards).pipe(Effect.mapError(storageError)))
-          ? [graphFolder, cards]
-          : [graphFolder];
+          ? [vaultFolder, cards]
+          : [vaultFolder];
         yield* Effect.forEach(folders, (folder) =>
           relinkFolder(folder, id, name).pipe(Effect.mapError(storageError)),
         );

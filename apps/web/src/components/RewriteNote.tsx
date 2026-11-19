@@ -19,7 +19,7 @@ import {
 import { type AiScope, parseNoteText } from "../graph/noteText.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { CARD_KEYS, cardsAtom } from "../state/cards.ts";
-import { KEYS, saveNoteAtom } from "../state/graph.ts";
+import { KEYS, saveNoteAtom } from "../state/vault.ts";
 import { AiText, NoteText, type WikilinkPart } from "./NoteText.tsx";
 import { CallNumber, Panel } from "./ui.tsx";
 

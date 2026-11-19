@@ -1,7 +1,7 @@
 import { articleForAi, parseArticle } from "@glose/contracts";
 import * as Effect from "effect/Effect";
 
-import type * as Sources from "../graph/Sources.ts";
+import type * as Sources from "../vault/Sources.ts";
 import type { AgentTool } from "./agent.ts";
 
 const NO_ARGUMENTS = {

@@ -2,7 +2,7 @@ import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 
-import * as Sources from "../graph/Sources.ts";
+import * as Sources from "../vault/Sources.ts";
 import type { WebPage } from "../research/WebPages.ts";
 import { DRAFT, PAGE_A, proposePages, searchThenRead, URL_A } from "../testkit/research.ts";
 import {

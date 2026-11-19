@@ -11,7 +11,7 @@ import * as NodeCrypto from "node:crypto";
 import * as ServerConfig from "../config.ts";
 import * as Server from "../server.ts";
 import { writeCredentials } from "../testkit/credentials.ts";
-import { makeDirs } from "../testkit/graph.ts";
+import { makeDirs } from "../testkit/services.ts";
 import { FAKE_OPENAI, makeFakeOpenAi } from "../testkit/openai.ts";
 import { Browser } from "./Browser.ts";
 import { ChatGpt } from "./ChatGpt.ts";

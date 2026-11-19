@@ -1,4 +1,4 @@
-import { GraphFolderUnavailable, GraphRemoteUnavailable } from "@glose/contracts";
+import { VaultFolderUnavailable, VaultRemoteUnavailable } from "@glose/contracts";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -9,7 +9,7 @@ import * as Stream from "effect/Stream";
 
 import * as ServerConfig from "../config.ts";
 import { GitHub } from "../github/GitHub.ts";
-import { makeDirs } from "../testkit/graph.ts";
+import { makeDirs } from "../testkit/services.ts";
 import * as Git from "../versions/Git.ts";
 import * as Settings from "./Settings.ts";
 import * as Setup from "./Setup.ts";
@@ -24,7 +24,7 @@ const withRemote = <A, E>(
     readonly settings: Settings.Settings["Service"];
     readonly git: (cwd: string, ...args: ReadonlyArray<string>) => Effect.Effect<string, unknown>;
   }) => Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>,
-  graph: Readonly<Record<string, string>> = {
+  vault: Readonly<Record<string, string>> = {
     ".glose/settings.json": '{"recall":{"newCardsPerDay":10}}',
     "Attention residue.md": "Switching tasks leaves part of the mind behind.\n",
   },
@@ -43,7 +43,7 @@ const withRemote = <A, E>(
     const other = path.join(dirs.homeDir, "other-computer");
     yield* git(dirs.homeDir, "init", "--quiet", "--bare", "--initial-branch=main", remote);
     yield* git(dirs.homeDir, "init", "--quiet", "--initial-branch=main", other);
-    for (const [file, text] of Object.entries(graph)) {
+    for (const [file, text] of Object.entries(vault)) {
       yield* fs.makeDirectory(path.dirname(path.join(other, file)), { recursive: true });
       yield* fs.writeFileString(path.join(other, file), text);
     }
@@ -71,7 +71,7 @@ const withRemote = <A, E>(
   }).pipe(Effect.scoped);
 
 it.layer(NodeServices.layer)("Setup", (it) => {
-  it.effect("copies a Graph from a remote into a new folder and opens it there", () =>
+  it.effect("copies a Vault from a remote into a new folder and opens it there", () =>
     withRemote(({ remote, homeDir, setup, settings, git }) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -80,12 +80,12 @@ it.layer(NodeServices.layer)("Setup", (it) => {
 
         const view = yield* setup.complete({
           language: "da",
-          graphFolder: folder,
+          vaultFolder: folder,
           action: "clone",
           remote,
         });
 
-        assert.deepStrictEqual(view.settings, { language: "da", graphFolder: folder });
+        assert.deepStrictEqual(view.settings, { language: "da", vaultFolder: folder });
         assert.deepStrictEqual((yield* settings.get).settings, view.settings);
         assert.strictEqual(
           yield* fs.readFileString(path.join(folder, "Attention residue.md")),
@@ -94,7 +94,7 @@ it.layer(NodeServices.layer)("Setup", (it) => {
         assert.strictEqual(
           yield* fs.readFileString(path.join(folder, ".glose", "settings.json")),
           '{"recall":{"newCardsPerDay":10}}',
-          "the Graph keeps its own settings",
+          "the Vault keeps its own settings",
         );
         assert.strictEqual(yield* git(folder, "config", "--get", "remote.origin.url"), remote);
         assert.strictEqual(yield* git(folder, "status", "--porcelain"), "");
@@ -102,7 +102,7 @@ it.layer(NodeServices.layer)("Setup", (it) => {
     ),
   );
 
-  it.effect("makes a Graph of a copied repository that holds none yet", () =>
+  it.effect("makes a Vault of a copied repository that holds none yet", () =>
     withRemote(
       ({ remote, homeDir, setup }) =>
         Effect.gen(function* () {
@@ -110,7 +110,7 @@ it.layer(NodeServices.layer)("Setup", (it) => {
           const path = yield* Path.Path;
           const folder = path.join(homeDir, "Notes from elsewhere");
 
-          yield* setup.complete({ language: "en", graphFolder: folder, action: "clone", remote });
+          yield* setup.complete({ language: "en", vaultFolder: folder, action: "clone", remote });
 
           assert.isTrue(yield* fs.exists(path.join(folder, ".glose", "settings.json")));
           assert.isTrue(yield* fs.exists(path.join(folder, "Reading list.md")));
@@ -129,15 +129,15 @@ it.layer(NodeServices.layer)("Setup", (it) => {
         yield* fs.writeFileString(path.join(folder, "Mine.md"), "My own words.\n");
 
         const error = yield* setup
-          .complete({ language: "en", graphFolder: folder, action: "clone", remote })
+          .complete({ language: "en", vaultFolder: folder, action: "clone", remote })
           .pipe(Effect.flip);
 
         assert.deepStrictEqual(
           error,
-          new GraphFolderUnavailable({ path: folder, reason: "not-empty" }),
+          new VaultFolderUnavailable({ path: folder, reason: "not-empty" }),
         );
         assert.deepStrictEqual(yield* fs.readDirectory(folder), ["Mine.md"]);
-        assert.isNull((yield* settings.get).settings.graphFolder);
+        assert.isNull((yield* settings.get).settings.vaultFolder);
       }),
     ),
   );
@@ -151,15 +151,15 @@ it.layer(NodeServices.layer)("Setup", (it) => {
         const missing = path.join(homeDir, "no-such-remote.git");
 
         const error = yield* setup
-          .complete({ language: "en", graphFolder: folder, action: "clone", remote: missing })
+          .complete({ language: "en", vaultFolder: folder, action: "clone", remote: missing })
           .pipe(Effect.flip);
 
-        assert.deepStrictEqual(error, new GraphRemoteUnavailable({ reason: "unreachable" }));
+        assert.deepStrictEqual(error, new VaultRemoteUnavailable({ reason: "unreachable" }));
         assert.isFalse(yield* fs.exists(folder), "the folder Glose made for the copy is gone");
-        assert.isNull((yield* settings.get).settings.graphFolder);
+        assert.isNull((yield* settings.get).settings.vaultFolder);
         assert.deepStrictEqual(
           yield* setup.checkRemote(missing).pipe(Effect.flip),
-          new GraphRemoteUnavailable({ reason: "unreachable" }),
+          new VaultRemoteUnavailable({ reason: "unreachable" }),
         );
       }),
     ),

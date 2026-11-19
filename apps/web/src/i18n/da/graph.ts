@@ -77,7 +77,7 @@ export const graphMessages: Pick<Messages, "graph" | "rewrite" | "newNote" | "re
     },
     noTitle: "En note skal have en titel.",
     nameTaken: (name: string) =>
-      `Din graf har allerede en fil med navnet »${name}«. Vælg en anden titel.`,
+      `Dit arkiv har allerede en fil med navnet »${name}«. Vælg en anden titel.`,
     progress: (done: number, total: number) =>
       `${numbers.format(done)} af ${numbers.format(total)} med dine ord`,
     save: "Gem",

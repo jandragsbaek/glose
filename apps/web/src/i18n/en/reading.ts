@@ -296,7 +296,7 @@ export const readingMessages = {
       dropped: "Dropped",
     } satisfies Record<PointState, string>,
     nameTaken: (name: string) =>
-      `Your Graph already has a file named “${name}”. Change the title, or open that Note.`,
+      `Your Vault already has a file named “${name}”. Change the title, or open that Note.`,
     saveFailed: "Glose could not save the Note. Try again.",
     actionFailed: "Glose could not save that. Try again.",
     next: {
@@ -436,7 +436,7 @@ export const readingMessages = {
       "not-asked": "Not asked yet",
     } satisfies Record<TopicState, string>,
     foundEmpty: "The Probe ended before any answer.",
-    keptIn: (file: string) => `The Probe is kept in ${file} in your Graph folder.`,
+    keptIn: (file: string) => `The Probe is kept in ${file} in your Vault.`,
     continueExtraction: "Continue to Extraction",
     continueHint: "Extraction makes Notes from what the Probe found, with your own words.",
     doneRead: (title: string) => `Done: ${title} is read`,

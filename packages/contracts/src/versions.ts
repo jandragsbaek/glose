@@ -1,7 +1,7 @@
 import * as Schema from "effect/Schema";
 
 export const VersionsOffReason = Schema.Literals([
-  "no-graph",
+  "no-vault",
   "no-git",
   "other-repository",
   "failed",
@@ -31,7 +31,7 @@ export type EndDay = typeof EndDay.Type;
 
 export const GITHUB_REPOSITORY_NAME = /^[A-Za-z0-9._-]{1,100}$/;
 
-export const DEFAULT_BACKUP_REPOSITORY = "glose-graph";
+export const DEFAULT_BACKUP_REPOSITORY = "glose-vault";
 
 export const BackUpToGitHub = Schema.Struct({
   name: Schema.String.pipe(Schema.check(Schema.isPattern(GITHUB_REPOSITORY_NAME))),
@@ -49,7 +49,7 @@ export const RemoteRefusedReason = Schema.Literals([
   "public-repository",
   "github-failed",
   "unreachable",
-  "other-graph",
+  "other-vault",
 ]);
 export type RemoteRefusedReason = typeof RemoteRefusedReason.Type;
 

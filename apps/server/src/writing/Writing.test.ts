@@ -8,11 +8,11 @@ import * as Path from "effect/Path";
 import * as TestClock from "effect/testing/TestClock";
 
 import * as ServerConfig from "../config.ts";
-import * as Graph from "../graph/Graph.ts";
+import * as Graph from "../vault/Graph.ts";
 import * as Server from "../server.ts";
 import * as Settings from "../settings/Settings.ts";
 import { writeCredentials } from "../testkit/credentials.ts";
-import { makeDirs } from "../testkit/graph.ts";
+import { makeDirs } from "../testkit/services.ts";
 import { type Answer, FAKE_OPENAI, makeFakeOpenAi } from "../testkit/openai.ts";
 import { Writing } from "./Writing.ts";
 
@@ -68,7 +68,7 @@ const setUp = (signedIn = false) =>
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const fake = yield* makeFakeOpenAi;
-    const graphFolder = path.join(dirs.homeDir, "Glose");
+    const vaultFolder = path.join(dirs.homeDir, "Glose");
     const site = path.join(dirs.homeDir, "blog");
     yield* fs.makeDirectory(path.join(site, "src"), { recursive: true });
     const layer = Server.layerApp.pipe(
@@ -79,29 +79,29 @@ const setUp = (signedIn = false) =>
     yield* Effect.gen(function* () {
       yield* (yield* Settings.Settings).completeSetup({
         language: "en",
-        graphFolder,
+        vaultFolder,
         action: "create",
       });
-      yield* fs.writeFileString(path.join(graphFolder, "Newport 2016 Deep Work.md"), NEWPORT);
+      yield* fs.writeFileString(path.join(vaultFolder, "Newport 2016 Deep Work.md"), NEWPORT);
       yield* fs.writeFileString(
-        path.join(graphFolder, `${NOTE}.md`),
+        path.join(vaultFolder, `${NOTE}.md`),
         `---\nglose: note\nsource: "[[Newport 2016 Deep Work]]"\npage: "64"\n---\n\nBusyness stands in for productivity.\n`,
       );
     }).pipe(Effect.provide(layer));
-    return { dirs, fake, graphFolder, site, layer };
+    return { dirs, fake, vaultFolder, site, layer };
   });
 
 it.layer(NodeServices.layer)("Writing", (it) => {
   it.effect("keeps a Writing project as Markdown in the Writing folder, outside the Graph", () =>
     Effect.gen(function* () {
-      const { graphFolder, layer } = yield* setUp();
+      const { vaultFolder, layer } = yield* setUp();
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       yield* Effect.gen(function* () {
         const writing = yield* Writing;
         const created = yield* writing.create(POST);
         const markdown = yield* fs.readFileString(
-          path.join(graphFolder, "Writing", `${created.id}.md`),
+          path.join(vaultFolder, "Writing", `${created.id}.md`),
         );
         assert.strictEqual(
           markdown,
@@ -282,7 +282,7 @@ it.layer(NodeServices.layer)("Writing", (it) => {
 
   it.effect("keeps the Tries after the prose, where other Markdown readers do not show them", () =>
     Effect.gen(function* () {
-      const { graphFolder, layer } = yield* setUp();
+      const { vaultFolder, layer } = yield* setUp();
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const body = "The nine o'clock version had the better verb.";
@@ -297,7 +297,7 @@ it.layer(NodeServices.layer)("Writing", (it) => {
             { at: 0, showing: 0, tries: ["The"], ai: [] },
           ],
         });
-        const file = path.join(graphFolder, "Writing", `${created.id}.md`);
+        const file = path.join(vaultFolder, "Writing", `${created.id}.md`);
         const markdown = yield* fs.readFileString(file);
         assert.isTrue(
           markdown.endsWith(

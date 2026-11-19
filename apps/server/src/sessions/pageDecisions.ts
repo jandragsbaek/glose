@@ -19,9 +19,9 @@ import * as Effect from "effect/Effect";
 import type * as Semaphore from "effect/Semaphore";
 import * as SubscriptionRef from "effect/SubscriptionRef";
 
-import * as Graph from "../graph/Graph.ts";
-import * as Notes from "../graph/Notes.ts";
-import * as Sources from "../graph/Sources.ts";
+import * as Graph from "../vault/Graph.ts";
+import * as Notes from "../vault/Notes.ts";
+import * as Sources from "../vault/Sources.ts";
 import * as WebPages from "../research/WebPages.ts";
 import { webUrl } from "../research/WebPages.ts";
 import { findWholeQuote } from "../research/wholeQuote.ts";
@@ -29,7 +29,7 @@ import * as Settings from "../settings/Settings.ts";
 import type { InputItem } from "./agent.ts";
 import { type Live, type Load, patch } from "./liveSession.ts";
 import { kickoff, pageLabel, pagesOf, restartMessage, setPage } from "./research.ts";
-import type { GraphError } from "./sessionRecord.ts";
+import type { VaultError } from "./sessionRecord.ts";
 import type { SessionStore } from "./sessionStore.ts";
 
 export const linkSafe = (text: string): string =>
@@ -97,7 +97,7 @@ export const make = Effect.fn("Sessions.makePageDecisions")(function* ({
   readonly save: SessionStore["save"];
   readonly deciding: Semaphore.Semaphore;
   readonly beginTurn: BeginTurn;
-  readonly open: (subject: string) => Effect.Effect<Live, GraphError>;
+  readonly open: (subject: string) => Effect.Effect<Live, VaultError>;
 }) {
   const settings = yield* Settings.Settings;
   const notes = yield* Notes.Notes;
@@ -350,6 +350,6 @@ type BeginTurn = (
   session: Live,
   entries: ReadonlyArray<SessionEntry>,
   items: ReadonlyArray<InputItem>,
-) => Effect.Effect<void, SessionBusy | GraphError>;
+) => Effect.Effect<void, SessionBusy | VaultError>;
 
 export type PageDecisions = Effect.Success<ReturnType<typeof make>>;

@@ -8,7 +8,7 @@ import { type FormEvent, useId, useState } from "react";
 
 import { wordCount } from "../domain/source.ts";
 import { useT } from "../i18n/I18n.tsx";
-import { KEYS } from "../state/graph.ts";
+import { KEYS } from "../state/vault.ts";
 import { dropPointAtom, sendMessageAtom, writePointAtom } from "../state/sessions.ts";
 import { AiText } from "./NoteText.tsx";
 import { elementOf, NoteLink, PointSource } from "./PointRow.tsx";

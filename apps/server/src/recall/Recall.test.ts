@@ -7,7 +7,7 @@ import * as TestClock from "effect/testing/TestClock";
 
 import * as Cards from "../cards/Cards.ts";
 import * as Settings from "../settings/Settings.ts";
-import { layerServices, makeDirs } from "../testkit/graph.ts";
+import { layerServices, makeDirs } from "../testkit/services.ts";
 import * as Recall from "./Recall.ts";
 
 const NOTE = "Retrieval practice strengthens memory";
@@ -16,8 +16,8 @@ const DAY = 24 * 60 * MINUTE;
 
 const NOON = new Date(2026, 10, 11, 12, 0).getTime();
 
-const withGraph = <A, E>(
-  test: (graph: {
+const withVault = <A, E>(
+  test: (vault: {
     readonly folder: string;
     readonly cards: Cards.Cards["Service"];
     readonly recall: Recall.Recall["Service"];
@@ -34,7 +34,7 @@ const withGraph = <A, E>(
     yield* TestClock.setTime(NOON);
     return yield* Effect.gen(function* () {
       const settings = yield* Settings.Settings;
-      yield* settings.completeSetup({ language: "en", graphFolder: folder, action: "create" });
+      yield* settings.completeSetup({ language: "en", vaultFolder: folder, action: "create" });
       return yield* test({
         folder,
         cards: yield* Cards.Cards,
@@ -54,7 +54,7 @@ const makeCard = (cards: Cards.Cards["Service"], question: string) =>
 
 it.layer(NodeServices.layer)("Recall", (it) => {
   it.effect("takes a new Card through its learning steps and keeps each Review in a log", () =>
-    withGraph(({ cards, recall, computerId, read }) =>
+    withVault(({ cards, recall, computerId, read }) =>
       Effect.gen(function* () {
         const card = yield* makeCard(cards, "What strengthens memory?");
 
@@ -91,8 +91,8 @@ it.layer(NodeServices.layer)("Recall", (it) => {
     ),
   );
 
-  it.effect("replays the Reviews of every computer that shares the Graph", () =>
-    withGraph(({ cards, recall, write }) =>
+  it.effect("replays the Reviews of every computer that shares the Vault", () =>
+    withVault(({ cards, recall, write }) =>
       Effect.gen(function* () {
         const card = yield* makeCard(cards, "What strengthens memory?");
         const line = (at: number, rating: string) =>
@@ -113,7 +113,7 @@ it.layer(NodeServices.layer)("Recall", (it) => {
   );
 
   it.effect("gives a Card written by hand its id before showing when it would come back", () =>
-    withGraph(({ recall, computerId, write, read }) =>
+    withVault(({ recall, computerId, write, read }) =>
       Effect.gen(function* () {
         yield* write(
           "Cards/By hand.md",
@@ -132,8 +132,8 @@ it.layer(NodeServices.layer)("Recall", (it) => {
     ),
   );
 
-  it.effect("schedules by the Graph's Recall settings, with Anki's defaults for the rest", () =>
-    withGraph(({ cards, recall, write }) =>
+  it.effect("schedules by the Vault's Recall settings, with Anki's defaults for the rest", () =>
+    withVault(({ cards, recall, write }) =>
       Effect.gen(function* () {
         yield* write(
           ".glose/settings.json",

@@ -46,8 +46,8 @@ in the user's own words (fewer **AI marks** over time), and every **Publication*
   source data; the citation style is a setting, not text in the prose.
 - **Reasoning counts.** In a **Probe**, the user's **Reasoning** is part of the answer, and the AI
   judges it as well as the end result.
-- **The files are the truth.** Plain Markdown on disk, readable in any other editor, easy to back
-  up with Dropbox or git.
+- **The files are the truth.** Plain Markdown on disk in one folder, the **Vault**, readable in any
+  other editor, easy to back up with Dropbox or git.
 
 ## Operating Context
 

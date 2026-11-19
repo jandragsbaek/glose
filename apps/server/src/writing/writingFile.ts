@@ -11,7 +11,7 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as Yaml from "yaml";
 
-import { FRONTMATTER, parseYaml } from "../graph/sourceFile.ts";
+import { FRONTMATTER, parseYaml } from "../vault/sourceFile.ts";
 
 const WritingFrontmatter = Schema.Struct({
   glose: Schema.Literal("writing-project"),

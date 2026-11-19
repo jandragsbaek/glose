@@ -24,7 +24,7 @@ import { Sessions } from "./Sessions.ts";
 it.layer(NodeServices.layer)("Sessions", (it) => {
   it.effect("proposes Cards from a passage of a Note, and saves the ones the user keeps", () =>
     Effect.gen(function* () {
-      const { fake, layer, graphFolder, bodies } = yield* setUp;
+      const { fake, layer, vaultFolder, bodies } = yield* setUp;
       fake.answer(MODELS, MODEL_LIST, MODEL_LIST, MODEL_LIST, MODEL_LIST);
       fake.answer(
         RESPONSES,
@@ -115,7 +115,7 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
       assert.deepStrictEqual(after.cards, [after.card]);
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      assert.isTrue(yield* fs.exists(path.join(graphFolder, "Cards", `${after.card.file}.md`)));
+      assert.isTrue(yield* fs.exists(path.join(vaultFolder, "Cards", `${after.card.file}.md`)));
       const proposals = after.done.entries.flatMap((entry) =>
         entry._tag === "CardProposals" ? entry.proposals : [],
       );

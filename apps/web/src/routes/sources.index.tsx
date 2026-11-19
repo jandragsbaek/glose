@@ -31,7 +31,7 @@ import {
 import { wordCount, onDesk } from "../domain/source.ts";
 import { cuesOf, videoIdOf } from "../domain/video.ts";
 import { useLanguage, useT } from "../i18n/I18n.tsx";
-import { graphAtom, sourcesAtom } from "../state/graph.ts";
+import { graphAtom, sourcesAtom } from "../state/vault.ts";
 
 export const Route = createFileRoute("/sources/")({
   component: SourcesPage,

@@ -23,7 +23,7 @@ import {
 } from "../graph/graphIndex.ts";
 import { DRAFT_NODE, newDraftId, pagesOf, proposedLinksOf, withDraft } from "../graph/newNote.ts";
 import { useT } from "../i18n/I18n.tsx";
-import { graphAtom, sourcesAtom } from "../state/graph.ts";
+import { graphAtom, sourcesAtom } from "../state/vault.ts";
 import { noSessionAtom, sessionAtom } from "../state/sessions.ts";
 
 export const Route = createFileRoute("/graph")({

@@ -10,7 +10,7 @@ import { type FormEvent, useId, useRef, useState } from "react";
 
 import { byFileName, isMarkdownName, partByOrder } from "../domain/importText.ts";
 import { useT } from "../i18n/I18n.tsx";
-import { importTextAtom, sourcesAtom } from "../state/graph.ts";
+import { importTextAtom, sourcesAtom } from "../state/vault.ts";
 import {
   blank,
   DropZone,

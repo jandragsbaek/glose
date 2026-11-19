@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 import { LANGUAGES, useT } from "../i18n/I18n.tsx";
-import { KEYS, setLanguageAtom } from "../state/graph.ts";
+import { KEYS, setLanguageAtom } from "../state/vault.ts";
 import { useOpenSettings, useSettingsOpen } from "./SettingsWindow.tsx";
 
 function RailLink({

@@ -1,7 +1,7 @@
 import type {
-  GraphFolderAction,
-  GraphFolderUnavailable,
-  GraphRemoteUnavailableReason,
+  VaultFolderAction,
+  VaultFolderUnavailable,
+  VaultRemoteUnavailableReason,
   ReadingStep,
 } from "@glose/contracts";
 import { numbers, count, shortDate, longDate } from "./format.ts";
@@ -38,7 +38,7 @@ export const coreMessages = {
   errors: {
     storage: "Glose could not read or write its files.",
     storageRecovery:
-      "Check that the Graph folder still exists and that Glose may write to it. Then try again.",
+      "Check that the Vault still exists and that Glose may write to it. Then try again.",
     unexpected: "Something went wrong in Glose. Try again.",
     notFoundTitle: "Page not found",
     notFound: "This page does not exist in Glose.",
@@ -53,26 +53,26 @@ export const coreMessages = {
     languageStep: "Language",
     languageHint:
       "The language of the interface. Notes and Writing projects can be in any language. You can change this later in Settings.",
-    folderStep: "Graph folder",
+    folderStep: "Vault",
     folderHint:
-      "Glose keeps every Source and Note as a Markdown file in this folder, and its own settings in a hidden .glose folder inside it. Move the folder, or share it through Dropbox or git, and the Graph goes with it.",
+      "Glose keeps every Source and Note as a Markdown file in this folder, and its own settings in a hidden .glose folder inside it. Move the folder, or share it through Dropbox or git, and the Vault goes with it.",
     folderActions: {
-      create: "Start a new Graph",
+      create: "Start a new Vault",
       open: "Open an existing folder",
       clone: "Get it from GitHub",
-    } satisfies Record<GraphFolderAction, string>,
+    } satisfies Record<VaultFolderAction, string>,
     folderActionHints: {
       create: "Glose creates an empty folder at this path.",
-      open: "A Graph that you moved or that someone shares with you, or a folder of Markdown files.",
+      open: "A Vault that you moved or that someone shares with you, or a folder of Markdown files.",
       clone:
-        "Glose copies the Graph into a new folder at this path. The folder must be missing or empty.",
-    } satisfies Record<GraphFolderAction, string>,
+        "Glose copies the Vault into a new folder at this path. The folder must be missing or empty.",
+    } satisfies Record<VaultFolderAction, string>,
     folderLabel: "Folder path",
     chatgptStep: "ChatGPT",
     chatgptHint:
       "Optional. You can also connect later in Settings. Without ChatGPT you can still add Sources and write Free text.",
     submit: "Start using Glose",
-    copying: "Copying your Graph…",
+    copying: "Copying your Vault…",
     remote: {
       from: "From",
       notChosen: "Not chosen yet",
@@ -81,43 +81,43 @@ export const coreMessages = {
       choose: "Choose on GitHub",
       chooseAgain: "Choose another",
       useRemote: "Use another git remote",
-      backupNote: "Glose keeps the Graph backed up there after each save.",
-      missing: "Choose where to get your Graph from.",
-      title: "Get your Graph from GitHub",
+      backupNote: "Glose keeps the Vault backed up there after each save.",
+      missing: "Choose where to get your Vault from.",
+      title: "Get your Vault from GitHub",
       intro:
-        "Glose copies your Graph from a private repository on GitHub, and keeps it backed up there after each save. Connect GitHub to see your repositories.",
+        "Glose copies your Vault from a private repository on GitHub, and keeps it backed up there after each save. Connect GitHub to see your repositories.",
       codeIntro: "Type this code on GitHub's page. It lets Glose read your private repositories.",
-      chooseGraph: "Choose the Graph",
+      chooseVault: "Choose the Vault",
       listHint: "Private repositories you own or that are shared with you.",
-      graph: "Graph",
+      vault: "Vault",
       updated: (at: Date) => `Updated ${shortDate.format(at)}`,
       others: (count: number) => `Other repositories (${count})`,
       othersHint:
-        "No Graph in them yet. If you choose one, Glose makes a Graph of its files as they are.",
-      none: "Glose found no private repositories on GitHub. Back the Graph up to GitHub from Settings on the other computer first, or use another account.",
+        "No Vault in them yet. If you choose one, Glose makes a Vault of its files as they are.",
+      none: "Glose found no private repositories on GitHub. Back the Vault up to GitHub from Settings on the other computer first, or use another account.",
       listFailed: "GitHub did not answer. Try again in a moment.",
       useThis: "Use this repository",
       notEmpty:
-        "This folder already holds files. Glose copies a Graph only into a folder that is missing or empty.",
+        "This folder already holds files. Glose copies a Vault only into a folder that is missing or empty.",
       gitHubFailed:
         "Glose could not copy the repository from GitHub. Check the internet connection and try again, or choose the repository again.",
-      copyingNote: "A large Graph can take a few minutes.",
+      copyingNote: "A large Vault can take a few minutes.",
       remoteIntro:
-        "Glose copies the Graph from a git remote you already have, with your own git sign-in: an SSH key or a credential helper.",
+        "Glose copies the Vault from a git remote you already have, with your own git sign-in: an SSH key or a credential helper.",
       errors: {
-        "no-git": "Glose needs git to copy a Graph. Install git, then try again.",
+        "no-git": "Glose needs git to copy a Vault. Install git, then try again.",
         unreachable:
           "Git could not reach that remote, or could not sign in to it. Check the address, and that git on this computer can read it.",
-      } satisfies Record<GraphRemoteUnavailableReason, string>,
+      } satisfies Record<VaultRemoteUnavailableReason, string>,
     },
     folderErrors: {
       "not-absolute": "Write the full path of the folder, starting from the top of the disk.",
       "not-a-folder": "This path is a file, not a folder. Choose a folder.",
-      "not-found": "There is no folder at this path. To make one, choose Start a new Graph.",
+      "not-found": "There is no folder at this path. To make one, choose Start a new Vault.",
       "not-empty":
         "This folder already holds files. To use them in Glose, choose Open an existing folder.",
       "not-writable": "Glose cannot write to this folder. Choose a folder that you may write to.",
-    } satisfies Record<GraphFolderUnavailable["reason"], string>,
+    } satisfies Record<VaultFolderUnavailable["reason"], string>,
   },
   today: {
     title: "Today",

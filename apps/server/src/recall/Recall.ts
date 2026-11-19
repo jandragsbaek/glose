@@ -1,7 +1,7 @@
 import {
   type Card,
   CardNotFound,
-  GraphFolderNotSet,
+  VaultFolderNotSet,
   type RecordReview,
   recallSettings,
   type ReviewQueue,
@@ -17,7 +17,7 @@ import * as Path from "effect/Path";
 import * as Semaphore from "effect/Semaphore";
 
 import * as Cards from "../cards/Cards.ts";
-import * as GraphFolder from "../graph/GraphFolder.ts";
+import * as VaultFolder from "../vault/VaultFolder.ts";
 import * as Settings from "../settings/Settings.ts";
 import {
   LOG_EXTENSION,
@@ -36,13 +36,13 @@ import {
   type Scheduler,
 } from "./schedule.ts";
 
-type GraphError = GraphFolderNotSet | StorageError;
+type VaultError = VaultFolderNotSet | StorageError;
 
 export class Recall extends Context.Service<
   Recall,
   {
-    readonly queue: Effect.Effect<ReviewQueue, GraphError>;
-    readonly review: (input: RecordReview) => Effect.Effect<void, CardNotFound | GraphError>;
+    readonly queue: Effect.Effect<ReviewQueue, VaultError>;
+    readonly review: (input: RecordReview) => Effect.Effect<void, CardNotFound | VaultError>;
   }
 >()("glose/recall/Recall") {}
 
@@ -66,20 +66,20 @@ export const make = Effect.gen(function* () {
   const path = yield* Path.Path;
   const settings = yield* Settings.Settings;
   const cards = yield* Cards.Cards;
-  const graphFolders = GraphFolder.make(fs, path);
+  const vaultFolders = VaultFolder.make(fs, path);
 
   const logs = new Map<string, LogFile>();
   let cache: Cache | null = null;
   const lock = yield* Semaphore.make(1);
 
-  const graphFolder = settings.get.pipe(
-    Effect.flatMap(({ settings: { graphFolder: folder } }) =>
-      folder === null ? Effect.fail(new GraphFolderNotSet()) : Effect.succeed(folder),
+  const vaultFolder = settings.get.pipe(
+    Effect.flatMap(({ settings: { vaultFolder: folder } }) =>
+      folder === null ? Effect.fail(new VaultFolderNotSet()) : Effect.succeed(folder),
     ),
   );
 
   const reviewsFolder = (folder: string) =>
-    path.join(folder, GraphFolder.GLOSE_DIR, ...REVIEWS_FOLDER);
+    path.join(folder, VaultFolder.GLOSE_DIR, ...REVIEWS_FOLDER);
 
   const stampOf = (info: FileSystem.File.Info) =>
     `${Option.getOrElse(info.mtime, () => new Date(0)).getTime()}:${info.size}`;
@@ -116,7 +116,7 @@ export const make = Effect.gen(function* () {
   });
 
   const current = Effect.fn("Recall.current")(function* (folder: string) {
-    const recall = recallSettings((yield* graphFolders.settings(folder)).recall);
+    const recall = recallSettings((yield* vaultFolders.settings(folder)).recall);
     const settingsKey = JSON.stringify(recall);
     const logKey = yield* readLogs(folder).pipe(Effect.mapError(storageError));
     if (cache?.folder === folder && cache.settingsKey === settingsKey && cache.logKey === logKey) {
@@ -140,7 +140,7 @@ export const make = Effect.gen(function* () {
 
   return Recall.of({
     queue: Effect.gen(function* () {
-      const folder = yield* graphFolder;
+      const folder = yield* vaultFolder;
       const { cache: replayed, recall } = yield* current(folder);
       const now = yield* Clock.currentTimeMillis;
       const queueOf = (all: ReadonlyArray<Card>) =>
@@ -161,7 +161,7 @@ export const make = Effect.gen(function* () {
 
     review: Effect.fn("Recall.review")(
       function* ({ file, rating, answerMs }) {
-        const folder = yield* graphFolder;
+        const folder = yield* vaultFolder;
         const card = yield* cards.ensureId(file);
         const id = card.id;
         if (id === null) return yield* Effect.die(`Card ${file} has no id after ensureId.`);

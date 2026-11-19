@@ -9,9 +9,9 @@ and suggests but never writes. [docs/ideas.md](docs/ideas.md) has the full idea.
 Today Glose has its frame and first working slice, in English and Danish: a first-start setup,
 Today, Add Source, the Reading Stage up to Extraction, a zoomable Graph view, and Card
 Extraction from a Note into Recall. Sources are saved as Markdown files in
-the Graph folder. Extraction is an agentic Session with the AI, on the user's own ChatGPT plan
+the Vault. Extraction is an agentic Session with the AI, on the user's own ChatGPT plan
 ("Sign in with ChatGPT"); so is Card Extraction, which proposes Cards from a Note that the user
-keeps, edits or drops. Cards are Markdown files in the Graph folder's `Cards` folder. The Probe
+keeps, edits or drops. Cards are Markdown files in the Vault's `Cards` folder. The Probe
 and the Review come later. The visual design is
 recorded in [PRODUCT.md](PRODUCT.md) and [DESIGN.md](DESIGN.md).
 
@@ -28,12 +28,12 @@ mise install
 pnpm install
 pnpm dev            # browser: server on :4310, web on http://localhost:5183
 pnpm dev:desktop    # the same, in an Electron window
-pnpm dev:demo       # the browser app on the demo Graph: 12 Sources, 105 linked Notes
+pnpm dev:demo       # the browser app on the demo Vault: 12 Sources, 105 linked Notes
 ```
 
-`pnpm dev:demo` (and `pnpm dev:demo:desktop`) copy `demo/Graph` to the temp folder and give the
-app its own computer settings there, so your own Graph and settings are not touched. Each start
-is a fresh copy; add `-- --keep` to continue with the last one. `demo/Graph` is plain Markdown,
+`pnpm dev:demo` (and `pnpm dev:demo:desktop`) copy `demo/Vault` to the temp folder and give the
+app its own computer settings there, so your own Vault and settings are not touched. Each start
+is a fresh copy; add `-- --keep` to continue with the last one. `demo/Vault` is plain Markdown,
 so it also opens as an Obsidian vault.
 
 The app as it ships, where Electron starts the built server itself:

@@ -281,7 +281,7 @@ export const make = Effect.gen(function* () {
         HttpClientRequest.bodyJsonUnsafe({
           name,
           private: true,
-          description: "Versions of a Glose Graph",
+          description: "Versions of a Glose Vault",
           has_issues: false,
           has_projects: false,
           has_wiki: false,
@@ -315,7 +315,7 @@ export const make = Effect.gen(function* () {
       if (repos.length < PAGE) break;
     }
     const own = all.filter((repo) => repo.private);
-    const graphs = yield* Effect.forEach(
+    const vaults = yield* Effect.forEach(
       own,
       (repo) =>
         call(
@@ -337,10 +337,10 @@ export const make = Effect.gen(function* () {
       owner: repo.owner.login,
       url: repo.clone_url,
       shared: repo.owner.login.toLowerCase() !== saved.login.toLowerCase(),
-      graph: graphs[index] ?? false,
+      vault: vaults[index] ?? false,
       pushedAt: repo.pushed_at === null ? null : Date.parse(repo.pushed_at) || null,
     }));
-    return found.toSorted((a, b) => Number(b.graph) - Number(a.graph));
+    return found.toSorted((a, b) => Number(b.vault) - Number(a.vault));
   }).pipe(Effect.withSpan("GitHub.repositories"));
 
   return GitHub.of({
