@@ -21,6 +21,9 @@ type Answer = Extract<SessionEntry, { _tag: "ProbeAnswer" }>;
 
 export type AnswerState = "known" | "unconfirmed" | "gap";
 
+export const answerWords = (answer: Pick<Answer, "reasoning" | "answer">): string =>
+  [answer.reasoning, answer.answer].filter((text) => text !== "").join("\n\n");
+
 export const answerState = (
   judgment: Pick<Judgment, "reasoning" | "result">,
   answer: Pick<Answer, "confidence" | "choice"> | undefined,

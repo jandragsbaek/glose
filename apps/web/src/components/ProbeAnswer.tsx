@@ -86,6 +86,9 @@ function SendButton({ disabled }: { readonly disabled: boolean }) {
   );
 }
 
+export const answerParts = (text: string, asReasoning: boolean) =>
+  asReasoning ? { reasoning: text, answer: "" } : { reasoning: "", answer: text };
+
 const sendsOnKey = (send: () => void) => (event: KeyboardEvent<HTMLElement>) => {
   if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
     event.preventDefault();
@@ -146,12 +149,10 @@ function AnswerForm({
   readonly hidden: boolean;
 }) {
   const t = useT();
-  const reasoningId = useId();
-  const reasoningHintId = useId();
-  const answerId = useId();
+  const textId = useId();
+  const textHintId = useId();
   const chosenId = useId();
-  const [reasoning, setReasoning] = useState("");
-  const [answer, setAnswer] = useState("");
+  const [text, setText] = useState("");
   const [sure, setSure] = useState<Confidence | null>(null);
   const [failed, setFailed] = useState<"answer" | "hint" | null>(null);
   const send = useAtomSet(answerProbeAtom, { mode: "promiseExit" });
@@ -159,7 +160,7 @@ function AnswerForm({
   const stop = useAtomSet(stopSessionAtom);
   const choice = open.choice;
   const ready = !session.working;
-  const canSend = ready && (choice === undefined ? answer.trim() !== "" : draft.choice.length > 0);
+  const canSend = ready && (choice === undefined ? text.trim() !== "" : draft.choice.length > 0);
 
   const submit = async (teachMe: boolean, event?: FormEvent) => {
     event?.preventDefault();
@@ -168,8 +169,7 @@ function AnswerForm({
       payload: {
         id: session.id,
         question: open.number,
-        reasoning,
-        answer: teachMe || choice !== undefined ? "" : answer,
+        ...answerParts(text, teachMe || choice !== undefined),
         teachMe,
         ...(teachMe || choice === undefined ? {} : { choice: draft.choice }),
         ...(teachMe || sure === null ? {} : { confidence: sure }),
@@ -177,8 +177,7 @@ function AnswerForm({
     });
     setFailed(Exit.isFailure(exit) ? "answer" : null);
     if (Exit.isSuccess(exit)) {
-      setReasoning("");
-      setAnswer("");
+      setText("");
       setSure(null);
     }
   };
@@ -194,8 +193,8 @@ function AnswerForm({
     <form className="probe__box-in" hidden={hidden} onSubmit={(event) => submit(false, event)}>
       <div className="probe__field">
         <div className="probe__label-row">
-          <label className="probe__label" htmlFor={reasoningId}>
-            {t.probe.reasoning}
+          <label className="probe__label" htmlFor={textId}>
+            {choice === undefined ? t.probe.answer : t.probe.reasoning}
             <span className="probe__for"> · {t.probe.question(open.number)}</span>
           </label>
           <button
@@ -206,42 +205,26 @@ function AnswerForm({
             {t.probe.talk}
           </button>
         </div>
-        <p className="field__hint" id={reasoningHintId}>
+        <p className="field__hint" id={textHintId}>
           {t.probe.dictate[DICTATION]}
         </p>
         <textarea
           ref={reasoningRef}
           className="composer__text probe__reasoning"
-          id={reasoningId}
-          aria-describedby={reasoningHintId}
+          id={textId}
+          aria-describedby={textHintId}
           placeholder={
-            choice === undefined ? t.probe.reasoningPlaceholder : t.probe.choiceReasoningPlaceholder
+            choice === undefined ? t.probe.openPlaceholder : t.probe.choiceReasoningPlaceholder
           }
-          value={reasoning}
-          onChange={(event) => setReasoning(event.target.value)}
+          value={text}
+          onChange={(event) => setText(event.target.value)}
           onKeyDown={onKeyDown}
           spellCheck
         />
         <SureChoice value={sure} onChange={setSure} disabled={!ready} />
       </div>
       <div className="probe__field">
-        {choice === undefined ? (
-          <>
-            <label className="probe__label" htmlFor={answerId}>
-              {t.probe.answer}
-            </label>
-            <input
-              className="input"
-              id={answerId}
-              placeholder={t.probe.answerPlaceholder}
-              value={answer}
-              onChange={(event) => setAnswer(event.target.value)}
-              onKeyDown={onKeyDown}
-              autoComplete="off"
-              spellCheck
-            />
-          </>
-        ) : (
+        {choice === undefined ? null : (
           <>
             <p className="probe__label" id={chosenId}>
               {t.probe.yourChoice}

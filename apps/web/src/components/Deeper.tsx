@@ -13,7 +13,7 @@ import { type FormEvent, useId, useState } from "react";
 import { useT } from "../i18n/I18n.tsx";
 import { answerProbeAtom, askHintAtom } from "../state/sessions.ts";
 import { AnswerView, Judgment } from "./ProbeRows.tsx";
-import { type AnswerDraft, useAnswerDraft } from "./ProbeAnswer.tsx";
+import { type AnswerDraft, answerParts, useAnswerDraft } from "./ProbeAnswer.tsx";
 import { ChoiceOptions, SureChoice } from "./ProbeChoice.tsx";
 import { IS_MAC, MessageText } from "./Session.tsx";
 import { followRow } from "./ProbeWhole.tsx";
@@ -188,17 +188,15 @@ function DeeperAnswer({
   readonly draft: AnswerDraft;
 }) {
   const t = useT();
-  const reasoningId = useId();
-  const answerId = useId();
-  const [reasoning, setReasoning] = useState("");
-  const [answer, setAnswer] = useState("");
+  const textId = useId();
+  const [text, setText] = useState("");
   const [sure, setSure] = useState<Confidence | null>(null);
   const [failed, setFailed] = useState<"answer" | "hint" | null>(null);
   const send = useAtomSet(answerProbeAtom, { mode: "promiseExit" });
   const hint = useAtomSet(askHintAtom, { mode: "promiseExit" });
   const choice = question.choice;
   const ready = !session.working;
-  const canSend = ready && (choice === undefined ? answer.trim() !== "" : draft.choice.length > 0);
+  const canSend = ready && (choice === undefined ? text.trim() !== "" : draft.choice.length > 0);
   const submit = async (teachMe: boolean, event?: FormEvent) => {
     event?.preventDefault();
     if (!ready || (!teachMe && !canSend)) return;
@@ -206,8 +204,7 @@ function DeeperAnswer({
       payload: {
         id: session.id,
         question: question.number,
-        reasoning,
-        answer: teachMe || choice !== undefined ? "" : answer,
+        ...answerParts(text, teachMe || choice !== undefined),
         teachMe,
         ...(teachMe || choice === undefined ? {} : { choice: draft.choice }),
         ...(teachMe || sure === null ? {} : { confidence: sure }),
@@ -215,8 +212,7 @@ function DeeperAnswer({
     });
     setFailed(Exit.isFailure(exit) ? "answer" : null);
     if (Exit.isSuccess(exit)) {
-      setReasoning("");
-      setAnswer("");
+      setText("");
       setSure(null);
     }
   };
@@ -229,38 +225,21 @@ function DeeperAnswer({
   };
   return (
     <form className="deeper__form" onSubmit={(event) => submit(false, event)}>
-      <label className="probe__label" htmlFor={reasoningId}>
-        {t.probe.reasoning}
+      <label className="probe__label" htmlFor={textId}>
+        {choice === undefined ? t.probe.answer : t.probe.reasoning}
         <span className="probe__for"> · {t.probe.question(question.number)}</span>
       </label>
       <textarea
-        id={reasoningId}
+        id={textId}
         className="textarea margin__textarea"
         placeholder={
-          choice === undefined ? t.probe.reasoningPlaceholder : t.probe.choiceReasoningPlaceholder
+          choice === undefined ? t.probe.openPlaceholder : t.probe.choiceReasoningPlaceholder
         }
-        value={reasoning}
-        onChange={(event) => setReasoning(event.target.value)}
+        value={text}
+        onChange={(event) => setText(event.target.value)}
         onKeyDown={onKeyDown}
         spellCheck
       />
-      {choice === undefined ? (
-        <>
-          <label className="probe__label" htmlFor={answerId}>
-            {t.probe.answer}
-          </label>
-          <input
-            id={answerId}
-            className="input"
-            placeholder={t.probe.answerPlaceholder}
-            value={answer}
-            onChange={(event) => setAnswer(event.target.value)}
-            onKeyDown={onKeyDown}
-            autoComplete="off"
-            spellCheck
-          />
-        </>
-      ) : null}
       <SureChoice value={sure} onChange={setSure} disabled={!ready} />
       {failed === null ? null : (
         <Notice tone="error">

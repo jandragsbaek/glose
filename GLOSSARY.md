@@ -90,6 +90,7 @@ _Avoid_: reading quiz, quiz, measure, test, exam, assessment
 
 **Reasoning**:
 The user's own words, typed or transcribed, that show how they reached an answer in a **Probe**.
+On an open question it shares one box with the answer it ends on.
 _Avoid_: explanation, thinking, working, rationale, chain of thought
 
 **Writing project**:

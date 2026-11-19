@@ -1107,6 +1107,19 @@ Sheet keeps the book's Reading Stage, adds one new mark to the Markdown, and nee
 - Not yet: other forms (ordering, matching, a scale), keys to pick an option, and showing the plan
   as a map of topics.
 
+## Decided, one box for an open answer (November 2026)
+
+- Jan found it odd to write the Reasoning, which already reaches the answer, and then write the
+  answer again. An open question now has one box, "Your answer" ("Think out loud, and end on your
+  answer."). He chose it over a short answer with an optional "Why?" under it, and over an
+  optional answer box.
+- The AI still judges the Reasoning and the result apart, from the same words; a bare answer with
+  no Reasoning is Reasoning "none". The quote it underlines may be any of the user's words.
+- A choice question keeps its "Your Reasoning" box ("why this one?"): there the answer is the
+  choice, so nothing repeats. Words written before "I don't know, teach me" go as Reasoning.
+- Stored: the open answer is `answer` with an empty `reasoning`. Older Probes that hold both still
+  show and judge both.
+
 ## Reasoning as part of the answer
 
 Taken from learnharness: the user thinks out loud, by typing or by dictation, and the reasoning is recorded and transcribed.
