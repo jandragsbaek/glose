@@ -17,6 +17,7 @@ import { type Answer, FAKE_OPENAI, makeFakeOpenAi } from "../testkit/openai.ts";
 import { Writing } from "./Writing.ts";
 
 const EPOCH_DAY = localDay(0);
+const DAY = 24 * 60 * 60 * 1000;
 
 const NEWPORT = [
   "---",
@@ -152,11 +153,12 @@ it.layer(NodeServices.layer)("Writing", (it) => {
             file(first.id),
             written.replace("---\n", "---\ntags: [essay]\n"),
           );
+          yield* TestClock.adjust("1 day");
           const renamed = yield* writing.save({ ...first, title: "Busy is not productive?" });
           assert.strictEqual(renamed.id, "Busy is not productive");
           assert.strictEqual(renamed.title, "Busy is not productive?");
           const moved = yield* fs.readFileString(file(renamed.id));
-          assert.include(moved, `created: ${EPOCH_DAY}\n`);
+          assert.include(moved, `created: ${EPOCH_DAY}\nupdated: ${localDay(DAY)}\n`);
           assert.include(moved, "tags: [ essay ]\n");
           const taken = yield* writing
             .save({ ...renamed, title: "clutter in my own sentences" })

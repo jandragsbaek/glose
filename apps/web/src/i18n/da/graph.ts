@@ -72,7 +72,7 @@ export const graphMessages: Pick<Messages, "graph" | "rewrite" | "newNote" | "re
       needs: {
         rewrite: "Den gror, når AI-teksten er skrevet med dine ord.",
         links: (need: number, have: number) =>
-          `Den gror, når den har links med ${count(need, "note", "noter")} (nu ${numbers.format(have)}).`,
+          `Den skal have links med ${count(need, "note", "noter")} (nu ${numbers.format(have)}).`,
         tend: "Plej den, så kan den gro til et træ.",
       },
       tend: "Markér som plejet",
