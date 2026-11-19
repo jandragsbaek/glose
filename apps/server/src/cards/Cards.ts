@@ -3,7 +3,7 @@ import {
   CardNotFound,
   CARDS_FOLDER,
   type CardText,
-  GraphFolderNotSet,
+  VaultFolderNotSet,
   StorageError,
   isFileName,
   sameFileName,
@@ -22,21 +22,21 @@ import * as Settings from "../settings/Settings.ts";
 import { writeFileAtomic } from "../storage.ts";
 import { type CardFileContent, editCardFile, parseCardFile, renderCardFile } from "./cardFile.ts";
 
-type GraphError = GraphFolderNotSet | StorageError;
+type VaultError = VaultFolderNotSet | StorageError;
 
 export class Cards extends Context.Service<
   Cards,
   {
-    readonly list: Effect.Effect<ReadonlyArray<Card>, GraphError>;
+    readonly list: Effect.Effect<ReadonlyArray<Card>, VaultError>;
     readonly create: (
       input: CardText & { readonly from: string | null; readonly ai: boolean },
-    ) => Effect.Effect<Card, GraphError>;
+    ) => Effect.Effect<Card, VaultError>;
     readonly update: (
       input: CardText & { readonly file: string },
-    ) => Effect.Effect<Card, CardNotFound | GraphError>;
-    readonly clearAiMark: (file: string) => Effect.Effect<Card, CardNotFound | GraphError>;
-    readonly ensureId: (file: string) => Effect.Effect<Card, CardNotFound | GraphError>;
-    readonly remove: (file: string) => Effect.Effect<void, CardNotFound | GraphError>;
+    ) => Effect.Effect<Card, CardNotFound | VaultError>;
+    readonly clearAiMark: (file: string) => Effect.Effect<Card, CardNotFound | VaultError>;
+    readonly ensureId: (file: string) => Effect.Effect<Card, CardNotFound | VaultError>;
+    readonly remove: (file: string) => Effect.Effect<void, CardNotFound | VaultError>;
   }
 >()("glose/cards/Cards") {}
 
@@ -64,10 +64,10 @@ export const make = Effect.gen(function* () {
   const writing = yield* Semaphore.make(1);
 
   const cardsFolder = settings.get.pipe(
-    Effect.flatMap(({ settings: { graphFolder } }) =>
-      graphFolder === null
-        ? Effect.fail(new GraphFolderNotSet())
-        : Effect.succeed(path.join(graphFolder, CARDS_FOLDER)),
+    Effect.flatMap(({ settings: { vaultFolder } }) =>
+      vaultFolder === null
+        ? Effect.fail(new VaultFolderNotSet())
+        : Effect.succeed(path.join(vaultFolder, CARDS_FOLDER)),
     ),
   );
 

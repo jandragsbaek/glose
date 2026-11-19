@@ -45,9 +45,9 @@ import {
 import {
   CheckRemote,
   CompleteSetup,
-  GraphFolderNotSet,
-  GraphFolderUnavailable,
-  GraphRemoteUnavailable,
+  VaultFolderNotSet,
+  VaultFolderUnavailable,
+  VaultRemoteUnavailable,
   Language,
   SettingsView,
   StorageError,
@@ -176,7 +176,7 @@ export const RPC_PATH = "/rpc";
 
 export const HEALTH_PATH = "/health";
 
-const GraphErrors = Schema.Union([GraphFolderNotSet, StorageError]);
+const VaultErrors = Schema.Union([VaultFolderNotSet, StorageError]);
 
 export const GloseRpcGroup = RpcGroup.make(
   Rpc.make(RPC_METHODS.serverInfo, { success: ServerInfo }),
@@ -189,49 +189,49 @@ export const GloseRpcGroup = RpcGroup.make(
   Rpc.make(RPC_METHODS.setupComplete, {
     payload: CompleteSetup,
     success: SettingsView,
-    error: Schema.Union([GraphFolderUnavailable, GraphRemoteUnavailable, StorageError]),
+    error: Schema.Union([VaultFolderUnavailable, VaultRemoteUnavailable, StorageError]),
   }),
-  Rpc.make(RPC_METHODS.setupCheckRemote, { payload: CheckRemote, error: GraphRemoteUnavailable }),
-  Rpc.make(RPC_METHODS.sourcesList, { success: Schema.Array(Source), error: GraphErrors }),
+  Rpc.make(RPC_METHODS.setupCheckRemote, { payload: CheckRemote, error: VaultRemoteUnavailable }),
+  Rpc.make(RPC_METHODS.sourcesList, { success: Schema.Array(Source), error: VaultErrors }),
   Rpc.make(RPC_METHODS.sourcesGet, {
     payload: SourceRef,
     success: Source,
-    error: Schema.Union([SourceNotFound, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SourceNotFound, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.sourcesCreate, {
     payload: SourceDetails,
     success: Source,
-    error: Schema.Union([SourceNameTaken, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SourceNameTaken, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.sourcesSaveFreeText, {
     payload: SaveFreeText,
     success: Source,
-    error: Schema.Union([SourceNotFound, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SourceNotFound, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.sourcesChooseStart, {
     payload: ChooseReadingStart,
     success: Source,
-    error: Schema.Union([SourceNotFound, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SourceNotFound, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.sourcesAdvance, {
     payload: AdvanceReading,
     success: Source,
-    error: Schema.Union([SourceNotFound, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SourceNotFound, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.sourcesImportText, {
     payload: ImportText,
     success: Source,
-    error: Schema.Union([SourceNameTaken, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SourceNameTaken, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.sourcesSetPlace, {
     payload: SetReadingPlace,
     success: Source,
-    error: Schema.Union([SourceNotFound, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SourceNotFound, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.sourcesAddVideo, {
     payload: AddVideo,
     success: Source,
-    error: Schema.Union([SourceNameTaken, VideoNotFound, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SourceNameTaken, VideoNotFound, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.sourcesLookupVideo, {
     payload: LookupVideo,
@@ -241,28 +241,28 @@ export const GloseRpcGroup = RpcGroup.make(
   Rpc.make(RPC_METHODS.articlesGet, {
     payload: SourceRef,
     success: ArticleText,
-    error: Schema.Union([SourceNotFound, PassageRefused, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SourceNotFound, PassageRefused, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.articlesMarkPassage, {
     payload: MarkPassage,
     success: MarkedPassage,
-    error: Schema.Union([SourceNotFound, PassageRefused, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SourceNotFound, PassageRefused, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.articlesRemovePassage, {
     payload: PassageRef,
     success: MarkedPassage,
-    error: Schema.Union([SourceNotFound, PassageRefused, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SourceNotFound, PassageRefused, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.articlesSetPassageWords, {
     payload: SetPassageWords,
     success: MarkedPassage,
-    error: Schema.Union([SourceNotFound, PassageRefused, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SourceNotFound, PassageRefused, VaultFolderNotSet, StorageError]),
   }),
-  Rpc.make(RPC_METHODS.graphRead, { success: GraphView, error: GraphErrors }),
+  Rpc.make(RPC_METHODS.graphRead, { success: GraphView, error: VaultErrors }),
   Rpc.make(RPC_METHODS.notesSave, {
     payload: SaveNote,
     success: Schema.String,
-    error: Schema.Union([NoteNotFound, NoteNameTaken, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([NoteNotFound, NoteNameTaken, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.notesCreate, {
     payload: CreateNote,
@@ -271,22 +271,22 @@ export const GloseRpcGroup = RpcGroup.make(
       NoteNameTaken,
       SessionNotFound,
       PageRefused,
-      GraphFolderNotSet,
+      VaultFolderNotSet,
       StorageError,
     ]),
   }),
   Rpc.make(RPC_METHODS.researchStart, {
     payload: StartResearch,
     success: Session,
-    error: Schema.Union([SessionBusy, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SessionBusy, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.researchKeepPage, {
     payload: PageDecision,
-    error: Schema.Union([SessionNotFound, ProposalNotOpen, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SessionNotFound, ProposalNotOpen, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.researchDropPage, {
     payload: PageDecision,
-    error: Schema.Union([SessionNotFound, ProposalNotOpen, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SessionNotFound, ProposalNotOpen, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.catalogSearch, {
     payload: CatalogSearch,
@@ -309,56 +309,56 @@ export const GloseRpcGroup = RpcGroup.make(
   Rpc.make(RPC_METHODS.sessionsFind, {
     payload: FindSession,
     success: Schema.NullOr(Session),
-    error: GraphErrors,
+    error: VaultErrors,
   }),
   Rpc.make(RPC_METHODS.sessionsStart, {
     payload: StartSession,
     success: Session,
-    error: Schema.Union([SourceNotFound, NoteNotFound, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SourceNotFound, NoteNotFound, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.sessionsWatch, {
     payload: SessionRef,
     success: Session,
-    error: Schema.Union([SessionNotFound, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SessionNotFound, VaultFolderNotSet, StorageError]),
     stream: true,
   }),
   Rpc.make(RPC_METHODS.sessionsSend, {
     payload: SendMessage,
-    error: Schema.Union([SessionNotFound, SessionBusy, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SessionNotFound, SessionBusy, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.sessionsRetry, {
     payload: SessionRef,
-    error: Schema.Union([SessionNotFound, SessionBusy, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SessionNotFound, SessionBusy, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.sessionsStop, { payload: SessionRef }),
   Rpc.make(RPC_METHODS.sessionsSendPassage, {
     payload: SendPassage,
-    error: Schema.Union([SessionNotFound, SessionBusy, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SessionNotFound, SessionBusy, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.sessionsKeepProposal, {
     payload: KeepProposal,
     success: Card,
-    error: Schema.Union([SessionNotFound, ProposalNotOpen, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SessionNotFound, ProposalNotOpen, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.sessionsDropProposal, {
     payload: DropProposal,
-    error: Schema.Union([SessionNotFound, ProposalNotOpen, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SessionNotFound, ProposalNotOpen, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.sessionsKeepPoint, {
     payload: KeepPoint,
-    error: Schema.Union([SessionNotFound, PointNotFound, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SessionNotFound, PointNotFound, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.sessionsDropPoint, {
     payload: PointRef,
-    error: Schema.Union([SessionNotFound, PointNotFound, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SessionNotFound, PointNotFound, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.sessionsRestorePoint, {
     payload: PointRef,
-    error: Schema.Union([SessionNotFound, PointNotFound, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SessionNotFound, PointNotFound, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.sessionsAddPoint, {
     payload: AddPoint,
-    error: Schema.Union([SessionNotFound, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SessionNotFound, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.sessionsWritePoint, {
     payload: WritePoint,
@@ -367,7 +367,7 @@ export const GloseRpcGroup = RpcGroup.make(
       SessionNotFound,
       PointNotFound,
       NoteNameTaken,
-      GraphFolderNotSet,
+      VaultFolderNotSet,
       StorageError,
     ]),
   }),
@@ -377,7 +377,7 @@ export const GloseRpcGroup = RpcGroup.make(
       SessionNotFound,
       SessionBusy,
       QuestionNotOpen,
-      GraphFolderNotSet,
+      VaultFolderNotSet,
       StorageError,
     ]),
   }),
@@ -389,17 +389,17 @@ export const GloseRpcGroup = RpcGroup.make(
       PassageRefused,
       SessionNotFound,
       SessionBusy,
-      GraphFolderNotSet,
+      VaultFolderNotSet,
       StorageError,
     ]),
   }),
   Rpc.make(RPC_METHODS.sessionsContinueProbe, {
     payload: SessionRef,
-    error: Schema.Union([SessionNotFound, SessionBusy, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SessionNotFound, SessionBusy, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.sessionsAddPassagePoint, {
     payload: AddPassagePoint,
-    error: Schema.Union([SourceNotFound, PassageRefused, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SourceNotFound, PassageRefused, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.sessionsAskHint, {
     payload: AskHint,
@@ -407,35 +407,35 @@ export const GloseRpcGroup = RpcGroup.make(
       SessionNotFound,
       SessionBusy,
       QuestionNotOpen,
-      GraphFolderNotSet,
+      VaultFolderNotSet,
       StorageError,
     ]),
   }),
   Rpc.make(RPC_METHODS.sessionsFinishProbe, {
     payload: SessionRef,
-    error: Schema.Union([SessionNotFound, SessionBusy, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([SessionNotFound, SessionBusy, VaultFolderNotSet, StorageError]),
   }),
-  Rpc.make(RPC_METHODS.cardsList, { success: Schema.Array(ScoredCard), error: GraphErrors }),
-  Rpc.make(RPC_METHODS.cardsJudge, { payload: JudgeCards, error: GraphErrors }),
-  Rpc.make(RPC_METHODS.cardsCreate, { payload: CreateCard, success: Card, error: GraphErrors }),
+  Rpc.make(RPC_METHODS.cardsList, { success: Schema.Array(ScoredCard), error: VaultErrors }),
+  Rpc.make(RPC_METHODS.cardsJudge, { payload: JudgeCards, error: VaultErrors }),
+  Rpc.make(RPC_METHODS.cardsCreate, { payload: CreateCard, success: Card, error: VaultErrors }),
   Rpc.make(RPC_METHODS.cardsUpdate, {
     payload: UpdateCard,
     success: Card,
-    error: Schema.Union([CardNotFound, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([CardNotFound, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.cardsClearAiMark, {
     payload: CardRef,
     success: Card,
-    error: Schema.Union([CardNotFound, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([CardNotFound, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.cardsDelete, {
     payload: CardRef,
-    error: Schema.Union([CardNotFound, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([CardNotFound, VaultFolderNotSet, StorageError]),
   }),
-  Rpc.make(RPC_METHODS.recallQueue, { success: ReviewQueue, error: GraphErrors }),
+  Rpc.make(RPC_METHODS.recallQueue, { success: ReviewQueue, error: VaultErrors }),
   Rpc.make(RPC_METHODS.recallReview, {
     payload: RecordReview,
-    error: Schema.Union([CardNotFound, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([CardNotFound, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.versionsWatch, { success: VersionsStatus, stream: true }),
   Rpc.make(RPC_METHODS.versionsEndDay, { payload: EndDay }),
@@ -449,17 +449,17 @@ export const GloseRpcGroup = RpcGroup.make(
   }),
   Rpc.make(RPC_METHODS.writingList, {
     success: Schema.Array(WritingProject),
-    error: GraphErrors,
+    error: VaultErrors,
   }),
   Rpc.make(RPC_METHODS.writingGet, {
     payload: WritingProjectRef,
     success: WritingProject,
-    error: Schema.Union([WritingProjectNotFound, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([WritingProjectNotFound, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.writingCreate, {
     payload: WritingProjectFields,
     success: WritingProject,
-    error: Schema.Union([WritingProjectNameTaken, GraphFolderNotSet, StorageError]),
+    error: Schema.Union([WritingProjectNameTaken, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.writingSave, {
     payload: SaveWritingProject,
@@ -467,7 +467,7 @@ export const GloseRpcGroup = RpcGroup.make(
     error: Schema.Union([
       WritingProjectNotFound,
       WritingProjectNameTaken,
-      GraphFolderNotSet,
+      VaultFolderNotSet,
       StorageError,
     ]),
   }),
@@ -477,7 +477,7 @@ export const GloseRpcGroup = RpcGroup.make(
     error: Schema.Union([
       WritingProjectNotFound,
       WritingReviewUnavailable,
-      GraphFolderNotSet,
+      VaultFolderNotSet,
       StorageError,
     ]),
   }),
@@ -495,7 +495,7 @@ export const GloseRpcGroup = RpcGroup.make(
       SiteFolderUnavailable,
       PublicationExists,
       PublicationNotReady,
-      GraphFolderNotSet,
+      VaultFolderNotSet,
       StorageError,
     ]),
   }),

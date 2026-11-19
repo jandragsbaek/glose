@@ -122,8 +122,8 @@ describe("buildGraphView", () => {
     assert.isFalse(aiText(["```", "> [!ai]", "```", "Write `> [!ai]` to mark it."].join("\n")));
   });
 
-  it("finds a file for every wikilink in the demo Graph", () => {
-    const folder = NodePath.join(import.meta.dirname, "../../../../demo/Graph");
+  it("finds a file for every wikilink in the demo Vault", () => {
+    const folder = NodePath.join(import.meta.dirname, "../../../../demo/Vault");
     const files = NodeFS.readdirSync(folder)
       .filter((entry) => entry.endsWith(".md"))
       .map((entry) => ({

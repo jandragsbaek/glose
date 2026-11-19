@@ -26,7 +26,7 @@ import {
 import { detailsFromMarkdown, isMarkdownName } from "../domain/importText.ts";
 import type { Messages } from "../i18n/en.ts";
 import { useT } from "../i18n/I18n.tsx";
-import { importTextAtom, KEYS } from "../state/graph.ts";
+import { importTextAtom, KEYS } from "../state/vault.ts";
 import {
   blank,
   DropZone,

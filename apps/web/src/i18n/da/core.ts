@@ -35,8 +35,7 @@ export const coreMessages: Pick<
   },
   errors: {
     storage: "Glose kunne ikke læse eller skrive sine filer.",
-    storageRecovery:
-      "Tjek at Graf-mappen stadig findes, og at Glose må skrive i den. Prøv så igen.",
+    storageRecovery: "Tjek at arkivet stadig findes, og at Glose må skrive i det. Prøv så igen.",
     unexpected: "Noget gik galt i Glose. Prøv igen.",
     notFoundTitle: "Siden findes ikke",
     notFound: "Denne side findes ikke i Glose.",
@@ -50,26 +49,26 @@ export const coreMessages: Pick<
     languageStep: "Sprog",
     languageHint:
       "Sproget i programmet. Noter og skriveprojekter kan være på alle sprog. Du kan ændre det senere under Indstillinger.",
-    folderStep: "Graf-mappe",
+    folderStep: "Arkiv",
     folderHint:
-      "Glose gemmer hver kilde og note som en Markdown-fil i denne mappe, og sine egne indstillinger i en skjult .glose-mappe i den. Flyt mappen, eller del den gennem Dropbox eller git, så følger grafen med.",
+      "Glose gemmer hver kilde og note som en Markdown-fil i denne mappe, og sine egne indstillinger i en skjult .glose-mappe i den. Flyt mappen, eller del den gennem Dropbox eller git, så følger arkivet med.",
     folderActions: {
-      create: "Start en ny graf",
+      create: "Start et nyt arkiv",
       open: "Åbn en eksisterende mappe",
-      clone: "Hent den fra GitHub",
+      clone: "Hent det fra GitHub",
     },
     folderActionHints: {
       create: "Glose opretter en tom mappe på denne sti.",
-      open: "En graf, som du har flyttet, eller som nogen deler med dig, eller en mappe med Markdown-filer.",
+      open: "Et arkiv, som du har flyttet, eller som nogen deler med dig, eller en mappe med Markdown-filer.",
       clone:
-        "Glose kopierer grafen til en ny mappe på denne sti. Mappen må ikke findes eller skal være tom.",
+        "Glose kopierer arkivet til en ny mappe på denne sti. Mappen må ikke findes eller skal være tom.",
     },
     folderLabel: "Mappens sti",
     chatgptStep: "ChatGPT",
     chatgptHint:
       "Valgfrit. Du kan også forbinde senere under Indstillinger. Uden ChatGPT kan du stadig tilføje kilder og skrive fri tekst.",
     submit: "Begynd at bruge Glose",
-    copying: "Kopierer din graf…",
+    copying: "Kopierer dit arkiv…",
     remote: {
       from: "Fra",
       notChosen: "Ikke valgt endnu",
@@ -78,31 +77,31 @@ export const coreMessages: Pick<
       choose: "Vælg på GitHub",
       chooseAgain: "Vælg en anden",
       useRemote: "Brug et andet git-remote",
-      backupNote: "Glose holder backuppen af grafen opdateret der efter hvert gem.",
-      missing: "Vælg, hvor din graf skal hentes fra.",
-      title: "Hent din graf fra GitHub",
+      backupNote: "Glose holder backuppen af arkivet opdateret der efter hvert gem.",
+      missing: "Vælg, hvor dit arkiv skal hentes fra.",
+      title: "Hent dit arkiv fra GitHub",
       intro:
-        "Glose kopierer din graf fra et privat repository på GitHub og holder backuppen opdateret der efter hvert gem. Forbind GitHub for at se dine repositories.",
+        "Glose kopierer dit arkiv fra et privat repository på GitHub og holder backuppen opdateret der efter hvert gem. Forbind GitHub for at se dine repositories.",
       codeIntro: "Skriv denne kode på GitHubs side. Så kan Glose læse dine private repositories.",
-      chooseGraph: "Vælg grafen",
+      chooseVault: "Vælg arkivet",
       listHint: "Private repositories, som du ejer, eller som andre deler med dig.",
-      graph: "Graf",
+      vault: "Arkiv",
       updated: (at) => `Opdateret ${shortDate.format(at)}`,
       others: (n) => `Andre repositories (${numbers.format(n)})`,
       othersHint:
-        "Ingen graf i dem endnu. Vælger du et, laver Glose en graf af dets filer, som de er.",
-      none: "Glose fandt ingen private repositories på GitHub. Tag først backup af grafen til GitHub under Indstillinger på den anden computer, eller brug en anden konto.",
+        "Intet arkiv i dem endnu. Vælger du et, laver Glose et arkiv af dets filer, som de er.",
+      none: "Glose fandt ingen private repositories på GitHub. Tag først backup af arkivet til GitHub under Indstillinger på den anden computer, eller brug en anden konto.",
       listFailed: "GitHub svarede ikke. Prøv igen om lidt.",
       useThis: "Brug dette repository",
       notEmpty:
-        "Mappen indeholder allerede filer. Glose kopierer kun en graf til en mappe, der ikke findes eller er tom.",
+        "Mappen indeholder allerede filer. Glose kopierer kun et arkiv til en mappe, der ikke findes eller er tom.",
       gitHubFailed:
         "Glose kunne ikke kopiere repositoriet fra GitHub. Tjek internetforbindelsen, og prøv igen, eller vælg repositoriet igen.",
-      copyingNote: "En stor graf kan tage nogle minutter.",
+      copyingNote: "Et stort arkiv kan tage nogle minutter.",
       remoteIntro:
-        "Glose kopierer grafen fra et git-remote, du allerede har, med dit eget git-login: en SSH-nøgle eller en credential helper.",
+        "Glose kopierer arkivet fra et git-remote, du allerede har, med dit eget git-login: en SSH-nøgle eller en credential helper.",
       errors: {
-        "no-git": "Glose skal bruge git for at kopiere en graf. Installér git, og prøv igen.",
+        "no-git": "Glose skal bruge git for at kopiere et arkiv. Installér git, og prøv igen.",
         unreachable:
           "Git kunne ikke nå det remote eller logge ind på det. Tjek adressen, og at git på denne computer kan læse det.",
       },
@@ -110,7 +109,7 @@ export const coreMessages: Pick<
     folderErrors: {
       "not-absolute": "Skriv mappens fulde sti, helt fra toppen af disken.",
       "not-a-folder": "Denne sti er en fil, ikke en mappe. Vælg en mappe.",
-      "not-found": "Der er ingen mappe på denne sti. Vælg Start en ny graf for at oprette den.",
+      "not-found": "Der er ingen mappe på denne sti. Vælg Start et nyt arkiv for at oprette den.",
       "not-empty":
         "Mappen indeholder allerede filer. Vælg Åbn en eksisterende mappe for at bruge dem i Glose.",
       "not-writable": "Glose kan ikke skrive i mappen. Vælg en mappe, som du må skrive i.",

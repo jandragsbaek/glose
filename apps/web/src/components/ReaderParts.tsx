@@ -12,7 +12,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useId, useState } from "react";
 
 import { useT } from "../i18n/I18n.tsx";
-import { ARTICLE_KEYS, chooseStartAtom, KEYS, sourcesAtom } from "../state/graph.ts";
+import { ARTICLE_KEYS, chooseStartAtom, KEYS, sourcesAtom } from "../state/vault.ts";
 import { stateLine, type States } from "./readerState.ts";
 import { Notice } from "./ui.tsx";
 

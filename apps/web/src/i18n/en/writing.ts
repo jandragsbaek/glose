@@ -58,7 +58,7 @@ export const writingMessages = {
     },
     pieces: "Your pieces",
     piecesEmpty:
-      "No pieces yet. Start one above. Glose keeps each piece as a Markdown file in the Writing folder of your Graph.",
+      "No pieces yet. Start one above. Glose keeps each piece as a Markdown file in the Writing folder of your Vault.",
     columns: {
       title: "Title",
       type: "Type",

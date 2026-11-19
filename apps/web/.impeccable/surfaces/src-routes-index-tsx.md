@@ -3,7 +3,7 @@ version: 1
 slug: "src-routes-index-tsx"
 primary_target: "src/routes/index.tsx"
 related_targets:
-  ["src/routes/__root.tsx", "src/components/Setup.tsx", "src/components/RemoteGraphSheet.tsx"]
+  ["src/routes/__root.tsx", "src/components/Setup.tsx", "src/components/RemoteVaultSheet.tsx"]
 ---
 
 # App frame, Today and Reading Stage
@@ -19,7 +19,7 @@ it in one click; see what is incomplete (missing Location, AI text, overdue Card
 
 ## Confirmed decisions
 
-- Opens straight to Today; no login. First start runs a short setup: language, Graph folder,
+- Opens straight to Today; no login. First start runs a short setup: language, Vault,
   ChatGPT (skippable; the connection does not exist yet, and the step says so).
 - Rail: large Section icons with a label under each (Lucide icons, standard set).
 - Rubric red marks AI text (the gloss) and initials only. Errors and missing data use red only
@@ -79,14 +79,14 @@ beside it, cards in cards, a red rule per row.
 
 Confirmed with Jan on the decision page ("Ledger and sheet", position 2 of 7 on Claude's list, dealt
 by the roll; seed:a4e2028568ad63a2; sketch `.impeccable/mocks/decision/sheet.html`, not in git) over
-"The Graphs found" (a two-column Graph step) and "Setup in steps" (a step-bar wizard). Asked first:
-GitHub and any git remote; pick from a list; own and shared Graphs.
+"The Vaults found" (a two-column Vault step) and "Setup in steps" (a step-bar wizard). Asked first:
+GitHub and any git remote; pick from a list; own and shared Vaults.
 
-- THESIS: the Backup sheet run the other way. The setup page stays one calm column; the Graph step
+- THESIS: the Backup sheet run the other way. The setup page stays one calm column; the Vault step
   keeps a short ledger of where the copy comes from, and choosing happens once, in a sheet.
-- FIRST VIEWPORT: the Graph folder panel with three choices; "Get it from GitHub" shows a Hairline,
+- FIRST VIEWPORT: the Vault panel with three choices; "Get it from GitHub" shows a Hairline,
   "From: Not chosen yet", primary Choose on GitHub and quiet Use another git remote, then the folder
-  field. The sheet: step 2 of 2 lists repositories as Choice rows, typed name label, Graph mark and
+  field. The sheet: step 2 of 2 lists repositories as Choice rows, typed name label, Vault mark and
   Yours or Shared by at the row's right end, others folded.
 - Built with two sheet steps (connect, choose), not three: the folder stays in the panel, where the
   other two choices already ask for it (Claude's call).

@@ -18,7 +18,7 @@ import {
 } from "../graph/newNote.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { CARD_KEYS } from "../state/cards.ts";
-import { KEYS } from "../state/graph.ts";
+import { KEYS } from "../state/vault.ts";
 import { createNoteAtom } from "../state/research.ts";
 import { CallNumber, Panel } from "./ui.tsx";
 

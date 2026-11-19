@@ -4,7 +4,7 @@ import * as SubscriptionRef from "effect/SubscriptionRef";
 
 import type { InputItem } from "./agent.ts";
 import { mapPoint, pointsOf } from "./sessionEntries.ts";
-import type { GraphError } from "./sessionRecord.ts";
+import type { VaultError } from "./sessionRecord.ts";
 
 export interface Live {
   readonly view: SubscriptionRef.SubscriptionRef<Session>;
@@ -12,7 +12,7 @@ export interface Live {
   decisions: Array<string>;
 }
 
-export type Load = (id: string) => Effect.Effect<Live, SessionNotFound | GraphError>;
+export type Load = (id: string) => Effect.Effect<Live, SessionNotFound | VaultError>;
 
 export const patch = (session: Live, change: (view: Session) => Session) =>
   SubscriptionRef.update(session.view, change);

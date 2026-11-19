@@ -78,7 +78,7 @@ export const graphMessages = {
     },
     noTitle: "A Note needs a title.",
     nameTaken: (name: string) =>
-      `Your Graph already has a file named “${name}”. Choose another title.`,
+      `Your Vault already has a file named “${name}”. Choose another title.`,
     progress: (done: number, total: number) =>
       `${numbers.format(done)} of ${numbers.format(total)} in your words`,
     save: "Save",

@@ -16,7 +16,7 @@ import {
 import { missingDetails, onDesk } from "../domain/source.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { cardsAtom } from "../state/cards.ts";
-import { graphAtom, sourcesAtom } from "../state/graph.ts";
+import { graphAtom, sourcesAtom } from "../state/vault.ts";
 import { writingListAtom } from "../state/writing.ts";
 
 export const Route = createFileRoute("/")({

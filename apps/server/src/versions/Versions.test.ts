@@ -12,15 +12,15 @@ import * as TestClock from "effect/testing/TestClock";
 import * as ServerConfig from "../config.ts";
 import { GitHub } from "../github/GitHub.ts";
 import * as Settings from "../settings/Settings.ts";
-import { makeDirs } from "../testkit/graph.ts";
+import { makeDirs } from "../testkit/services.ts";
 import * as Git from "./Git.ts";
 import * as Versions from "./Versions.ts";
 
 const MINUTE = 60_000;
 const OTHER = ["-c", "user.name=Other computer", "-c", "user.email=other@example.com"];
 
-const withGraph = <A, E>(
-  test: (graph: {
+const withVault = <A, E>(
+  test: (vault: {
     readonly folder: string;
     readonly remote: string;
     readonly git: (cwd: string, ...args: ReadonlyArray<string>) => Effect.Effect<string, unknown>;
@@ -33,13 +33,13 @@ const withGraph = <A, E>(
     >;
     readonly status: (versions: Versions.Versions["Service"]) => Effect.Effect<VersionsStatus>;
   }) => Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>,
-  options: { readonly graphFolder?: (homeDir: string) => string } = {},
+  options: { readonly vaultFolder?: (homeDir: string) => string } = {},
 ) =>
   Effect.gen(function* () {
     const dirs = yield* makeDirs;
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const folder = options.graphFolder?.(dirs.homeDir) ?? path.join(dirs.homeDir, "Glose");
+    const folder = options.vaultFolder?.(dirs.homeDir) ?? path.join(dirs.homeDir, "Glose");
     const remote = path.join(dirs.homeDir, "remote.git");
     const globalConfig = path.join(dirs.homeDir, "gitconfig");
     yield* fs.writeFileString(globalConfig, "");
@@ -64,7 +64,7 @@ const withGraph = <A, E>(
     const start = Versions.make.pipe(Effect.provide(deps));
     yield* Effect.gen(function* () {
       const settings = yield* Settings.Settings;
-      yield* settings.completeSetup({ language: "en", graphFolder: folder, action: "create" });
+      yield* settings.completeSetup({ language: "en", vaultFolder: folder, action: "create" });
     }).pipe(Effect.provide(deps));
 
     return yield* test({
@@ -87,8 +87,8 @@ const on = (status: VersionsStatus) => {
 };
 
 it.layer(NodeServices.layer)("Versions", (it) => {
-  it.effect("starts a repository in a new Graph and saves what is there as its first Version", () =>
-    withGraph(({ folder, git, read, start, status }) =>
+  it.effect("starts a repository in a new Vault and saves what is there as its first Version", () =>
+    withVault(({ folder, git, read, start, status }) =>
       Effect.gen(function* () {
         const versions = yield* start;
         yield* versions.tick;
@@ -102,14 +102,14 @@ it.layer(NodeServices.layer)("Versions", (it) => {
         assert.strictEqual(
           yield* git(folder, "log", "--format=%s"),
           "Auto-save: 2 files",
-          "the Graph settings and the .gitignore",
+          "the Vault settings and the .gitignore",
         );
       }),
     ),
   );
 
-  it.effect("saves a change once the Graph folder has been quiet for five minutes", () =>
-    withGraph(({ folder, git, write, start, status }) =>
+  it.effect("saves a change once the Vault folder has been quiet for five minutes", () =>
+    withVault(({ folder, git, write, start, status }) =>
       Effect.gen(function* () {
         const versions = yield* start;
         yield* versions.tick;
@@ -137,7 +137,7 @@ it.layer(NodeServices.layer)("Versions", (it) => {
   );
 
   it.effect("ends the day with a named Version, even without changes, and pushes it", () =>
-    withGraph(({ folder, remote, git, start, status }) =>
+    withVault(({ folder, remote, git, start, status }) =>
       Effect.gen(function* () {
         yield* git(folder, "init", "--quiet", "--bare", "--initial-branch=main", remote);
         yield* git(folder, "init", "--quiet", "--initial-branch=main");
@@ -160,8 +160,8 @@ it.layer(NodeServices.layer)("Versions", (it) => {
     ),
   );
 
-  it.effect("pulls what another computer pushed when Glose opens the Graph", () =>
-    withGraph(({ folder, remote, git, read, start, status }) =>
+  it.effect("pulls what another computer pushed when Glose opens the Vault", () =>
+    withVault(({ folder, remote, git, read, start, status }) =>
       Effect.gen(function* () {
         yield* git(folder, "init", "--quiet", "--bare", "--initial-branch=main", remote);
         yield* git(folder, "init", "--quiet", "--initial-branch=main");
@@ -185,7 +185,7 @@ it.layer(NodeServices.layer)("Versions", (it) => {
   );
 
   it.effect("syncs with the branch the local one follows, even under another name", () =>
-    withGraph(({ folder, remote, git, read, start }) =>
+    withVault(({ folder, remote, git, read, start }) =>
       Effect.gen(function* () {
         yield* git(folder, "init", "--quiet", "--bare", "--initial-branch=master", remote);
         yield* git(folder, "init", "--quiet", "--initial-branch=main");
@@ -213,7 +213,7 @@ it.layer(NodeServices.layer)("Versions", (it) => {
   );
 
   it.effect("keeps every Version and undoes the sync when both computers changed one line", () =>
-    withGraph(({ folder, remote, git, read, write, start, status }) =>
+    withVault(({ folder, remote, git, read, write, start, status }) =>
       Effect.gen(function* () {
         yield* git(folder, "init", "--quiet", "--bare", "--initial-branch=main", remote);
         yield* git(folder, "init", "--quiet", "--initial-branch=main");
@@ -243,14 +243,14 @@ it.layer(NodeServices.layer)("Versions", (it) => {
   );
 
   it.effect("backs up to GitHub: the repository becomes the remote and gets every Version", () =>
-    withGraph(({ folder, remote, git, start, status }) =>
+    withVault(({ folder, remote, git, start, status }) =>
       Effect.gen(function* () {
         yield* git(folder, "init", "--quiet", "--bare", "--initial-branch=main", remote);
         const versions = yield* start;
         yield* versions.tick;
         assert.isNull(on(yield* status(versions)).remote);
 
-        yield* versions.backUpToGitHub({ name: "glose-graph" });
+        yield* versions.backUpToGitHub({ name: "glose-vault" });
 
         const now = on(yield* status(versions));
         assert.strictEqual(now.remote, "origin");
@@ -262,20 +262,20 @@ it.layer(NodeServices.layer)("Versions", (it) => {
     ),
   );
 
-  it.effect("refuses a remote that holds another Graph, and keeps none", () =>
-    withGraph(({ folder, remote, git, start, status }) =>
+  it.effect("refuses a remote that holds another Vault, and keeps none", () =>
+    withVault(({ folder, remote, git, start, status }) =>
       Effect.gen(function* () {
         yield* git(folder, "init", "--quiet", "--bare", "--initial-branch=main", remote);
         const other = `${remote}-other`;
         yield* git(folder, "init", "--quiet", "--initial-branch=main", other);
-        yield* git(other, ...OTHER, "commit", "--quiet", "--allow-empty", "-m", "Another Graph");
+        yield* git(other, ...OTHER, "commit", "--quiet", "--allow-empty", "-m", "Another Vault");
         yield* git(other, "push", "--quiet", remote, "main");
         const versions = yield* start;
         yield* versions.tick;
 
         const refused = yield* versions.setRemote({ url: remote }).pipe(Effect.flip);
 
-        assert.deepStrictEqual(refused, new RemoteRefused({ reason: "other-graph" }));
+        assert.deepStrictEqual(refused, new RemoteRefused({ reason: "other-vault" }));
         assert.strictEqual(yield* git(folder, "remote"), "");
         assert.isNull(on(yield* status(versions)).remote);
         assert.strictEqual(yield* git(remote, "rev-list", "--count", "main"), "1");
@@ -284,7 +284,7 @@ it.layer(NodeServices.layer)("Versions", (it) => {
   );
 
   it.effect("refuses a remote git cannot reach", () =>
-    withGraph(({ folder, remote, git, start }) =>
+    withVault(({ folder, remote, git, start }) =>
       Effect.gen(function* () {
         const versions = yield* start;
         yield* versions.tick;
@@ -298,7 +298,7 @@ it.layer(NodeServices.layer)("Versions", (it) => {
   );
 
   it.effect("refuses a remote that git reaches but that does not take the push", () =>
-    withGraph(({ folder, remote, git, start, status }) =>
+    withVault(({ folder, remote, git, start, status }) =>
       Effect.gen(function* () {
         yield* git(folder, "init", "--quiet", "--bare", "--initial-branch=main", remote);
         const fs = yield* FileSystem.FileSystem;
@@ -320,7 +320,7 @@ it.layer(NodeServices.layer)("Versions", (it) => {
   );
 
   it.effect("moves to a new remote without the old one's branches, and stops on removal", () =>
-    withGraph(({ folder, remote, git, write, start, status }) =>
+    withVault(({ folder, remote, git, write, start, status }) =>
       Effect.gen(function* () {
         const old = `${remote}-old`;
         yield* git(folder, "init", "--quiet", "--bare", "--initial-branch=main", old);
@@ -348,8 +348,8 @@ it.layer(NodeServices.layer)("Versions", (it) => {
     ),
   );
 
-  it.effect("leaves a Graph folder inside another repository alone", () =>
-    withGraph(
+  it.effect("leaves a Vault folder inside another repository alone", () =>
+    withVault(
       ({ folder, git, start, status }) =>
         Effect.gen(function* () {
           const path = yield* Path.Path;
@@ -363,7 +363,7 @@ it.layer(NodeServices.layer)("Versions", (it) => {
           });
           assert.strictEqual(yield* git(outer, "rev-list", "--all", "--count"), "0");
         }),
-      { graphFolder: (homeDir) => `${homeDir}/outer/Glose` },
+      { vaultFolder: (homeDir) => `${homeDir}/outer/Glose` },
     ),
   );
 });

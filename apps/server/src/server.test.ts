@@ -14,7 +14,7 @@ import * as RpcSerialization from "effect/rpc/RpcSerialization";
 import * as ServerConfig from "./config.ts";
 import * as ServerInfo from "./info/ServerInfo.ts";
 import * as Server from "./server.ts";
-import { layerServices, makeDirs } from "./testkit/graph.ts";
+import { layerServices, makeDirs } from "./testkit/services.ts";
 
 const layerServer = Layer.unwrap(
   Effect.map(makeDirs, (dirs) =>
@@ -43,11 +43,11 @@ it.layer(layerClient.pipe(Layer.provideMerge(layerServer)))("server", (it) => {
     }),
   );
 
-  it.effect("sends a typed error when the Graph folder is not set up", () =>
+  it.effect("sends a typed error when the Vault is not set up", () =>
     Effect.gen(function* () {
       const client = yield* RpcClient.make(GloseRpcGroup);
       const error = yield* client[RPC_METHODS.sourcesList]().pipe(Effect.flip);
-      assert.strictEqual(error._tag, "GraphFolderNotSet");
+      assert.strictEqual(error._tag, "VaultFolderNotSet");
     }),
   );
 

@@ -7,13 +7,13 @@ import * as Path from "effect/Path";
 import * as Stream from "effect/Stream";
 
 import * as ServerConfig from "../config.ts";
-import * as Sources from "../graph/Sources.ts";
+import * as Sources from "../vault/Sources.ts";
 import * as Server from "../server.ts";
 import { Sessions } from "../sessions/Sessions.ts";
 import * as WebPages from "../research/WebPages.ts";
 import * as Settings from "../settings/Settings.ts";
 import { writeCredentials } from "./credentials.ts";
-import { makeDirs } from "./graph.ts";
+import { makeDirs } from "./services.ts";
 import { FAKE_OPENAI, makeFakeOpenAi } from "./openai.ts";
 
 export const RESPONSES = `${FAKE_OPENAI.apiUrl}/responses`;
@@ -131,11 +131,11 @@ const setUpOn = Effect.fn("testkit.setUpOn")(function* (webPages: Layer.Layer<We
     Layer.provide(NodeServices.layer),
     Layer.provide(ServerConfig.layerTest(dirs)),
   );
-  const graphFolder = path.join(dirs.homeDir, "Glose");
+  const vaultFolder = path.join(dirs.homeDir, "Glose");
   const sourceId = yield* Effect.gen(function* () {
     yield* (yield* Settings.Settings).completeSetup({
       language: "en",
-      graphFolder,
+      vaultFolder,
       action: "create",
     });
     const sources = yield* Sources.Sources;
@@ -148,7 +148,7 @@ const setUpOn = Effect.fn("testkit.setUpOn")(function* (webPages: Layer.Layer<We
     return source.id;
   }).pipe(Effect.provide(layer));
   yield* (yield* FileSystem.FileSystem).writeFileString(
-    path.join(graphFolder, `${NOTE}.md`),
+    path.join(vaultFolder, `${NOTE}.md`),
     `---\nglose: note\nsource: "[[${sourceId}]]"\n---\n\nLeroy found that attention lingers.\n`,
   );
   fake.answerMatching(RESPONSES, isChecks);
@@ -156,7 +156,7 @@ const setUpOn = Effect.fn("testkit.setUpOn")(function* (webPages: Layer.Layer<We
     fake.requests
       .filter((request) => request.url === RESPONSES && !isChecks(request.body))
       .map((request) => JSON.parse(request.body) as Body);
-  return { fake, layer, graphFolder, sourceId, bodies };
+  return { fake, layer, vaultFolder, sourceId, bodies };
 });
 
 export const setUp = setUpOn(WebPages.layer);

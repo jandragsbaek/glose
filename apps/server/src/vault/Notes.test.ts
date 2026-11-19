@@ -6,7 +6,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 
 import * as Settings from "../settings/Settings.ts";
-import { layerServices, makeDirs } from "../testkit/graph.ts";
+import { layerServices, makeDirs } from "../testkit/services.ts";
 import { buildGraphView } from "./graphView.ts";
 import * as Notes from "./Notes.ts";
 
@@ -28,9 +28,9 @@ const AI_NOTE = [
   "",
 ].join("\n");
 
-const withGraph = <A, E>(
+const withVault = <A, E>(
   files: Record<string, string>,
-  test: (graph: {
+  test: (vault: {
     readonly folder: string;
     readonly notes: Notes.Notes["Service"];
   }) => Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>,
@@ -43,7 +43,7 @@ const withGraph = <A, E>(
     return yield* Effect.gen(function* () {
       yield* (yield* Settings.Settings).completeSetup({
         language: "en",
-        graphFolder: folder,
+        vaultFolder: folder,
         action: "create",
       });
       yield* fs.makeDirectory(path.join(folder, CARDS_FOLDER));
@@ -71,7 +71,7 @@ it.layer(NodeServices.layer)("Notes.save", (it) => {
   it.effect(
     "renames a rewritten Note, keeps the user's frontmatter, and Links follow the new name",
     () =>
-      withGraph(
+      withVault(
         {
           [`${AI_TITLE}.md`]: AI_NOTE,
           "Rules beat willpower.md": `See [[${AI_TITLE}|why]] and [[${AI_TITLE}#Values]].\n`,
@@ -124,7 +124,7 @@ it.layer(NodeServices.layer)("Notes.save", (it) => {
   );
 
   it.effect("keeps the AI marks on AI text the user left, corrected or not", () =>
-    withGraph({ [`${AI_TITLE}.md`]: AI_NOTE }, ({ folder, notes }) =>
+    withVault({ [`${AI_TITLE}.md`]: AI_NOTE }, ({ folder, notes }) =>
       Effect.gen(function* () {
         const saved = yield* notes.save({
           id: AI_TITLE,
@@ -145,7 +145,7 @@ it.layer(NodeServices.layer)("Notes.save", (it) => {
   );
 
   it.effect("refuses a title another file has, in any case, and changes nothing", () =>
-    withGraph(
+    withVault(
       { [`${AI_TITLE}.md`]: AI_NOTE, "Rules beat willpower.md": "Mine.\n" },
       ({ folder, notes }) =>
         Effect.gen(function* () {
@@ -172,7 +172,7 @@ it.layer(NodeServices.layer)("Notes.save", (it) => {
   );
 
   it.effect("changes the case of a title in place", () =>
-    withGraph({ [`${AI_TITLE}.md`]: AI_NOTE }, ({ folder, notes }) =>
+    withVault({ [`${AI_TITLE}.md`]: AI_NOTE }, ({ folder, notes }) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const lower = AI_TITLE.toLowerCase();

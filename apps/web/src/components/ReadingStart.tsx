@@ -4,7 +4,7 @@ import * as Exit from "effect/Exit";
 import { useId, useState } from "react";
 
 import { useT } from "../i18n/I18n.tsx";
-import { chooseStartAtom, KEYS } from "../state/graph.ts";
+import { chooseStartAtom, KEYS } from "../state/vault.ts";
 import { Notice, Panel } from "./ui.tsx";
 
 const STARTS = ["write", "probe", "catch-up"] as const satisfies ReadonlyArray<Start>;

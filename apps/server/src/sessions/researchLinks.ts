@@ -3,7 +3,7 @@ import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-import type * as Graph from "../graph/Graph.ts";
+import type * as Graph from "../vault/Graph.ts";
 import type { AgentTool, InputItem } from "./agent.ts";
 import { readNoteTool, searchGraphTool } from "./graphTools.ts";
 import { linksOf, MAX_LINKS, pagesOf } from "./research.ts";

@@ -28,8 +28,8 @@ import * as SubscriptionRef from "effect/SubscriptionRef";
 import * as NodeCrypto from "node:crypto";
 
 import * as ChatGpt from "../chatgpt/ChatGpt.ts";
-import * as Graph from "../graph/Graph.ts";
-import * as Sources from "../graph/Sources.ts";
+import * as Graph from "../vault/Graph.ts";
+import * as Sources from "../vault/Sources.ts";
 import * as Settings from "../settings/Settings.ts";
 import * as CardDecisions from "./cardDecisions.ts";
 import * as CardExtraction from "./cardExtraction.ts";
@@ -40,7 +40,7 @@ import * as PageDecisions from "./pageDecisions.ts";
 import * as PointDecisions from "./pointDecisions.ts";
 import * as Probe from "./probe.ts";
 import { pointsOf } from "./sessionEntries.ts";
-import { type GraphError, type SessionRecord, viewOf } from "./sessionRecord.ts";
+import { type VaultError, type SessionRecord, viewOf } from "./sessionRecord.ts";
 import * as SessionStore from "./sessionStore.ts";
 import * as SessionTurn from "./sessionTurn.ts";
 
@@ -50,48 +50,48 @@ export class Sessions extends Context.Service<
     readonly find: (input: {
       readonly kind: SessionKind;
       readonly subject: string;
-    }) => Effect.Effect<Session | null, GraphError>;
+    }) => Effect.Effect<Session | null, VaultError>;
     readonly start: (input: {
       readonly kind: SessionKind;
       readonly subject: string;
       readonly passage?: string;
-    }) => Effect.Effect<Session, SourceNotFound | NoteNotFound | GraphError>;
-    readonly watch: (id: string) => Stream.Stream<Session, SessionNotFound | GraphError>;
+    }) => Effect.Effect<Session, SourceNotFound | NoteNotFound | VaultError>;
+    readonly watch: (id: string) => Stream.Stream<Session, SessionNotFound | VaultError>;
     readonly send: (input: {
       readonly id: string;
       readonly text: string;
       readonly about?: string;
       readonly judgment?: number;
-    }) => Effect.Effect<void, SessionNotFound | SessionBusy | GraphError>;
-    readonly retry: (id: string) => Effect.Effect<void, SessionNotFound | SessionBusy | GraphError>;
+    }) => Effect.Effect<void, SessionNotFound | SessionBusy | VaultError>;
+    readonly retry: (id: string) => Effect.Effect<void, SessionNotFound | SessionBusy | VaultError>;
     readonly stop: (id: string) => Effect.Effect<void>;
     readonly sendPassage: (input: {
       readonly id: string;
       readonly passage: string;
-    }) => Effect.Effect<void, SessionNotFound | SessionBusy | GraphError>;
+    }) => Effect.Effect<void, SessionNotFound | SessionBusy | VaultError>;
     readonly keepProposal: (input: {
       readonly id: string;
       readonly proposal: string;
       readonly question: string;
       readonly answer: string;
-    }) => Effect.Effect<Card, SessionNotFound | ProposalNotOpen | GraphError>;
+    }) => Effect.Effect<Card, SessionNotFound | ProposalNotOpen | VaultError>;
     readonly dropProposal: (input: {
       readonly id: string;
       readonly proposal: string;
-    }) => Effect.Effect<void, SessionNotFound | ProposalNotOpen | GraphError>;
+    }) => Effect.Effect<void, SessionNotFound | ProposalNotOpen | VaultError>;
     readonly keepPoint: (
       input: PointDecisions.PointInput & { readonly title: string },
-    ) => Effect.Effect<void, SessionNotFound | PointNotFound | GraphError>;
+    ) => Effect.Effect<void, SessionNotFound | PointNotFound | VaultError>;
     readonly dropPoint: (
       input: PointDecisions.PointInput,
-    ) => Effect.Effect<void, SessionNotFound | PointNotFound | GraphError>;
+    ) => Effect.Effect<void, SessionNotFound | PointNotFound | VaultError>;
     readonly restorePoint: (
       input: PointDecisions.PointInput,
-    ) => Effect.Effect<void, SessionNotFound | PointNotFound | GraphError>;
+    ) => Effect.Effect<void, SessionNotFound | PointNotFound | VaultError>;
     readonly addPoint: (input: {
       readonly id: string;
       readonly title: string;
-    }) => Effect.Effect<void, SessionNotFound | GraphError>;
+    }) => Effect.Effect<void, SessionNotFound | VaultError>;
     readonly writePoint: (
       input: PointDecisions.PointInput & {
         readonly title: string;
@@ -100,7 +100,7 @@ export class Sessions extends Context.Service<
         readonly page: string | null;
         readonly links: ReadonlyArray<string>;
       },
-    ) => Effect.Effect<string, SessionNotFound | PointNotFound | NoteNameTaken | GraphError>;
+    ) => Effect.Effect<string, SessionNotFound | PointNotFound | NoteNameTaken | VaultError>;
     readonly answerProbe: (input: {
       readonly id: string;
       readonly question: number;
@@ -109,29 +109,29 @@ export class Sessions extends Context.Service<
       readonly teachMe: boolean;
       readonly choice?: ReadonlyArray<number>;
       readonly confidence?: Confidence;
-    }) => Effect.Effect<void, SessionNotFound | SessionBusy | QuestionNotOpen | GraphError>;
+    }) => Effect.Effect<void, SessionNotFound | SessionBusy | QuestionNotOpen | VaultError>;
     readonly askHint: (input: {
       readonly id: string;
       readonly question: number;
-    }) => Effect.Effect<void, SessionNotFound | SessionBusy | QuestionNotOpen | GraphError>;
+    }) => Effect.Effect<void, SessionNotFound | SessionBusy | QuestionNotOpen | VaultError>;
     readonly finishProbe: (
       id: string,
-    ) => Effect.Effect<void, SessionNotFound | SessionBusy | GraphError>;
+    ) => Effect.Effect<void, SessionNotFound | SessionBusy | VaultError>;
     readonly goDeeper: (input: {
       readonly source: string;
       readonly passage: string;
     }) => Effect.Effect<
       Session,
-      SourceNotFound | PassageRefused | SessionNotFound | SessionBusy | GraphError
+      SourceNotFound | PassageRefused | SessionNotFound | SessionBusy | VaultError
     >;
     readonly continueProbe: (
       id: string,
-    ) => Effect.Effect<void, SessionNotFound | SessionBusy | GraphError>;
+    ) => Effect.Effect<void, SessionNotFound | SessionBusy | VaultError>;
     readonly addPassagePoint: (input: {
       readonly source: string;
       readonly passage: string;
       readonly title: string;
-    }) => Effect.Effect<void, SourceNotFound | PassageRefused | GraphError>;
+    }) => Effect.Effect<void, SourceNotFound | PassageRefused | VaultError>;
   } & PageDecisions.PageDecisions
 >()("glose/sessions/Sessions") {}
 

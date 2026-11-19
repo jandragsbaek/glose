@@ -1,7 +1,7 @@
 import {
   type AddVideo,
   BOOK_TEXT_DETAILS,
-  GraphFolderNotSet,
+  VaultFolderNotSet,
   hasOwnText,
   type ImportText,
   markPassage,
@@ -38,62 +38,62 @@ import * as Settings from "../settings/Settings.ts";
 import { writeFileAtomic } from "../storage.ts";
 import { parseSourceFile, renderSourceFile, type SourceFileContent } from "./sourceFile.ts";
 
-type GraphError = GraphFolderNotSet | StorageError;
+type VaultError = VaultFolderNotSet | StorageError;
 
 export class Sources extends Context.Service<
   Sources,
   {
-    readonly list: Effect.Effect<ReadonlyArray<Source>, GraphError>;
-    readonly get: (id: string) => Effect.Effect<Source, SourceNotFound | GraphError>;
+    readonly list: Effect.Effect<ReadonlyArray<Source>, VaultError>;
+    readonly get: (id: string) => Effect.Effect<Source, SourceNotFound | VaultError>;
     readonly create: (
       details: SourceDetails,
-    ) => Effect.Effect<Source, SourceNameTaken | GraphError>;
+    ) => Effect.Effect<Source, SourceNameTaken | VaultError>;
     readonly saveFreeText: (input: {
       readonly id: string;
       readonly freeText: string;
       readonly finish: boolean;
-    }) => Effect.Effect<Source, SourceNotFound | GraphError>;
+    }) => Effect.Effect<Source, SourceNotFound | VaultError>;
     readonly chooseStart: (input: {
       readonly id: string;
       readonly start: ReadingStart;
-    }) => Effect.Effect<Source, SourceNotFound | GraphError>;
+    }) => Effect.Effect<Source, SourceNotFound | VaultError>;
     readonly advance: (input: {
       readonly id: string;
       readonly from: ReadingStep;
-    }) => Effect.Effect<Source, SourceNotFound | GraphError>;
-    readonly importText: (input: ImportText) => Effect.Effect<Source, SourceNameTaken | GraphError>;
+    }) => Effect.Effect<Source, SourceNotFound | VaultError>;
+    readonly importText: (input: ImportText) => Effect.Effect<Source, SourceNameTaken | VaultError>;
     readonly addVideo: (
       input: AddVideo,
-    ) => Effect.Effect<Source, SourceNameTaken | VideoNotFound | GraphError>;
+    ) => Effect.Effect<Source, SourceNameTaken | VideoNotFound | VaultError>;
     readonly freeId: (
       details: Pick<ImportText, "familyName" | "firstPublished" | "title" | "kind" | "part">,
-    ) => Effect.Effect<string | null, GraphError>;
+    ) => Effect.Effect<string | null, VaultError>;
     readonly setPlace: (input: {
       readonly id: string;
       readonly place: number;
-    }) => Effect.Effect<Source, SourceNotFound | GraphError>;
+    }) => Effect.Effect<Source, SourceNotFound | VaultError>;
     readonly articleText: (
       id: string,
-    ) => Effect.Effect<string, SourceNotFound | PassageRefused | GraphError>;
+    ) => Effect.Effect<string, SourceNotFound | PassageRefused | VaultError>;
     readonly markPassage: (input: {
       readonly id: string;
       readonly paragraph: number;
       readonly start: number;
       readonly end: number;
-    }) => Effect.Effect<Marked, SourceNotFound | PassageRefused | GraphError>;
+    }) => Effect.Effect<Marked, SourceNotFound | PassageRefused | VaultError>;
     readonly removePassage: (input: {
       readonly id: string;
       readonly passage: string;
       readonly text?: string;
       readonly at?: number;
-    }) => Effect.Effect<Marked, SourceNotFound | PassageRefused | GraphError>;
+    }) => Effect.Effect<Marked, SourceNotFound | PassageRefused | VaultError>;
     readonly setPassageWords: (input: {
       readonly id: string;
       readonly passage: string;
       readonly words: string;
       readonly text?: string;
       readonly at?: number;
-    }) => Effect.Effect<Marked, SourceNotFound | PassageRefused | GraphError>;
+    }) => Effect.Effect<Marked, SourceNotFound | PassageRefused | VaultError>;
   }
 >()("glose/Sources") {}
 
@@ -128,9 +128,9 @@ export const make = Effect.gen(function* () {
 
   const writing = yield* Semaphore.make(1);
 
-  const graphFolder = settings.get.pipe(
-    Effect.flatMap(({ settings: { graphFolder } }) =>
-      graphFolder === null ? Effect.fail(new GraphFolderNotSet()) : Effect.succeed(graphFolder),
+  const vaultFolder = settings.get.pipe(
+    Effect.flatMap(({ settings: { vaultFolder } }) =>
+      vaultFolder === null ? Effect.fail(new VaultFolderNotSet()) : Effect.succeed(vaultFolder),
     ),
   );
 
@@ -179,7 +179,7 @@ export const make = Effect.gen(function* () {
   });
 
   const get = Effect.fn("Sources.get")(function* (id: string) {
-    const folder = yield* graphFolder;
+    const folder = yield* vaultFolder;
     const notFound = new SourceNotFound({ id });
     if (!isFileName(id)) return yield* notFound;
     if (!(yield* fs.exists(fileOf(folder, id)).pipe(Effect.mapError(storageError)))) {
@@ -215,7 +215,7 @@ export const make = Effect.gen(function* () {
 
   const articleText = Effect.fn("Sources.articleText")(function* (id: string) {
     const source = yield* get(id);
-    const folder = yield* graphFolder;
+    const folder = yield* vaultFolder;
     if (!source.hasText) return yield* new PassageRefused({ reason: "no-text" });
     return yield* fs.readFileString(articleOf(folder, id)).pipe(Effect.mapError(storageError));
   });
@@ -223,7 +223,7 @@ export const make = Effect.gen(function* () {
   const editArticle = Effect.fn("Sources.editArticle")(
     function* (id: string, edit: (markdown: string) => PassageEdit) {
       const markdown = yield* articleText(id);
-      const folder = yield* graphFolder;
+      const folder = yield* vaultFolder;
       const result = edit(markdown);
       if (result._tag === "Refused") return yield* new PassageRefused({ reason: result.reason });
       if (result.markdown !== markdown) {
@@ -238,7 +238,7 @@ export const make = Effect.gen(function* () {
 
   return Sources.of({
     list: Effect.gen(function* () {
-      const folder = yield* graphFolder;
+      const folder = yield* vaultFolder;
       const names = yield* markdownNames(folder).pipe(Effect.mapError(storageError));
       const sources = yield* Effect.forEach(names, (name) => readSource(folder, name), {
         concurrency: 8,
@@ -251,7 +251,7 @@ export const make = Effect.gen(function* () {
     get,
 
     create: Effect.fn("Sources.create")(function* (details) {
-      const folder = yield* graphFolder;
+      const folder = yield* vaultFolder;
       const id = yield* newId(folder, details);
       return yield* writeSource(folder, id, {
         ...details,
@@ -267,7 +267,7 @@ export const make = Effect.gen(function* () {
     saveFreeText: Effect.fn("Sources.saveFreeText")(
       function* ({ id, freeText, finish }) {
         const source = yield* get(id);
-        const folder = yield* graphFolder;
+        const folder = yield* vaultFolder;
         const readingStep =
           finish && source.readingStep === "free-text"
             ? nextReadingStep(source.readingStart, "free-text", source.kind)
@@ -282,7 +282,7 @@ export const make = Effect.gen(function* () {
     chooseStart: Effect.fn("Sources.chooseStart")(
       function* ({ id, start }) {
         const source = yield* get(id);
-        const folder = yield* graphFolder;
+        const folder = yield* vaultFolder;
         const readingStep =
           source.readingStep === "read"
             ? nextReadingStep(start, "read", source.kind)
@@ -300,7 +300,7 @@ export const make = Effect.gen(function* () {
       function* ({ id, from }) {
         const source = yield* get(id);
         if (source.readingStep !== from) return source;
-        const folder = yield* graphFolder;
+        const folder = yield* vaultFolder;
         return yield* writeSource(folder, id, {
           ...source,
           readingStep: nextReadingStep(source.readingStart, from, source.kind),
@@ -310,7 +310,7 @@ export const make = Effect.gen(function* () {
     ),
 
     freeId: Effect.fn("Sources.freeId")(function* (details) {
-      const folder = yield* graphFolder;
+      const folder = yield* vaultFolder;
       const id = yield* newId(
         folder,
         details,
@@ -322,7 +322,7 @@ export const make = Effect.gen(function* () {
     }),
 
     importText: Effect.fn("Sources.importText")(function* ({ markdown, ...details }) {
-      const folder = yield* graphFolder;
+      const folder = yield* vaultFolder;
       const id = yield* newId(folder, details, details.kind === "lesson" ? details.part : null);
       const articles = path.join(folder, ARTICLES_DIR);
       if (yield* fs.exists(articleOf(folder, id)).pipe(Effect.mapError(storageError))) {
@@ -346,7 +346,7 @@ export const make = Effect.gen(function* () {
     addVideo: Effect.fn("Sources.addVideo")(function* ({ url, container, ...details }) {
       const video = youtubeId(url);
       if (video === null) return yield* new VideoNotFound({ reason: "not-youtube" });
-      const folder = yield* graphFolder;
+      const folder = yield* vaultFolder;
       const id = yield* newId(folder, details);
       return yield* writeSource(folder, id, {
         ...BOOK_TEXT_DETAILS,
@@ -370,7 +370,7 @@ export const make = Effect.gen(function* () {
       function* ({ id, place }) {
         const source = yield* get(id);
         if (source.readingPlace === place) return source;
-        const folder = yield* graphFolder;
+        const folder = yield* vaultFolder;
         return yield* writeSource(folder, id, { ...source, readingPlace: place }).pipe(
           Effect.mapError(storageError),
         );

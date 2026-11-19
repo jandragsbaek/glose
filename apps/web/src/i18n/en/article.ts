@@ -180,7 +180,7 @@ export const articleMessages = {
   importText: {
     article: "The article",
     chooseFile: "Choose a Markdown file",
-    dropHint: "or drop it here. Glose copies it into Articles in your Graph folder.",
+    dropHint: "or drop it here. Glose copies it into Articles in your Vault.",
     paste: "Paste the text instead",
     pasteLabel: "The article as Markdown or plain text",
     usePasted: "Use this text",
@@ -252,7 +252,7 @@ export const articleMessages = {
     titleLabel: (file: string) => `Title for ${file}`,
     states: {
       new: "New",
-      taken: "Already in your Graph",
+      taken: "Already in your Vault",
       named: "A Source has this file name. Change the title.",
       added: "Added",
       failed: "Not added",
@@ -264,7 +264,7 @@ export const articleMessages = {
     done: (added: number, skipped: number) =>
       skipped === 0
         ? `${count(added, "lesson", "lessons")} added.`
-        : `${count(added, "lesson", "lessons")} added; ${numbers.format(skipped)} were already in your Graph or could not be added.`,
+        : `${count(added, "lesson", "lessons")} added; ${numbers.format(skipped)} were already in your Vault or could not be added.`,
     openFirst: (part: string) => `Open ${lessonPart(part)}`,
     seeSources: "See them in Sources",
     needFiles: "Choose the lesson files first.",

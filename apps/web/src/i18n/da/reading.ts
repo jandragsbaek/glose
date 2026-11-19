@@ -277,7 +277,7 @@ export const readingMessages: Pick<
       dropped: "Droppet",
     },
     nameTaken: (name: string) =>
-      `Din graf har allerede en fil med navnet »${name}«. Ret titlen, eller åbn den note.`,
+      `Dit arkiv har allerede en fil med navnet »${name}«. Ret titlen, eller åbn den note.`,
     saveFailed: "Glose kunne ikke gemme noten. Prøv igen.",
     actionFailed: "Glose kunne ikke gemme det. Prøv igen.",
     next: {
@@ -407,7 +407,7 @@ export const readingMessages: Pick<
       "not-asked": "Ikke spurgt endnu",
     },
     foundEmpty: "Sonderingen sluttede før noget svar.",
-    keptIn: (file: string) => `Sonderingen er gemt i ${file} i din grafmappe.`,
+    keptIn: (file: string) => `Sonderingen er gemt i ${file} i dit arkiv.`,
     continueExtraction: "Fortsæt til udtræk",
     continueHint: "Udtrækket laver noter af det, sonderingen fandt, med dine egne ord.",
     doneRead: (title: string) => `Færdig: ${title} er læst`,

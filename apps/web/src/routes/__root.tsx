@@ -10,7 +10,7 @@ import { SettingsWindow, validateSettingsSearch } from "../components/SettingsWi
 import { StatusBar } from "../components/StatusBar.tsx";
 import { Notice, Page } from "../components/ui.tsx";
 import { I18nProvider, systemLanguage, useT } from "../i18n/I18n.tsx";
-import { settingsAtom } from "../state/graph.ts";
+import { settingsAtom } from "../state/vault.ts";
 
 import "@fontsource/public-sans/400.css";
 import "@fontsource/public-sans/500.css";
@@ -46,7 +46,7 @@ function Root() {
     ),
     onSuccess: ({ value }) => {
       const language = value.settings.language ?? systemLanguage();
-      if (value.settings.graphFolder === null) {
+      if (value.settings.vaultFolder === null) {
         return <Setup view={value} initialLanguage={language} />;
       }
       if (focus) {

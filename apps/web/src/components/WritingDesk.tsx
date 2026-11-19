@@ -18,7 +18,7 @@ import { useId, useLayoutEffect, useRef, useState } from "react";
 
 import { hugWord, proseWords, referenceLead } from "../domain/writing.ts";
 import { useT } from "../i18n/I18n.tsx";
-import { graphAtom, settingsAtom, sourcesAtom } from "../state/graph.ts";
+import { graphAtom, settingsAtom, sourcesAtom } from "../state/vault.ts";
 import { publishWritingAtom, reviewWritingAtom, WRITING_KEYS } from "../state/writing.ts";
 import { flaggedKeys, ProseEditor, type ProseHandle, referenceKey } from "./ProseEditor.tsx";
 import {

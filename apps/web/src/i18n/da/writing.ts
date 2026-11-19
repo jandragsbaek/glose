@@ -52,7 +52,7 @@ export const writingMessages: Pick<Messages, "writing"> = {
     },
     pieces: "Dine tekster",
     piecesEmpty:
-      "Ingen tekster endnu. Begynd på en ovenfor. Glose gemmer hver tekst som en Markdown-fil i mappen Writing i din graf.",
+      "Ingen tekster endnu. Begynd på en ovenfor. Glose gemmer hver tekst som en Markdown-fil i mappen Writing i dit arkiv.",
     columns: {
       title: "Titel",
       type: "Type",

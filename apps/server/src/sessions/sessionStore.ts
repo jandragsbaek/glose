@@ -1,5 +1,5 @@
 import {
-  GraphFolderNotSet,
+  VaultFolderNotSet,
   publicEntries,
   type Session,
   SessionNotFound,
@@ -12,8 +12,8 @@ import * as Path from "effect/Path";
 import * as Semaphore from "effect/Semaphore";
 import * as SubscriptionRef from "effect/SubscriptionRef";
 
-import { GLOSE_DIR } from "../graph/GraphFolder.ts";
-import * as Sources from "../graph/Sources.ts";
+import { GLOSE_DIR } from "../vault/VaultFolder.ts";
+import * as Sources from "../vault/Sources.ts";
 import * as Settings from "../settings/Settings.ts";
 import { writeFileAtomic } from "../storage.ts";
 import type { Live } from "./liveSession.ts";
@@ -28,10 +28,10 @@ export const make = Effect.gen(function* () {
   const saving = yield* Semaphore.make(1);
 
   const sessionsFolder = settings.get.pipe(
-    Effect.flatMap(({ settings: { graphFolder } }) =>
-      graphFolder === null
-        ? Effect.fail(new GraphFolderNotSet())
-        : Effect.succeed(path.join(graphFolder, GLOSE_DIR, "sessions")),
+    Effect.flatMap(({ settings: { vaultFolder } }) =>
+      vaultFolder === null
+        ? Effect.fail(new VaultFolderNotSet())
+        : Effect.succeed(path.join(vaultFolder, GLOSE_DIR, "sessions")),
     ),
   );
 
@@ -39,10 +39,10 @@ export const make = Effect.gen(function* () {
 
   const writeProbeRecord = Effect.fn("Sessions.writeProbeRecord")(
     function* (view: Session) {
-      const { graphFolder, language } = (yield* settings.get).settings;
-      if (graphFolder === null) return;
+      const { vaultFolder, language } = (yield* settings.get).settings;
+      if (vaultFolder === null) return;
       const source = yield* sources.get(view.subject);
-      const folder = path.join(graphFolder, ProbeRecord.PROBES_FOLDER);
+      const folder = path.join(vaultFolder, ProbeRecord.PROBES_FOLDER);
       yield* fs.makeDirectory(folder, { recursive: true });
       yield* writeFileAtomic(
         fs,

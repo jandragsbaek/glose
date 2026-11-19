@@ -4,7 +4,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 
-import { layerServices, makeDirs } from "../testkit/graph.ts";
+import { layerServices, makeDirs } from "../testkit/services.ts";
 import * as Settings from "./Settings.ts";
 
 const onComputer = (dirs: { readonly dataDir: string; readonly homeDir: string }) =>
@@ -29,19 +29,44 @@ it.layer(NodeServices.layer)("Settings", (it) => {
         onComputer(dirs),
       );
       assert.deepStrictEqual(view, {
-        settings: { language: null, graphFolder: null },
-        suggestedGraphFolder: path.join(dirs.homeDir, "Glose"),
+        settings: { language: null, vaultFolder: null },
+        suggestedVaultFolder: path.join(dirs.homeDir, "Glose"),
       });
     }).pipe(Effect.scoped),
   );
 
-  it.effect("creates a new Graph with hidden settings and keeps the setup across a restart", () =>
+  it.effect("keeps the Vault of settings saved when it was the Graph folder", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const dirs = yield* makeDirs;
+      const vaultFolder = path.join(dirs.homeDir, "Glose");
+      yield* fs.makeDirectory(dirs.dataDir, { recursive: true });
+      yield* fs.writeFileString(
+        path.join(dirs.dataDir, "settings.json"),
+        JSON.stringify({ language: "da", graphFolder: vaultFolder }),
+      );
+
+      const view = yield* Settings.Settings.pipe(
+        Effect.flatMap((settings) => settings.setLanguage("en")),
+        onComputer(dirs),
+      );
+
+      assert.deepStrictEqual(view.settings, { language: "en", vaultFolder });
+      assert.deepStrictEqual(yield* readJson(path.join(dirs.dataDir, "settings.json")), {
+        language: "en",
+        vaultFolder,
+      });
+    }).pipe(Effect.scoped),
+  );
+
+  it.effect("creates a new Vault with hidden settings and keeps the setup across a restart", () =>
     Effect.gen(function* () {
       const dirs = yield* makeDirs;
       const path = yield* Path.Path;
-      const graphFolder = path.join(dirs.homeDir, "Studier", "Glose");
+      const vaultFolder = path.join(dirs.homeDir, "Studier", "Glose");
 
-      yield* completeSetup({ language: "da", graphFolder, action: "create" }).pipe(
+      yield* completeSetup({ language: "da", vaultFolder, action: "create" }).pipe(
         onComputer(dirs),
       );
       const afterRestart = yield* Settings.Settings.pipe(
@@ -49,15 +74,15 @@ it.layer(NodeServices.layer)("Settings", (it) => {
         onComputer(dirs),
       );
 
-      assert.deepStrictEqual(afterRestart.settings, { language: "da", graphFolder });
+      assert.deepStrictEqual(afterRestart.settings, { language: "da", vaultFolder });
       assert.deepStrictEqual(
-        yield* readJson(path.join(graphFolder, ".glose", "settings.json")),
+        yield* readJson(path.join(vaultFolder, ".glose", "settings.json")),
         {},
       );
     }).pipe(Effect.scoped),
   );
 
-  it.effect("opens a moved Graph on another computer with the settings it carries", () =>
+  it.effect("opens a moved Vault on another computer with the settings it carries", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -67,7 +92,7 @@ it.layer(NodeServices.layer)("Settings", (it) => {
       const moved = path.join(second.homeDir, "Dropbox", "Glose");
       const carried = { fromNewerGlose: true };
 
-      yield* completeSetup({ language: "en", graphFolder: created, action: "create" }).pipe(
+      yield* completeSetup({ language: "en", vaultFolder: created, action: "create" }).pipe(
         onComputer(first),
       );
       yield* fs.writeFileString(
@@ -78,32 +103,32 @@ it.layer(NodeServices.layer)("Settings", (it) => {
       yield* fs.rename(created, moved);
       const view = yield* completeSetup({
         language: "da",
-        graphFolder: moved,
+        vaultFolder: moved,
         action: "open",
       }).pipe(onComputer(second));
 
-      assert.deepStrictEqual(view.settings, { language: "da", graphFolder: moved });
+      assert.deepStrictEqual(view.settings, { language: "da", vaultFolder: moved });
       assert.deepStrictEqual(yield* readJson(path.join(moved, ".glose", "settings.json")), carried);
     }).pipe(Effect.scoped),
   );
 
-  it.effect("opens a folder of Markdown from another editor as a Graph and keeps its files", () =>
+  it.effect("opens a folder of Markdown from another editor as a Vault and keeps its files", () =>
     Effect.gen(function* () {
       const dirs = yield* makeDirs;
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const graphFolder = path.join(dirs.homeDir, "Notes");
-      yield* fs.makeDirectory(graphFolder);
-      yield* fs.writeFileString(path.join(graphFolder, "Labour.md"), "# Labour\n");
+      const vaultFolder = path.join(dirs.homeDir, "Notes");
+      yield* fs.makeDirectory(vaultFolder);
+      yield* fs.writeFileString(path.join(vaultFolder, "Labour.md"), "# Labour\n");
 
-      yield* completeSetup({ language: "en", graphFolder, action: "open" }).pipe(onComputer(dirs));
+      yield* completeSetup({ language: "en", vaultFolder, action: "open" }).pipe(onComputer(dirs));
 
-      assert.deepStrictEqual((yield* fs.readDirectory(graphFolder)).toSorted(), [
+      assert.deepStrictEqual((yield* fs.readDirectory(vaultFolder)).toSorted(), [
         ".glose",
         "Labour.md",
       ]);
       assert.deepStrictEqual(
-        yield* readJson(path.join(graphFolder, ".glose", "settings.json")),
+        yield* readJson(path.join(vaultFolder, ".glose", "settings.json")),
         {},
       );
     }).pipe(Effect.scoped),
@@ -121,16 +146,16 @@ it.layer(NodeServices.layer)("Settings", (it) => {
       yield* fs.writeFileString(path.join(full, "letter.md"), "");
 
       const cases = [
-        { graphFolder: "Glose", action: "create", reason: "not-absolute" },
-        { graphFolder: file, action: "create", reason: "not-a-folder" },
-        { graphFolder: full, action: "create", reason: "not-empty" },
-        { graphFolder: path.join(dirs.homeDir, "Missing"), action: "open", reason: "not-found" },
-        { graphFolder: file, action: "open", reason: "not-a-folder" },
+        { vaultFolder: "Glose", action: "create", reason: "not-absolute" },
+        { vaultFolder: file, action: "create", reason: "not-a-folder" },
+        { vaultFolder: full, action: "create", reason: "not-empty" },
+        { vaultFolder: path.join(dirs.homeDir, "Missing"), action: "open", reason: "not-found" },
+        { vaultFolder: file, action: "open", reason: "not-a-folder" },
       ] as const;
-      const reasons = yield* Effect.forEach(cases, ({ graphFolder, action }) =>
-        completeSetup({ language: "en", graphFolder, action }).pipe(
+      const reasons = yield* Effect.forEach(cases, ({ vaultFolder, action }) =>
+        completeSetup({ language: "en", vaultFolder, action }).pipe(
           Effect.flip,
-          Effect.map((error) => (error._tag === "GraphFolderUnavailable" ? error.reason : error)),
+          Effect.map((error) => (error._tag === "VaultFolderUnavailable" ? error.reason : error)),
           onComputer(dirs),
         ),
       );

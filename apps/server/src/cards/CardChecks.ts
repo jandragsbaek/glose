@@ -5,7 +5,7 @@ import {
   type CardScore,
   type CardText,
   Check,
-  GraphFolderNotSet,
+  VaultFolderNotSet,
   type JudgeState,
   type Language,
   linkKey,
@@ -32,12 +32,12 @@ import * as ChatGpt from "../chatgpt/ChatGpt.ts";
 import { Responses } from "../chatgpt/Responses.ts";
 import { askStructured, strictObject } from "../chatgpt/structured.ts";
 import * as ServerConfig from "../config.ts";
-import * as Graph from "../graph/Graph.ts";
+import * as Graph from "../vault/Graph.ts";
 import * as Settings from "../settings/Settings.ts";
 import { writeFileAtomic } from "../storage.ts";
 import * as Cards from "./Cards.ts";
 
-type GraphError = GraphFolderNotSet | StorageError;
+type VaultError = VaultFolderNotSet | StorageError;
 
 export interface JudgeItem extends CardText {
   readonly from: string | null;
@@ -49,7 +49,7 @@ export class CardChecks extends Context.Service<
   CardChecks,
   {
     readonly score: (cards: ReadonlyArray<Card>) => Effect.Effect<ReadonlyArray<ScoredCard>>;
-    readonly judgeFiles: (files: ReadonlyArray<string>) => Effect.Effect<void, GraphError>;
+    readonly judgeFiles: (files: ReadonlyArray<string>) => Effect.Effect<void, VaultError>;
     readonly judge: (items: ReadonlyArray<JudgeItem>) => Effect.Effect<ReadonlyArray<Judged>>;
   }
 >()("glose/cards/CardChecks") {}

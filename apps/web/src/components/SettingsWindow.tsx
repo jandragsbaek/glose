@@ -14,7 +14,7 @@ import {
 import { type ReactNode, useId, useLayoutEffect, useRef, useState } from "react";
 
 import { LANGUAGES, useT } from "../i18n/I18n.tsx";
-import { KEYS, setLanguageAtom, settingsAtom } from "../state/graph.ts";
+import { KEYS, setLanguageAtom, settingsAtom } from "../state/vault.ts";
 import { AppearancePanel } from "./AppearancePanel.tsx";
 import { BackupPanel } from "./Backup.tsx";
 import { ChatGptConnection } from "./ChatGptConnection.tsx";
@@ -24,7 +24,7 @@ import { SiteFolderSheet } from "./WritingSheets.tsx";
 export const SETTINGS_SECTIONS = [
   "language",
   "appearance",
-  "graph-folder",
+  "vault-folder",
   "backup",
   "chatgpt",
   "site",
@@ -35,7 +35,7 @@ export type SettingsSection = (typeof SETTINGS_SECTIONS)[number];
 const SECTION_ICONS: Record<SettingsSection, LucideIcon> = {
   language: Languages,
   appearance: Palette,
-  "graph-folder": Folder,
+  "vault-folder": Folder,
   backup: CloudUpload,
   chatgpt: MessageSquareText,
   site: Globe,
@@ -213,8 +213,8 @@ function sectionTitle(t: ReturnType<typeof useT>, section: SettingsSection) {
       return t.settings.language;
     case "appearance":
       return t.appearance.title;
-    case "graph-folder":
-      return t.settings.graphFolder;
+    case "vault-folder":
+      return t.settings.vaultFolder;
     case "backup":
       return t.backup.title;
     case "chatgpt":
@@ -295,11 +295,11 @@ function SettingsPages({
       <SettingsPage section="appearance" idPrefix={idPrefix} shown={shown}>
         <AppearancePanel />
       </SettingsPage>
-      <SettingsPage section="graph-folder" idPrefix={idPrefix} shown={shown}>
-        <Panel title={t.settings.graphFolder} initial="rubric" level={3}>
+      <SettingsPage section="vault-folder" idPrefix={idPrefix} shown={shown}>
+        <Panel title={t.settings.vaultFolder} initial="rubric" level={3}>
           <div className="panel__body field">
-            <code className="call settings-window__path">{current?.graphFolder}</code>
-            <p className="field__hint">{t.settings.graphFolderHint}</p>
+            <code className="call settings-window__path">{current?.vaultFolder}</code>
+            <p className="field__hint">{t.settings.vaultFolderHint}</p>
           </div>
         </Panel>
       </SettingsPage>

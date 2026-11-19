@@ -1,7 +1,7 @@
 import {
   AI_TRY_WORDS,
   type AskTryWords,
-  GraphFolderNotSet,
+  VaultFolderNotSet,
   keepTryWords,
   MAX_SUGGESTED_WORDS,
   linkKey,
@@ -42,29 +42,29 @@ import * as Schema from "effect/Schema";
 import * as ChatGpt from "../chatgpt/ChatGpt.ts";
 import { Responses } from "../chatgpt/Responses.ts";
 import { askStructured, strictObject } from "../chatgpt/structured.ts";
-import * as Graph from "../graph/Graph.ts";
-import * as Sources from "../graph/Sources.ts";
+import * as Graph from "../vault/Graph.ts";
+import * as Sources from "../vault/Sources.ts";
 import * as Settings from "../settings/Settings.ts";
 import { writeFileAtomic } from "../storage.ts";
 import { parseWritingFile, renderWritingFile, type WritingFileContent } from "./writingFile.ts";
 
-type GraphError = GraphFolderNotSet | StorageError;
+type VaultError = VaultFolderNotSet | StorageError;
 
 export class Writing extends Context.Service<
   Writing,
   {
-    readonly list: Effect.Effect<ReadonlyArray<WritingProject>, GraphError>;
+    readonly list: Effect.Effect<ReadonlyArray<WritingProject>, VaultError>;
     readonly get: (
       id: string,
-    ) => Effect.Effect<WritingProject, WritingProjectNotFound | GraphError>;
+    ) => Effect.Effect<WritingProject, WritingProjectNotFound | VaultError>;
     readonly create: (
       fields: WritingProjectFields,
-    ) => Effect.Effect<WritingProject, WritingProjectNameTaken | GraphError>;
+    ) => Effect.Effect<WritingProject, WritingProjectNameTaken | VaultError>;
     readonly save: (
       input: SaveWritingProject,
     ) => Effect.Effect<
       WritingProject,
-      WritingProjectNotFound | WritingProjectNameTaken | GraphError
+      WritingProjectNotFound | WritingProjectNameTaken | VaultError
     >;
     readonly publish: (input: {
       readonly id: string;
@@ -76,13 +76,13 @@ export class Writing extends Context.Service<
       | SiteFolderUnavailable
       | PublicationExists
       | PublicationNotReady
-      | GraphError
+      | VaultError
     >;
     readonly review: (
       id: string,
     ) => Effect.Effect<
       WritingReview,
-      WritingProjectNotFound | WritingReviewUnavailable | GraphError
+      WritingProjectNotFound | WritingReviewUnavailable | VaultError
     >;
     readonly tryWords: (input: AskTryWords) => Effect.Effect<TryWords, TryWordsUnavailable>;
   }
@@ -169,10 +169,10 @@ export const make = Effect.gen(function* () {
   const responses = yield* Responses;
 
   const writingFolder = settings.get.pipe(
-    Effect.flatMap(({ settings: { graphFolder } }) =>
-      graphFolder === null
-        ? Effect.fail(new GraphFolderNotSet())
-        : Effect.succeed(path.join(graphFolder, WRITING_FOLDER)),
+    Effect.flatMap(({ settings: { vaultFolder } }) =>
+      vaultFolder === null
+        ? Effect.fail(new VaultFolderNotSet())
+        : Effect.succeed(path.join(vaultFolder, WRITING_FOLDER)),
     ),
   );
 

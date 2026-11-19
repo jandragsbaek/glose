@@ -1,4 +1,4 @@
-import { GraphFolderUnavailable, GraphSettings, StorageError } from "@glose/contracts";
+import { VaultFolderUnavailable, VaultSettings, StorageError } from "@glose/contracts";
 import * as Effect from "effect/Effect";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
@@ -8,21 +8,21 @@ import { writeFileAtomic } from "../storage.ts";
 
 export const GLOSE_DIR = ".glose";
 
-const GraphSettingsJson = Schema.fromJsonString(GraphSettings);
-const decodeGraphSettings = Schema.decodeUnknownEffect(GraphSettingsJson);
-const encodeGraphSettings = Schema.encodeEffect(GraphSettingsJson);
+const VaultSettingsJson = Schema.fromJsonString(VaultSettings);
+const decodeVaultSettings = Schema.decodeUnknownEffect(VaultSettingsJson);
+const encodeVaultSettings = Schema.encodeEffect(VaultSettingsJson);
 
-const EMPTY: GraphSettings = {};
+const EMPTY: VaultSettings = {};
 
 const storageError = (cause: unknown) => new StorageError({ detail: String(cause) });
 
 export const make = (fs: FileSystem.FileSystem, path: Path.Path) => {
   const settingsFile = (folder: string) => path.join(folder, GLOSE_DIR, "settings.json");
 
-  const unavailable = (folder: string, reason: GraphFolderUnavailable["reason"]) =>
-    new GraphFolderUnavailable({ path: folder, reason });
+  const unavailable = (folder: string, reason: VaultFolderUnavailable["reason"]) =>
+    new VaultFolderUnavailable({ path: folder, reason });
 
-  const inspect = Effect.fn("GraphFolder.inspect")(function* (folder: string) {
+  const inspect = Effect.fn("VaultFolder.inspect")(function* (folder: string) {
     if (!path.isAbsolute(folder)) return yield* unavailable(folder, "not-absolute");
     if (!(yield* fs.exists(folder).pipe(Effect.mapError(storageError)))) return "missing";
     const info = yield* fs.stat(folder).pipe(Effect.mapError(storageError));
@@ -30,16 +30,16 @@ export const make = (fs: FileSystem.FileSystem, path: Path.Path) => {
     return "folder";
   });
 
-  const writeSettings = Effect.fn("GraphFolder.writeSettings")(
-    function* (folder: string, settings: GraphSettings) {
+  const writeSettings = Effect.fn("VaultFolder.writeSettings")(
+    function* (folder: string, settings: VaultSettings) {
       yield* fs.makeDirectory(path.join(folder, GLOSE_DIR), { recursive: true });
-      yield* writeFileAtomic(fs, settingsFile(folder), yield* encodeGraphSettings(settings));
+      yield* writeFileAtomic(fs, settingsFile(folder), yield* encodeVaultSettings(settings));
       return settings;
     },
     (effect, folder) => Effect.mapError(effect, () => unavailable(folder, "not-writable")),
   );
 
-  const prepareEmpty = Effect.fn("GraphFolder.prepareEmpty")(function* (folder: string) {
+  const prepareEmpty = Effect.fn("VaultFolder.prepareEmpty")(function* (folder: string) {
     if ((yield* inspect(folder)) === "folder") {
       const entries = yield* fs.readDirectory(folder).pipe(Effect.mapError(storageError));
       if (entries.length > 0) return yield* unavailable(folder, "not-empty");
@@ -54,20 +54,20 @@ export const make = (fs: FileSystem.FileSystem, path: Path.Path) => {
   return {
     prepareEmpty,
 
-    settings: Effect.fn("GraphFolder.settings")(function* (folder: string) {
+    settings: Effect.fn("VaultFolder.settings")(function* (folder: string) {
       const file = settingsFile(folder);
       if (!(yield* fs.exists(file).pipe(Effect.mapError(storageError)))) return EMPTY;
       return yield* fs
         .readFileString(file)
-        .pipe(Effect.flatMap(decodeGraphSettings), Effect.mapError(storageError));
+        .pipe(Effect.flatMap(decodeVaultSettings), Effect.mapError(storageError));
     }),
 
-    create: Effect.fn("GraphFolder.create")(function* (folder: string) {
+    create: Effect.fn("VaultFolder.create")(function* (folder: string) {
       yield* prepareEmpty(folder);
       return yield* writeSettings(folder, EMPTY);
     }),
 
-    open: Effect.fn("GraphFolder.open")(function* (folder: string) {
+    open: Effect.fn("VaultFolder.open")(function* (folder: string) {
       if ((yield* inspect(folder)) === "missing") return yield* unavailable(folder, "not-found");
       const file = settingsFile(folder);
       if (!(yield* fs.exists(file).pipe(Effect.mapError(storageError)))) {
@@ -75,7 +75,7 @@ export const make = (fs: FileSystem.FileSystem, path: Path.Path) => {
       }
       return yield* fs
         .readFileString(file)
-        .pipe(Effect.flatMap(decodeGraphSettings), Effect.mapError(storageError));
+        .pipe(Effect.flatMap(decodeVaultSettings), Effect.mapError(storageError));
     }),
   };
 };

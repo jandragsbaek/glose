@@ -24,10 +24,10 @@ import { Sessions } from "./Sessions.ts";
 
 it.layer(NodeServices.layer)("Sessions", (it) => {
   it.effect(
-    "runs an Extraction turn with a tool call, keeps it in the Graph, and continues it",
+    "runs an Extraction turn with a tool call, keeps it in the Vault, and continues it",
     () =>
       Effect.gen(function* () {
-        const { fake, layer, graphFolder, sourceId, bodies } = yield* setUp;
+        const { fake, layer, vaultFolder, sourceId, bodies } = yield* setUp;
         fake.answer(MODELS, MODEL_LIST, MODEL_LIST);
         fake.answer(RESPONSES, toolCall("read_source"), answer("Your point: labour."));
 
@@ -84,14 +84,14 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
 
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const files = yield* fs.readDirectory(path.join(graphFolder, ".glose", "sessions"));
+        const files = yield* fs.readDirectory(path.join(vaultFolder, ".glose", "sessions"));
         assert.deepStrictEqual(files, [`${first.id}.json`]);
       }).pipe(Effect.scoped),
   );
 
   it.effect("keeps what the AI already said when the user stops a turn", () =>
     Effect.gen(function* () {
-      const { fake, layer, graphFolder, sourceId } = yield* setUp;
+      const { fake, layer, vaultFolder, sourceId } = yield* setUp;
       fake.answer(MODELS, MODEL_LIST);
       fake.answer(RESPONSES, halfAnswer);
       const id = yield* Effect.gen(function* () {
@@ -110,7 +110,7 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const saved = JSON.parse(
-        yield* fs.readFileString(path.join(graphFolder, ".glose", "sessions", `${id}.json`)),
+        yield* fs.readFileString(path.join(vaultFolder, ".glose", "sessions", `${id}.json`)),
       );
       assert.deepStrictEqual(saved.items.at(-1), {
         type: "message",
@@ -161,10 +161,10 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
 
   it.effect("reads a Session that an earlier Glose kept for a Source", () =>
     Effect.gen(function* () {
-      const { layer, graphFolder, sourceId } = yield* setUp;
+      const { layer, vaultFolder, sourceId } = yield* setUp;
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const folder = path.join(graphFolder, ".glose", "sessions");
+      const folder = path.join(vaultFolder, ".glose", "sessions");
       yield* fs.makeDirectory(folder, { recursive: true });
       yield* fs.writeFileString(
         path.join(folder, "old.json"),

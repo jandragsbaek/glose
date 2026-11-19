@@ -1,6 +1,6 @@
 import {
-  type GraphFolderAction,
-  type GraphFolderUnavailable,
+  type VaultFolderAction,
+  type VaultFolderUnavailable,
   type Language,
   Settings as SettingsData,
   type SettingsView,
@@ -16,7 +16,7 @@ import * as Schema from "effect/Schema";
 import * as NodeCrypto from "node:crypto";
 
 import * as ServerConfig from "../config.ts";
-import * as GraphFolder from "../graph/GraphFolder.ts";
+import * as VaultFolder from "../vault/VaultFolder.ts";
 import { writeFileAtomic } from "../storage.ts";
 
 export class Settings extends Context.Service<
@@ -27,9 +27,9 @@ export class Settings extends Context.Service<
     readonly setLanguage: (language: Language) => Effect.Effect<SettingsView, StorageError>;
     readonly completeSetup: (input: {
       readonly language: Language;
-      readonly graphFolder: string;
-      readonly action: Exclude<GraphFolderAction, "clone">;
-    }) => Effect.Effect<SettingsView, GraphFolderUnavailable | StorageError>;
+      readonly vaultFolder: string;
+      readonly action: Exclude<VaultFolderAction, "clone">;
+    }) => Effect.Effect<SettingsView, VaultFolderUnavailable | StorageError>;
     readonly setSiteFolder: (
       siteFolder: string,
     ) => Effect.Effect<SettingsView, SiteFolderUnavailable | StorageError>;
@@ -37,10 +37,15 @@ export class Settings extends Context.Service<
 >()("glose/Settings") {}
 
 const SettingsJson = Schema.fromJsonString(SettingsData);
-const decodeSettings = Schema.decodeUnknownEffect(SettingsJson);
+const decodeSettings = Schema.decodeUnknownEffect(SettingsData);
 const encodeSettings = Schema.encodeEffect(SettingsJson);
 
-const EMPTY: SettingsData = { language: null, graphFolder: null };
+const fromGraphFolderKey = (json: unknown): unknown =>
+  typeof json === "object" && json !== null && "graphFolder" in json && !("vaultFolder" in json)
+    ? (({ graphFolder, ...rest }) => ({ ...rest, vaultFolder: graphFolder }))(json)
+    : json;
+
+const EMPTY: SettingsData = { language: null, vaultFolder: null };
 
 const ComputerJson = Schema.fromJsonString(Schema.Struct({ id: Schema.String }));
 const decodeComputer = Schema.decodeUnknownEffect(ComputerJson);
@@ -53,11 +58,16 @@ export const make = Effect.gen(function* () {
   const path = yield* Path.Path;
   const { dataDir, homeDir } = yield* ServerConfig.ServerConfig;
   const file = path.join(dataDir, "settings.json");
-  const suggestedGraphFolder = path.join(homeDir, "Glose");
+  const suggestedVaultFolder = path.join(homeDir, "Glose");
 
   const read = Effect.gen(function* () {
     if (!(yield* fs.exists(file))) return EMPTY;
-    return yield* decodeSettings(yield* fs.readFileString(file));
+    const text = yield* fs.readFileString(file);
+    const json = yield* Effect.try({
+      try: (): unknown => JSON.parse(text),
+      catch: (cause) => cause,
+    });
+    return yield* decodeSettings(fromGraphFolderKey(json));
   }).pipe(Effect.mapError(storageError));
 
   const write = Effect.fn("Settings.write")(function* (settings: SettingsData) {
@@ -65,7 +75,7 @@ export const make = Effect.gen(function* () {
     yield* writeFileAtomic(fs, file, yield* encodeSettings(settings));
   }, Effect.mapError(storageError));
 
-  const view = (settings: SettingsData): SettingsView => ({ settings, suggestedGraphFolder });
+  const view = (settings: SettingsData): SettingsView => ({ settings, suggestedVaultFolder });
 
   const computerFile = path.join(dataDir, "computer.json");
   const computerId = Effect.gen(function* () {
@@ -78,7 +88,7 @@ export const make = Effect.gen(function* () {
     return id;
   }).pipe(Effect.mapError(storageError));
 
-  const graphFolders = GraphFolder.make(fs, path);
+  const vaultFolders = VaultFolder.make(fs, path);
 
   return Settings.of({
     get: read.pipe(Effect.map(view)),
@@ -90,12 +100,12 @@ export const make = Effect.gen(function* () {
     }),
     completeSetup: Effect.fn("Settings.completeSetup")(function* ({
       language,
-      graphFolder,
+      vaultFolder,
       action,
     }) {
-      const folder = graphFolder.trim();
-      yield* graphFolders[action](folder);
-      const next = { ...(yield* read), language, graphFolder: path.resolve(folder) };
+      const folder = vaultFolder.trim();
+      yield* vaultFolders[action](folder);
+      const next = { ...(yield* read), language, vaultFolder: path.resolve(folder) };
       yield* write(next);
       return view(next);
     }),

@@ -9,7 +9,7 @@ import { type FormEvent, type RefObject, useId, useRef, useState } from "react";
 
 import type { Messages } from "../i18n/en.ts";
 import { useT } from "../i18n/I18n.tsx";
-import { addVideoAtom, KEYS, lookupVideoAtom } from "../state/graph.ts";
+import { addVideoAtom, KEYS, lookupVideoAtom } from "../state/vault.ts";
 import {
   blank,
   FillLine,

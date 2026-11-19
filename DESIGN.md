@@ -684,7 +684,7 @@ whole for screen readers. Never on data, buttons or body.
 
 **The Typed Label Rule.** Courier Prime is for call numbers, step numbers, the Probe's question
 numbers ("Q6"), repository names in the
-Repository Rows (a repository is the Graph's shelf mark on GitHub), a code the user types
+Repository Rows (a repository is the Vault's shelf mark on GitHub), a code the user types
 elsewhere (the GitHub sign-in code), the paragraph numbers that are Locations ("¶ 8", in the
 Reader's gutter and apparatus), note numbers in a read text, and a Course lesson's week·day
 (in its call number and in the Week · Day field of the lesson table) only. Code in an Article is
@@ -996,7 +996,7 @@ On a problem, a Rubric triangle and words ("Not synced") follow, in 600. The ite
 button with 4px corners; hover and an open panel fill it with Lapis Tint and turn it Ink.
 
 The Versions panel opens above the item's right end as a Glose panel leaf (380px, Strong
-Hairline border, no shadow): the heading "Versions of your Graph" with a lapis Initial and the
+Hairline border, no shadow): the heading "Versions of your Vault" with a lapis Initial and the
 flourish; a problem as an in-panel warning notice; the Facts (a remote as `github.com/<login>/<repo>`;
 a missing one as "Only on this computer." ("Kun på denne computer.") in Mute, followed by a
 "Back up to GitHub" link button that opens the Backup sheet); then, under a Hairline, the End the day
@@ -1010,7 +1010,7 @@ All settings in one window over the page the user is on, like a small bound volu
 desk. A native `<dialog>` opened with `showModal`, `min(1040px, 100vw - 64px)` by
 `min(720px, 100vh - 64px)`, centred, so the page shows 32px around it at the least. The address
 holds it: `?settings=<section>` on any page with the rail (not the Review focus screen) opens it at that section (`language`,
-`appearance`, `graph-folder`, `backup`, `chatgpt`, `site`).
+`appearance`, `vault-folder`, `backup`, `chatgpt`, `site`).
 
 - **Window:** Paper, a 1px Lapis border, 4px corners, no shadow. Two columns: the 220px spine, then
   the leaf.
@@ -1031,7 +1031,7 @@ holds it: `?settings=<section>` on any page with the rail (not the Review focus 
 - **Body:** Ground, its own scroll (20px 32px 40px). It shows one section at a time, after T3
   Code's settings pages: its panel as on any page, up to 760px wide, with its own Initial,
   and its title an `h3` under the window's `h2`. The sections: Interface language (choice
-  rows), Appearance (the Appearance Panel), Graph folder (the path as a Call Number label that
+  rows), Appearance (the Appearance Panel), Vault (the path as a Call Number label that
   wraps, and a Meta hint), Backup (the Backup Panel), ChatGPT and Your website. A sheet opened from a panel opens over the window.
 - **Spine and pages:** the window opens at the section in the address. A click on a spine section
   puts it in the address (replacing the entry, so Back does not walk the sections) and shows it
@@ -1114,15 +1114,15 @@ disclosure ("5 Checks passed", a drawn 14px chevron that turns 90° in 160ms whe
 it Ink), where it comes from, and Edit and Delete (secondary) with a quiet Close pushed right
 (Esc). The sheet shows each change to the Card and closes when it is deleted.
 
-**Remote Graph sheet.** The Backup sheet run the other way, opened from the first start's Graph
-folder step. Titled "Get your Graph from GitHub" ("Hent din graf fra GitHub") with a rubric Initial;
+**Remote Vault sheet.** The Backup sheet run the other way, opened from the first start's Vault
+step. Titled "Get your Vault from GitHub" ("Hent dit arkiv fra GitHub") with a rubric Initial;
 it only chooses, and the setup page copies.
 
 - **Step 1, connect:** the Backup sheet's connect step and code, in this sheet's own words (what
   GitHub's code lets Glose read).
 - **Step 2, choose:** "Signed in to GitHub as <login>." with "Use another account", then the
-  Repository Rows under the field label "Choose the Graph" and a Meta hint, the latest pushed
-  Graph chosen and focused; Use this repository (primary, off while no row is chosen) and Cancel. Loading is the live line; a failed list is an
+  Repository Rows under the field label "Choose the Vault" and a Meta hint, the latest pushed
+  Vault chosen and focused; Use this repository (primary, off while no row is chosen) and Cancel. Loading is the live line; a failed list is an
   in-sheet warning notice with Try again; no repositories is the Mute empty sentence.
 - **Another git remote:** the same sheet without steps: a sentence, the Remote address field,
   Use this remote (primary, "Checking…" while git looks) and Cancel; a remote git cannot read
@@ -1132,22 +1132,22 @@ it only chooses, and the setup page copies.
 
 The account's private repositories as radio rows in the Choice style: Strong Hairline, 4px, 10px
 12px padding, 12px gaps; checked turns Lapis with Lapis Tint, hover darkens the border to Mute.
-Each row: the radio, the repository as a typed call-number label (`jandragsbaek/glose-graph`; a long
+Each row: the radio, the repository as a typed call-number label (`jandragsbaek/glose-vault`; a long
 name wraps inside its label) over a Mute 13px "Updated 12 Nov", and at the right end its states in
-fixed places: a Lapis 600 13px "Graph" with a 14px Lucide waypoints icon (the Graph Section's icon)
-over a Mute "Yours" or "Shared by <owner>". Graphs come first; the rest fold under a Mute 600 13px
-disclosure, "Other repositories (7)", with a hint that one becomes a Graph as it is. Below 520px the
+fixed places: a Lapis 600 13px "Vault" with a 14px Lucide waypoints icon (the Graph Section's icon)
+over a Mute "Yours" or "Shared by <owner>". Vaults come first; the rest fold under a Mute 600 13px
+disclosure, "Other repositories (7)", with a hint that one becomes a Vault as it is. Below 520px the
 states drop under the name.
 
 ### Setup Remote Ledger
 
-In the first start's Graph folder panel, "Get it from GitHub" is the third choice. Under the choices,
+In the first start's Vault panel, "Get it from GitHub" is the third choice. Under the choices,
 a Hairline, then the Facts ("From": "Not chosen yet" in Mute, or the place, such as
-`github.com/jandragsbaek/glose-graph`, with "Yours" or "Shared by <owner>" in Mute 13px), a Meta line
+`github.com/jandragsbaek/glose-vault`, with "Yours" or "Shared by <owner>" in Mute 13px), a Meta line
 that Glose keeps the backup there, an error line when the copy failed, and the buttons: Choose on
 GitHub (primary until a remote is chosen, then the secondary Choose another) and a quiet Use another
 git remote. The folder field follows, 14px below. While Glose copies, the start button reads
-"Copying your Graph…" with the live tick and "A large Graph can take a few minutes." beside it. A
+"Copying your Vault…" with the live tick and "A large Vault can take a few minutes." beside it. A
 copy from GitHub that fails says so in its own words (check the connection, or choose again); the
 sheet hands focus back to the button that opened it.
 
@@ -1165,7 +1165,7 @@ alternation).
 A ledger, not a form; setting up happens in the Backup sheet.
 
 - **Not backed up:** Facts ("Versions: Only on this computer", "Last saved: Today 14:37"), the
-  rubric inline warning ("If this computer is lost or breaks, your Graph is lost with it."), then
+  rubric inline warning ("If this computer is lost or breaks, your Vault is lost with it."), then
   Back up to GitHub (primary) and a quiet Use another git remote, 18px below.
 - **Backed up:** a sync problem as an in-panel warning notice; Facts ("Backed up to" with
   `github.com/<login>/<repo>` as a link, "Last sync", and "GitHub" with the login and a small
@@ -1436,7 +1436,7 @@ lesson is new). Fields in the table
 are 5px 8px at 14px.
 
 - **State marks:** a 15px icon and Mute 13px words, in a fixed cell (empty while new): a Mute
-  circle-alert and "Already in your Graph"; a Verdigris check and "Added"; a Rubric circle-alert and
+  circle-alert and "Already in your Vault"; a Verdigris check and "Added"; a Rubric circle-alert and
   "Not added" in Rubric; a lesson whose Source file name is taken says, in Rubric, "A Source has
   this file name. Change the title.", its title field points to it, the cursor goes to the first
   such title, and the lesson waits out of the retry while the file name it would get, by the
@@ -1803,7 +1803,7 @@ confirmed yet and Still open with a Rubric triangle; Asked, no answer yet and No
 Mute dash; Right, not confirmed yet (a guess, or a choice with no Reasoning) takes a Mute dash
 too. The
 topics follow in Mute 13px, joined by " · ". A Meta line says where the record is kept ("The
-Probe is kept in Probes/<Source>.md in your Graph folder."), then the way on: a primary button
+Probe is kept in Probes/<Source>.md in your Vault."), then the way on: a primary button
 ("Continue to Extraction", or "Done: <title> is read") with a Mute status beside it. An empty
 Probe says "The Probe ended before any answer."
 

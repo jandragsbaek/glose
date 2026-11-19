@@ -46,15 +46,15 @@ export const settingsMessages = {
     } satisfies Record<UpdatesProblem, string>,
   },
   versions: {
-    title: "Versions of your Graph",
+    title: "Versions of your Vault",
     off: "No versions",
     offReasons: {
-      "no-graph": "Glose keeps versions once you choose a Graph folder.",
+      "no-vault": "Glose keeps versions once you choose a Vault.",
       "no-git":
-        "Git is not installed on this computer. Install Git and start Glose again to keep versions of your Graph.",
+        "Git is not installed on this computer. Install Git and start Glose again to keep versions of your Vault.",
       "other-repository":
-        "The Graph folder is inside another git repository. Glose does not make commits there.",
-      failed: "Git could not start a repository in the Graph folder.",
+        "The Vault is inside another git repository. Glose does not make commits there.",
+      failed: "Git could not start a repository in the Vault.",
     } satisfies Record<VersionsOffReason, string>,
     saved: (at: Date, today: boolean) =>
       `Saved ${today ? clockTime.format(at) : shortDate.format(at)}`,
@@ -96,7 +96,7 @@ export const settingsMessages = {
     lastSaved: "Last saved",
     savedAt: (at: Date, today: boolean) =>
       today ? `Today ${clockTime.format(at)}` : shortDate.format(at),
-    risk: "If this computer is lost or breaks, your Graph is lost with it.",
+    risk: "If this computer is lost or breaks, your Vault is lost with it.",
     backUpToGitHub: "Back up to GitHub",
     useRemote: "Use another git remote",
     backedUpTo: "Backed up to",
@@ -110,7 +110,7 @@ export const settingsMessages = {
     keep: "Keep backing up",
     step: (n: number, of: number) => `Step ${n} of ${of}`,
     intro:
-      "GitHub keeps a private copy of every version, free. Only you can see it, and later you can open your Graph on another computer.",
+      "GitHub keeps a private copy of every version, free. Only you can see it, and later you can open your Vault on another computer.",
     connect: "Connect GitHub",
     noAccount: "No GitHub account?",
     createAccount: "Create one, free",
@@ -137,7 +137,7 @@ export const settingsMessages = {
     remoteIntro:
       "Glose pushes to a git remote you already have, with your own git sign-in: an SSH key or a credential helper.",
     remoteUrl: "Remote address",
-    remotePlaceholder: "git@example.com:you/glose-graph.git",
+    remotePlaceholder: "git@example.com:you/glose-vault.git",
     useThisRemote: "Use this remote",
     checking: "Checking…",
     remoteDone: "Backed up. Glose keeps the remote up to date after each save.",
@@ -151,12 +151,12 @@ export const settingsMessages = {
       "versions-off": "Glose keeps no versions now, so there is nothing to back up.",
       "github-not-connected": "Glose is not connected to GitHub now. Connect again.",
       "public-repository":
-        "You have a public repository of this name. Glose never puts your Graph where everyone can read it. Choose another name.",
+        "You have a public repository of this name. Glose never puts your Vault where everyone can read it. Choose another name.",
       "github-failed": "GitHub did not make the repository. Try again in a moment.",
       unreachable:
         "Git could not reach that remote, or could not sign in to it. Check the address, and that git on this computer can push there.",
-      "other-graph":
-        "That remote holds another Graph. Glose does not mix two Graphs. Use an empty remote, or the one of this Graph.",
+      "other-vault":
+        "That remote holds another Vault. Glose does not mix two Vaults. Use an empty remote, or the one of this Vault.",
     } satisfies Record<RemoteRefusedReason, string>,
   },
   appearance: {
@@ -177,8 +177,8 @@ export const settingsMessages = {
   settings: {
     title: "Settings",
     language: "Interface language",
-    graphFolder: "Graph folder",
-    graphFolderHint: "Changing the folder comes in a later version.",
+    vaultFolder: "Vault",
+    vaultFolderHint: "Changing the folder comes in a later version.",
     site: "Your website",
     siteNotChosen: "Not chosen yet.",
     sections: "Parts of Settings",

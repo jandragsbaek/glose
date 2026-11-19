@@ -11,7 +11,7 @@ import { useState } from "react";
 import { Notice, Page, Panel, SkeletonPanel, StorageProblem } from "../components/ui.tsx";
 import { proseWords } from "../domain/writing.ts";
 import { useLanguage, useT } from "../i18n/I18n.tsx";
-import { graphAtom, sourcesAtom } from "../state/graph.ts";
+import { graphAtom, sourcesAtom } from "../state/vault.ts";
 import { createWritingAtom, WRITING_KEYS, writingListAtom } from "../state/writing.ts";
 
 export const Route = createFileRoute("/writing/")({ component: WritingProjectsPage });

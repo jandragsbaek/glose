@@ -7,7 +7,7 @@ import { CircleAlert } from "lucide-react";
 import { type ReactNode, useId, useState } from "react";
 
 import { useT } from "../i18n/I18n.tsx";
-import { KEYS } from "../state/graph.ts";
+import { KEYS } from "../state/vault.ts";
 import { setSiteFolderAtom } from "../state/writing.ts";
 import { SheetFoot } from "./Backup.tsx";
 import { Flourish } from "./ui.tsx";

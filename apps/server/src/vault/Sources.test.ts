@@ -8,7 +8,7 @@ import * as Path from "effect/Path";
 import * as TestClock from "effect/testing/TestClock";
 
 import * as Settings from "../settings/Settings.ts";
-import { layerServices, makeDirs } from "../testkit/graph.ts";
+import { layerServices, makeDirs } from "../testkit/services.ts";
 import * as Sources from "./Sources.ts";
 
 const ARENDT: SourceDetails = {
@@ -22,8 +22,8 @@ const ARENDT: SourceDetails = {
   translator: null,
 };
 
-const withGraph = <A, E>(
-  test: (graph: {
+const withVault = <A, E>(
+  test: (vault: {
     readonly folder: string;
     readonly sources: Sources.Sources["Service"];
   }) => Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>,
@@ -35,7 +35,7 @@ const withGraph = <A, E>(
     return yield* Effect.gen(function* () {
       yield* (yield* Settings.Settings).completeSetup({
         language: "en",
-        graphFolder: folder,
+        vaultFolder: folder,
         action: "create",
       });
       return yield* test({ folder, sources: yield* Sources.Sources });
@@ -44,7 +44,7 @@ const withGraph = <A, E>(
 
 it.layer(NodeServices.layer)("Sources", (it) => {
   it.effect("writes a new Source as Markdown that other editors can read", () =>
-    withGraph(({ folder, sources }) =>
+    withVault(({ folder, sources }) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -77,7 +77,7 @@ it.layer(NodeServices.layer)("Sources", (it) => {
   );
 
   it.effect("lists Sources written by hand and skips other Markdown files", () =>
-    withGraph(({ folder, sources }) =>
+    withVault(({ folder, sources }) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -125,7 +125,7 @@ it.layer(NodeServices.layer)("Sources", (it) => {
   );
 
   it.effect("counts a Source without an added date from its file", () =>
-    withGraph(({ folder, sources }) =>
+    withVault(({ folder, sources }) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -147,7 +147,7 @@ it.layer(NodeServices.layer)("Sources", (it) => {
   );
 
   it.effect("keeps file names valid on Windows and refuses names that differ only in case", () =>
-    withGraph(({ folder, sources }) =>
+    withVault(({ folder, sources }) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -178,7 +178,7 @@ it.layer(NodeServices.layer)("Sources", (it) => {
   );
 
   it.effect("refuses an id that is a path, not a file name", () =>
-    withGraph(({ sources }) =>
+    withVault(({ sources }) =>
       Effect.gen(function* () {
         const error = yield* sources.get("../app-data/settings").pipe(Effect.flip);
         assert.strictEqual(error._tag, "SourceNotFound");
@@ -187,7 +187,7 @@ it.layer(NodeServices.layer)("Sources", (it) => {
   );
 
   it.effect("saves Free text and moves to Extraction only when the step is finished", () =>
-    withGraph(({ sources }) =>
+    withVault(({ sources }) =>
       Effect.gen(function* () {
         const { id } = yield* sources.create(ARENDT);
         const draft = yield* sources.saveFreeText({
@@ -211,7 +211,7 @@ it.layer(NodeServices.layer)("Sources", (it) => {
   );
 
   it.effect("keeps the answer to where the user is with the book, which sets the first step", () =>
-    withGraph(({ folder, sources }) =>
+    withVault(({ folder, sources }) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -231,7 +231,7 @@ it.layer(NodeServices.layer)("Sources", (it) => {
   );
 
   it.effect("moves a Source on in the order its start gives", () =>
-    withGraph(({ folder, sources }) =>
+    withVault(({ folder, sources }) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -257,7 +257,7 @@ it.layer(NodeServices.layer)("Sources", (it) => {
   );
 
   it.effect("imports a Course lesson with its text, and marks a Passage in that text", () =>
-    withGraph(({ folder, sources }) =>
+    withVault(({ folder, sources }) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -356,7 +356,7 @@ it.layer(NodeServices.layer)("Sources", (it) => {
   );
 
   it.effect("moves an Article from reading to the step the user chooses", () =>
-    withGraph(({ sources }) =>
+    withVault(({ sources }) =>
       Effect.gen(function* () {
         const article = yield* sources.importText({
           ...ARENDT,
@@ -377,7 +377,7 @@ it.layer(NodeServices.layer)("Sources", (it) => {
   );
 
   it.effect("adds a Video with its watch page, and its watch notes lead to Extraction", () =>
-    withGraph(({ folder, sources }) =>
+    withVault(({ folder, sources }) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -428,7 +428,7 @@ it.layer(NodeServices.layer)("Sources", (it) => {
   );
 
   it.effect("refuses a Video whose address is not a YouTube video, and writes no file", () =>
-    withGraph(({ folder, sources }) =>
+    withVault(({ folder, sources }) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const refused = yield* Effect.flip(

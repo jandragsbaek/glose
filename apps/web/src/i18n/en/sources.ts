@@ -25,7 +25,7 @@ export const sourceMessages = {
       `Missing for a correct Citation: ${list.format(missing)}.`,
     howToFix: "How to add it",
     missingHowTo:
-      "Add it to the Source's Markdown file in the Graph folder. Editing it in Glose comes in a later version.",
+      "Add it to the Source's Markdown file in the Vault. Editing it in Glose comes in a later version.",
     details: "Bibliographic data",
     fields: {
       author: "Author",
@@ -174,6 +174,6 @@ export const sourceMessages = {
     submit: "Add Source",
     cancel: "Cancel",
     nameTaken: (fileName: string) =>
-      `The Graph folder already has a file named "${fileName}". Change the title, or open the existing Source.`,
+      `The Vault already has a file named "${fileName}". Change the title, or open the existing Source.`,
   },
 };

@@ -5,15 +5,15 @@ import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 
-import * as Graph from "../graph/Graph.ts";
+import * as Graph from "../vault/Graph.ts";
 import * as Settings from "../settings/Settings.ts";
-import { layerServices, makeDirs } from "../testkit/graph.ts";
+import { layerServices, makeDirs } from "../testkit/services.ts";
 import * as Cards from "./Cards.ts";
 
 const NOTE = "Attention residue lowers performance after switching";
 
-const withGraph = <A, E>(
-  test: (graph: {
+const withVault = <A, E>(
+  test: (vault: {
     readonly folder: string;
     readonly cards: Cards.Cards["Service"];
     readonly writeCard: (name: string, markdown: string) => Effect.Effect<void, unknown>;
@@ -29,7 +29,7 @@ const withGraph = <A, E>(
     return yield* Effect.gen(function* () {
       yield* (yield* Settings.Settings).completeSetup({
         language: "en",
-        graphFolder: folder,
+        vaultFolder: folder,
         action: "create",
       });
       return yield* test({
@@ -48,7 +48,7 @@ const ID = /^c-[0-9a-f]{8}$/;
 
 it.layer(NodeServices.layer)("Cards", (it) => {
   it.effect("writes an AI-written Card as Markdown that other editors can read", () =>
-    withGraph(({ cards, readCard }) =>
+    withVault(({ cards, readCard }) =>
       Effect.gen(function* () {
         const card = yield* cards.create({
           from: NOTE,
@@ -83,7 +83,7 @@ it.layer(NodeServices.layer)("Cards", (it) => {
   );
 
   it.effect("names a Card after its question, without clashing with any case of a name", () =>
-    withGraph(({ cards, writeCard }) =>
+    withVault(({ cards, writeCard }) =>
       Effect.gen(function* () {
         yield* writeCard("what is flow.md", "Not a Card, but the name is taken.");
         const text = { from: NOTE, question: "What is flow?", answer: "", ai: false };
@@ -99,7 +99,7 @@ it.layer(NodeServices.layer)("Cards", (it) => {
   );
 
   it.effect("reads Cards written or changed by hand, and skips other files", () =>
-    withGraph(({ cards, writeCard }) =>
+    withVault(({ cards, writeCard }) =>
       Effect.gen(function* () {
         yield* writeCard(
           "Labour.md",
@@ -161,7 +161,7 @@ it.layer(NodeServices.layer)("Cards", (it) => {
   );
 
   it.effect("edits a Card and keeps what the user added by hand", () =>
-    withGraph(({ cards, writeCard, readCard }) =>
+    withVault(({ cards, writeCard, readCard }) =>
       Effect.gen(function* () {
         yield* writeCard(
           "Flow.md",
@@ -218,7 +218,7 @@ it.layer(NodeServices.layer)("Cards", (it) => {
   );
 
   it.effect("deletes a Card, and refuses a name outside the Cards folder", () =>
-    withGraph(({ cards, folder }) =>
+    withVault(({ cards, folder }) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -237,7 +237,7 @@ it.layer(NodeServices.layer)("Cards", (it) => {
   );
 
   it.effect("keeps Cards out of the Graph's Notes", () =>
-    withGraph(({ cards }) =>
+    withVault(({ cards }) =>
       Effect.gen(function* () {
         yield* cards.create({ from: NOTE, question: "Q?", answer: "A.", ai: false });
         assert.deepStrictEqual((yield* (yield* Graph.Graph).read).nodes, []);

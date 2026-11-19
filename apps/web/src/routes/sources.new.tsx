@@ -26,7 +26,7 @@ import {
   formValuesOf,
 } from "../domain/sourceForm.ts";
 import { useT } from "../i18n/I18n.tsx";
-import { createSourceAtom, KEYS, searchCatalogAtom } from "../state/graph.ts";
+import { createSourceAtom, KEYS, searchCatalogAtom } from "../state/vault.ts";
 
 type AddKind = "book" | "article" | "lesson" | "video";
 const KINDS = ["book", "article", "lesson", "video"] as const satisfies ReadonlyArray<AddKind>;

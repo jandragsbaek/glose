@@ -1,5 +1,5 @@
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
-import type { GitHubRepository, GraphRemoteUnavailableReason } from "@glose/contracts";
+import type { GitHubRepository, VaultRemoteUnavailableReason } from "@glose/contracts";
 import * as Cause from "effect/Cause";
 import * as Exit from "effect/Exit";
 import * as Option from "effect/Option";
@@ -14,7 +14,7 @@ import {
   gitHubRepositoriesAtom,
   gitHubStatusAtom,
 } from "../state/github.ts";
-import { checkRemoteAtom } from "../state/graph.ts";
+import { checkRemoteAtom } from "../state/vault.ts";
 import { ConnectStep, SheetFoot } from "./Backup.tsx";
 import { Flourish, Notice } from "./ui.tsx";
 
@@ -27,20 +27,20 @@ export type RemoteSheetMode = "github" | "remote";
 
 export const remoteFailureOf = (
   exit: Exit.Exit<unknown, unknown>,
-): GraphRemoteUnavailableReason | null => {
+): VaultRemoteUnavailableReason | null => {
   if (Exit.isSuccess(exit)) return null;
   const error = Cause.findErrorOption(exit.cause);
   return Option.isSome(error) &&
     typeof error.value === "object" &&
     error.value !== null &&
     "_tag" in error.value &&
-    error.value._tag === "GraphRemoteUnavailable" &&
+    error.value._tag === "VaultRemoteUnavailable" &&
     "reason" in error.value
-    ? (error.value.reason as GraphRemoteUnavailableReason)
+    ? (error.value.reason as VaultRemoteUnavailableReason)
     : null;
 };
 
-export function RemoteGraphSheet({
+export function RemoteVaultSheet({
   mode,
   onMode,
   onChoose,
@@ -123,7 +123,7 @@ function RepositoryStep({
   const [chosen, setChosen] = useState<string | null>(null);
 
   const repositories = AsyncResult.getOrElse(listing, () => []);
-  const current = chosen ?? repositories.find((repository) => repository.graph)?.url ?? null;
+  const current = chosen ?? repositories.find((repository) => repository.vault)?.url ?? null;
   const picked = repositories.find((repository) => repository.url === current) ?? null;
 
   const submit = (event: FormEvent) => {
@@ -185,8 +185,8 @@ function RepositoryList({
   const t = useT();
   const name = useId();
   const hintId = useId();
-  const graphs = repositories.filter((repository) => repository.graph);
-  const others = repositories.filter((repository) => !repository.graph);
+  const vaults = repositories.filter((repository) => repository.vault);
+  const others = repositories.filter((repository) => !repository.vault);
   const otherChosen = others.some((repository) => repository.url === chosen);
 
   const row = (repository: GitHubRepository) => (
@@ -208,10 +208,10 @@ function RepositoryList({
         )}
       </span>
       <span className="repo__side">
-        {repository.graph ? (
-          <span className="repo__graph">
-            <Waypoints className="repo__graph-icon" aria-hidden="true" />
-            {t.setup.remote.graph}
+        {repository.vault ? (
+          <span className="repo__vault">
+            <Waypoints className="repo__vault-icon" aria-hidden="true" />
+            {t.setup.remote.vault}
           </span>
         ) : null}
         <span className="repo__owner">
@@ -223,13 +223,13 @@ function RepositoryList({
 
   return (
     <fieldset className="repo-list" aria-describedby={hintId}>
-      <legend className="field__label">{t.setup.remote.chooseGraph}</legend>
+      <legend className="field__label">{t.setup.remote.chooseVault}</legend>
       <p className="field__hint" id={hintId}>
         {t.setup.remote.listHint}
       </p>
-      {graphs.length === 0 ? null : <div className="repo-list__rows">{graphs.map(row)}</div>}
+      {vaults.length === 0 ? null : <div className="repo-list__rows">{vaults.map(row)}</div>}
       {others.length === 0 ? null : (
-        <details className="repo-others" open={graphs.length === 0 || otherChosen}>
+        <details className="repo-others" open={vaults.length === 0 || otherChosen}>
           <summary className="repo-others__summary">{t.setup.remote.others(others.length)}</summary>
           <p className="field__hint">{t.setup.remote.othersHint}</p>
           <div className="repo-list__rows">{others.map(row)}</div>
@@ -252,7 +252,7 @@ function RemoteForm({
   const check = useAtomSet(checkRemoteAtom, { mode: "promiseExit" });
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
-  const [problem, setProblem] = useState<GraphRemoteUnavailableReason | "failed" | null>(null);
+  const [problem, setProblem] = useState<VaultRemoteUnavailableReason | "failed" | null>(null);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();

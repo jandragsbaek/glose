@@ -14,7 +14,7 @@ import {
   setUp,
   toolCall,
 } from "../testkit/sessions.ts";
-import { Sources } from "../graph/Sources.ts";
+import { Sources } from "../vault/Sources.ts";
 import { Sessions } from "./Sessions.ts";
 
 it.layer(NodeServices.layer)("Sessions", (it) => {
@@ -22,7 +22,7 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
     "proposes Points with Graph flags, keeps only true quotes and real Notes, and writes a kept Point as a Note",
     () =>
       Effect.gen(function* () {
-        const { fake, layer, graphFolder, sourceId, bodies } = yield* setUp;
+        const { fake, layer, vaultFolder, sourceId, bodies } = yield* setUp;
         fake.answer(MODELS, MODEL_LIST, MODEL_LIST);
         fake.answer(
           RESPONSES,
@@ -153,7 +153,7 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
 
         assert.strictEqual(note.name, "Labour leaves nothing");
         assert.strictEqual(
-          yield* fs.readFileString(path.join(graphFolder, `${note.name}.md`)),
+          yield* fs.readFileString(path.join(vaultFolder, `${note.name}.md`)),
           [
             "---",
             "glose: note",
@@ -170,7 +170,7 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
           ].join("\n"),
         );
         assert.strictEqual(
-          yield* fs.readFileString(path.join(graphFolder, `${note.drafted}.md`)),
+          yield* fs.readFileString(path.join(vaultFolder, `${note.drafted}.md`)),
           [
             "---",
             "glose: note",

@@ -1,7 +1,7 @@
 import { useAtomSet } from "@effect/atom-react";
 import type {
-  GraphFolderAction,
-  GraphRemoteUnavailableReason,
+  VaultFolderAction,
+  VaultRemoteUnavailableReason,
   Language,
   SettingsView,
 } from "@glose/contracts";
@@ -14,21 +14,21 @@ import { flushSync } from "react-dom";
 
 import { I18nProvider, LANGUAGES, useT } from "../i18n/I18n.tsx";
 import type { Messages } from "../i18n/en.ts";
-import { completeSetupAtom, KEYS } from "../state/graph.ts";
+import { completeSetupAtom, KEYS } from "../state/vault.ts";
 import { remotePlace } from "./Backup.tsx";
 import { ChatGptConnection } from "./ChatGptConnection.tsx";
 import {
   type ChosenRemote,
-  RemoteGraphSheet,
+  RemoteVaultSheet,
   remoteFailureOf,
   type RemoteSheetMode,
-} from "./RemoteGraphSheet.tsx";
+} from "./RemoteVaultSheet.tsx";
 import { Notice, Panel } from "./ui.tsx";
 
 type FolderError = keyof Messages["setup"]["folderErrors"] | "storage";
-type RemoteError = GraphRemoteUnavailableReason | "missing";
+type RemoteError = VaultRemoteUnavailableReason | "missing";
 
-const FOLDER_ACTIONS: ReadonlyArray<GraphFolderAction> = ["create", "open", "clone"];
+const FOLDER_ACTIONS: ReadonlyArray<VaultFolderAction> = ["create", "open", "clone"];
 
 export function Setup({
   view,
@@ -58,8 +58,8 @@ function SetupForm({
   const folderId = useId();
   const errorId = useId();
   const remoteErrorId = useId();
-  const [action, setAction] = useState<GraphFolderAction>("create");
-  const [folder, setFolder] = useState(view.suggestedGraphFolder);
+  const [action, setAction] = useState<VaultFolderAction>("create");
+  const [folder, setFolder] = useState(view.suggestedVaultFolder);
   const [error, setError] = useState<FolderError | null>(null);
   const [remote, setRemote] = useState<ChosenRemote | null>(null);
   const [remoteError, setRemoteError] = useState<RemoteError | null>(null);
@@ -84,7 +84,7 @@ function SetupForm({
     const exit = await completeSetup({
       payload: {
         language,
-        graphFolder: folder,
+        vaultFolder: folder,
         action,
         ...(cloning && remote !== null ? { remote: remote.url } : {}),
       },
@@ -96,7 +96,7 @@ function SetupForm({
     if (remoteFailure !== null) return setRemoteError(remoteFailure);
     const failure = Cause.findErrorOption(exit.cause);
     setError(
-      Option.isSome(failure) && failure.value._tag === "GraphFolderUnavailable"
+      Option.isSome(failure) && failure.value._tag === "VaultFolderUnavailable"
         ? failure.value.reason
         : "storage",
     );
@@ -222,7 +222,7 @@ function SetupForm({
         </form>
       </main>
       {sheet === null ? null : (
-        <RemoteGraphSheet
+        <RemoteVaultSheet
           mode={sheet}
           onMode={setSheet}
           onClose={closeSheet}

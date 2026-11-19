@@ -4,7 +4,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 
-import * as Sources from "../graph/Sources.ts";
+import * as Sources from "../vault/Sources.ts";
 import {
   afterTurn,
   answer,
@@ -29,7 +29,7 @@ import { Sessions } from "./Sessions.ts";
 it.layer(NodeServices.layer)("Sessions: research for a new Note", (it) => {
   it.effect("offers web search, keeps only quotes that are on the page, and saves the Note", () =>
     Effect.gen(function* () {
-      const { fake, layer, graphFolder, bodies } = yield* setUpWithPages(
+      const { fake, layer, vaultFolder, bodies } = yield* setUpWithPages(
         new Map([
           [URL_A, PAGE_A],
           [URL_B, PAGE_B],
@@ -143,7 +143,7 @@ it.layer(NodeServices.layer)("Sessions: research for a new Note", (it) => {
       assert.strictEqual(source?.container, "Learning Example");
       assert.isFalse(sources.some((other) => other.url === URL_B));
 
-      const file = yield* fs.readFileString(path.join(graphFolder, `${note}.md`));
+      const file = yield* fs.readFileString(path.join(vaultFolder, `${note}.md`));
       assert.strictEqual(
         file,
         [

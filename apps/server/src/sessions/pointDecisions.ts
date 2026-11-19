@@ -3,7 +3,7 @@ import * as Effect from "effect/Effect";
 import type * as Semaphore from "effect/Semaphore";
 import * as SubscriptionRef from "effect/SubscriptionRef";
 
-import * as Notes from "../graph/Notes.ts";
+import * as Notes from "../vault/Notes.ts";
 import * as Settings from "../settings/Settings.ts";
 import { addPoints, type Live, type Load, patch } from "./liveSession.ts";
 import { mapPoint, pointName, pointsOf } from "./sessionEntries.ts";

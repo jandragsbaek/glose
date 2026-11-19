@@ -46,7 +46,7 @@ const END_OF_DAY = "End of day";
 const LISTED_FILES = 20;
 
 const GITIGNORE = [
-  "# Written by Glose when it started versioning this Graph. Edit freely.",
+  "# Written by Glose when it started versioning this Vault. Edit freely.",
   "*.glose-tmp",
   ".DS_Store",
   "Thumbs.db",
@@ -63,7 +63,7 @@ interface Opened {
   readonly usable: boolean;
 }
 
-const OFF_NO_GRAPH: VersionsStatus = { _tag: "Off", reason: "no-graph" };
+const OFF_NO_VAULT: VersionsStatus = { _tag: "Off", reason: "no-vault" };
 
 export const make = Effect.gen(function* () {
   const git = yield* Git;
@@ -73,7 +73,7 @@ export const make = Effect.gen(function* () {
   const path = yield* Path.Path;
   const { homeDir } = yield* ServerConfig.ServerConfig;
 
-  const status = yield* SubscriptionRef.make<VersionsStatus>(OFF_NO_GRAPH);
+  const status = yield* SubscriptionRef.make<VersionsStatus>(OFF_NO_VAULT);
   const lock = yield* Semaphore.make(1);
 
   let opened: Opened | null = null;
@@ -315,7 +315,7 @@ export const make = Effect.gen(function* () {
     if (heads.trim() !== "" && (yield* hasCommits(folder))) {
       yield* git.run(folder, ["fetch", "--quiet", url, `refs/heads/${branch}`], network).pipe(
         Effect.flatMap(() => git.run(folder, ["merge-base", "HEAD", "FETCH_HEAD"])),
-        Effect.mapError(() => new RemoteRefused({ reason: "other-graph" })),
+        Effect.mapError(() => new RemoteRefused({ reason: "other-vault" })),
       );
     }
     const name = (yield* remoteOf(folder, branch)) ?? REMOTE_NAME;
@@ -334,16 +334,16 @@ export const make = Effect.gen(function* () {
     }
   });
 
-  const graphFolder = settings.get.pipe(
-    Effect.map((view) => view.settings.graphFolder),
+  const vaultFolder = settings.get.pipe(
+    Effect.map((view) => view.settings.vaultFolder),
     Effect.orElseSucceed(() => null),
   );
 
   const tick = Effect.gen(function* () {
-    const folder = yield* graphFolder;
+    const folder = yield* vaultFolder;
     if (folder === null) {
       opened = null;
-      yield* SubscriptionRef.set(status, OFF_NO_GRAPH);
+      yield* SubscriptionRef.set(status, OFF_NO_VAULT);
       return;
     }
     if (opened?.folder !== folder) {

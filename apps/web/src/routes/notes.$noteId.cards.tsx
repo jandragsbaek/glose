@@ -13,7 +13,7 @@ import { LiveSession, NeedsChatGpt, useChatGptReady } from "../components/Sessio
 import { Notice, Page, Panel, SkeletonPanel, StorageProblem } from "../components/ui.tsx";
 import { useT } from "../i18n/I18n.tsx";
 import { CARD_KEYS, cardsAtom, createCardAtom } from "../state/cards.ts";
-import { graphAtom } from "../state/graph.ts";
+import { graphAtom } from "../state/vault.ts";
 import {
   cardExtractionSessionAtom,
   SESSION_KEYS,
