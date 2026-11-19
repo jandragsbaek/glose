@@ -1,10 +1,11 @@
-import { POSTS_FOLDER, type WritingProjectFields, type WritingReview } from "@glose/contracts";
+import { POSTS_FOLDER, type WritingProjectFields } from "@glose/contracts";
 import { Link } from "@tanstack/react-router";
 import { Check, TriangleAlert, Waypoints } from "lucide-react";
 
 import { useT } from "../i18n/I18n.tsx";
 import { OpenSettingsButton } from "./SettingsWindow.tsx";
 import { PieceSettings } from "./WritingPieceSettings.tsx";
+import type { ShownReview } from "./WritingMargins.tsx";
 import type { SaveState } from "./WritingSave.ts";
 
 export type ReviewState = "idle" | "running" | "done" | "off" | "failed";
@@ -162,11 +163,13 @@ export function DeskBar({
 
 export function DeskNote({
   reviewState,
-  review,
+  shown,
+  onShowQuestions,
   publish,
 }: {
   readonly reviewState: ReviewState;
-  readonly review: WritingReview | null;
+  readonly shown: ShownReview | null;
+  readonly onShowQuestions: (() => void) | null;
   readonly publish: PublishState;
 }) {
   const t = useT();
@@ -193,8 +196,22 @@ export function DeskNote({
           <TriangleAlert className="desk-note__icon" aria-hidden="true" />
           {t.writing.publishFailed}
         </>
-      ) : reviewState === "done" && review !== null ? (
-        t.writing.reviewed(review.claims.length, review.suggestions.length, review.questions.length)
+      ) : reviewState === "done" && shown !== null ? (
+        <>
+          {t.writing.reviewed(
+            shown.claims.length,
+            shown.suggestions.length,
+            shown.questions.length,
+          )}
+          {shown.questions.length > 0 && onShowQuestions !== null ? (
+            <>
+              {" "}
+              <button type="button" className="link-button" onClick={onShowQuestions}>
+                {t.writing.showQuestions(shown.questions.length)}
+              </button>
+            </>
+          ) : null}
+        </>
       ) : reviewState === "off" ? (
         <>
           <TriangleAlert className="desk-note__icon" aria-hidden="true" />

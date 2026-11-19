@@ -165,11 +165,17 @@ Decided, the Blog post flow (November 2026), chosen with impeccable:
   number in the text; its Citation (the short citation, the Note and the call number with page)
   sits in the right margin beside its line. The AI's flags (no page, no Reference, Notes for this
   paragraph) sit in the left margin, marked in Rubric. A thin bar holds the title, the type,
-  Write | Proof, Cite a Note (`[[` or ⌘K) and Publish. Below a wide window the margins fold under
+  Write | Preview, Cite a Note (`[[` or ⌘K) and Publish. Below a wide window the margins fold under
   their paragraph.
-- Publishing happens in Proof ("Publish from Proof"): the leaf shows the post as readers will see
+- Publishing happens in Preview ("Publish from Preview"): the leaf shows the post as readers will see
   it, in the chosen Reference form. The left margin lists the checks before publishing, the right
   margin the AI's closing questions, and the bar names the target file with "Write to site".
+- After "Ask the AI to check", the line under the bar counts only the flags the margins show (a
+  claim or Note whose excerpt is not word for word in the text is not counted). The questions stay
+  in Preview; in Write the line links to them ("Read it in Preview"), so a counted question is never
+  out of sight (November 2026).
+- The second mode is called Preview (Danish: Forhåndsvisning), not Proof: Jan did not know what
+  Proof meant (November 2026). The code still calls the mode `proof`.
 - A Writing project is one Markdown file, `Writing/<Title>.md`, with frontmatter `glose:
   writing-project`, `title`, `type`, `language`, `reference-form` (Blog post) or `citation-style`
   (assignment), and after publishing `published` and `published-file`. A new piece is saved at
@@ -209,7 +215,7 @@ Decided, the Graph beside the desk (November 2026), chosen with impeccable ("Tra
   (number, title, call number) above the open Note, and the trail is drawn on the Graph as a Lapis
   line with numbered stops. A slip opens its Note again. Notes cited in the piece carry a ring.
 - The panel is for reading only. Citing stays in the Cite Slip (⌘K).
-- The panel shows in Write and in Proof. The trail lasts while the piece is open and is not saved.
+- The panel shows in Write and in Preview. The trail lasts while the piece is open and is not saved.
 - While the panel is open, the References' glosses fold under the leaf, as on a narrow window.
 - Built and reviewed by a three-model council (Claude Opus, GPT Sol, Muse Wonder Full; five rounds,
   all at 9.0 or more). From the review: the stops sit in their own strip above the open Note so the
@@ -242,7 +248,7 @@ Decided, Tries on the desk (November 2026), chosen with impeccable ("Tries Slip"
   Glose never moves bold or italic marks on its own.
 - The text holds the Try that shows. The others wait in an HTML comment at the end of the file
   (`<!-- glose:tries … -->`, YAML), so the prose stays plain Markdown for every other tool, and
-  Proof, the post and the AI review read only the text. A Try whose words were changed in
+  Preview, the post and the AI review read only the text. A Try whose words were changed in
   another editor moves to the nearest place that still holds them, or is dropped.
 - When the text ends inside an open code fence or HTML comment and has Tries, saving adds the
   closing line before the Tries block, so the block never lands inside the fence or comment.

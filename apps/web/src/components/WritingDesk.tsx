@@ -35,6 +35,7 @@ import {
   Questions,
   ReviewFlags,
   ReferenceGlosses,
+  shownReview,
   useMarginPlacement,
 } from "./WritingMargins.tsx";
 import {
@@ -114,20 +115,13 @@ export function WritingDesk({
       .filter((reference) => reference.problems.length > 0)
       .map((reference) => referenceKey(reference.target, reference.location)),
   );
-  const reviewFits = review !== null && reviewedBody !== null;
-  const claims = reviewFits
-    ? review.claims.filter((claim) => fields.body.includes(claim.excerpt))
-    : [];
-  const suggestions = reviewFits
-    ? review.suggestions.filter(
-        (suggestion) =>
-          fields.body.includes(suggestion.excerpt) &&
-          !references.some((reference) => reference.noteId === suggestion.noteId),
-      )
-    : [];
+  const shown = reviewedBody === null ? null : shownReview(review, fields.body, references);
+  const claims = shown?.claims ?? [];
+  const suggestions = shown?.suggestions ?? [];
 
   const runReview = async () => {
     setReviewState("running");
+    setPublish((now) => (now.kind === "writing" ? now : { kind: "idle" }));
     if (!(await save(fields))) {
       setReviewState("failed");
       return;
@@ -321,7 +315,12 @@ export function WritingDesk({
             : null
         }
       />
-      <DeskNote reviewState={reviewState} review={review} publish={publish} />
+      <DeskNote
+        reviewState={reviewState}
+        shown={shown}
+        onShowQuestions={mode === "write" ? () => setMode("proof") : null}
+        publish={publish}
+      />
       <div className="desk-body">
         <div className="desk-body__desk">
           <div className="writing-desk" data-mode={mode}>
@@ -421,7 +420,7 @@ export function WritingDesk({
                 />
               ) : (
                 <Questions
-                  review={reviewFits ? review : null}
+                  questions={shown?.questions ?? []}
                   running={reviewState === "running"}
                   onAsk={() => void runReview()}
                 />
@@ -440,7 +439,7 @@ export function WritingDesk({
                 <Checks
                   references={references}
                   claims={claims.length}
-                  reviewed={reviewFits && reviewedBody === fields.body}
+                  reviewed={shown !== null && reviewedBody === fields.body}
                   onFix={(reference) => {
                     setMode("write");
                     window.setTimeout(() => {

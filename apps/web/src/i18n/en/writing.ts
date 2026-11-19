@@ -86,7 +86,7 @@ export const writingMessages = {
     notSaved: "Not saved",
     mode: "View",
     write: "Write",
-    proof: "Proof",
+    proof: "Preview",
     cite: "Cite a Note",
     settingsOfPiece: "Settings of this piece",
     typeLabel: "This piece is a",
@@ -145,6 +145,7 @@ export const writingMessages = {
     reviewing: "The AI reads your text…",
     reviewed: (claims: number, notes: number, questions: number) =>
       `The AI flagged ${count(claims, "claim", "claims")}, suggested ${count(notes, "Note", "Notes")} and asked ${count(questions, "question", "questions")}.`,
+    showQuestions: (n: number): string => (n === 1 ? "Read it in Preview" : "Read them in Preview"),
     reviewOff: "Connect ChatGPT in Settings so the AI can check your text.",
     reviewFailed: "The AI could not check the text. Try again.",
     citeTitle: "Cite a Note",
