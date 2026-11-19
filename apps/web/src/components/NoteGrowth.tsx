@@ -1,6 +1,5 @@
 import { useAtomSet } from "@effect/atom-react";
 import {
-  earnedGrowth,
   type GraphNode,
   type Growth,
   type GrowthEvidence,
@@ -113,7 +112,7 @@ function Needs({
   const needs = useT().graph.growth.needs;
   if (growth === "tree") return null;
   if (evidence.aiText) return <p className="graph__help">{needs.rewrite}</p>;
-  if (earnedGrowth({ ...evidence, tended: null }) === "sprout") {
+  if (evidence.linkedNotes < SAPLING_LINKS) {
     return <p className="graph__help">{needs.links(SAPLING_LINKS, evidence.linkedNotes)}</p>;
   }
   return <p className="graph__help">{needs.tend}</p>;

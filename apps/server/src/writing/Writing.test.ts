@@ -135,26 +135,39 @@ it.layer(NodeServices.layer)("Writing", (it) => {
     }).pipe(Effect.scoped),
   );
 
-  it.effect("renames the file with the title, and refuses a title another project has", () =>
-    Effect.gen(function* () {
-      const { layer } = yield* setUp();
-      yield* Effect.gen(function* () {
-        const writing = yield* Writing;
-        const first = yield* writing.create(POST);
-        yield* writing.create({ ...POST, title: "Clutter in my own sentences" });
-        const renamed = yield* writing.save({ ...first, title: "Busy is not productive?" });
-        assert.strictEqual(renamed.id, "Busy is not productive");
-        assert.strictEqual(renamed.title, "Busy is not productive?");
-        const taken = yield* writing
-          .save({ ...renamed, title: "clutter in my own sentences" })
-          .pipe(Effect.flip);
-        assert.strictEqual(taken._tag, "WritingProjectNameTaken");
-        assert.deepStrictEqual((yield* writing.list).map((project) => project.id).sort(), [
-          "Busy is not productive",
-          "Clutter in my own sentences",
-        ]);
-      }).pipe(Effect.provide(layer));
-    }).pipe(Effect.scoped),
+  it.effect(
+    "renames the file with the title, keeps its own fields, and refuses a taken title",
+    () =>
+      Effect.gen(function* () {
+        const { vaultFolder, layer } = yield* setUp();
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* Effect.gen(function* () {
+          const writing = yield* Writing;
+          const first = yield* writing.create(POST);
+          yield* writing.create({ ...POST, title: "Clutter in my own sentences" });
+          const file = (id: string) => path.join(vaultFolder, "Writing", `${id}.md`);
+          const written = yield* fs.readFileString(file(first.id));
+          yield* fs.writeFileString(
+            file(first.id),
+            written.replace("---\n", "---\ntags: [essay]\n"),
+          );
+          const renamed = yield* writing.save({ ...first, title: "Busy is not productive?" });
+          assert.strictEqual(renamed.id, "Busy is not productive");
+          assert.strictEqual(renamed.title, "Busy is not productive?");
+          const moved = yield* fs.readFileString(file(renamed.id));
+          assert.include(moved, `created: ${EPOCH_DAY}\n`);
+          assert.include(moved, "tags: [ essay ]\n");
+          const taken = yield* writing
+            .save({ ...renamed, title: "clutter in my own sentences" })
+            .pipe(Effect.flip);
+          assert.strictEqual(taken._tag, "WritingProjectNameTaken");
+          assert.deepStrictEqual((yield* writing.list).map((project) => project.id).sort(), [
+            "Busy is not productive",
+            "Clutter in my own sentences",
+          ]);
+        }).pipe(Effect.provide(layer));
+      }).pipe(Effect.scoped),
   );
 
   it.effect("publishes a Blog post into the Bridgetown site and asks before replacing it", () =>

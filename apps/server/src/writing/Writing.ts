@@ -198,6 +198,7 @@ export const make = Effect.gen(function* () {
     folder: string,
     id: string,
     content: WritingFileContent,
+    from: string = id,
   ) {
     yield* fs.makeDirectory(folder, { recursive: true });
     yield* writeKeepingFields(
@@ -206,6 +207,7 @@ export const make = Effect.gen(function* () {
       renderWritingFile(content),
       WRITING_FIELDS,
       true,
+      fileOf(folder, from),
     );
     const written = yield* read(folder, id);
     if (Option.isNone(written))
@@ -297,9 +299,12 @@ export const make = Effect.gen(function* () {
       const wanted = toFileName(fields.title);
       const next =
         wanted === "" || sameFileName(wanted, id) ? id : yield* freeName(folder, fields.title, id);
-      const saved = yield* write(folder, next, { ...fields, published: project.published }).pipe(
-        Effect.mapError(storageError),
-      );
+      const saved = yield* write(
+        folder,
+        next,
+        { ...fields, published: project.published },
+        id,
+      ).pipe(Effect.mapError(storageError));
       if (next !== id) yield* fs.remove(fileOf(folder, id)).pipe(Effect.mapError(storageError));
       return saved;
     }),

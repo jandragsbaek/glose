@@ -53,8 +53,9 @@ export const writeKeepingFields = Effect.fn("writeKeepingFields")(function* (
   rendered: string,
   owned: ReadonlySet<string>,
   created: boolean,
+  from: string = file,
 ) {
-  const previous = (yield* fs.exists(file)) ? yield* fs.readFileString(file) : null;
+  const previous = (yield* fs.exists(from)) ? yield* fs.readFileString(from) : null;
   const today = localDay(yield* Clock.currentTimeMillis);
   yield* writeFileAtomic(fs, file, keepOtherFields(previous, rendered, owned, { today, created }));
 });

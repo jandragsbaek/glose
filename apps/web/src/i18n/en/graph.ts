@@ -75,7 +75,7 @@ export const graphMessages = {
       needs: {
         rewrite: "It grows once its AI text is in your words.",
         links: (need: number, have: number) =>
-          `It grows into a Sapling when it links with ${count(need, "Note", "Notes")} (now ${numbers.format(have)}).`,
+          `It grows when it links with ${count(need, "Note", "Notes")} (now ${numbers.format(have)}).`,
         tend: "Tend it, and it can grow into a Tree.",
       },
       tend: "Mark as tended",
