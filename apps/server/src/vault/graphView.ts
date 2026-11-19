@@ -1,4 +1,5 @@
 import {
+  dayOf,
   type GraphLink,
   type GraphNode,
   type GraphView,
@@ -6,10 +7,12 @@ import {
   linkKey,
   MARKDOWN_CODE,
   parseWikilink,
+  growthOf,
   WIKILINK,
 } from "@glose/contracts";
 import * as Option from "effect/Option";
 
+import { propertiesOf } from "./frontmatter.ts";
 import { FRONTMATTER, parseSourceFile, parseYaml } from "./sourceFile.ts";
 
 export interface GraphFile {
@@ -63,6 +66,11 @@ const parseFile = ({ name, markdown }: GraphFile): ParsedFile => {
   const frontmatter = match ? parseYaml(match[1] ?? "") : undefined;
   const body = (match ? (match[2] ?? "") : markdown).replace(/^\r?\n/, "").trimEnd();
   const targets = linkTargets(markdown);
+  const dates = {
+    updated: dayOf(field(frontmatter, "updated")),
+    tended: dayOf(field(frontmatter, "tended")),
+    properties: propertiesOf(frontmatter),
+  };
   return Option.match(parseSourceFile(markdown), {
     onSome: (source) => ({
       node: {
@@ -73,6 +81,9 @@ const parseFile = ({ name, markdown }: GraphFile): ParsedFile => {
         aiText: hasAiText(frontmatter, source.freeText),
         aiTitle: false,
         page: null,
+        growth: null,
+        created: dayOf(field(frontmatter, "added")),
+        ...dates,
       },
       sourceName: null,
       targets,
@@ -86,6 +97,9 @@ const parseFile = ({ name, markdown }: GraphFile): ParsedFile => {
         aiText: hasAiText(frontmatter, body),
         aiTitle: field(frontmatter, "ai-title") === true,
         page: pageOf(frontmatter),
+        growth: growthOf(field(frontmatter, "growth")),
+        created: dayOf(field(frontmatter, "created")),
+        ...dates,
       },
       sourceName: sourceName(frontmatter),
       targets,

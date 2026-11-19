@@ -12,3 +12,8 @@ export const longDate = new Intl.DateTimeFormat("da-DK", {
   day: "numeric",
   month: "long",
 });
+export const dayDate = new Intl.DateTimeFormat("da-DK", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+});

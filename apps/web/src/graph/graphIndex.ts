@@ -1,4 +1,10 @@
-import { type GraphNode, type GraphView, linkKey, type Source } from "@glose/contracts";
+import {
+  type GraphNode,
+  type GraphView,
+  type GrowthEvidence,
+  linkKey,
+  type Source,
+} from "@glose/contracts";
 
 import { callNumber } from "../domain/source.ts";
 import type { NodeLabel } from "./GraphCanvas.ts";
@@ -63,3 +69,19 @@ export const narrowToAiText = (
   unwritten: ReadonlyArray<GraphNode>,
   aiOnly: boolean,
 ): ReadonlyArray<GraphNode> | null => (aiOnly ? (found ?? unwritten).filter(holdsAiText) : found);
+
+export const growthEvidence = (node: GraphNode, index: GraphIndex): GrowthEvidence => ({
+  aiText: holdsAiText(node),
+  linkedNotes: (index.linked.get(node.id) ?? []).filter((other) => other.kind === "note").length,
+  tended: node.tended,
+});
+
+export const toTend = (view: GraphView): ReadonlyArray<GraphNode> =>
+  view.nodes
+    .filter((node) => node.kind === "note" && !holdsAiText(node))
+    .sort(
+      (a, b) =>
+        (a.tended ?? "").localeCompare(b.tended ?? "") ||
+        (a.created ?? "").localeCompare(b.created ?? "") ||
+        a.title.localeCompare(b.title),
+    );

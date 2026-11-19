@@ -15,6 +15,13 @@ const ARENDT = [
   "Start at [[Natality]].",
 ].join("\n");
 
+const noDates = { created: null, updated: null, tended: null } as const;
+
+const noteFields = (source: string) => [
+  { key: "glose", value: "note" },
+  { key: "source", value: source },
+];
+
 const note = (source: string, body: string) =>
   ["---", "glose: note", `source: "${source}"`, "---", "", body].join("\n");
 
@@ -37,6 +44,14 @@ describe("buildGraphView", () => {
         aiText: false,
         aiTitle: false,
         page: null,
+        growth: null,
+        ...noDates,
+        properties: [
+          { key: "glose", value: "source" },
+          { key: "author-family", value: "Arendt" },
+          { key: "title", value: "The Human Condition" },
+          { key: "first-published", value: "1958" },
+        ],
       },
       {
         id: "Inbox",
@@ -47,6 +62,9 @@ describe("buildGraphView", () => {
         aiText: false,
         aiTitle: false,
         page: null,
+        growth: "seed",
+        ...noDates,
+        properties: [],
       },
       {
         id: "Natality",
@@ -57,6 +75,9 @@ describe("buildGraphView", () => {
         aiText: false,
         aiTitle: false,
         page: null,
+        growth: "seed",
+        ...noDates,
+        properties: noteFields("[[Arendt 1958 The Human Condition]]"),
       },
       {
         id: "Plurality",
@@ -67,6 +88,9 @@ describe("buildGraphView", () => {
         aiText: false,
         aiTitle: false,
         page: null,
+        growth: "seed",
+        ...noDates,
+        properties: noteFields("[[arendt 1958 the human condition]]"),
       },
     ]);
   });

@@ -794,6 +794,41 @@ the agent; these are the picks.
   and screen readers hear "holds AI text".
 - After a save the node fills and the counts drop at once: the Graph reads the files again.
 
+## Decided, Properties and Growth (November 2026)
+
+Jan asked that Notes, Sources and every Markdown file have frontmatter properties, as in
+Obsidian: when a file was created and updated, when a Note was last looked at again, and how
+mature a Note is (seed, sprout, tree). Shaped with impeccable; Jan chose "Earned Growth" over
+"Obsidian Properties, straight" (Growth set by hand only) and "The Tending Round" (Notes on a
+schedule in Recall, a second daily queue). The details below are the agent's picks.
+
+- Every file Glose writes keeps the frontmatter fields Glose does not own (tags, aliases, the
+  user's own). Notes and Cards already did; Sources and Writing projects now do too.
+- `created` and `updated` are days, `2026-11-19`, in the computer's time zone. A day, not a time,
+  so `updated` changes at most once a day and two computers clash less in sync. Glose sets
+  `created` on a new Note, Card or Writing project, and `updated` when it saves one; a Source
+  keeps its `added` as its created day. A file written before this gets no `created`: Glose does
+  not know when it began. Edits in another editor do not change `updated`.
+- `updated` is for the text: growing or tending a Note does not change it.
+- A Note's Growth is `growth: seed | sprout | sapling | tree`. A new Note is a Seed; a Note
+  without the field, or with a value Glose does not know, reads as a Seed.
+- Glose suggests the highest Growth the evidence allows, and only the user sets it:
+  Seed while the Note holds AI text; Sprout once it is all in the user's words; Sapling when it
+  also links with 3 Notes (Links either way, Notes only); Tree when it is also tended. Glose
+  never suggests a step down.
+- Tending is reading a Note again and deciding it still stands. "Mark as tended" sets
+  `tended:` to today.
+- The Note panel on the Graph shows Growth, Created, Updated and Tended, a "Grow to …" button
+  with the reason when the evidence allows more, or what the Note needs to grow, and "Mark as
+  tended". Every node, Source too, has a folded Properties list of all its frontmatter fields,
+  read-only for now.
+- With no node selected, the side panel lists "To tend" under "To rewrite": Notes in the user's
+  words, never tended first, then the one tended longest ago; the first eight show.
+- Danish: Vækst (Frø, Spire, Ungt træ, Træ), Plej (Plejet, Til pleje), Egenskaber. To be checked
+  by a Danish user.
+- Open: how Growth looks on the Graph canvas and in the panel (Jan designs it); editing the
+  user's own properties in Glose; whether `updated` should follow edits made in another editor.
+
 ## Decided, a new Note researched (November 2026)
 
 Jan asked for a way to add a Note to the Graph from blank, with the AI's help to research it and

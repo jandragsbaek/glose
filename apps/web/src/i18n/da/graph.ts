@@ -1,5 +1,10 @@
-import { numbers, count, list } from "./format.ts";
+import { numbers, count, dayDate, list } from "./format.ts";
 import type { Messages } from "../en.ts";
+
+const dayOf = (day: string) => {
+  const [year = 0, month = 1, date = 1] = day.split("-").map(Number);
+  return new Date(year, month - 1, date);
+};
 
 export const graphMessages: Pick<Messages, "graph" | "rewrite" | "newNote" | "research"> = {
   graph: {
@@ -45,6 +50,41 @@ export const graphMessages: Pick<Messages, "graph" | "rewrite" | "newNote" | "re
       `${count(n, "note", "noter")} har AI-tekst. Vis kun noterne med AI-tekst`,
     allYours: "Alle noter er skrevet med dine ord",
     holdsAi: "har AI-tekst",
+    growth: {
+      label: "Vækst",
+      names: { seed: "Frø", sprout: "Spire", sapling: "Ungt træ", tree: "Træ" },
+      created: "Oprettet",
+      updated: "Opdateret",
+      tended: "Plejet",
+      never: "Aldrig",
+      unknown: "Ukendt",
+      day: (day: string) => dayDate.format(dayOf(day)),
+      lastTended: (day: string | null) =>
+        day === null ? "Aldrig plejet" : `Plejet ${dayDate.format(dayOf(day))}`,
+      grow: (name: string) => `Lad den gro til ${name.toLocaleLowerCase("da")}`,
+      earned: {
+        sprout: "Den er skrevet helt med dine ord.",
+        sapling: (n: number) =>
+          `Den er skrevet med dine ord og har links med ${count(n, "note", "noter")}.`,
+        tree: (n: number) =>
+          `Du har plejet den, og den har links med ${count(n, "note", "noter")}. Holder den stadig?`,
+      },
+      needs: {
+        rewrite: "Den gror, når AI-teksten er skrevet med dine ord.",
+        links: (need: number, have: number) =>
+          `Den skal have links med ${count(need, "note", "noter")} (nu ${numbers.format(have)}).`,
+        tend: "Plej den, så kan den gro til et træ.",
+      },
+      tend: "Markér som plejet",
+      tendHelp: "At pleje en note er at læse den igen og afgøre, om den stadig holder.",
+      failed: "Glose kunne ikke gemme det. Prøv igen.",
+      toTend: "Til pleje",
+      toTendHelp:
+        "Noter med dine ord, den der blev plejet for længst siden først. Læs en igen, og markér den som plejet.",
+      more: (n: number) => `og ${numbers.format(n)} mere`,
+    },
+    properties: "Egenskaber",
+    noProperties: "Filen har ingen egenskaber.",
   },
   rewrite: {
     titleAi: "Omskriv noten",

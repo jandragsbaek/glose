@@ -4,6 +4,7 @@ import { CARDS_FOLDER } from "@glose/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
+import * as TestClock from "effect/testing/TestClock";
 
 import * as Settings from "../settings/Settings.ts";
 import { layerServices, makeDirs } from "../testkit/services.ts";
@@ -28,6 +29,9 @@ const AI_NOTE = [
   "",
 ].join("\n");
 
+const TODAY = "2026-11-19";
+const NOON = new Date(2026, 10, 19, 12).getTime();
+
 const withVault = <A, E>(
   files: Record<string, string>,
   test: (vault: {
@@ -36,6 +40,7 @@ const withVault = <A, E>(
   }) => Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>,
 ) =>
   Effect.gen(function* () {
+    yield* TestClock.setTime(NOON);
     const dirs = yield* makeDirs;
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
@@ -99,6 +104,7 @@ it.layer(NodeServices.layer)("Notes.save", (it) => {
                 'source: "[[Newport 2019 Digital Minimalism]]"',
                 'page: "28–29"',
                 "tags: [ values ]",
+                `updated: ${TODAY}`,
                 "---",
                 "",
                 "In my words: a tool must earn its place.",
@@ -190,6 +196,42 @@ it.layer(NodeServices.layer)("Notes.save", (it) => {
           (yield* fs.readDirectory(folder)).filter((name) => name.endsWith(".md")),
           [`${lower}.md`],
         );
+      }),
+    ),
+  );
+});
+
+const ARENDT = "---\nglose: source\nauthor-family: Arendt\ntitle: The Human Condition\n---\n";
+
+it.layer(NodeServices.layer)("Notes.grow and Notes.tend", (it) => {
+  it.effect("set Growth and the day tended, and leave the text and other fields as written", () =>
+    withVault({ [`${AI_TITLE}.md`]: AI_NOTE }, ({ folder, notes }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* notes.grow(AI_TITLE, "sapling");
+        yield* notes.tend(AI_TITLE);
+
+        const markdown = yield* fs.readFileString(path.join(folder, `${AI_TITLE}.md`));
+        assert.strictEqual(
+          markdown,
+          AI_NOTE.replace("tags: [values]\n", "tags: [ values ]\ngrowth: sapling\n").replace(
+            "---\n\n",
+            `tended: ${TODAY}\n---\n\n`,
+          ),
+        );
+        const note = (yield* readGraph(folder)).nodes[0];
+        assert.strictEqual(note?.growth, "sapling");
+        assert.strictEqual(note?.tended, TODAY);
+      }),
+    ),
+  );
+
+  it.effect("refuses a Source, which has no Growth", () =>
+    withVault({ "Arendt 1958 The Human Condition.md": ARENDT }, ({ notes }) =>
+      Effect.gen(function* () {
+        const error = yield* notes.tend("Arendt 1958 The Human Condition").pipe(Effect.flip);
+        assert.strictEqual(error._tag, "NoteNotFound");
       }),
     ),
   );

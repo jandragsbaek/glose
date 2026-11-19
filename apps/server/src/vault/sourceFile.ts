@@ -49,6 +49,8 @@ const SourceFrontmatter = Schema.Struct({
   added: Schema.optionalKey(Schema.Unknown),
 });
 const decodeFrontmatter = Schema.decodeUnknownOption(SourceFrontmatter);
+
+export const SOURCE_FIELDS: ReadonlySet<string> = new Set(Object.keys(SourceFrontmatter.fields));
 const decodeDetails = Schema.decodeUnknownOption(SourceDetails);
 
 const text = (value: string | number | null | undefined) =>

@@ -25,6 +25,8 @@ const WritingFrontmatter = Schema.Struct({
 });
 const decodeFrontmatter = Schema.decodeUnknownOption(WritingFrontmatter);
 
+export const WRITING_FIELDS: ReadonlySet<string> = new Set(Object.keys(WritingFrontmatter.fields));
+
 const Text = Schema.Union([Schema.String, Schema.Number]);
 const SavedTry = Schema.Struct({
   at: Schema.Int,

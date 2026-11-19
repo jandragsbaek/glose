@@ -1,6 +1,6 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
-import type { WritingProjectFields } from "@glose/contracts";
+import { localDay, type WritingProjectFields } from "@glose/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -15,6 +15,9 @@ import { writeCredentials } from "../testkit/credentials.ts";
 import { makeDirs } from "../testkit/services.ts";
 import { type Answer, FAKE_OPENAI, makeFakeOpenAi } from "../testkit/openai.ts";
 import { Writing } from "./Writing.ts";
+
+const EPOCH_DAY = localDay(0);
+const DAY = 24 * 60 * 60 * 1000;
 
 const NEWPORT = [
   "---",
@@ -112,6 +115,8 @@ it.layer(NodeServices.layer)("Writing", (it) => {
             "type: blog-post",
             "language: en",
             "reference-form: footnotes",
+            `created: ${EPOCH_DAY}`,
+            `updated: ${EPOCH_DAY}`,
             "---",
             "",
             `Newport has a name for this.[[${NOTE}]]{p. 64}`,
@@ -131,26 +136,40 @@ it.layer(NodeServices.layer)("Writing", (it) => {
     }).pipe(Effect.scoped),
   );
 
-  it.effect("renames the file with the title, and refuses a title another project has", () =>
-    Effect.gen(function* () {
-      const { layer } = yield* setUp();
-      yield* Effect.gen(function* () {
-        const writing = yield* Writing;
-        const first = yield* writing.create(POST);
-        yield* writing.create({ ...POST, title: "Clutter in my own sentences" });
-        const renamed = yield* writing.save({ ...first, title: "Busy is not productive?" });
-        assert.strictEqual(renamed.id, "Busy is not productive");
-        assert.strictEqual(renamed.title, "Busy is not productive?");
-        const taken = yield* writing
-          .save({ ...renamed, title: "clutter in my own sentences" })
-          .pipe(Effect.flip);
-        assert.strictEqual(taken._tag, "WritingProjectNameTaken");
-        assert.deepStrictEqual((yield* writing.list).map((project) => project.id).sort(), [
-          "Busy is not productive",
-          "Clutter in my own sentences",
-        ]);
-      }).pipe(Effect.provide(layer));
-    }).pipe(Effect.scoped),
+  it.effect(
+    "renames the file with the title, keeps its own fields, and refuses a taken title",
+    () =>
+      Effect.gen(function* () {
+        const { vaultFolder, layer } = yield* setUp();
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* Effect.gen(function* () {
+          const writing = yield* Writing;
+          const first = yield* writing.create(POST);
+          yield* writing.create({ ...POST, title: "Clutter in my own sentences" });
+          const file = (id: string) => path.join(vaultFolder, "Writing", `${id}.md`);
+          const written = yield* fs.readFileString(file(first.id));
+          yield* fs.writeFileString(
+            file(first.id),
+            written.replace("---\n", "---\ntags: [essay]\n"),
+          );
+          yield* TestClock.adjust("1 day");
+          const renamed = yield* writing.save({ ...first, title: "Busy is not productive?" });
+          assert.strictEqual(renamed.id, "Busy is not productive");
+          assert.strictEqual(renamed.title, "Busy is not productive?");
+          const moved = yield* fs.readFileString(file(renamed.id));
+          assert.include(moved, `created: ${EPOCH_DAY}\nupdated: ${localDay(DAY)}\n`);
+          assert.include(moved, "tags: [ essay ]\n");
+          const taken = yield* writing
+            .save({ ...renamed, title: "clutter in my own sentences" })
+            .pipe(Effect.flip);
+          assert.strictEqual(taken._tag, "WritingProjectNameTaken");
+          assert.deepStrictEqual((yield* writing.list).map((project) => project.id).sort(), [
+            "Busy is not productive",
+            "Clutter in my own sentences",
+          ]);
+        }).pipe(Effect.provide(layer));
+      }).pipe(Effect.scoped),
   );
 
   it.effect("publishes a Blog post into the Bridgetown site and asks before replacing it", () =>

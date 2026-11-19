@@ -56,11 +56,13 @@ export const parseCardFile = (markdown: string): Option.Option<CardFileContent> 
 const renderBody = ({ question, answer }: CardText) =>
   answer === "" ? `\n${question}\n` : `\n${question}\n\n---\n\n${answer}\n`;
 
-export const renderCardFile = (card: CardFileContent): string => {
+export const renderCardFile = (card: CardFileContent, today: string): string => {
   const frontmatter = new Yaml.Document({
     glose: "card",
     ...(card.id === null ? {} : { id: card.id }),
     ...(card.from === null ? {} : { from: `[[${card.from}]]` }),
+    created: today,
+    updated: today,
     ...(card.ai ? { ai: true } : {}),
   });
   return `---\n${frontmatter.toString(YAML_OPTIONS)}---\n${renderBody(card)}`;
@@ -72,6 +74,7 @@ export const editCardFile = (
     readonly text?: CardText;
     readonly id?: string;
     readonly clearAiMark?: boolean;
+    readonly today: string;
   },
 ): Option.Option<string> => {
   const match = FRONTMATTER.exec(markdown);
@@ -80,6 +83,7 @@ export const editCardFile = (
   if (document === null) return Option.none();
   if (change.id !== undefined) document.set("id", change.id);
   if (change.clearAiMark === true) document.delete("ai");
+  document.set("updated", change.today);
   const body = change.text === undefined ? (match[2] ?? "") : renderBody(change.text);
   return Option.some(`---\n${document.toString(YAML_OPTIONS)}---\n${body}`);
 };
