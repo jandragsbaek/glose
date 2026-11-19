@@ -1,5 +1,7 @@
 import * as Schema from "effect/Schema";
 
+import { Growth, NoteProperty } from "./growth.ts";
+
 export const GraphNodeKind = Schema.Literals(["source", "note"]);
 export type GraphNodeKind = typeof GraphNodeKind.Type;
 
@@ -12,6 +14,11 @@ export const GraphNode = Schema.Struct({
   aiText: Schema.Boolean,
   aiTitle: Schema.Boolean,
   page: Schema.NullOr(Schema.String),
+  growth: Schema.NullOr(Growth),
+  created: Schema.NullOr(Schema.String),
+  updated: Schema.NullOr(Schema.String),
+  tended: Schema.NullOr(Schema.String),
+  properties: Schema.Array(NoteProperty),
 });
 export type GraphNode = typeof GraphNode.Type;
 

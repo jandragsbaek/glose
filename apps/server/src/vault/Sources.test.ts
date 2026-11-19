@@ -34,6 +34,7 @@ it.layer(NodeServices.layer)("Sources", (it) => {
             "publisher: University of Chicago Press",
             "reading-step: free-text",
             "added: 2026-11-13",
+            "updated: 2026-11-13",
             "---",
             "",
           ].join("\n"),
@@ -194,6 +195,40 @@ it.layer(NodeServices.layer)("Sources", (it) => {
         assert.deepStrictEqual(
           [written.readingStep, probed.readingStep, (yield* sources.get(prober.id)).readingStart],
           ["free-text", "probe", "catch-up"],
+        );
+      }),
+    ),
+  );
+
+  it.effect("keeps the fields the user added by hand when it saves a Source", () =>
+    withVault(({ folder, sources }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const file = path.join(folder, "Arendt 1958 The Human Condition.md");
+        yield* fs.writeFileString(
+          file,
+          "---\nglose: source\nauthor-family: Arendt\ntitle: The Human Condition\nadded: 2026-09-14\ntags: [politics]\nshelf: home # by the desk\n---\n",
+        );
+        yield* TestClock.setTime(new Date(2026, 10, 19, 9, 0).getTime());
+        yield* sources.chooseStart({ id: "Arendt 1958 The Human Condition", start: "write" });
+
+        assert.strictEqual(
+          yield* fs.readFileString(file),
+          [
+            "---",
+            "glose: source",
+            "author-family: Arendt",
+            "title: The Human Condition",
+            "reading-step: free-text",
+            "reading-start: write",
+            "added: 2026-09-14",
+            "updated: 2026-11-19",
+            "tags: [ politics ]",
+            "shelf: home # by the desk",
+            "---",
+            "",
+          ].join("\n"),
         );
       }),
     ),
@@ -386,6 +421,7 @@ it.layer(NodeServices.layer)("Sources", (it) => {
             "url: https://www.youtube.com/watch?v=u4ZoJKF_VuA",
             "reading-step: extraction",
             "added: 2026-11-18",
+            "updated: 2026-11-18",
             "---",
             "",
             notes,

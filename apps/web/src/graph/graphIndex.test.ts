@@ -1,7 +1,7 @@
 import type { GraphNode } from "@glose/contracts";
 import { assert, describe, it } from "@effect/vitest";
 
-import { holdsAiText, narrowToAiText } from "./graphIndex.ts";
+import { holdsAiText, narrowToAiText, toTend } from "./graphIndex.ts";
 
 const node = (fields: Partial<GraphNode>): GraphNode => ({
   id: "N",
@@ -12,6 +12,11 @@ const node = (fields: Partial<GraphNode>): GraphNode => ({
   aiText: false,
   aiTitle: false,
   page: null,
+  growth: "seed",
+  created: null,
+  updated: null,
+  tended: null,
+  properties: [],
   ...fields,
 });
 
@@ -37,5 +42,24 @@ describe("narrowToAiText", () => {
     assert.deepStrictEqual(narrowToAiText(null, [ai], true), [ai]);
     assert.deepStrictEqual(narrowToAiText([ai, own], [ai], true), [ai]);
     assert.deepStrictEqual(narrowToAiText([own], [ai], true), []);
+  });
+});
+
+describe("toTend", () => {
+  it("lists Notes in the user's words, never tended first, then the one tended longest ago", () => {
+    const view = {
+      nodes: [
+        node({ id: "Recent", tended: "2026-11-18" }),
+        node({ id: "AI", aiText: true }),
+        node({ id: "Source", kind: "source" }),
+        node({ id: "Old", tended: "2026-01-02" }),
+        node({ id: "Never" }),
+      ],
+      links: [],
+    };
+    assert.deepStrictEqual(
+      toTend(view).map((found) => found.id),
+      ["Never", "Old", "Recent"],
+    );
   });
 });

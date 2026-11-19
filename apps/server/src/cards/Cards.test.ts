@@ -1,5 +1,6 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
+import { localDay } from "@glose/contracts";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
@@ -9,6 +10,8 @@ import * as Graph from "../vault/Graph.ts";
 import * as Settings from "../settings/Settings.ts";
 import { layerServices, makeDirs } from "../testkit/services.ts";
 import * as Cards from "./Cards.ts";
+
+const EPOCH_DAY = localDay(0);
 
 const NOTE = "Attention residue lowers performance after switching";
 
@@ -67,6 +70,8 @@ it.layer(NodeServices.layer)("Cards", (it) => {
             "glose: card",
             `id: ${card.id}`,
             `from: "[[${NOTE}]]"`,
+            `created: ${EPOCH_DAY}`,
+            `updated: ${EPOCH_DAY}`,
             "ai: true",
             "---",
             "",
@@ -203,6 +208,7 @@ it.layer(NodeServices.layer)("Cards", (it) => {
             `from: "[[${NOTE}]]"`,
             "tags: [psychology]",
             `id: ${edited.id}`,
+            `updated: ${EPOCH_DAY}`,
             "---",
             "",
             "When does flow happen?",

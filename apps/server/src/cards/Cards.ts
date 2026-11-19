@@ -8,7 +8,9 @@ import {
   isFileName,
   sameFileName,
   toFileName,
+  localDay,
 } from "@glose/contracts";
+import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -149,7 +151,12 @@ export const make = Effect.gen(function* () {
       const ids = card.id === null ? new Set((yield* list).map((other) => other.id)) : null;
       let id = card.id ?? newId();
       while (ids?.has(id)) id = newId();
-      const edited = editCardFile(markdown, { ...change, ...(card.id === null ? { id } : {}) });
+      const today = localDay(yield* Clock.currentTimeMillis);
+      const edited = editCardFile(markdown, {
+        ...change,
+        today,
+        ...(card.id === null ? { id } : {}),
+      });
       if (Option.isNone(edited)) return yield* notFound;
       return yield* write(folder, file, edited.value);
     },
@@ -169,7 +176,12 @@ export const make = Effect.gen(function* () {
         yield* fs.makeDirectory(folder, { recursive: true }).pipe(Effect.mapError(storageError));
         const taken = yield* fs.readDirectory(folder).pipe(Effect.mapError(storageError));
         const file = freeName(question, id, taken);
-        return yield* write(folder, file, renderCardFile({ id, from, question, answer, ai }));
+        const today = localDay(yield* Clock.currentTimeMillis);
+        return yield* write(
+          folder,
+          file,
+          renderCardFile({ id, from, question, answer, ai }, today),
+        );
       },
       (effect) => writing.withPermit(effect),
     ),

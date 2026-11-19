@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Check } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { type GraphIndex, holdsAiText } from "../graph/graphIndex.ts";
+import { type GraphIndex, holdsAiText, toTend } from "../graph/graphIndex.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { CallNumber, Panel } from "./ui.tsx";
 
@@ -27,6 +27,7 @@ export function SourceList({
       {unwritten.length === 0 ? null : (
         <ToRewrite notes={unwritten} index={index} onShow={onShow} />
       )}
+      <ToTend view={view} onShow={onShow} />
       <Panel title={t.graph.sources} initial={unwritten.length === 0 ? "rubric" : "accent"}>
         <div className="panel__body">
           <p className="graph__help">{t.graph.help}</p>
@@ -81,6 +82,44 @@ function ToRewrite({
             );
           })}
         </ul>
+      </div>
+    </Panel>
+  );
+}
+
+const TO_TEND_SHOWN = 8;
+
+function ToTend({
+  view,
+  onShow,
+}: {
+  readonly view: GraphView;
+  readonly onShow: (id: string) => void;
+}) {
+  const t = useT();
+  const g = t.graph.growth;
+  const notes = toTend(view);
+  if (notes.length === 0) return null;
+  const shown = notes.slice(0, TO_TEND_SHOWN);
+  return (
+    <Panel title={g.toTend} initial="accent" meta={t.graph.noteCount(notes.length)}>
+      <div className="panel__body">
+        <p className="graph__help">{g.toTendHelp}</p>
+        <ul className="graph__list">
+          {shown.map((node) => (
+            <li key={node.id}>
+              <NodeLink id={node.id} className="graph__link" onShow={onShow}>
+                {node.title}
+              </NodeLink>{" "}
+              <span className="status">
+                {g.names[node.growth ?? "seed"]} · {g.lastTended(node.tended)}
+              </span>
+            </li>
+          ))}
+        </ul>
+        {notes.length > shown.length ? (
+          <p className="graph__help">{g.more(notes.length - shown.length)}</p>
+        ) : null}
       </div>
     </Panel>
   );

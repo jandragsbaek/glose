@@ -5,35 +5,43 @@ import { renderNoteFile } from "./noteFile.ts";
 
 const SOURCE = "Brown 2014 Make It Stick";
 
+const TODAY = "2026-11-19";
+
 const read = (markdown: string) =>
   buildGraphView([{ name: "Spaced practice beats massed practice", markdown }]).nodes[0];
 
 describe("renderNoteFile", () => {
   it("quotes a time in a video, so a YAML 1.1 reader keeps it a time and not seconds", () => {
-    const markdown = renderNoteFile({
-      source: "Sinek 2009 Start with why",
-      page: "4:10",
-      text: "People buy why you do it.",
-      draft: null,
-      aiTitle: false,
-      related: [],
-      language: "en",
-    });
+    const markdown = renderNoteFile(
+      {
+        source: "Sinek 2009 Start with why",
+        page: "4:10",
+        text: "People buy why you do it.",
+        draft: null,
+        aiTitle: false,
+        related: [],
+        language: "en",
+      },
+      TODAY,
+    );
 
     assert.include(markdown, 'page: "4:10"\n');
     assert.strictEqual(read(markdown)?.page, "4:10");
   });
 
   it("writes the user's words, the kept AI draft as marked paragraphs, and the Links", () => {
-    const markdown = renderNoteFile({
-      source: SOURCE,
-      page: "47",
-      text: "Cramming fades.\r\n\r\nSpacing lasts.",
-      draft: "The AI's first.\n\nThe AI's second.",
-      aiTitle: true,
-      related: ["Desirable difficulties make learning stick", "Calibration"],
-      language: "en",
-    });
+    const markdown = renderNoteFile(
+      {
+        source: SOURCE,
+        page: "47",
+        text: "Cramming fades.\r\n\r\nSpacing lasts.",
+        draft: "The AI's first.\n\nThe AI's second.",
+        aiTitle: true,
+        related: ["Desirable difficulties make learning stick", "Calibration"],
+        language: "en",
+      },
+      TODAY,
+    );
 
     assert.strictEqual(
       markdown,
@@ -42,6 +50,9 @@ describe("renderNoteFile", () => {
         "glose: note",
         `source: "[[${SOURCE}]]"`,
         'page: "47"',
+        "growth: seed",
+        `created: ${TODAY}`,
+        `updated: ${TODAY}`,
         "ai: true",
         "ai-title: true",
         "---",
@@ -67,19 +78,33 @@ describe("renderNoteFile", () => {
   });
 
   it("marks nothing when the user wrote the title and every word", () => {
-    const markdown = renderNoteFile({
-      source: SOURCE,
-      page: null,
-      text: "My own words.",
-      draft: null,
-      aiTitle: false,
-      related: [],
-      language: "da",
-    });
+    const markdown = renderNoteFile(
+      {
+        source: SOURCE,
+        page: null,
+        text: "My own words.",
+        draft: null,
+        aiTitle: false,
+        related: [],
+        language: "da",
+      },
+      TODAY,
+    );
 
     assert.strictEqual(
       markdown,
-      ["---", "glose: note", `source: "[[${SOURCE}]]"`, "---", "", "My own words.", ""].join("\n"),
+      [
+        "---",
+        "glose: note",
+        `source: "[[${SOURCE}]]"`,
+        "growth: seed",
+        `created: ${TODAY}`,
+        `updated: ${TODAY}`,
+        "---",
+        "",
+        "My own words.",
+        "",
+      ].join("\n"),
     );
     const node = read(markdown);
     assert.isFalse(node?.aiText);
@@ -88,15 +113,18 @@ describe("renderNoteFile", () => {
   });
 
   it("names the closing line in the interface language", () => {
-    const markdown = renderNoteFile({
-      source: SOURCE,
-      page: null,
-      text: "",
-      draft: null,
-      aiTitle: true,
-      related: ["Hukommelse"],
-      language: "da",
-    });
+    const markdown = renderNoteFile(
+      {
+        source: SOURCE,
+        page: null,
+        text: "",
+        draft: null,
+        aiTitle: true,
+        related: ["Hukommelse"],
+        language: "da",
+      },
+      TODAY,
+    );
 
     assert.include(markdown, "\nSe også: [[Hukommelse]]\n");
     assert.include(markdown, "ai: true\nai-title: true\n");

@@ -1,6 +1,6 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
-import type { WritingProjectFields } from "@glose/contracts";
+import { localDay, type WritingProjectFields } from "@glose/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -15,6 +15,8 @@ import { writeCredentials } from "../testkit/credentials.ts";
 import { makeDirs } from "../testkit/services.ts";
 import { type Answer, FAKE_OPENAI, makeFakeOpenAi } from "../testkit/openai.ts";
 import { Writing } from "./Writing.ts";
+
+const EPOCH_DAY = localDay(0);
 
 const NEWPORT = [
   "---",
@@ -112,6 +114,8 @@ it.layer(NodeServices.layer)("Writing", (it) => {
             "type: blog-post",
             "language: en",
             "reference-form: footnotes",
+            `created: ${EPOCH_DAY}`,
+            `updated: ${EPOCH_DAY}`,
             "---",
             "",
             `Newport has a name for this.[[${NOTE}]]{p. 64}`,

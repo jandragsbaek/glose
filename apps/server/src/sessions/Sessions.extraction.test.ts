@@ -1,5 +1,6 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
+import { localDay } from "@glose/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
@@ -16,6 +17,8 @@ import {
 } from "../testkit/sessions.ts";
 import { Sources } from "../vault/Sources.ts";
 import { Sessions } from "./Sessions.ts";
+
+const EPOCH_DAY = localDay(0);
 
 it.layer(NodeServices.layer)("Sessions", (it) => {
   it.effect(
@@ -159,6 +162,9 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
             "glose: note",
             `source: "[[${sourceId}]]"`,
             'page: "7"',
+            "growth: seed",
+            `created: ${EPOCH_DAY}`,
+            `updated: ${EPOCH_DAY}`,
             "ai: true",
             "ai-title: true",
             "---",
@@ -175,6 +181,9 @@ it.layer(NodeServices.layer)("Sessions", (it) => {
             "---",
             "glose: note",
             `source: "[[${sourceId}]]"`,
+            "growth: seed",
+            `created: ${EPOCH_DAY}`,
+            `updated: ${EPOCH_DAY}`,
             "ai: true",
             "ai-title: true",
             "---",

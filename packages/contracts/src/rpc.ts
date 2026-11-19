@@ -16,6 +16,7 @@ import { CatalogRecord, CatalogSearch, CatalogUnavailable } from "./catalog.ts";
 import { ChatGptStatus, ConnectChatGpt, DisconnectResult } from "./chatgpt.ts";
 import { GitHubRepository, GitHubStatus } from "./github.ts";
 import { GraphView, NoteNameTaken, NoteNotFound, SaveNote } from "./graph.ts";
+import { GrowNote, TendNote } from "./growth.ts";
 import { RecordReview, ReviewQueue } from "./recall.ts";
 import { CreateNote, PageDecision, PageRefused, StartResearch } from "./research.ts";
 import { ServerInfo } from "./server.ts";
@@ -118,6 +119,8 @@ export const RPC_METHODS = {
   graphRead: "graph.read",
   notesSave: "notes.save",
   notesCreate: "notes.create",
+  notesGrow: "notes.grow",
+  notesTend: "notes.tend",
   researchStart: "research.start",
   researchKeepPage: "research.keepPage",
   researchDropPage: "research.dropPage",
@@ -271,6 +274,16 @@ export const GloseRpcGroup = RpcGroup.make(
     payload: SaveNote,
     success: Schema.String,
     error: Schema.Union([NoteNotFound, NoteNameTaken, VaultFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.notesGrow, {
+    payload: GrowNote,
+    success: Schema.String,
+    error: Schema.Union([NoteNotFound, VaultFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.notesTend, {
+    payload: TendNote,
+    success: Schema.String,
+    error: Schema.Union([NoteNotFound, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.notesCreate, {
     payload: CreateNote,

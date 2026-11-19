@@ -29,6 +29,7 @@ import {
   TryWords,
   TryWordsUnavailable,
   tryWordCount,
+  localDay,
 } from "@glose/contracts";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -46,7 +47,13 @@ import * as Graph from "../vault/Graph.ts";
 import * as Sources from "../vault/Sources.ts";
 import * as Settings from "../settings/Settings.ts";
 import { writeFileAtomic } from "../storage.ts";
-import { parseWritingFile, renderWritingFile, type WritingFileContent } from "./writingFile.ts";
+import { writeKeepingFields } from "../vault/frontmatter.ts";
+import {
+  parseWritingFile,
+  renderWritingFile,
+  WRITING_FIELDS,
+  type WritingFileContent,
+} from "./writingFile.ts";
 
 type VaultError = VaultFolderNotSet | StorageError;
 
@@ -91,13 +98,6 @@ export class Writing extends Context.Service<
 const MARKDOWN = ".md";
 
 const storageError = (cause: unknown) => new StorageError({ detail: String(cause) });
-
-const twoDigits = (value: number) => String(value).padStart(2, "0");
-
-const localDay = (time: number) => {
-  const date = new Date(time);
-  return `${date.getFullYear()}-${twoDigits(date.getMonth() + 1)}-${twoDigits(date.getDate())}`;
-};
 
 const NOTE_CHARS = 600;
 const MAX_NOTES = 250;
@@ -200,7 +200,13 @@ export const make = Effect.gen(function* () {
     content: WritingFileContent,
   ) {
     yield* fs.makeDirectory(folder, { recursive: true });
-    yield* writeFileAtomic(fs, fileOf(folder, id), renderWritingFile(content));
+    yield* writeKeepingFields(
+      fs,
+      fileOf(folder, id),
+      renderWritingFile(content),
+      WRITING_FIELDS,
+      true,
+    );
     const written = yield* read(folder, id);
     if (Option.isNone(written))
       return yield* Effect.die(`Writing project ${id} did not read back.`);

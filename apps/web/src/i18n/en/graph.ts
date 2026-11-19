@@ -1,6 +1,11 @@
-import { numbers, count, list } from "./format.ts";
+import { numbers, count, dayDate, list } from "./format.ts";
 
-import type { ArticleType, PageProblem, ResearchAsk, Stance } from "@glose/contracts";
+import type { ArticleType, Growth, PageProblem, ResearchAsk, Stance } from "@glose/contracts";
+
+const dayOf = (day: string) => {
+  const [year = 0, month = 1, date = 1] = day.split("-").map(Number);
+  return new Date(year, month - 1, date);
+};
 
 export const graphMessages = {
   graph: {
@@ -46,6 +51,43 @@ export const graphMessages = {
       `${count(n, "Note holds", "Notes hold")} AI text. Show only the Notes with AI text`,
     allYours: "Every Note is in your words",
     holdsAi: "holds AI text",
+    growth: {
+      label: "Growth",
+      names: { seed: "Seed", sprout: "Sprout", sapling: "Sapling", tree: "Tree" } satisfies Record<
+        Growth,
+        string
+      >,
+      created: "Created",
+      updated: "Updated",
+      tended: "Tended",
+      never: "Never",
+      unknown: "Not known",
+      day: (day: string) => dayDate.format(dayOf(day)),
+      lastTended: (day: string | null) =>
+        day === null ? "Never tended" : `Tended ${dayDate.format(dayOf(day))}`,
+      grow: (name: string) => `Grow to ${name}`,
+      earned: {
+        sprout: "It is all in your words.",
+        sapling: (n: number) => `It is in your words and links with ${count(n, "Note", "Notes")}.`,
+        tree: (n: number) =>
+          `You tended it, and it links with ${count(n, "Note", "Notes")}. Does it still stand?`,
+      },
+      needs: {
+        rewrite: "It grows once its AI text is in your words.",
+        links: (need: number, have: number) =>
+          `It grows into a Sapling when it links with ${count(need, "Note", "Notes")} (now ${numbers.format(have)}).`,
+        tend: "Tend it, and it can grow into a Tree.",
+      },
+      tend: "Mark as tended",
+      tendHelp: "Tending is reading a Note again and deciding it still stands.",
+      failed: "Glose could not save this. Try again.",
+      toTend: "To tend",
+      toTendHelp:
+        "Notes in your words, the one tended longest ago first. Read one again, then mark it tended.",
+      more: (n: number) => `and ${numbers.format(n)} more`,
+    },
+    properties: "Properties",
+    noProperties: "This file has no properties.",
   },
   rewrite: {
     titleAi: "Rewrite the Note",

@@ -1,5 +1,6 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
+import { localDay } from "@glose/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
@@ -25,6 +26,8 @@ import {
   URL_B,
 } from "../testkit/research.ts";
 import { Sessions } from "./Sessions.ts";
+
+const EPOCH_DAY = localDay(0);
 
 it.layer(NodeServices.layer)("Sessions: research for a new Note", (it) => {
   it.effect("offers web search, keeps only quotes that are on the page, and saves the Note", () =>
@@ -150,6 +153,9 @@ it.layer(NodeServices.layer)("Sessions: research for a new Note", (it) => {
           "---",
           "glose: note",
           `source: "[[${source!.id}]]"`,
+          "growth: seed",
+          `created: ${EPOCH_DAY}`,
+          `updated: ${EPOCH_DAY}`,
           "---",
           "",
           "Closing the book works better.[^q1]",

@@ -1,5 +1,7 @@
 import {
   CARDS_FOLDER,
+  type Growth,
+  localDay,
   VaultFolderNotSet,
   NoteNameTaken,
   NoteNotFound,
@@ -9,6 +11,7 @@ import {
   sameFileName,
   toFileName,
 } from "@glose/contracts";
+import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -19,7 +22,7 @@ import * as Semaphore from "effect/Semaphore";
 
 import * as Settings from "../settings/Settings.ts";
 import { writeFileAtomic } from "../storage.ts";
-import { editNoteFile, type NoteFileContent, renderNoteFile } from "./noteFile.ts";
+import { editNoteFile, type NoteFileContent, renderNoteFile, setNoteFields } from "./noteFile.ts";
 import { relinkWikilinks } from "./relink.ts";
 import { parseSourceFile } from "./sourceFile.ts";
 
@@ -35,12 +38,21 @@ export class Notes extends Context.Service<
     readonly save: (
       input: SaveNote,
     ) => Effect.Effect<string, NoteNotFound | NoteNameTaken | VaultFolderNotSet | StorageError>;
+    readonly grow: (
+      id: string,
+      growth: Growth,
+    ) => Effect.Effect<string, NoteNotFound | VaultFolderNotSet | StorageError>;
+    readonly tend: (
+      id: string,
+    ) => Effect.Effect<string, NoteNotFound | VaultFolderNotSet | StorageError>;
   }
 >()("glose/vault/Notes") {}
 
 const MARKDOWN = ".md";
 
 const storageError = (cause: unknown) => new StorageError({ detail: String(cause) });
+
+const today = Effect.map(Clock.currentTimeMillis, localDay);
 
 export const make = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -80,8 +92,40 @@ export const make = Effect.gen(function* () {
     return name;
   });
 
+  const noteFile = Effect.fn("Notes.noteFile")(function* (id: string) {
+    const { vaultFolder } = (yield* settings.get).settings;
+    if (vaultFolder === null) return yield* new VaultFolderNotSet();
+    if (!isFileName(id)) return yield* new NoteNotFound({ id });
+    const file = path.join(vaultFolder, `${id}${MARKDOWN}`);
+    if (!(yield* fs.exists(file).pipe(Effect.mapError(storageError)))) {
+      return yield* new NoteNotFound({ id });
+    }
+    const markdown = yield* fs.readFileString(file).pipe(Effect.mapError(storageError));
+    if (Option.isSome(parseSourceFile(markdown))) return yield* new NoteNotFound({ id });
+    return { file, markdown };
+  });
+
+  const setFields = Effect.fn("Notes.setFields")(
+    function* (id: string, fields: Readonly<Record<string, string>>) {
+      const { file, markdown } = yield* noteFile(id);
+      const edited = setNoteFields(markdown, fields);
+      if (edited === null) {
+        return yield* new StorageError({
+          detail: `The frontmatter of ${id}${MARKDOWN} is not YAML.`,
+        });
+      }
+      yield* writeFileAtomic(fs, file, edited).pipe(Effect.mapError(storageError));
+      return id;
+    },
+    (effect) => writing.withPermit(effect),
+  );
+
   return Notes.of({
     checkName,
+
+    grow: (id, growth) => setFields(id, { growth }),
+
+    tend: (id) => Effect.flatMap(today, (day) => setFields(id, { tended: day })),
 
     create: Effect.fn("Notes.create")(
       function* ({ title, ...content }) {
@@ -91,7 +135,7 @@ export const make = Effect.gen(function* () {
         yield* writeFileAtomic(
           fs,
           path.join(vaultFolder, `${name}${MARKDOWN}`),
-          renderNoteFile(content),
+          renderNoteFile(content, yield* today),
         ).pipe(Effect.mapError(storageError));
         return name;
       },
@@ -102,13 +146,7 @@ export const make = Effect.gen(function* () {
       function* ({ id, title, aiTitle, page, body, aiNote }) {
         const { vaultFolder } = (yield* settings.get).settings;
         if (vaultFolder === null) return yield* new VaultFolderNotSet();
-        if (!isFileName(id)) return yield* new NoteNotFound({ id });
-        const file = path.join(vaultFolder, `${id}${MARKDOWN}`);
-        if (!(yield* fs.exists(file).pipe(Effect.mapError(storageError)))) {
-          return yield* new NoteNotFound({ id });
-        }
-        const markdown = yield* fs.readFileString(file).pipe(Effect.mapError(storageError));
-        if (Option.isSome(parseSourceFile(markdown))) return yield* new NoteNotFound({ id });
+        const { file, markdown } = yield* noteFile(id);
 
         const name = toFileName(title);
         if (name === "") return yield* new NoteNameTaken({ fileName: title });
@@ -122,7 +160,7 @@ export const make = Effect.gen(function* () {
           return yield* new NoteNameTaken({ fileName: name });
         }
 
-        const edited = editNoteFile(markdown, { page, body, aiTitle, aiNote });
+        const edited = editNoteFile(markdown, { page, body, aiTitle, aiNote, today: yield* today });
         if (edited === null) {
           return yield* new StorageError({ detail: `The frontmatter of ${own} is not YAML.` });
         }

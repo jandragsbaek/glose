@@ -32,6 +32,15 @@ _Avoid_: chat, conversation, thread, run
 A Markdown file in the **Graph** that has a **Source**. By default it holds one idea.
 _Avoid_: zettel, page, document, entry
 
+**Growth**:
+How far a **Note** has grown in the user's own words: Seed, Sprout, Sapling or Tree. Glose
+suggests the next step from what it sees in the **Graph**; only the user sets it.
+_Avoid_: maturity, status, level, stage (that is a **Stage**)
+
+**Tend**:
+To read a **Note** again and decide that it still stands. The day is kept with the **Note**.
+_Avoid_: review (that is a **Review** of a **Card**), revisit, refresh
+
 **Part**:
 A heading in a **Note** and its text, up to the next heading.
 _Avoid_: section (that is a **Section** of the app), chapter, block
@@ -184,6 +193,8 @@ _Avoid_: alternative, variant, version, suggestion
 
 - A **Vault** holds one **Graph**; moving, sharing or backing up the folder takes all of it along
 - Every **Note** has a **Source**; **Links** join **Notes** into the **Graph**
+- A **Note** with **AI text** stays a Seed; a **Note** in the user's words can grow, and a Tree
+  has been tended
 - A **Source** is a book (read elsewhere), an **Article**, a **Course lesson** or a **Video**; an
   **Article** and a **Course lesson** bring their text, so the Reading **Stage** starts by reading it
   in Glose and marking **Passages**; a **Video** starts by watching it in Glose and writing the

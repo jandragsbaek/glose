@@ -42,7 +42,13 @@ import * as Stream from "effect/Stream";
 import * as Settings from "../settings/Settings.ts";
 import { writeFileAtomic } from "../storage.ts";
 import { ignoreCourseVideos, NotAVideoFile, ownVideoFile } from "./courseVideoFiles.ts";
-import { parseSourceFile, renderSourceFile, type SourceFileContent } from "./sourceFile.ts";
+import { writeKeepingFields } from "./frontmatter.ts";
+import {
+  parseSourceFile,
+  renderSourceFile,
+  SOURCE_FIELDS,
+  type SourceFileContent,
+} from "./sourceFile.ts";
 
 type VaultError = VaultFolderNotSet | StorageError;
 
@@ -187,7 +193,13 @@ export const make = Effect.gen(function* () {
     id: string,
     content: SourceFileContent,
   ) {
-    yield* writeFileAtomic(fs, fileOf(folder, id), renderSourceFile(content));
+    yield* writeKeepingFields(
+      fs,
+      fileOf(folder, id),
+      renderSourceFile(content),
+      SOURCE_FIELDS,
+      false,
+    );
     const written = yield* readSource(folder, id);
     if (Option.isNone(written)) return yield* Effect.die(`Source ${id} did not read back.`);
     return written.value;

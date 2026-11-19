@@ -41,6 +41,11 @@ const note = (id: string, sourceId: string | null, page: string | null = null): 
   aiText: false,
   aiTitle: false,
   page,
+  growth: "seed",
+  created: null,
+  updated: null,
+  tended: null,
+  properties: [],
 });
 
 const sourceNode = (id: string): GraphNode => ({ ...note(id, null), kind: "source" });
