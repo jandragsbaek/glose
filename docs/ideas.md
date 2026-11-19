@@ -958,6 +958,42 @@ three-model council.
 - The three kinds check a form the same way, in Glose's own words: a line under each field that
   needs a value or a fix, one line in the foot, and the cursor in the first such field.
 
+## Decided, a course page and lesson videos (November 2026)
+
+Jan asked for a simple way to put in a course and its many pieces of content (his AI course from
+mega.dev: 4 weeks of 5 days) for later reading. He had not found Add Source → Course lessons, and
+after an import the lessons were loose rows in the register with no place for the course.
+
+- The mega.dev course arrives one day at a time. A day has a Markdown text and a video, both from
+  the course's members' area. Jan chose "one lesson, two pieces": the day stays one Course lesson
+  Source, and its video is part of it (a Lesson video), so the day has one Reading and one Probe,
+  and the Probe can ask where the video and the text do not agree. Two Sources per day was the
+  alternative.
+- Jan chose "The Course Shelf" with impeccable over a one-day-at-a-time leaf with week tabs and a
+  sheet over the Sources page. A Course has its own page (`/courses/<course name>`): each week is a
+  shelf of day spines (lapis spines with the call number, gilt band; under each a text and a video
+  mark), an empty day is a dashed spine, and the next day to add is the outlined spine. The chosen
+  day shows in a leaf beside the shelf and lives in the address (`?day=3.3`).
+- A course has no file of its own; it is the lessons that share a course name. The shelf takes
+  five days a week, or more when a lesson has a higher day, and shows the weeks up to the next
+  day to add, which is the day after the last one added.
+- An empty day's leaf adds it: the text (choose, drop or paste the `.md`; a file dropped on an
+  empty spine goes to that day; a file named for another free day moves the leaf there), the
+  title from the file, and the Lesson video. Teacher, year and course address come from the
+  course. "Add, then Week 3 · Day 4" adds and opens the next day.
+- The Lesson video is the address of the page where it plays (it opens in the browser; Glose adds
+  `https://` when it is left out) and, optionally, a video file the user saved. Glose never logs
+  in to a course site or downloads a video: that needs the user's login, can break the course's
+  terms, and breaks when the site changes. A saved file is copied to `Course videos/<Source
+  id>.<ext>` in the Vault, which `.gitignore` keeps out of the git backup (big files, and
+  private); the Source file holds `video-link` and `video-file`. The day's leaf plays the file.
+- Sources has a Courses panel between the desk and the register; each course opens its page. A
+  lesson's page head links its course name to the course, at its day. Add Source → Course lessons
+  ends on "Open the course", and its hint says one file (the first day) is enough to start.
+- Not yet: the Lesson video beside the text in the Reader, its timestamps as Locations, and the
+  Probe over the text and the video; editing the course data for all its lessons at once; a
+  course's own length (it follows the lessons added).
+
 ## Decided, Videos and timestamps (November 2026)
 
 Jan asked to add a YouTube video, such as a conference talk, as a Source, and to make Notes that

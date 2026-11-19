@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as GraphRouteImport } from './routes/graph'
 import { Route as RecallRouteImport } from './routes/recall'
 import { Route as ReviewRouteImport } from './routes/review'
+import { Route as CoursesCourseNameRouteImport } from './routes/courses.$courseName'
 import { Route as SourcesIndexRouteImport } from './routes/sources.index'
 import { Route as SourcesSourceIdRouteImport } from './routes/sources.$sourceId'
 import { Route as SourcesNewRouteImport } from './routes/sources.new'
@@ -38,6 +39,11 @@ const RecallRoute = RecallRouteImport.update({
 const ReviewRoute = ReviewRouteImport.update({
   id: '/review',
   path: '/review',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoursesCourseNameRoute = CoursesCourseNameRouteImport.update({
+  id: '/courses/$courseName',
+  path: '/courses/$courseName',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SourcesIndexRoute = SourcesIndexRouteImport.update({
@@ -76,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/graph': typeof GraphRoute
   '/recall': typeof RecallRoute
   '/review': typeof ReviewRoute
+  '/courses/$courseName': typeof CoursesCourseNameRoute
   '/sources/$sourceId': typeof SourcesSourceIdRoute
   '/sources/new': typeof SourcesNewRoute
   '/writing/$projectId': typeof WritingProjectIdRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/graph': typeof GraphRoute
   '/recall': typeof RecallRoute
   '/review': typeof ReviewRoute
+  '/courses/$courseName': typeof CoursesCourseNameRoute
   '/sources/$sourceId': typeof SourcesSourceIdRoute
   '/sources/new': typeof SourcesNewRoute
   '/writing/$projectId': typeof WritingProjectIdRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/graph': typeof GraphRoute
   '/recall': typeof RecallRoute
   '/review': typeof ReviewRoute
+  '/courses/$courseName': typeof CoursesCourseNameRoute
   '/sources/$sourceId': typeof SourcesSourceIdRoute
   '/sources/new': typeof SourcesNewRoute
   '/writing/$projectId': typeof WritingProjectIdRoute
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/graph'
     | '/recall'
     | '/review'
+    | '/courses/$courseName'
     | '/sources/$sourceId'
     | '/sources/new'
     | '/writing/$projectId'
@@ -127,6 +137,7 @@ export interface FileRouteTypes {
     | '/graph'
     | '/recall'
     | '/review'
+    | '/courses/$courseName'
     | '/sources/$sourceId'
     | '/sources/new'
     | '/writing/$projectId'
@@ -139,6 +150,7 @@ export interface FileRouteTypes {
     | '/graph'
     | '/recall'
     | '/review'
+    | '/courses/$courseName'
     | '/sources/$sourceId'
     | '/sources/new'
     | '/writing/$projectId'
@@ -152,6 +164,7 @@ export interface RootRouteChildren {
   GraphRoute: typeof GraphRoute
   RecallRoute: typeof RecallRoute
   ReviewRoute: typeof ReviewRoute
+  CoursesCourseNameRoute: typeof CoursesCourseNameRoute
   SourcesSourceIdRoute: typeof SourcesSourceIdRoute
   SourcesNewRoute: typeof SourcesNewRoute
   WritingProjectIdRoute: typeof WritingProjectIdRoute
@@ -188,6 +201,13 @@ declare module '@tanstack/react-router' {
       path: '/review'
       fullPath: '/review'
       preLoaderRoute: typeof ReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/courses/$courseName': {
+      id: '/courses/$courseName'
+      path: '/courses/$courseName'
+      fullPath: '/courses/$courseName'
+      preLoaderRoute: typeof CoursesCourseNameRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sources/': {
@@ -240,6 +260,7 @@ const rootRouteChildren: RootRouteChildren = {
   GraphRoute: GraphRoute,
   RecallRoute: RecallRoute,
   ReviewRoute: ReviewRoute,
+  CoursesCourseNameRoute: CoursesCourseNameRoute,
   SourcesSourceIdRoute: SourcesSourceIdRoute,
   SourcesNewRoute: SourcesNewRoute,
   WritingProjectIdRoute: WritingProjectIdRoute,

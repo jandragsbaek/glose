@@ -52,6 +52,7 @@ export const layer = GloseRpcGroup.toLayer(
       [RPC_METHODS.sourcesImportText]: (input) => sources.importText(input),
       [RPC_METHODS.sourcesSetPlace]: (input) => sources.setPlace(input),
       [RPC_METHODS.sourcesAddVideo]: (input) => sources.addVideo(input),
+      [RPC_METHODS.sourcesSetLessonVideo]: (input) => sources.setLessonVideo(input),
       [RPC_METHODS.sourcesLookupVideo]: ({ url }) => videos.lookup(url),
       [RPC_METHODS.articlesGet]: ({ id }) =>
         sources.articleText(id).pipe(Effect.map((markdown) => ({ markdown }))),

@@ -434,7 +434,9 @@ three small pigments (gold, rubric red, verdigris) each with one job.
   the apparatus, the 1px underline of a Passage taken deeper and "Taken deeper" in the margin. On
   Add Source it is the name of the checked kind, the dot on a value Glose filled in and the same
   dot in the Fill Line, the outline of the chosen catalog record, and the border of a Drop Zone
-  while a file is dragged over it.
+  while a file is dragged over it. On the Course Shelf it is every added day's spine (Raised Lapis
+  once the day is read), the 2px outline and the plus of the next day to add, and the marks of the
+  pieces a day has.
 - **Raised Lapis** (lapis-raised): the current rail item, and the section shown on the Settings
   window's spine; primary button hover. Hover on a rail item or a spine section is half a step,
   Lapis and Raised Lapis mixed half and half, so "here" stays the stronger mark.
@@ -451,7 +453,8 @@ three small pigments (gold, rubric red, verdigris) each with one job.
   on that spine, and the focus outline on lapis. Also the triangle of a Check that warns on a Recall slip, beside
   Ink words. In the Reader: the 3px edge of the current section in Contents, the 2px underline
   under the open Passage and under its ¶ number in the apparatus, and the 1px underline (at 70%)
-  of a Passage that is only marked. On Add Source, the 3px underline of the checked kind. Never
+  of a Passage that is only marked. On Add Source, the 3px underline of the checked kind. On the Course Shelf, the
+  gilt band at a day spine's head and the 3px bar under the chosen day's spine. Never
   text on paper.
 - **Gilt Wash** (gold-wash): text selection, and a Passage, which is a kept selection. The quote
   of the open Passage in the margin and of a Passage taken deeper in the Probe sits on it too.
@@ -1459,12 +1462,69 @@ are 5px 8px at 14px.
   could not read is this year, unmarked, with the hint "This year, as a guess. Change it for an
   older course." Once a lesson is added, the course data and "Choose other files" lock, so a
   retry cannot split the course or drop the result. When adding ends, the cursor goes to "Open
-  Week 1 · Day 1", or to the retry button when a lesson was not added. While the lessons are added, every control in the panel is locked, Cancel and the done
+  the course", or to the retry button when a lesson was not added. While the lessons are added, every control in the panel is locked, Cancel and the done
   links too;
   the status counts from 1 ("Adding lesson 1 of 20…"), and the summary counts every added lesson,
   retries included. The Panel
-  Foot: "Add 20 lessons" (primary; "Adding lesson 3 of 20…" while it works), then "Open Week 1 · Day
-  1" and "See them in Sources" when done.
+  Foot: "Add 20 lessons" (primary; "Adding lesson 3 of 20…" while it works), then "Open the course" (the
+  Course Shelf) and "See them in Sources" when done.
+
+### Course Shelf (signature)
+
+The page of one Course (`/courses/<course name>`, the chosen day as `?day=3.3`): each week a shelf
+of day spines, and the chosen day's leaf beside it. Mode: Operate.
+
+- **Layout:** the Page head (the course name; then a Lapis 600 "Sources" link back, the teacher,
+  the course's Call Number and a Mute count "13 days in · 0 read"; when a day other than the next
+  is chosen, "Add Week 3 · Day 4" as the primary action). Under it two columns, `1fr | 340–420px`,
+  20px apart; below 1080px the leaf goes under the shelf.
+- **The weeks:** a Panel (rubric Initial, Meta "3 weeks · 5 days a week") with a Mute 13px hint,
+  then one row per week: an 88px label (the week in 600, "3 of 5" in Mute 13px tabular) and the
+  shelf, a row of days 14px apart standing on a 3px Strong Hairline board. A Hairline divides the
+  weeks. A week holds five days, or more when a lesson has a higher day; the weeks run to the next
+  day to add.
+- **Day spine:** a 44 by 120px button, 2px corners. An added day is Lapis with a gilt double band
+  at its head and its call number on a Paper label set vertically (Courier Prime 700 12px); a
+  read day is Raised Lapis and its name ends ", read". A day not added is a dashed Strong
+  Hairline outline with a Mute 20px plus; the next day to add has a 2px Lapis outline on Lapis Tint
+  and a Lapis plus. Hover lifts a spine 3px (160ms, none with reduced motion); a file dragged over
+  an empty day gives it the next day's look. The chosen day has a 3px Gilt bar 7px under it and
+  `aria-current`. Under each added spine two 14px marks, a text and a video icon, Lapis when the
+  day has that piece and Strong Hairline when not; under every spine "Day 3" in Mute 12px (Ink 700
+  when chosen).
+- **Drop on a day:** a Markdown file dropped on an empty spine chooses that day and fills its
+  text. Any other file chooses the day and says in the leaf that the shelf takes the .md file and
+  the video file goes under The video.
+- **Unplaced lessons:** lessons with no week and day, or a second lesson on one day, list under a
+  Hairline as Lapis links ("Lessons without a week and day").
+
+### Day Leaf
+
+The Panel beside the shelf for the chosen day, headed by the day ("Week 3 · Day 3", lapis Initial).
+
+- **A day not added** (Meta "Not added yet"): a Mute hint that teacher, year and course address
+  come from the course; a status line for what just happened ("Week 3 · Day 3 is added.", or why a
+  file moved the leaf to another day); "The text" (600 15px) over a Drop Zone ("Choose the Markdown
+  file", primary with a file icon, and a quiet "Paste the text instead"), which turns into the
+  chosen-file row (name, "10 paragraphs · 267 words", "Choose another") and the required Title
+  field. Under a Hairline, "The video" with "optional": the Video address field (Glose adds
+  `https://` when it is missing) and the Video file row (a Lapis film icon, the file name or "No
+  file" in Mute, "Choose a video file" small, "Remove the file" quiet) with its hint. The Panel
+  Foot: "Add Week 3 · Day 3" (primary) and "Add, then Week 3 · Day 4" (secondary), the status
+  counting the copy of a video file ("Copying the video file… 40%").
+- **An added day** (Meta its Call Number): the title as an Ink 700 16px link, the Reading marks
+  and the step, and a primary "Read the day" ("Continue" once started) with a right arrow. Under a
+  Hairline, "The video" with "Change the video" (small) at the right; under it the saved file in a
+  Paper plate (8px, Hairline, a 16:9 native player) and "Open the video" (secondary, external-link
+  icon), or Mute "No video yet." "Change the video" opens the same fields with "Save the video" and
+  a quiet Cancel, the cursor in the address.
+
+### Courses
+
+On Sources, a Panel "Courses" (lapis Initial, Meta "1 course") between the desk and the register,
+only when a course exists: each course as the 56px Spine (course call number), its name as an Ink
+700 16px link, the teacher, a Mute line "13 days · 0 read · next: Week 3 · Day 4" and a small
+"Open the course". A lesson's page head links its course name (Lapis 600) to the course at its day.
 
 ### Reading Marks
 

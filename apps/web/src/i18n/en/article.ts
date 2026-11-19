@@ -26,7 +26,8 @@ export const articleMessages = {
     hints: {
       book: "You read it elsewhere. Glose keeps your Free text and Notes.",
       article: "One Markdown file or pasted text. You read it in Glose.",
-      lesson: "A folder of lesson files from a course. Each lesson is a Source.",
+      lesson:
+        "A course's lesson files: the whole folder, or the first day. Each lesson is a Source, and the course gets its own page.",
       video: "A talk or another video on YouTube. You watch it in Glose and stamp the times.",
     } satisfies Record<SourceKind, string>,
     articleTypes: {
@@ -265,7 +266,6 @@ export const articleMessages = {
       skipped === 0
         ? `${count(added, "lesson", "lessons")} added.`
         : `${count(added, "lesson", "lessons")} added; ${numbers.format(skipped)} were already in your Vault or could not be added.`,
-    openFirst: (part: string) => `Open ${lessonPart(part)}`,
     seeSources: "See them in Sources",
     needFiles: "Choose the lesson files first.",
     filled: "Filled in from the files. Check the marked fields.",

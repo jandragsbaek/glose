@@ -58,6 +58,15 @@ A **Source** that is one lesson of a course, imported as Markdown with the cours
 It brings its own text, read in Glose; the course is where it appeared, as a journal is for a paper.
 _Avoid_: module, unit, chapter, lecture
 
+**Course**:
+The **Course lessons** that share a course name. Its page shows them as a shelf of weeks and days.
+_Avoid_: class, program, module
+
+**Lesson video**:
+The video of a **Course lesson**: a link to where it plays and, if the user saved it, a file in
+`Course videos`. It is part of the lesson, not a **Video** **Source**.
+_Avoid_: clip, recording, attachment
+
 **Video**:
 A **Source** that is a talk or another video on YouTube, watched in Glose. It brings no text; its
 **Free text** is written while watching, with timestamps, and a timestamp is its **Location**.
@@ -179,6 +188,8 @@ _Avoid_: alternative, variant, version, suggestion
   **Article** and a **Course lesson** bring their text, so the Reading **Stage** starts by reading it
   in Glose and marking **Passages**; a **Video** starts by watching it in Glose and writing the
   **Free text** beside it
+- A **Course** is its **Course lessons**; each lesson may have one **Lesson video**, read and
+  questioned with its text in one Reading **Stage** and one **Probe**
 - A **Point** from words of a **Video**'s **Free text** takes the timestamp before those words as
   its **Location**
 - A new **Source** can be filled in from a **Catalog**; the **Source** file, not the **Catalog**,

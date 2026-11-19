@@ -152,6 +152,27 @@
         "files": ["apps/web/src/styles/app.css"],
         "createdAt": "2026-11-13T21:28:49.136Z",
         "reason": "Claude: the .miniature specimen is a small picture of a finished page (aria-hidden), not reading text"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [".impeccable/mocks/decision/shelf.html"],
+        "createdAt": "2026-11-19T20:24:08.386Z",
+        "reason": "Claude: decision-round sketch (a 1440x900 thumbnail drawn as a skeleton on the decision page), not shipping UI; the built Course page uses DESIGN.md's sizes and padding"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [".impeccable/mocks/decision/dayleaf.html"],
+        "createdAt": "2026-11-19T20:24:08.397Z",
+        "reason": "Claude: decision-round sketch (a 1440x900 thumbnail drawn as a skeleton on the decision page), not shipping UI; the built Course page uses DESIGN.md's sizes and padding"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [".impeccable/mocks/decision/dayleaf.html"],
+        "createdAt": "2026-11-19T20:24:08.407Z",
+        "reason": "Claude: decision-round sketch (a 1440x900 thumbnail drawn as a skeleton on the decision page), not shipping UI; the built Course page uses DESIGN.md's sizes and padding"
       }
     ]
   }

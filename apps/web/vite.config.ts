@@ -1,4 +1,4 @@
-import { RPC_PATH } from "@glose/contracts";
+import { COURSE_VIDEO_PATH, RPC_PATH } from "@glose/contracts";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite-plus";
@@ -21,6 +21,6 @@ export default defineConfig({
   server: {
     port: Number(process.env.PORT ?? 5183),
     strictPort: true,
-    proxy: { [RPC_PATH]: server },
+    proxy: { [RPC_PATH]: server, [COURSE_VIDEO_PATH]: server },
   },
 });

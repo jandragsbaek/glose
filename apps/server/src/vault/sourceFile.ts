@@ -44,6 +44,8 @@ const SourceFrontmatter = Schema.Struct({
   doi: MaybeText,
   accessed: MaybeText,
   part: MaybeText,
+  "video-link": MaybeText,
+  "video-file": MaybeText,
   added: Schema.optionalKey(Schema.Unknown),
 });
 const decodeFrontmatter = Schema.decodeUnknownOption(SourceFrontmatter);
@@ -115,6 +117,8 @@ export const parseSourceFile = (markdown: string): Option.Option<SourceFileConte
           doi: text(data.doi),
           accessed: text(data.accessed),
           part: text(data.part),
+          videoLink: text(data["video-link"]),
+          videoFile: text(data["video-file"]),
           readingPlace: data["reading-place"] ?? null,
           readingStep:
             data["reading-step"] ?? (hasOwnText(data.kind ?? "book") ? "read" : "free-text"),
@@ -154,6 +158,8 @@ export const renderSourceFile = (source: SourceFileContent): string => {
       doi: textDetails.doi,
       accessed: textDetails.accessed,
       part: textDetails.part,
+      "video-link": source.videoLink,
+      "video-file": source.videoFile,
       "reading-step": source.readingStep,
       "reading-start": source.readingStart,
       "reading-place": source.readingPlace,

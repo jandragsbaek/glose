@@ -8,6 +8,7 @@ import { recallMessages } from "./da/recall.ts";
 import { settingsMessages } from "./da/settings.ts";
 import { articleMessages } from "./da/article.ts";
 import { videoMessages } from "./da/video.ts";
+import { courseMessages } from "./da/course.ts";
 import type { Messages } from "./en.ts";
 
 export const da: Messages = {
@@ -21,4 +22,5 @@ export const da: Messages = {
   ...settingsMessages,
   ...articleMessages,
   ...videoMessages,
+  ...courseMessages,
 };

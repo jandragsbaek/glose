@@ -20,6 +20,7 @@ import * as ChatGpt from "./chatgpt/ChatGpt.ts";
 import * as Credentials from "./chatgpt/Credentials.ts";
 import * as Responses from "./chatgpt/Responses.ts";
 import * as ServerConfig from "./config.ts";
+import * as CourseVideoRoutes from "./vault/courseVideoRoutes.ts";
 import * as Graph from "./vault/Graph.ts";
 import * as Notes from "./vault/Notes.ts";
 import * as Sources from "./vault/Sources.ts";
@@ -97,7 +98,12 @@ export const layerServices = layerApp.pipe(
   ]),
 );
 
-export const layerRoutes = Layer.mergeAll(layerRpcRoute, layerHealthRoute, layerSpaRoute);
+export const layerRoutes = Layer.mergeAll(
+  layerRpcRoute,
+  layerHealthRoute,
+  CourseVideoRoutes.layer,
+  layerSpaRoute,
+);
 
 export const layer = HttpRouter.serve(layerRoutes).pipe(
   Layer.merge(Versions.layerRunner),
