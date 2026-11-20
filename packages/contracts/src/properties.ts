@@ -7,7 +7,7 @@ export type PropertyKind = typeof PropertyKind.Type;
 
 export const PropertyValue = Schema.Union([
   Schema.String,
-  Schema.Number,
+  Schema.Finite,
   Schema.Boolean,
   Schema.Array(Schema.String),
 ]);
@@ -37,7 +37,7 @@ export const NOTE_FIELDS: ReadonlySet<string> = new Set(["glose", "source", "ai"
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 export const isPropertyKey = (key: string): boolean =>
-  key.trim() === key && key !== "" && key.length <= 100 && !/[\n\r]/.test(key);
+  key.trim() === key && key !== "" && !/[\n\r]/.test(key);
 
 export const propertyKind = (value: unknown): PropertyKind => {
   if (value === null || value === undefined) return "text";

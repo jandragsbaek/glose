@@ -36,14 +36,20 @@ export function Properties({
   const [failed, setFailed] = useState<string | null>(null);
   const vault = vaultKeys(index);
 
-  const save: Save = async (key, value) => {
+  const queue = useRef<Promise<unknown>>(Promise.resolve());
+
+  const save: Save = (key, value) => {
     setFailed(null);
-    const exit = await set({
-      payload: { id: node.id, key, value },
-      reactivityKeys: KEYS.sources,
+    const saved = queue.current.then(async () => {
+      const exit = await set({
+        payload: { id: node.id, key, value },
+        reactivityKeys: KEYS.sources,
+      });
+      if (Exit.isFailure(exit)) setFailed(key);
+      return Exit.isSuccess(exit);
     });
-    if (Exit.isFailure(exit)) setFailed(key);
-    return Exit.isSuccess(exit);
+    queue.current = saved;
+    return saved;
   };
 
   return (
@@ -296,24 +302,40 @@ function ListValue({
 }) {
   const p = useT().graph.props;
   const [draft, setDraft] = useState("");
+  const [list, setList] = useState(items);
+  const [known, setKnown] = useState<ReadonlyArray<string> | null>(items);
+  const [saving, setSaving] = useState(0);
   const input = useRef<HTMLInputElement>(null);
   const listId = `${id}-items`;
+  if (known !== items && saving === 0) {
+    setKnown(items);
+    setList(items);
+  }
 
-  const add = async () => {
-    const added = splitItems(draft).filter((item) => !items.includes(item));
-    if (added.length === 0) return setDraft("");
-    if (await onSave([...items, ...added])) setDraft("");
+  const commit = (next: ReadonlyArray<string>) => {
+    setList(next);
+    setSaving((count) => count + 1);
+    void onSave(next).then((saved) => {
+      if (!saved) setKnown(null);
+      setSaving((count) => count - 1);
+    });
+  };
+
+  const add = () => {
+    const added = splitItems(draft).filter((item) => !list.includes(item));
+    setDraft("");
+    if (added.length > 0) commit([...list, ...added]);
   };
 
   const remove = (item: string) => {
     input.current?.focus();
-    void onSave(items.filter((other) => other !== item));
+    commit(list.filter((other) => other !== item));
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter" || event.key === ",") {
       event.preventDefault();
-      void add();
+      add();
     } else if (event.key === "Escape") {
       setDraft("");
     }
@@ -321,7 +343,7 @@ function ListValue({
 
   return (
     <span className="properties__items">
-      {items.map((item) => (
+      {list.map((item) => (
         <span key={item} className="properties__token">
           {item}
           <button
@@ -344,12 +366,12 @@ function ListValue({
         placeholder={p.addItem}
         aria-label={p.addTo(name)}
         onChange={(event) => setDraft(event.currentTarget.value)}
-        onBlur={() => void add()}
+        onBlur={add}
         onKeyDown={onKeyDown}
       />
       <datalist id={listId}>
         {suggestions
-          .filter((item) => !items.includes(item))
+          .filter((item) => !list.includes(item))
           .map((item) => (
             <option key={item} value={item} />
           ))}

@@ -239,35 +239,40 @@ it.layer(NodeServices.layer)("Notes.grow and Notes.tend", (it) => {
 
 it.layer(NodeServices.layer)("Notes.setProperty", (it) => {
   it.effect("sets, changes and removes the user's own fields, and leaves the text as written", () =>
-    withVault({ [`${AI_TITLE}.md`]: AI_NOTE }, ({ folder, notes }) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        yield* notes.setProperty({ id: AI_TITLE, key: "tags", value: ["values", "tools"] });
-        yield* notes.setProperty({ id: AI_TITLE, key: "reread", value: true });
-        yield* notes.setProperty({ id: AI_TITLE, key: "due", value: "2026-12-01" });
-        yield* notes.setProperty({ id: AI_TITLE, key: "course", value: "42" });
-        yield* notes.setProperty({ id: AI_TITLE, key: "reread", value: null });
+    withVault(
+      { [`${AI_TITLE}.md`]: AI_NOTE.replace("---\n\n", "updated: 2026-11-01\n---\n\n") },
+      ({ folder, notes }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          yield* notes.setProperty({ id: AI_TITLE, key: "tags", value: ["values", "tools"] });
+          yield* notes.setProperty({ id: AI_TITLE, key: "reread", value: true });
+          yield* notes.setProperty({ id: AI_TITLE, key: "due", value: "2026-12-01" });
+          yield* notes.setProperty({ id: AI_TITLE, key: "course", value: "42" });
+          yield* notes.setProperty({ id: AI_TITLE, key: "reread", value: null });
 
-        const markdown = yield* fs.readFileString(path.join(folder, `${AI_TITLE}.md`));
-        assert.include(markdown, "tags:\n  - values\n  - tools\n");
-        assert.notInclude(markdown, "reread");
-        assert.isTrue(
-          markdown.endsWith("---\n\n> [!ai]\n> A tool deserves a place when it serves a value.\n"),
-        );
-        const properties = (yield* readGraph(folder)).nodes[0]?.properties ?? [];
-        assert.deepStrictEqual(
-          properties
-            .filter((property) => !property.locked)
-            .map(({ key, kind, value }) => [key, kind, value]),
-          [
-            ["page", "text", "28"],
-            ["tags", "list", ["values", "tools"]],
-            ["due", "date", "2026-12-01"],
-            ["course", "text", "42"],
-          ],
-        );
-      }),
+          const markdown = yield* fs.readFileString(path.join(folder, `${AI_TITLE}.md`));
+          assert.include(markdown, "updated: 2026-11-01\n");
+          assert.notInclude(markdown, "reread");
+          assert.isTrue(
+            markdown.endsWith(
+              "---\n\n> [!ai]\n> A tool deserves a place when it serves a value.\n",
+            ),
+          );
+          const properties = (yield* readGraph(folder)).nodes[0]?.properties ?? [];
+          assert.deepStrictEqual(
+            properties
+              .filter((property) => !property.locked)
+              .map(({ key, kind, value }) => [key, kind, value]),
+            [
+              ["page", "text", "28"],
+              ["tags", "list", ["values", "tools"]],
+              ["updated", "date", "2026-11-01"],
+              ["due", "date", "2026-12-01"],
+              ["course", "text", "42"],
+            ],
+          );
+        }),
     ),
   );
 

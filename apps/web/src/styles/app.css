@@ -2930,7 +2930,7 @@ textarea.properties__input {
 }
 
 .properties__input--item::-webkit-calendar-picker-indicator,
-.properties__new-input::-webkit-calendar-picker-indicator {
+.properties__new-input[list]::-webkit-calendar-picker-indicator {
   display: none !important;
 }
 
