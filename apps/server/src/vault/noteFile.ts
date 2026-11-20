@@ -27,7 +27,7 @@ export interface NoteFileContent {
 
 const RELATED: Record<Language, string> = { en: "Related", da: "Se også" };
 
-const pageValue = (page: string) => {
+export const pageValue = (page: string) => {
   if (!isTimestamp(page)) return page;
   const scalar = new Yaml.Scalar(page);
   scalar.type = Yaml.Scalar.QUOTE_DOUBLE;
@@ -84,7 +84,7 @@ const frontmatterOf = (markdown: string) => {
 
 export const setNoteFields = (
   markdown: string,
-  fields: Readonly<Record<string, string | null>>,
+  fields: Readonly<Record<string, unknown>>,
 ): string | null => {
   const parsed = frontmatterOf(markdown);
   if (parsed === null) return null;

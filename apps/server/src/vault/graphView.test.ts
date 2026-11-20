@@ -2,6 +2,8 @@ import { assert, describe, it } from "@effect/vitest";
 import * as NodeFS from "node:fs";
 import * as NodePath from "node:path";
 
+import type { NoteProperty } from "@glose/contracts";
+
 import { buildGraphView, type GraphFile } from "./graphView.ts";
 
 const ARENDT = [
@@ -17,9 +19,9 @@ const ARENDT = [
 
 const noDates = { created: null, updated: null, tended: null } as const;
 
-const noteFields = (source: string) => [
-  { key: "glose", value: "note" },
-  { key: "source", value: source },
+const noteFields = (source: string): ReadonlyArray<NoteProperty> => [
+  { key: "glose", kind: "text", value: "note", locked: true },
+  { key: "source", kind: "text", value: source, locked: true },
 ];
 
 const note = (source: string, body: string) =>
@@ -47,10 +49,10 @@ describe("buildGraphView", () => {
         growth: null,
         ...noDates,
         properties: [
-          { key: "glose", value: "source" },
-          { key: "author-family", value: "Arendt" },
-          { key: "title", value: "The Human Condition" },
-          { key: "first-published", value: "1958" },
+          { key: "glose", kind: "text", value: "source", locked: true },
+          { key: "author-family", kind: "text", value: "Arendt", locked: true },
+          { key: "title", kind: "text", value: "The Human Condition", locked: true },
+          { key: "first-published", kind: "number", value: 1958, locked: true },
         ],
       },
       {

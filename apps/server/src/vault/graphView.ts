@@ -6,6 +6,7 @@ import {
   hasAiCallout,
   linkKey,
   MARKDOWN_CODE,
+  NOTE_FIELDS,
   parseWikilink,
   growthOf,
   WIKILINK,
@@ -13,7 +14,7 @@ import {
 import * as Option from "effect/Option";
 
 import { propertiesOf } from "./frontmatter.ts";
-import { FRONTMATTER, parseSourceFile, parseYaml } from "./sourceFile.ts";
+import { FRONTMATTER, parseSourceFile, parseYaml, SOURCE_FIELDS } from "./sourceFile.ts";
 
 export interface GraphFile {
   readonly name: string;
@@ -69,9 +70,10 @@ const parseFile = ({ name, markdown }: GraphFile): ParsedFile => {
   const dates = {
     updated: dayOf(field(frontmatter, "updated")),
     tended: dayOf(field(frontmatter, "tended")),
-    properties: propertiesOf(frontmatter),
   };
-  return Option.match(parseSourceFile(markdown), {
+  const source = parseSourceFile(markdown);
+  const properties = propertiesOf(frontmatter, Option.isSome(source) ? SOURCE_FIELDS : NOTE_FIELDS);
+  return Option.match(source, {
     onSome: (source) => ({
       node: {
         id: name,
@@ -84,6 +86,7 @@ const parseFile = ({ name, markdown }: GraphFile): ParsedFile => {
         growth: null,
         created: dayOf(field(frontmatter, "added")),
         ...dates,
+        properties,
       },
       sourceName: null,
       targets,
@@ -100,6 +103,7 @@ const parseFile = ({ name, markdown }: GraphFile): ParsedFile => {
         growth: growthOf(field(frontmatter, "growth")),
         created: dayOf(field(frontmatter, "created")),
         ...dates,
+        properties,
       },
       sourceName: sourceName(frontmatter),
       targets,

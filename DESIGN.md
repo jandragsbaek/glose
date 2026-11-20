@@ -1577,6 +1577,34 @@ row of a table that reads down.
   address (`?source=`), so Back returns to it. The tint and the edge ease in over 160ms.
 - **Nothing found:** "No Source matches." in Mute and a "Clear search and filters" link button.
 
+### Properties
+
+Every frontmatter field of the Note or Source open in the Graph's side panel, as Obsidian shows
+them. It sits under the title and the Source line, above the Note's buttons.
+
+- **Box:** a Hairline box (4px) that folds. The summary "Properties" in 600 13px with a 16px Mute
+  chevron that turns -90° when folded (160ms), Lapis on hover; a Hairline under it while open.
+- **Rows:** a grid of the name column (at least 88px, 36%) and the value, 36px tall at least, a
+  Hairline under each. The name in Mute 13px after a 15px Mute Lucide icon for its type: align-left
+  text, list, hash number, square-check yes or no, calendar date, braces for a value Glose cannot
+  show, sprout for `growth`, lock for a field Glose keeps and link for `source`.
+- **Values:** 14px Ink with tabular numerals, set as fields that read as text: no border at rest,
+  Lapis Tint on hover, and on focus Paper with the Lapis border and the focus halo. They line up
+  with the text of the locked values. Text wraps and grows with its words. Dates use the native
+  date field, numbers the native number field, yes or no a 16px Lapis checkbox. `growth` is a
+  compact Select (13px, 2px 28px 2px 8px). `source` is a Lapis 600 link with a 1px underline at
+  3px offset. A value Glose cannot show is Mute 13px.
+- **Lists:** each item a token, Strong Hairline 1px, 3px corners, 13px/22px, with a 12px × at its
+  end; after them a borderless "Add…" field that suggests the Vault's items for that name.
+- **Remove:** a 26px Mute × at the row's right end, shown on row hover or focus; Lapis Tint on
+  hover.
+- **Add property:** a full-width quiet row (Mute 600 13px, 15px plus icon, Ink on hover). Open, a
+  form 12px 10px: Name and Type side by side (Text Field and Select at 14px), then Value, with
+  "Separate the items with commas." under a list; the field error line under them, and a small
+  secondary Add and a quiet small Cancel. Escape closes it and focus returns to Add property.
+- **Error:** a failed save puts the field error line under the box: "Glose could not save
+  “tags”. The file is as it was. Try again."
+
 ### AI Text (signature)
 
 AI text in a Note. The text stays Ink and Body type; the mark sits at the edge, and it says how

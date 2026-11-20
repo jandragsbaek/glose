@@ -1,7 +1,11 @@
 import {
   CARDS_FOLDER,
   type Growth,
+  isPropertyKey,
   localDay,
+  NOTE_FIELDS,
+  PropertyRefused,
+  type SetProperty,
   VaultFolderNotSet,
   NoteNameTaken,
   NoteNotFound,
@@ -22,9 +26,16 @@ import * as Semaphore from "effect/Semaphore";
 
 import * as Settings from "../settings/Settings.ts";
 import { writeFileAtomic } from "../storage.ts";
-import { editNoteFile, type NoteFileContent, renderNoteFile, setNoteFields } from "./noteFile.ts";
+import { propertiesOf } from "./frontmatter.ts";
+import {
+  editNoteFile,
+  type NoteFileContent,
+  pageValue,
+  renderNoteFile,
+  setNoteFields,
+} from "./noteFile.ts";
 import { relinkWikilinks } from "./relink.ts";
-import { parseSourceFile } from "./sourceFile.ts";
+import { FRONTMATTER, parseSourceFile, parseYaml, SOURCE_FIELDS } from "./sourceFile.ts";
 
 export class Notes extends Context.Service<
   Notes,
@@ -45,6 +56,9 @@ export class Notes extends Context.Service<
     readonly tend: (
       id: string,
     ) => Effect.Effect<string, NoteNotFound | VaultFolderNotSet | StorageError>;
+    readonly setProperty: (
+      input: SetProperty,
+    ) => Effect.Effect<string, NoteNotFound | PropertyRefused | VaultFolderNotSet | StorageError>;
   }
 >()("glose/vault/Notes") {}
 
@@ -53,6 +67,11 @@ const MARKDOWN = ".md";
 const storageError = (cause: unknown) => new StorageError({ detail: String(cause) });
 
 const today = Effect.map(Clock.currentTimeMillis, localDay);
+
+const frontmatterValues = (markdown: string): unknown => {
+  const match = FRONTMATTER.exec(markdown);
+  return match ? parseYaml(match[1] ?? "") : undefined;
+};
 
 export const make = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -92,7 +111,7 @@ export const make = Effect.gen(function* () {
     return name;
   });
 
-  const noteFile = Effect.fn("Notes.noteFile")(function* (id: string) {
+  const vaultFile = Effect.fn("Notes.vaultFile")(function* (id: string) {
     const { vaultFolder } = (yield* settings.get).settings;
     if (vaultFolder === null) return yield* new VaultFolderNotSet();
     if (!isFileName(id)) return yield* new NoteNotFound({ id });
@@ -101,21 +120,51 @@ export const make = Effect.gen(function* () {
       return yield* new NoteNotFound({ id });
     }
     const markdown = yield* fs.readFileString(file).pipe(Effect.mapError(storageError));
-    if (Option.isSome(parseSourceFile(markdown))) return yield* new NoteNotFound({ id });
+    return { file, markdown, isSource: Option.isSome(parseSourceFile(markdown)) };
+  });
+
+  const noteFile = Effect.fn("Notes.noteFile")(function* (id: string) {
+    const { file, markdown, isSource } = yield* vaultFile(id);
+    if (isSource) return yield* new NoteNotFound({ id });
     return { file, markdown };
+  });
+
+  const writeFields = Effect.fn("Notes.writeFields")(function* (
+    id: string,
+    file: string,
+    markdown: string,
+    fields: Readonly<Record<string, unknown>>,
+  ) {
+    const edited = setNoteFields(markdown, fields);
+    if (edited === null) {
+      return yield* new StorageError({
+        detail: `The frontmatter of ${id}${MARKDOWN} is not YAML.`,
+      });
+    }
+    yield* writeFileAtomic(fs, file, edited).pipe(Effect.mapError(storageError));
+    return id;
   });
 
   const setFields = Effect.fn("Notes.setFields")(
     function* (id: string, fields: Readonly<Record<string, string>>) {
       const { file, markdown } = yield* noteFile(id);
-      const edited = setNoteFields(markdown, fields);
-      if (edited === null) {
-        return yield* new StorageError({
-          detail: `The frontmatter of ${id}${MARKDOWN} is not YAML.`,
-        });
-      }
-      yield* writeFileAtomic(fs, file, edited).pipe(Effect.mapError(storageError));
-      return id;
+      return yield* writeFields(id, file, markdown, fields);
+    },
+    (effect) => writing.withPermit(effect),
+  );
+
+  const setProperty = Effect.fn("Notes.setProperty")(
+    function* ({ id, key, value }: SetProperty) {
+      const { file, markdown, isSource } = yield* vaultFile(id);
+      const owned = isSource ? SOURCE_FIELDS : NOTE_FIELDS;
+      if (!isPropertyKey(key) || owned.has(key)) return yield* new PropertyRefused({ key });
+      const current = propertiesOf(frontmatterValues(markdown), owned).find(
+        (property) => property.key === key,
+      );
+      if (current?.kind === "other") return yield* new PropertyRefused({ key });
+      const written =
+        !isSource && key === "page" && typeof value === "string" ? pageValue(value) : value;
+      return yield* writeFields(id, file, markdown, { [key]: written });
     },
     (effect) => writing.withPermit(effect),
   );
@@ -126,6 +175,8 @@ export const make = Effect.gen(function* () {
     grow: (id, growth) => setFields(id, { growth }),
 
     tend: (id) => Effect.flatMap(today, (day) => setFields(id, { tended: day })),
+
+    setProperty,
 
     create: Effect.fn("Notes.create")(
       function* ({ title, ...content }) {

@@ -6,6 +6,7 @@ export * from "./desktop.ts";
 export * from "./github.ts";
 export * from "./graph.ts";
 export * from "./growth.ts";
+export * from "./properties.ts";
 export * from "./probe.ts";
 export * from "./recall.ts";
 export * from "./research.ts";

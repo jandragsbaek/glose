@@ -43,9 +43,6 @@ export const dayOf = (value: unknown): string | null => {
   return DAY.exec(value.trim())?.[1] ?? null;
 };
 
-export const NoteProperty = Schema.Struct({ key: Schema.String, value: Schema.String });
-export type NoteProperty = typeof NoteProperty.Type;
-
 export const TendNote = Schema.Struct({ id: Schema.String });
 export type TendNote = typeof TendNote.Type;
 

@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 
-import { Growth, NoteProperty } from "./growth.ts";
+import { Growth } from "./growth.ts";
+import { NoteProperty } from "./properties.ts";
 
 export const GraphNodeKind = Schema.Literals(["source", "note"]);
 export type GraphNodeKind = typeof GraphNodeKind.Type;

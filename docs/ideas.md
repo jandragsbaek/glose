@@ -829,6 +829,34 @@ schedule in Recall, a second daily queue). The details below are the agent's pic
 - Open: how Growth looks on the Graph canvas and in the panel (Jan designs it); editing the
   user's own properties in Glose; whether `updated` should follow edits made in another editor.
 
+## Decided, editing Properties (November 2026)
+
+Jan asked to edit the Properties of a file in Glose, as in Obsidian. Shaped with impeccable; Jan
+chose "Obsidian properties, straight" over "The Ledger, edited in place" (only the user's own
+fields, in a ledger under Growth) and "Edited on the desk" (Properties saved with the Note's text).
+The details below are the agent's picks.
+
+- The Graph's side panel shows every frontmatter field of the selected Note or Source in one
+  Properties table, under the title and the Source line, above the Note's buttons and text. It is
+  open by default and folds.
+- Each row has a type icon, the field's name and its value. Glose reads the type from the value:
+  text, list, number, yes or no (a checkbox), or date (`2026-11-20`). A Note's `growth` is a select
+  of Seed, Sprout, Sapling and Tree.
+- A value saves to the file when the user leaves the field or presses Enter; Escape puts it back.
+  A list item is added with Enter or a comma and removed with its ×. There is no Undo.
+- Fields Glose keeps are locked: on a Note `glose`, `source`, `ai` and `ai-title`; on a Source all
+  its citation fields. `source` shows as a link to the Source. A value Glose cannot show (a nested
+  map, a list of numbers) is read-only, to change in another editor.
+- "Add property" opens a small form: a name (it suggests names used in the Vault), a type (taken
+  from how the Vault uses that name; `tags` and `aliases` are lists) and a value. Every other row
+  can be removed with the × that shows on hover or focus.
+- List fields suggest the items the Vault already uses for that name (for example tags).
+- Editing a Property does not change `updated`; `updated` is for the text.
+- The Growth panel keeps "Grow to …" and "Mark as tended"; its Growth, Created, Updated and Tended
+  list is gone, as the table shows them.
+- Not yet: renaming a field, changing a field's type, ordering the fields, date with time, and
+  Properties on Cards and Writing projects.
+
 ## Decided, a new Note researched (November 2026)
 
 Jan asked for a way to add a Note to the Graph from blank, with the AI's help to research it and
