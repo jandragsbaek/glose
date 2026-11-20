@@ -331,7 +331,10 @@ function ListValue({
     });
   };
 
+  const saving = awaited !== null;
+
   const add = () => {
+    if (saving) return;
     const added = splitItems(draft).filter((item) => !list.includes(item));
     setDraft("");
     if (added.length > 0) commit([...list, ...added], draft);
@@ -339,11 +342,11 @@ function ListValue({
 
   const remove = (item: string) => {
     input.current?.focus();
-    commit(list.filter((other) => other !== item));
+    if (!saving) commit(list.filter((other) => other !== item));
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter" || event.key === ",") {
+    if (event.key === "Enter" || (event.key === "," && !saving)) {
       event.preventDefault();
       add();
     } else if (event.key === "Escape") {
