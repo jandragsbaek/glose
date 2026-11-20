@@ -277,10 +277,12 @@ function GraphPage({
   }, [canvas, framing]);
 
   const notes = view.nodes.filter((node) => node.kind === "note").length;
+  const sourceCount = view.nodes.filter((node) => node.kind === "source").length;
+  const people = view.nodes.length - notes - sourceCount;
   return (
     <Page
       title={t.graph.title}
-      sub={t.graph.counts(notes, view.nodes.length - notes, view.links.length)}
+      sub={t.graph.counts(notes, sourceCount, view.links.length, people)}
       fill
       actions={
         <>
@@ -358,7 +360,7 @@ function GraphPage({
           >
             <AiKey
               count={unwritten.length}
-              notes={notes}
+              notes={notes + people}
               pressed={showAi}
               onPress={() => setAiOnly(!showAi)}
             />
@@ -433,7 +435,7 @@ function GraphPage({
               session={researchSession}
               title={newTitle}
               text={newText}
-              notes={view.nodes.filter((node) => node.kind === "note").map((node) => node.id)}
+              notes={view.nodes.filter((node) => node.kind !== "source").map((node) => node.id)}
               onStarted={(draft, id) => setResearch((now) => new Map(now).set(draft, id))}
             />
           ) : selected === undefined ? (

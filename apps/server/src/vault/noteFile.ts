@@ -3,6 +3,7 @@ import {
   hasAiCallout,
   isTimestamp,
   type Language,
+  type PersonName,
   textParagraphs,
 } from "@glose/contracts";
 import * as Yaml from "yaml";
@@ -64,8 +65,20 @@ export const renderNoteFile = (note: NoteFileContent, today: string): string => 
   return `---\n${frontmatter.toString()}---\n${body}`;
 };
 
+export const renderPersonFile = (person: PersonName, today: string): string => {
+  const frontmatter = new Yaml.Document({
+    glose: "person",
+    family: person.family.trim(),
+    ...(person.given === null || person.given.trim() === "" ? {} : { given: person.given.trim() }),
+    created: today,
+    updated: today,
+  });
+  return `---\n${frontmatter.toString()}---\n`;
+};
+
 export interface NoteEdit {
   readonly page: string | null;
+  readonly keepPage?: boolean;
   readonly body: string;
   readonly aiTitle: boolean;
   readonly aiNote: boolean;
@@ -103,7 +116,7 @@ export const editNoteFile = (markdown: string, edit: NoteEdit): string | null =>
     .replace(/\r\n?/g, "\n")
     .replace(/^(?:[ \t]*\n)+/, "")
     .trimEnd();
-  set("page", edit.page === null ? null : pageValue(edit.page));
+  if (edit.keepPage !== true) set("page", edit.page === null ? null : pageValue(edit.page));
   set("ai", edit.aiTitle || edit.aiNote || hasAiCallout(body) ? true : null);
   set("ai-title", edit.aiTitle ? true : null);
   set("updated", edit.today);

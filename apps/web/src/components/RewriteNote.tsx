@@ -250,16 +250,18 @@ export function RewriteNote({
                 {t.rewrite.renames(linking.notes, linking.sources, cards)}
               </p>
             ) : null}
-            <label className="write__page rewrite__page" htmlFor={pageId}>
-              {source?.kind === "video" ? t.watch.time : t.rewrite.page}
-              <input
-                id={pageId}
-                className="input"
-                placeholder={source?.kind === "video" ? t.watch.timePlaceholder : undefined}
-                value={page}
-                onChange={(event) => setPage(event.target.value)}
-              />
-            </label>
+            {node.kind === "person" ? null : (
+              <label className="write__page rewrite__page" htmlFor={pageId}>
+                {source?.kind === "video" ? t.watch.time : t.rewrite.page}
+                <input
+                  id={pageId}
+                  className="input"
+                  placeholder={source?.kind === "video" ? t.watch.timePlaceholder : undefined}
+                  value={page}
+                  onChange={(event) => setPage(event.target.value)}
+                />
+              </label>
+            )}
           </div>
         </div>
 

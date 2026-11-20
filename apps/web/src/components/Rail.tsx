@@ -1,6 +1,6 @@
 import { useAtomSet } from "@effect/atom-react";
 import type { Language } from "@glose/contracts";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import {
   CalendarDays,
   Layers,
@@ -19,13 +19,22 @@ function RailLink({
   to,
   icon: Icon,
   label,
+  also,
 }: {
   readonly to: "/" | "/sources" | "/graph" | "/writing" | "/recall";
   readonly icon: LucideIcon;
   readonly label: string;
+  readonly also?: string;
 }) {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const here = also !== undefined && pathname.startsWith(also);
   return (
-    <Link to={to} className="rail__link" activeOptions={{ exact: to === "/" }}>
+    <Link
+      to={to}
+      className="rail__link"
+      activeOptions={{ exact: to === "/" }}
+      aria-current={here ? "page" : undefined}
+    >
       <Icon className="rail__icon" aria-hidden="true" />
       {label}
     </Link>
@@ -91,7 +100,7 @@ export function Rail({ language }: { readonly language: Language }) {
       <RailLink to="/" icon={CalendarDays} label={t.nav.today} />
       <RailLink to="/sources" icon={Library} label={t.nav.sources} />
       <span className="rail__rule" aria-hidden="true" />
-      <RailLink to="/graph" icon={Waypoints} label={t.nav.graph} />
+      <RailLink to="/graph" icon={Waypoints} label={t.nav.graph} also="/people/" />
       <RailLink to="/writing" icon={NotebookPen} label={t.nav.writingProjects} />
       <RailLink to="/recall" icon={Layers} label={t.nav.recall} />
       <div className="rail__foot">

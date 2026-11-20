@@ -62,7 +62,7 @@ export const findNodes = (
 };
 
 export const holdsAiText = (node: GraphNode): boolean =>
-  node.kind === "note" && (node.aiText || node.aiTitle);
+  node.kind !== "source" && (node.aiText || node.aiTitle);
 
 export const narrowToAiText = (
   found: ReadonlyArray<GraphNode> | null,

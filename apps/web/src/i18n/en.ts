@@ -9,6 +9,7 @@ import { settingsMessages } from "./en/settings.ts";
 import { articleMessages } from "./en/article.ts";
 import { videoMessages } from "./en/video.ts";
 import { courseMessages } from "./en/course.ts";
+import { peopleMessages } from "./en/people.ts";
 
 export const en = {
   ...coreMessages,
@@ -22,6 +23,7 @@ export const en = {
   ...articleMessages,
   ...videoMessages,
   ...courseMessages,
+  ...peopleMessages,
 };
 
 export type Messages = typeof en;

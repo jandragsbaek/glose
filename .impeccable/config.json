@@ -173,6 +173,26 @@
         "files": [".impeccable/mocks/decision/dayleaf.html"],
         "createdAt": "2026-11-19T20:24:08.407Z",
         "reason": "Claude: decision-round sketch (a 1440x900 thumbnail drawn as a skeleton on the decision page), not shipping UI; the built Course page uses DESIGN.md's sizes and padding"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "sans\",system-ui,sans-serif",
+        "createdAt": "2026-11-20T16:30:23.775Z",
+        "reason": "Claude: Public Sans is DESIGN.md's UI face; the detector reads the font shorthand's tail as a family"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [".impeccable/mocks/decision/person-chronology.html"],
+        "createdAt": "2026-11-20T16:59:42.842Z",
+        "reason": "Claude: decision-round sketch (a 1440x900 skeleton on the decision page), not shipping UI; the call-number label uses DESIGN.md's 1px 7px padding, as in the app"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [".impeccable/mocks/decision/person-shelf.html"],
+        "createdAt": "2026-11-20T16:59:42.851Z",
+        "reason": "Claude: decision-round sketch (a 1440x900 skeleton on the decision page), not shipping UI; the call-number label uses DESIGN.md's 1px 7px padding, as in the app"
       }
     ]
   }

@@ -27,7 +27,11 @@ export interface LayoutLink extends SimulationLinkDatum<LayoutNode> {
 export type GraphSimulation = Simulation<LayoutNode, LayoutLink>;
 
 export const nodeRadius = (kind: GraphNodeKind, degree: number): number =>
-  kind === "source" ? 9 + Math.sqrt(degree) * 1.2 : 3.5 + Math.sqrt(degree) * 1.1;
+  kind === "source"
+    ? 9 + Math.sqrt(degree) * 1.2
+    : kind === "person"
+      ? 7 + Math.sqrt(degree) * 1.1
+      : 3.5 + Math.sqrt(degree) * 1.1;
 
 export const LABEL_FADE = { from: 1, to: 1.6 } as const;
 

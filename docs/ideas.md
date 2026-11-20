@@ -573,7 +573,7 @@ Decided, a Vault from GitHub at first start (November 2026):
   Links. Without a selection it lists the Sources. Search fades everything except matching names.
 - Double-clicking a Source opens its Reading Stage; double-clicking a Note opens it on the rewrite
   desk (see "Decided, the AI mark on the Graph"). A Note has no page of its own yet.
-- `pnpm dev:demo` opens Glose on the demo Vault (`demo/Vault`): twelve Sources, two of them Danish,
+- `pnpm dev:demo` opens Glose on the demo Vault (`demo/Vault`): thirteen Sources, two of them Danish,
   one a sample Article with Passages and one a Video with sample watch notes, with 105 linked Notes
   of clearly sample content.
   `demo/Course export (sample)` holds five sample lesson files to try Add Source → Course lessons. It runs on a copy in the temp folder with its
@@ -943,6 +943,43 @@ three-model council.
   so a quote cannot make a Link. Checked Links go on the `Related:` line.
 - Not yet: PDFs, a reload that keeps the unsaved leaf, reading a found page in Glose before it is
   kept, and the new Note's place on the canvas near its Links (it is drawn apart until saved).
+
+## Decided, a Person (November 2026)
+
+Jan asked for a Person, a type of Note, to gather what he knows about people and the talks they
+give. Shaped with impeccable; Jan chose "The Career Line" over "Their Shelf" (the person's works as
+spines, as on the Course Shelf) and "The Authority Record" (a library name record with a register
+of works). He chose that a Person gathers their Sources, the Notes from them, his own words on
+them and Links to other People; that Glose proposes a Person from a Source's author; and that a
+Person has no single Source. The details below are the agent's picks.
+
+- A Person is a Rich note: `<Given Family>.md` at the top of the Vault, frontmatter `glose:
+  person`, `family`, `given`, and any of the user's own fields (`born`, `died`, `aliases`). The
+  body is the user's words on the person, with the AI mark like any Note. It has no `source` and
+  no Growth. A file without `family` takes its name from the file name (the last word as family).
+- The person's works are the Sources whose `author-family` is their `family` (case aside), and
+  whose `author-given` is their `given` when both are known. Only the first author counts for now.
+- Glose proposes a Person: the Graph's panel of a Source whose author has none says so and offers
+  "Make a Person note for <name>" (`people.create`), which writes the file and opens the page. The
+  author's name in that panel links to their Person once there is one.
+- The Person page, `/people/<Person>` (the chosen work as `?work=<Source>`), belongs to the Graph
+  in the rail. "Works and talks" is the Career Line: every work as its call number, title and
+  its Reading marks and "Book · 9 Notes" over a year rule (at least ten years wide; works of one year stack); a
+  book or text is a filled Lapis dot, a talk (a Video) a hollow one, and the chosen work wears the
+  Gilt underline and ring. Choosing a work shows its Notes in the panel under it.
+- Under the line, one lane for each linked Person: a Person this one links with either way, or
+  whose works share Links with this one's. An Accent ring sits at the work where their Links meet,
+  named with their works and the count ("Flow · 17 Links"; "named in 1 Note" when the Links reach
+  their own file).
+- The side column: In your words (the body), People (each with the sentence that links them, from
+  either Person's words, else "Linked through their works"), and Properties. Editing happens in
+  the Graph ("Edit in the Graph"), on the same desk as a Note.
+- On the Graph a Person is a Lapis medallion (a Paper ring inside the disc) with its name always
+  shown; with AI text it is the hollow Rubric ring, like a Note. The Graph's panel lists People
+  under the Sources, and a Person cannot be cited in a Writing project.
+- Not yet: co-authors and aliases in the matching, prefilling Add Source with the person, Links
+  from a Person to their own works on the Graph canvas (a Person floats apart from them), events
+  (conferences) as their own notes, and a People list outside the Graph.
 
 ## Decided, the first page of a Source (November 2026)
 
@@ -1317,4 +1354,5 @@ Taken from learnharness: the user thinks out loud, by typing or by dictation, an
 - Beyond the Blog post help decided above (Notes to cite, flags, quote and page checks, closing questions), may the AI suggest other words or point at weak sentences?
 - When a note changes, what happens to the cards made from it?
 - Does the AI see the book text, or only the user's free text plus what the model already knows?
-- What exactly are the richer note types (author, work, period, concept)?
+- What exactly are the richer note types (author, work, period, concept)? (Partly answered: a
+  Person; see "Decided, a Person".)

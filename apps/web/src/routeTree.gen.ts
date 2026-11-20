@@ -14,6 +14,7 @@ import { Route as GraphRouteImport } from './routes/graph'
 import { Route as RecallRouteImport } from './routes/recall'
 import { Route as ReviewRouteImport } from './routes/review'
 import { Route as CoursesCourseNameRouteImport } from './routes/courses.$courseName'
+import { Route as PeoplePersonNameRouteImport } from './routes/people.$personName'
 import { Route as SourcesIndexRouteImport } from './routes/sources.index'
 import { Route as SourcesSourceIdRouteImport } from './routes/sources.$sourceId'
 import { Route as SourcesNewRouteImport } from './routes/sources.new'
@@ -44,6 +45,11 @@ const ReviewRoute = ReviewRouteImport.update({
 const CoursesCourseNameRoute = CoursesCourseNameRouteImport.update({
   id: '/courses/$courseName',
   path: '/courses/$courseName',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PeoplePersonNameRoute = PeoplePersonNameRouteImport.update({
+  id: '/people/$personName',
+  path: '/people/$personName',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SourcesIndexRoute = SourcesIndexRouteImport.update({
@@ -83,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/recall': typeof RecallRoute
   '/review': typeof ReviewRoute
   '/courses/$courseName': typeof CoursesCourseNameRoute
+  '/people/$personName': typeof PeoplePersonNameRoute
   '/sources/$sourceId': typeof SourcesSourceIdRoute
   '/sources/new': typeof SourcesNewRoute
   '/writing/$projectId': typeof WritingProjectIdRoute
@@ -96,6 +103,7 @@ export interface FileRoutesByTo {
   '/recall': typeof RecallRoute
   '/review': typeof ReviewRoute
   '/courses/$courseName': typeof CoursesCourseNameRoute
+  '/people/$personName': typeof PeoplePersonNameRoute
   '/sources/$sourceId': typeof SourcesSourceIdRoute
   '/sources/new': typeof SourcesNewRoute
   '/writing/$projectId': typeof WritingProjectIdRoute
@@ -110,6 +118,7 @@ export interface FileRoutesById {
   '/recall': typeof RecallRoute
   '/review': typeof ReviewRoute
   '/courses/$courseName': typeof CoursesCourseNameRoute
+  '/people/$personName': typeof PeoplePersonNameRoute
   '/sources/$sourceId': typeof SourcesSourceIdRoute
   '/sources/new': typeof SourcesNewRoute
   '/writing/$projectId': typeof WritingProjectIdRoute
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
     | '/recall'
     | '/review'
     | '/courses/$courseName'
+    | '/people/$personName'
     | '/sources/$sourceId'
     | '/sources/new'
     | '/writing/$projectId'
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
     | '/recall'
     | '/review'
     | '/courses/$courseName'
+    | '/people/$personName'
     | '/sources/$sourceId'
     | '/sources/new'
     | '/writing/$projectId'
@@ -151,6 +162,7 @@ export interface FileRouteTypes {
     | '/recall'
     | '/review'
     | '/courses/$courseName'
+    | '/people/$personName'
     | '/sources/$sourceId'
     | '/sources/new'
     | '/writing/$projectId'
@@ -165,6 +177,7 @@ export interface RootRouteChildren {
   RecallRoute: typeof RecallRoute
   ReviewRoute: typeof ReviewRoute
   CoursesCourseNameRoute: typeof CoursesCourseNameRoute
+  PeoplePersonNameRoute: typeof PeoplePersonNameRoute
   SourcesSourceIdRoute: typeof SourcesSourceIdRoute
   SourcesNewRoute: typeof SourcesNewRoute
   WritingProjectIdRoute: typeof WritingProjectIdRoute
@@ -208,6 +221,13 @@ declare module '@tanstack/react-router' {
       path: '/courses/$courseName'
       fullPath: '/courses/$courseName'
       preLoaderRoute: typeof CoursesCourseNameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/people/$personName': {
+      id: '/people/$personName'
+      path: '/people/$personName'
+      fullPath: '/people/$personName'
+      preLoaderRoute: typeof PeoplePersonNameRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sources/': {
@@ -261,6 +281,7 @@ const rootRouteChildren: RootRouteChildren = {
   RecallRoute: RecallRoute,
   ReviewRoute: ReviewRoute,
   CoursesCourseNameRoute: CoursesCourseNameRoute,
+  PeoplePersonNameRoute: PeoplePersonNameRoute,
   SourcesSourceIdRoute: SourcesSourceIdRoute,
   SourcesNewRoute: SourcesNewRoute,
   WritingProjectIdRoute: WritingProjectIdRoute,

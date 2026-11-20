@@ -22,6 +22,9 @@ export function SourceList({
   const sources = view.nodes
     .filter((node) => node.kind === "source")
     .sort((a, b) => a.id.localeCompare(b.id));
+  const people = view.nodes
+    .filter((node) => node.kind === "person")
+    .sort((a, b) => a.title.localeCompare(b.title));
   return (
     <div className="graph__panels">
       {unwritten.length === 0 ? null : (
@@ -46,6 +49,21 @@ export function SourceList({
           </ul>
         </div>
       </Panel>
+      {people.length === 0 ? null : (
+        <Panel title={t.people.people} initial="accent" meta={people.length}>
+          <div className="panel__body">
+            <ul className="graph__list">
+              {people.map((node) => (
+                <li key={node.id}>
+                  <NodeLink id={node.id} className="graph__link" kind="person" onShow={onShow}>
+                    {node.title}
+                  </NodeLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Panel>
+      )}
     </div>
   );
 }

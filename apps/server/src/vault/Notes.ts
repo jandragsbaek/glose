@@ -1,5 +1,7 @@
 import {
   CARDS_FOLDER,
+  type CreatePerson,
+  personFileTitle,
   type Growth,
   isPropertyKey,
   localDay,
@@ -32,6 +34,7 @@ import {
   type NoteFileContent,
   pageValue,
   renderNoteFile,
+  renderPersonFile,
   setNoteFields,
 } from "./noteFile.ts";
 import { relinkWikilinks } from "./relink.ts";
@@ -42,6 +45,9 @@ export class Notes extends Context.Service<
   {
     readonly create: (
       input: NoteFileContent & { readonly title: string },
+    ) => Effect.Effect<string, NoteNameTaken | VaultFolderNotSet | StorageError>;
+    readonly createPerson: (
+      person: CreatePerson,
     ) => Effect.Effect<string, NoteNameTaken | VaultFolderNotSet | StorageError>;
     readonly checkName: (
       title: string,
@@ -67,6 +73,11 @@ const MARKDOWN = ".md";
 const storageError = (cause: unknown) => new StorageError({ detail: String(cause) });
 
 const today = Effect.map(Clock.currentTimeMillis, localDay);
+
+const field = (values: unknown, key: string): unknown =>
+  typeof values === "object" && values !== null
+    ? (values as Record<string, unknown>)[key]
+    : undefined;
 
 const frontmatterValues = (markdown: string): unknown => {
   const match = FRONTMATTER.exec(markdown);
@@ -193,6 +204,22 @@ export const make = Effect.gen(function* () {
       (effect) => writing.withPermit(effect),
     ),
 
+    createPerson: Effect.fn("Notes.createPerson")(
+      function* (person) {
+        const { vaultFolder } = (yield* settings.get).settings;
+        if (vaultFolder === null) return yield* new VaultFolderNotSet();
+        if (person.family.trim() === "") return yield* new NoteNameTaken({ fileName: "" });
+        const name = yield* checkName(personFileTitle(person));
+        yield* writeFileAtomic(
+          fs,
+          path.join(vaultFolder, `${name}${MARKDOWN}`),
+          renderPersonFile(person, yield* today),
+        ).pipe(Effect.mapError(storageError));
+        return name;
+      },
+      (effect) => writing.withPermit(effect),
+    ),
+
     save: Effect.fn("Notes.save")(
       function* ({ id, title, aiTitle, page, body, aiNote }) {
         const { vaultFolder } = (yield* settings.get).settings;
@@ -211,7 +238,15 @@ export const make = Effect.gen(function* () {
           return yield* new NoteNameTaken({ fileName: name });
         }
 
-        const edited = editNoteFile(markdown, { page, body, aiTitle, aiNote, today: yield* today });
+        const person = field(frontmatterValues(markdown), "glose") === "person";
+        const edited = editNoteFile(markdown, {
+          page,
+          keepPage: person,
+          body,
+          aiTitle,
+          aiNote,
+          today: yield* today,
+        });
         if (edited === null) {
           return yield* new StorageError({ detail: `The frontmatter of ${own} is not YAML.` });
         }

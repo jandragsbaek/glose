@@ -15,7 +15,7 @@ import {
 import { type Box, frameTarget, labelCenter, overlaps, wrapWords } from "./canvasGeometry.ts";
 import { subscribePaint } from "../theme/appearance.ts";
 import { type Palette, readPalette } from "./canvasPalette.ts";
-import { drawCallLabel, drawNode } from "./canvasNode.ts";
+import { drawCallLabel, drawNode, namedAlways } from "./canvasNode.ts";
 import { type DraftMark, drawDraft } from "./canvasDraft.ts";
 import { holdsAiText } from "./graphIndex.ts";
 import { drawStopTabs, drawTrailLine, layoutStopTabs, type StopTab } from "./canvasTrail.ts";
@@ -563,7 +563,7 @@ export class GraphCanvas {
 
     for (const node of this.#nodes) {
       context.globalAlpha = this.#alpha(node);
-      const lit = node.kind === "source" || (focused && node.id === this.#focus);
+      const lit = node.kind !== "note" || (focused && node.id === this.#focus);
       drawNode(context, node, { lit, holdsAiText: this.#ai.has(node.id), zoom: k }, palette);
       const cited = this.#cited.has(node.id);
       if (cited) {
@@ -643,7 +643,7 @@ export class GraphCanvas {
       const label = this.#labels.get(node.id);
       if (label === undefined) continue;
       const strong =
-        node.id === this.#selected ||
+        namedAlways(node, this.#selected) ||
         this.#marked(node.id) ||
         (focused && this.#inFocus(node.id)) ||
         (showMatches && this.#matches?.has(node.id) === true);
@@ -652,7 +652,7 @@ export class GraphCanvas {
       const showText = textAlpha >= 0.02 && (strong || base >= GHOST);
       const call = strong || base >= GHOST ? label.call : null;
       if (!showText && call === null) continue;
-      const font = node.kind === "source" ? SOURCE_FONT : NOTE_FONT;
+      const font = node.kind === "note" ? NOTE_FONT : SOURCE_FONT;
       const lines = showText ? this.#lines(node.id, label.text, font) : [];
       const callWidth = call === null ? 0 : this.#callWidth(call);
       const width = Math.max(callWidth, showText ? this.#textWidth(node.id, lines, font) : 0);
@@ -729,10 +729,10 @@ export class GraphCanvas {
     strong: boolean,
   ): void {
     const context = this.#context;
-    context.font = node.kind === "source" ? SOURCE_FONT : NOTE_FONT;
+    context.font = node.kind === "note" ? NOTE_FONT : SOURCE_FONT;
     context.strokeStyle = this.#palette.ground;
     context.lineWidth = 3;
-    context.fillStyle = strong || node.kind === "source" ? this.#palette.ink : this.#palette.mute;
+    context.fillStyle = strong || node.kind !== "note" ? this.#palette.ink : this.#palette.mute;
     lines.forEach((line, index) => {
       context.strokeText(line, cx, top + index * LINE_HEIGHT);
       context.fillText(line, cx, top + index * LINE_HEIGHT);

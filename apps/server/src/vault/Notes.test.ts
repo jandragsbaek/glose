@@ -312,3 +312,75 @@ it.layer(NodeServices.layer)("Notes.setProperty", (it) => {
     ),
   );
 });
+
+it.layer(NodeServices.layer)("Notes.createPerson", (it) => {
+  it.effect("keeps a Person's own page field when its text is saved", () =>
+    withVault(
+      { "Cal Newport.md": "---\nglose: person\nfamily: Newport\npage: home\n---\n\nOld.\n" },
+      ({ folder, notes }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          yield* notes.save({
+            id: "Cal Newport",
+            title: "Cal Newport",
+            aiTitle: false,
+            page: null,
+            body: "New.",
+            aiNote: false,
+          });
+          const written = yield* fs.readFileString(path.join(folder, "Cal Newport.md"));
+          assert.include(written, "page: home");
+          assert.include(written, "New.");
+        }),
+    ),
+  );
+
+  it.effect("saves a Note's Location as written, even the word keep", () =>
+    withVault({ [`${AI_TITLE}.md`]: AI_NOTE }, ({ folder, notes }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* notes.save({
+          id: AI_TITLE,
+          title: AI_TITLE,
+          aiTitle: true,
+          page: "keep",
+          body: "> [!ai]\n> A tool deserves a place when it serves a value.",
+          aiNote: false,
+        });
+        const written = yield* fs.readFileString(path.join(folder, `${AI_TITLE}.md`));
+        assert.include(written, `page: "keep"`);
+      }),
+    ),
+  );
+
+  it.effect("writes a Person file named given name first, and refuses a name that is taken", () =>
+    withVault({ "cal newport.md": "Mine.\n" }, ({ folder, notes }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const name = yield* notes.createPerson({ family: "Csikszentmihalyi", given: "Mihaly" });
+
+        assert.strictEqual(name, "Mihaly Csikszentmihalyi");
+        assert.strictEqual(
+          yield* fs.readFileString(path.join(folder, "Mihaly Csikszentmihalyi.md")),
+          [
+            "---",
+            "glose: person",
+            "family: Csikszentmihalyi",
+            "given: Mihaly",
+            `created: ${TODAY}`,
+            `updated: ${TODAY}`,
+            "---",
+            "",
+          ].join("\n"),
+        );
+        const taken = yield* notes
+          .createPerson({ family: "Newport", given: "Cal" })
+          .pipe(Effect.flip);
+        assert.strictEqual(taken._tag, "NoteNameTaken");
+      }),
+    ),
+  );
+});

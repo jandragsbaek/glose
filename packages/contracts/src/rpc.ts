@@ -15,7 +15,7 @@ import {
 import { CatalogRecord, CatalogSearch, CatalogUnavailable } from "./catalog.ts";
 import { ChatGptStatus, ConnectChatGpt, DisconnectResult } from "./chatgpt.ts";
 import { GitHubRepository, GitHubStatus } from "./github.ts";
-import { GraphView, NoteNameTaken, NoteNotFound, SaveNote } from "./graph.ts";
+import { CreatePerson, GraphView, NoteNameTaken, NoteNotFound, SaveNote } from "./graph.ts";
 import { GrowNote, TendNote } from "./growth.ts";
 import { PropertyRefused, SetProperty } from "./properties.ts";
 import { RecordReview, ReviewQueue } from "./recall.ts";
@@ -122,6 +122,7 @@ export const RPC_METHODS = {
   notesCreate: "notes.create",
   notesGrow: "notes.grow",
   notesTend: "notes.tend",
+  peopleCreate: "people.create",
   graphSetProperty: "graph.setProperty",
   researchStart: "research.start",
   researchKeepPage: "research.keepPage",
@@ -286,6 +287,11 @@ export const GloseRpcGroup = RpcGroup.make(
     payload: TendNote,
     success: Schema.String,
     error: Schema.Union([NoteNotFound, VaultFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.peopleCreate, {
+    payload: CreatePerson,
+    success: Schema.String,
+    error: Schema.Union([NoteNameTaken, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.graphSetProperty, {
     payload: SetProperty,

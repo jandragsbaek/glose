@@ -138,7 +138,7 @@ function NotesWithAiText() {
     onDefect: () => <StorageProblem onRetry={refresh} />,
     onSuccess: ({ value }) => {
       const notes = value.nodes
-        .filter((node) => node.kind === "note" && node.aiText)
+        .filter((node) => node.kind !== "source" && node.aiText)
         .sort((a, b) => a.title.localeCompare(b.title));
       return (
         <Panel

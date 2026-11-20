@@ -10339,3 +10339,379 @@ h4.article__heading {
     transform: none;
   }
 }
+
+/* A Person (signature: The Career Line): the person's works as call numbers on a year rule, the
+   chosen one's Notes under it, and a quiet lane for each linked Person with a ring where they meet. */
+
+.person__back {
+  margin-top: 16px;
+}
+
+.career__line {
+  position: relative;
+  height: calc(var(--rows) * 78px + 6px);
+  list-style: none;
+}
+
+.career__stop {
+  position: absolute;
+  left: var(--at);
+  bottom: calc(var(--row) * 78px + 6px);
+  width: max-content;
+  max-width: 220px;
+  transform: translateX(-50%);
+}
+
+.career__stop[data-align="start"] {
+  transform: translateX(-12px);
+}
+
+.career__stop[data-align="end"] {
+  transform: translateX(calc(-100% + 12px));
+}
+
+.career__work {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  max-width: 220px;
+  padding: 5px 8px 4px;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 160ms var(--ease-out);
+}
+
+.career__stop[data-align="start"] .career__work {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.career__stop[data-align="end"] .career__work {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.career__work:hover {
+  background: var(--tint);
+}
+
+.career__work[aria-pressed="true"] .career__call .call {
+  box-shadow: 0 4px 0 -1px var(--gold);
+}
+
+.career__call {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.career__title {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.career__work[aria-pressed="true"] .career__title {
+  color: var(--accent);
+}
+
+.career__meta {
+  color: var(--mute);
+  font-size: 13px;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The year rule: a Strong Hairline, a dot on each work's year, the years typed under it. */
+.career__rule {
+  position: relative;
+  height: 30px;
+  margin: 0 12px;
+  border-top: 1px solid var(--line-strong);
+}
+
+.career__dot {
+  position: absolute;
+  left: var(--at);
+  top: -6px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--accent);
+  transform: translateX(-50%);
+}
+
+.career__dot[data-kind="talk"] {
+  border: 2px solid var(--accent);
+  background: var(--paper);
+}
+
+.career__dot[data-chosen] {
+  box-shadow:
+    0 0 0 2px var(--paper),
+    0 0 0 4px var(--gold);
+}
+
+.career__tick {
+  position: absolute;
+  left: var(--at);
+  top: 9px;
+  color: var(--mute);
+  font: 400 12px/1 var(--font-call);
+  font-variant-numeric: tabular-nums;
+  transform: translateX(-50%);
+}
+
+.career__tick::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -9px;
+  width: 1px;
+  height: 5px;
+  background: var(--line-strong);
+}
+
+.career__tick[data-align="start"] {
+  transform: none;
+}
+
+.career__tick[data-align="start"]::before {
+  left: 0;
+}
+
+.career__tick[data-align="end"] {
+  transform: translateX(-100%);
+}
+
+.career__tick[data-align="end"]::before {
+  left: auto;
+  right: 0;
+}
+
+.career__undated {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 8px;
+  list-style: none;
+}
+
+/* A lane per linked Person: their name over a Hairline that runs under the year rule, and an
+   Accent ring at the work where their Links meet this person's. */
+.career__lanes {
+  margin-top: 6px;
+  list-style: none;
+}
+
+.career__lane {
+  padding: 6px 0 2px;
+}
+
+.career__who {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.career__their {
+  margin-left: 8px;
+  color: var(--mute);
+  font: 400 12px/1 var(--font-call);
+}
+
+.career__track {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 24px;
+  margin: 0 12px;
+}
+
+.career__track::before {
+  content: "";
+  position: absolute;
+  left: -12px;
+  right: -12px;
+  top: 12px;
+  height: 1px;
+  background: var(--line);
+}
+
+.career__meet,
+.career__none {
+  position: relative;
+  padding: 2px 6px;
+  background: var(--paper);
+  font-size: 13px;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+
+.career__meet {
+  max-width: calc(100% - var(--at) + 8px);
+  margin-left: calc(var(--at) - 8px);
+  padding-left: 24px;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.career__meet::before,
+.career__key[data-kind="meet"] {
+  content: "";
+  width: 13px;
+  height: 13px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  background: var(--paper);
+}
+
+.career__meet::before {
+  position: absolute;
+  left: 1.5px;
+  top: 12px;
+  transform: translateY(-50%);
+}
+
+.career__meet[data-align="end"] {
+  align-self: flex-end;
+  max-width: calc(var(--at) + 8px);
+  margin-left: 0;
+  margin-right: calc(100% - var(--at) - 8px);
+  padding-left: 6px;
+  padding-right: 24px;
+  text-align: right;
+}
+
+.career__meet[data-align="end"]::before {
+  left: auto;
+  right: 1.5px;
+}
+
+.career__none {
+  margin-left: -12px;
+  padding-left: 0;
+  color: var(--mute);
+}
+
+.career__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  color: var(--mute);
+  font-size: 13px;
+}
+
+.career__legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.career__key {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.career__key[data-kind="talk"] {
+  border: 2px solid var(--accent);
+  background: var(--paper);
+}
+
+.career__key[data-kind="meet"] {
+  width: 11px;
+  height: 11px;
+}
+
+.person__open {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.person__open:hover,
+.person__note:hover,
+.person__who:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.person__notes,
+.person__people {
+  list-style: none;
+}
+
+.person__notes li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 0;
+  border-top: 1px solid var(--line);
+}
+
+.person__notes li:first-child,
+.person__people li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.person__note {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.person__growth {
+  color: var(--mute);
+  font-size: 13px;
+}
+
+.person__people li {
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+
+.person__who {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.person__why {
+  color: var(--mute);
+  font-size: 13px;
+}
+
+/* Glose proposes a Person note for a Source's author who has none yet. */
+.person-proposal {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.person-proposal__line {
+  color: var(--mute);
+  font-size: 13px;
+}

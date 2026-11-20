@@ -7,6 +7,9 @@ export interface NodeLook {
   readonly zoom: number;
 }
 
+export const namedAlways = (node: LayoutNode, selected: string | null): boolean =>
+  node.kind === "person" || node.id === selected;
+
 const RING = { resting: 1.75, lit: 2.5 } as const;
 
 export const drawNode = (
@@ -22,6 +25,7 @@ export const drawNode = (
     context.fillStyle = look.lit ? palette.accent : palette.mute;
     context.arc(x, y, node.radius, 0, Math.PI * 2);
     context.fill();
+    if (node.kind === "person") drawMedallion(context, node, look, palette.paper);
     return;
   }
   const ring = Math.min((look.lit ? RING.lit : RING.resting) / look.zoom, node.radius * 0.6);
@@ -30,6 +34,20 @@ export const drawNode = (
   context.lineWidth = ring;
   context.arc(x, y, node.radius - ring / 2, 0, Math.PI * 2);
   context.fill();
+  context.stroke();
+  if (node.kind === "person") drawMedallion(context, node, look, palette.rubric);
+};
+
+const drawMedallion = (
+  context: CanvasRenderingContext2D,
+  node: LayoutNode,
+  look: NodeLook,
+  color: string,
+): void => {
+  context.beginPath();
+  context.strokeStyle = color;
+  context.lineWidth = Math.min(1.5 / look.zoom, node.radius * 0.18);
+  context.arc(node.x ?? 0, node.y ?? 0, node.radius * 0.58, 0, Math.PI * 2);
   context.stroke();
 };
 

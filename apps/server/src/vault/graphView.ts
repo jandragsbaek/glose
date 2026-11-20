@@ -8,6 +8,7 @@ import {
   MARKDOWN_CODE,
   NOTE_FIELDS,
   parseWikilink,
+  type PersonName,
   growthOf,
   WIKILINK,
 } from "@glose/contracts";
@@ -56,6 +57,20 @@ const pageOf = (frontmatter: unknown): string | null => {
   return typeof value === "string" && value.trim() !== "" ? value.trim() : null;
 };
 
+const text = (frontmatter: unknown, key: string): string | null => {
+  const value = field(frontmatter, key);
+  if (typeof value === "number") return String(value);
+  return typeof value === "string" && value.trim() !== "" ? value.trim() : null;
+};
+
+const personOf = (frontmatter: unknown, name: string): PersonName => {
+  const family = text(frontmatter, "family");
+  if (family !== null) return { family, given: text(frontmatter, "given") };
+  const words = name.trim().split(/\s+/);
+  const last = words.pop() ?? name;
+  return { family: last, given: words.length === 0 ? null : words.join(" ") };
+};
+
 interface ParsedFile {
   readonly node: Omit<GraphNode, "sourceId">;
   readonly sourceName: string | null;
@@ -71,6 +86,26 @@ const parseFile = ({ name, markdown }: GraphFile): ParsedFile => {
     updated: dayOf(field(frontmatter, "updated")),
     tended: dayOf(field(frontmatter, "tended")),
   };
+  if (field(frontmatter, "glose") === "person") {
+    return {
+      node: {
+        id: name,
+        kind: "person",
+        title: name,
+        body,
+        aiText: hasAiText(frontmatter, body),
+        aiTitle: field(frontmatter, "ai-title") === true,
+        page: null,
+        growth: null,
+        created: dayOf(field(frontmatter, "created")),
+        ...dates,
+        properties: propertiesOf(frontmatter, NOTE_FIELDS),
+        person: personOf(frontmatter, name),
+      },
+      sourceName: null,
+      targets,
+    };
+  }
   const source = parseSourceFile(markdown);
   const properties = propertiesOf(frontmatter, Option.isSome(source) ? SOURCE_FIELDS : NOTE_FIELDS);
   return Option.match(source, {
