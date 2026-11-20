@@ -48,6 +48,12 @@ _Avoid_: section (that is a **Section** of the app), chapter, block
 **Rich note**:
 A **Note** about one subject, such as an author or a work, that may be long and hold images.
 
+**Person**:
+A **Rich note** about one person (`glose: person`). It has no single **Source**: the person's
+**Sources** are the ones whose author has their name. Its page sets them out by year, with the
+**Notes** from each and the other **People** it links with. Plural: People.
+_Avoid_: author (as the term), contact, profile, speaker (as the term)
+
 **Link**:
 A wikilink (`[[note name]]`) from one **Note** to another. **Links**, not folders, give the
 **Graph** its structure.

@@ -15,7 +15,9 @@ import { type GraphIndex, holdsAiText } from "../graph/graphIndex.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { cardsAtom } from "../state/cards.ts";
 import { NodeLink, NodeList } from "./GraphLists.tsx";
+import { authorOf, personOfSource } from "../domain/person.ts";
 import { NoteGrowth } from "./NoteGrowth.tsx";
+import { PersonProposal } from "./PersonProposal.tsx";
 import { AiText, MissingLink, NoteText, type WikilinkPart } from "./NoteText.tsx";
 import { Properties } from "./Properties.tsx";
 import type { Linking } from "./RewriteNote.tsx";
@@ -40,14 +42,17 @@ export function NodePanel({
 }) {
   const t = useT();
   const isSource = node.kind === "source";
+  const isPerson = node.kind === "person";
   const source = index.sources.get(isSource ? node.id : (node.sourceId ?? ""));
+  const people = Array.from(index.byId.values()).filter((other) => other.kind === "person");
+  const author = isSource && source !== undefined ? personOfSource(source, people) : null;
   const linked = index.linked.get(node.id) ?? [];
   const fromSource = linked.filter((other) => other.sourceId === node.id);
   const others = isSource ? linked.filter((other) => other.sourceId !== node.id) : linked;
   return (
     <Panel
-      title={isSource ? t.graph.source : t.graph.note}
-      initial={isSource ? "accent" : "rubric"}
+      title={isSource ? t.graph.source : isPerson ? t.people.kind : t.graph.note}
+      initial={isSource || isPerson ? "accent" : "rubric"}
       meta={
         <button
           type="button"
@@ -72,10 +77,21 @@ export function NodePanel({
           source === undefined ? null : (
             <p className="graph__source">
               <CallNumber source={source} />
-              <span>{[source.givenName, source.familyName].filter(Boolean).join(" ")}</span>
+              {author === null ? (
+                <span>{[source.givenName, source.familyName].filter(Boolean).join(" ")}</span>
+              ) : (
+                <Link
+                  to="/people/$personName"
+                  params={{ personName: author.id }}
+                  search={{}}
+                  className="graph__link"
+                >
+                  {author.title}
+                </Link>
+              )}
             </p>
           )
-        ) : source === undefined ? (
+        ) : isPerson ? null : source === undefined ? (
           <p className="graph__source graph__source--none">{t.graph.noSource}</p>
         ) : (
           <p className="graph__source">
@@ -98,11 +114,39 @@ export function NodePanel({
         )}
         {rewriting ? null : <Properties node={node} index={index} onShow={onShow} />}
         {rewriting ? null : isSource ? (
-          <p className="graph__actions">
-            <Link to="/sources/$sourceId" params={{ sourceId: node.id }} className="button">
-              {t.graph.openSource}
-            </Link>
-          </p>
+          <>
+            <p className="graph__actions">
+              <Link to="/sources/$sourceId" params={{ sourceId: node.id }} className="button">
+                {t.graph.openSource}
+              </Link>
+            </p>
+            {source === undefined || author !== null ? null : (
+              <PersonProposal author={authorOf(source)} />
+            )}
+          </>
+        ) : isPerson ? (
+          <>
+            <p className="graph__actions">
+              <Link
+                to="/people/$personName"
+                params={{ personName: node.id }}
+                search={{}}
+                className="button"
+              >
+                {t.people.openPerson(node.title)}
+              </Link>
+            </p>
+            <p className="graph__actions">
+              <button
+                ref={opener}
+                type="button"
+                className={holdsAiText(node) ? "button button--primary" : "button"}
+                onClick={onRewrite}
+              >
+                {holdsAiText(node) ? t.graph.rewrite : t.graph.edit}
+              </button>
+            </p>
+          </>
         ) : (
           <>
             <NoteCards

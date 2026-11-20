@@ -266,7 +266,7 @@ export const make = Effect.fn("Sessions.makePageDecisions")(function* ({
       const view = yield* graph.read;
       const names = new Map(
         view.nodes
-          .filter((node) => node.kind === "note")
+          .filter((node) => node.kind !== "source")
           .map((node) => [linkKey(node.id), node.id]),
       );
       const related = [...new Set(input.links.flatMap((link) => names.get(linkKey(link)) ?? []))];

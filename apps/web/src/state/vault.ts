@@ -36,6 +36,7 @@ export const saveNoteAtom = GloseClient.mutation(RPC_METHODS.notesSave);
 export const growNoteAtom = GloseClient.mutation(RPC_METHODS.notesGrow);
 export const tendNoteAtom = GloseClient.mutation(RPC_METHODS.notesTend);
 export const setPropertyAtom = GloseClient.mutation(RPC_METHODS.graphSetProperty);
+export const createPersonAtom = GloseClient.mutation(RPC_METHODS.peopleCreate);
 export const advanceReadingAtom = GloseClient.mutation(RPC_METHODS.sourcesAdvance);
 
 export const writeWatchNotesAtom = GloseClient.runtime.fn<typeof SaveFreeText.Type>()(

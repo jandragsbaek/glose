@@ -91,7 +91,7 @@ export const linkTools = ({ graph, proposeLinks }: LinkContext): AgentTool[] => 
       if (Option.isNone(view)) return { error: "The Graph could not be read." };
       const byKey = new Map(
         view.value.nodes
-          .filter((node) => node.kind === "note")
+          .filter((node) => node.kind !== "source")
           .map((node) => [linkKey(node.id), node.id]),
       );
       const links = asked.slice(0, MAX_LINKS).flatMap((link) => {

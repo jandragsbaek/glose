@@ -3,8 +3,14 @@ import * as Schema from "effect/Schema";
 import { Growth } from "./growth.ts";
 import { NoteProperty } from "./properties.ts";
 
-export const GraphNodeKind = Schema.Literals(["source", "note"]);
+export const GraphNodeKind = Schema.Literals(["source", "note", "person"]);
 export type GraphNodeKind = typeof GraphNodeKind.Type;
+
+export const PersonName = Schema.Struct({
+  family: Schema.String,
+  given: Schema.NullOr(Schema.String),
+});
+export type PersonName = typeof PersonName.Type;
 
 export const GraphNode = Schema.Struct({
   id: Schema.String,
@@ -20,6 +26,7 @@ export const GraphNode = Schema.Struct({
   updated: Schema.NullOr(Schema.String),
   tended: Schema.NullOr(Schema.String),
   properties: Schema.Array(NoteProperty),
+  person: Schema.optionalKey(PersonName),
 });
 export type GraphNode = typeof GraphNode.Type;
 
@@ -90,3 +97,12 @@ export class NoteNotFound extends Schema.TaggedError<NoteNotFound>()("NoteNotFou
 export class NoteNameTaken extends Schema.TaggedError<NoteNameTaken>()("NoteNameTaken", {
   fileName: Schema.String,
 }) {}
+
+export const CreatePerson = PersonName;
+export type CreatePerson = typeof CreatePerson.Type;
+
+export const personFileTitle = ({ family, given }: PersonName): string =>
+  [given ?? "", family]
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(" ");

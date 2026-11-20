@@ -11,11 +11,12 @@ export const graphMessages: Pick<Messages, "graph" | "rewrite" | "newNote" | "re
     title: "Graf",
     empty:
       "Grafen rummer dine noter og links mellem dem. Udtræk laver noter fra en kilde, eller start selv en med Ny note.",
-    counts: (notes: number, sources: number, links: number) =>
+    counts: (notes: number, sources: number, links: number, people = 0) =>
       [
         count(notes, "note", "noter"),
         count(sources, "kilde", "kilder"),
         count(links, "link", "links"),
+        ...(people === 0 ? [] : [count(people, "person", "personer")]),
       ].join(" · "),
     canvasLabel: (notes: number, links: number, ai = 0) =>
       `Grafen: ${count(notes, "punkt", "punkter")} forbundet af ${count(links, "link", "links")}.${ai === 0 ? "" : ` ${count(ai, "note", "noter")} har AI-tekst.`} Panelet ved siden af viser de samme kilder og noter.`,

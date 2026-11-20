@@ -76,6 +76,7 @@ export function CiteSlip({
   const words = query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
   const matches: ReadonlyArray<Match> = nodes
     .flatMap((node): ReadonlyArray<Match> => {
+      if (node.kind === "person") return [];
       const source = sourceOf(node);
       const about =
         source === null ? "" : `${source.givenName ?? ""} ${source.familyName} ${source.title}`;

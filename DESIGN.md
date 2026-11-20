@@ -442,6 +442,9 @@ three small pigments (gold, rubric red, verdigris) each with one job.
   while a file is dragged over it. On the Course Shelf it is every added day's spine (Raised Lapis
   once the day is read), the 2px outline and the plus of the next day to add, and the marks of the
   pieces a day has.
+  On a Person's Career Line it is the dot of each work (hollow for a talk), the chosen work's
+  title, and the 13px ring where a linked Person's Links meet a work; on the Graph a Person is a
+  Lapis medallion, a Paper ring inside the disc.
 - **Raised Lapis** (lapis-raised): the current rail item, and the section shown on the Settings
   window's spine; primary button hover. Hover on a rail item or a spine section is half a step,
   Lapis and Raised Lapis mixed half and half, so "here" stays the stronger mark.
@@ -522,6 +525,8 @@ icon of a Check that warns on a Recall slip, always beside Ink words ("Could be 
 the Writing Desk's Format Bar a 2px Gilt underline marks the style the selection already has. Beside
 the desk, the open stop of the trail wears it: a ring around its node, a 2px underline under its stop
 tab on the Graph, and a 3px underline under its number in the stop strip.
+On a Person's Career Line the chosen work wears it: a 3px Gilt underline under its Call
+Number and a Gilt ring around its dot.
 In the Reader, the current section in Contents wears a 3px Gilt edge (a 2px underline when Contents
 is a strip), and the open Passage and its ¶ number in the apparatus a 2px Gilt underline. On Add
 Source the checked kind wears a 3px Gilt underline, as the current step does. A marked Passage's
@@ -1505,6 +1510,38 @@ of day spines, and the chosen day's leaf beside it. Mode: Operate.
   the video file goes under The video.
 - **Unplaced lessons:** lessons with no week and day, or a second lesson on one day, list under a
   Hairline as Lapis links ("Lessons without a week and day").
+
+### Career Line (signature: a Person's page)
+
+The page of one Person (`/people/<Person>`, the chosen work as `?work=<Source>`). Mode: Operate.
+The rail lights Graph.
+
+- **Layout:** the Page head (the name; then a Lapis 600 "Graph" link back, "Person", the life
+  years and a Mute count "2 Sources · 10 Notes · 1 Person"; "Edit in the Graph" and the primary
+  "Add a Source"). Under it the working columns: main, and a 300–380px side column.
+- **Works and talks:** a Panel (Accent Initial, Meta "by year of first publication"). Each work is a
+  button over its year: Call Number with its Reading marks beside it, title (600 14px) and a Mute
+  13px line ("Book · 9 Notes"), centred, or aligned to the end near either end of the line. Works too close for one row
+  stack upward in rows 78px apart. The rule is a Strong Hairline with a 11px dot per work: Lapis
+  for a book or text, hollow (2px Accent on Paper) for a talk; the years are Courier Prime 12px
+  Mute under 5px ticks. The chosen work has `aria-pressed`, a Gilt underline under its Call
+  Number, its title in Accent, and a Gilt ring around its dot (Paper 2px, Gilt 2px). Hover is
+  Lapis Tint.
+- **Lanes:** one per linked Person under the rule: their name (600 13px) and call numbers (Courier
+  Prime 12px Mute), over a Hairline track. A 13px Accent ring sits where their Links meet a work,
+  with the words in Accent 600 13px on Paper ("Flow · 17 Links"); with none, Mute "no shared Links
+  yet". A legend under a Hairline names the marks shown.
+- **From <work>:** a Panel (rubric Initial, Meta "Open the Source" in Accent 600) of the work's
+  Notes: title (with the AI ring when it holds AI text), Growth in Mute 13px, and the Call Number
+  with the Location when the Note has one, divided by Hairlines.
+- **Side column:** In your words (the body as Note text, AI text marked), People (each name in
+  Accent 600 and the sentence that links them in Mute 13px), and the Properties table straight in
+  the column.
+- **On the Graph:** a Person is a Lapis medallion (a Paper ring at 58% of the radius), between a
+  Note and a Source in size, its name always shown. With AI text it is the hollow Rubric ring with
+  a Rubric medallion ring inside, so it still reads as a Person. A Source whose author has no Person shows,
+  under a Hairline, a Mute 13px line and "Make a Person note for <name>" (secondary button with a
+  person icon).
 
 ### Day Leaf
 

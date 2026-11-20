@@ -148,6 +148,46 @@ describe("buildGraphView", () => {
     assert.isFalse(aiText(["```", "> [!ai]", "```", "Write `> [!ai]` to mark it."].join("\n")));
   });
 
+  it("reads a Person, with the name it is matched by, and no Source or Growth", () => {
+    const [person, named] = buildGraphView([
+      {
+        name: "Cal Newport",
+        markdown: [
+          "---",
+          "glose: person",
+          "family: Newport",
+          "given: Cal",
+          "born: 1982",
+          "---",
+          "",
+          "His deep work leans on [[Flow]].",
+        ].join("\n"),
+      },
+      { name: "Sophie Leroy", markdown: ["---", "glose: person", "---", ""].join("\n") },
+    ]).nodes;
+
+    assert.deepStrictEqual(person, {
+      id: "Cal Newport",
+      kind: "person",
+      title: "Cal Newport",
+      sourceId: null,
+      body: "His deep work leans on [[Flow]].",
+      aiText: false,
+      aiTitle: false,
+      page: null,
+      growth: null,
+      ...noDates,
+      properties: [
+        { key: "glose", kind: "text", value: "person", locked: true },
+        { key: "family", kind: "text", value: "Newport", locked: false },
+        { key: "given", kind: "text", value: "Cal", locked: false },
+        { key: "born", kind: "number", value: 1982, locked: false },
+      ],
+      person: { family: "Newport", given: "Cal" },
+    });
+    assert.deepStrictEqual(named?.person, { family: "Leroy", given: "Sophie" });
+  });
+
   it("finds a file for every wikilink in the demo Vault", () => {
     const folder = NodePath.join(import.meta.dirname, "../../../../demo/Vault");
     const files = NodeFS.readdirSync(folder)
@@ -162,8 +202,9 @@ describe("buildGraphView", () => {
     );
     const view = buildGraphView(files);
 
-    assert.strictEqual(view.nodes.filter((node) => node.kind === "source").length, 12);
-    assert.isTrue(view.nodes.every((node) => node.kind === "source" || node.sourceId !== null));
+    assert.strictEqual(view.nodes.filter((node) => node.kind === "source").length, 13);
+    assert.strictEqual(view.nodes.filter((node) => node.kind === "person").length, 2);
+    assert.isTrue(view.nodes.every((node) => node.kind !== "note" || node.sourceId !== null));
     assert.strictEqual(view.links.length, written);
   });
 });

@@ -137,7 +137,7 @@ export const make = Effect.fn("Sessions.makeSessionTurn")(function* ({
   ) {
     const { entries } = yield* SubscriptionRef.get(session.view);
     const view = yield* graph.read.pipe(Effect.orElseSucceed(() => null));
-    if (view === null || !view.nodes.some((node) => node.kind === "note")) return;
+    if (view === null || !view.nodes.some((node) => node.kind !== "source")) return;
     yield* runTurn({
       token,
       model,

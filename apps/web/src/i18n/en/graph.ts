@@ -12,11 +12,12 @@ export const graphMessages = {
     title: "Graph",
     empty:
       "The Graph holds your Notes and the Links between them. Extraction makes Notes from a Source, or start one yourself with New Note.",
-    counts: (notes: number, sources: number, links: number) =>
+    counts: (notes: number, sources: number, links: number, people = 0) =>
       [
         count(notes, "Note", "Notes"),
         count(sources, "Source", "Sources"),
         count(links, "Link", "Links"),
+        ...(people === 0 ? [] : [count(people, "Person", "People")]),
       ].join(" · "),
     canvasLabel: (notes: number, links: number, ai = 0) =>
       `The Graph: ${count(notes, "node", "nodes")} joined by ${count(links, "Link", "Links")}.${ai === 0 ? "" : ` ${count(ai, "Note holds", "Notes hold")} AI text.`} The panel beside it lists the same Sources and Notes.`,
