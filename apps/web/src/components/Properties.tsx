@@ -20,6 +20,8 @@ import { KEYS, setPropertyAtom } from "../state/vault.ts";
 import { AddProperty } from "./AddProperty.tsx";
 import { NodeLink } from "./GraphLists.tsx";
 
+let saves: Promise<unknown> = Promise.resolve();
+
 export function Properties({
   node,
   index,
@@ -36,11 +38,9 @@ export function Properties({
   const [failed, setFailed] = useState<string | null>(null);
   const vault = vaultKeys(index);
 
-  const queue = useRef<Promise<unknown>>(Promise.resolve());
-
   const save: Save = (key, value) => {
     setFailed(null);
-    const saved = queue.current.then(async () => {
+    const saved = saves.then(async () => {
       const exit = await set({
         payload: { id: node.id, key, value },
         reactivityKeys: KEYS.sources,
@@ -48,7 +48,7 @@ export function Properties({
       if (Exit.isFailure(exit)) setFailed(key);
       return Exit.isSuccess(exit);
     });
-    queue.current = saved;
+    saves = saved;
     return saved;
   };
 
@@ -184,6 +184,9 @@ function PropertyRow({
   );
 }
 
+const sameItems = (a: ReadonlyArray<string>, b: ReadonlyArray<string>): boolean =>
+  a.length === b.length && a.every((item, index) => item === b[index]);
+
 const asText = (value: PropertyValue): string =>
   Array.isArray(value) ? value.join(", ") : String(value);
 
@@ -304,27 +307,34 @@ function ListValue({
   const [draft, setDraft] = useState("");
   const [list, setList] = useState(items);
   const [known, setKnown] = useState<ReadonlyArray<string> | null>(items);
-  const [saving, setSaving] = useState(0);
+  const [awaited, setAwaited] = useState<ReadonlyArray<string> | null>(null);
   const input = useRef<HTMLInputElement>(null);
   const listId = `${id}-items`;
-  if (known !== items && saving === 0) {
-    setKnown(items);
-    setList(items);
+  if (known !== items) {
+    if (awaited === null) {
+      setKnown(items);
+      setList(items);
+    } else if (sameItems(items, awaited)) {
+      setKnown(items);
+      setAwaited(null);
+    }
   }
 
-  const commit = (next: ReadonlyArray<string>) => {
+  const commit = (next: ReadonlyArray<string>, typed = "") => {
     setList(next);
-    setSaving((count) => count + 1);
+    setAwaited(next);
     void onSave(next).then((saved) => {
-      if (!saved) setKnown(null);
-      setSaving((count) => count - 1);
+      if (saved) return;
+      setAwaited(null);
+      setKnown(null);
+      setDraft((draft) => (draft === "" ? typed : draft));
     });
   };
 
   const add = () => {
     const added = splitItems(draft).filter((item) => !list.includes(item));
     setDraft("");
-    if (added.length > 0) commit([...list, ...added]);
+    if (added.length > 0) commit([...list, ...added], draft);
   };
 
   const remove = (item: string) => {
