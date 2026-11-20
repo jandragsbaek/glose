@@ -63,6 +63,7 @@ export const layer = GloseRpcGroup.toLayer(
       [RPC_METHODS.notesSave]: (input) => notes.save(input),
       [RPC_METHODS.notesGrow]: ({ id, growth }) => notes.grow(id, growth),
       [RPC_METHODS.notesTend]: ({ id }) => notes.tend(id),
+      [RPC_METHODS.graphSetProperty]: (input) => notes.setProperty(input),
       [RPC_METHODS.notesCreate]: (input) => sessions.createNote(input),
       [RPC_METHODS.researchStart]: (input) =>
         sessions.startResearch(input).pipe(Effect.map(publicSession)),

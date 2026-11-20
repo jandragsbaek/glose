@@ -236,3 +236,79 @@ it.layer(NodeServices.layer)("Notes.grow and Notes.tend", (it) => {
     ),
   );
 });
+
+it.layer(NodeServices.layer)("Notes.setProperty", (it) => {
+  it.effect("sets, changes and removes the user's own fields, and leaves the text as written", () =>
+    withVault(
+      { [`${AI_TITLE}.md`]: AI_NOTE.replace("---\n\n", "updated: 2026-11-01\n---\n\n") },
+      ({ folder, notes }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          yield* notes.setProperty({ id: AI_TITLE, key: "tags", value: ["values", "tools"] });
+          yield* notes.setProperty({ id: AI_TITLE, key: "reread", value: true });
+          yield* notes.setProperty({ id: AI_TITLE, key: "due", value: "2026-12-01" });
+          yield* notes.setProperty({ id: AI_TITLE, key: "course", value: "42" });
+          yield* notes.setProperty({ id: AI_TITLE, key: "reread", value: null });
+
+          const markdown = yield* fs.readFileString(path.join(folder, `${AI_TITLE}.md`));
+          assert.include(markdown, "updated: 2026-11-01\n");
+          assert.notInclude(markdown, "reread");
+          assert.isTrue(
+            markdown.endsWith(
+              "---\n\n> [!ai]\n> A tool deserves a place when it serves a value.\n",
+            ),
+          );
+          const properties = (yield* readGraph(folder)).nodes[0]?.properties ?? [];
+          assert.deepStrictEqual(
+            properties
+              .filter((property) => !property.locked)
+              .map(({ key, kind, value }) => [key, kind, value]),
+            [
+              ["page", "text", "28"],
+              ["tags", "list", ["values", "tools"]],
+              ["updated", "date", "2026-11-01"],
+              ["due", "date", "2026-12-01"],
+              ["course", "text", "42"],
+            ],
+          );
+        }),
+    ),
+  );
+
+  it.effect("refuses the fields Glose keeps and fields it cannot show, on Notes and Sources", () =>
+    withVault(
+      {
+        [`${AI_TITLE}.md`]: AI_NOTE.replace("tags: [values]", "meta:\n  by: me"),
+        "Arendt 1958 The Human Condition.md": ARENDT,
+      },
+      ({ folder, notes }) =>
+        Effect.gen(function* () {
+          const refused = (id: string, key: string) =>
+            notes.setProperty({ id, key, value: "x" }).pipe(
+              Effect.flip,
+              Effect.map((error) => error._tag),
+            );
+          assert.strictEqual(yield* refused(AI_TITLE, "source"), "PropertyRefused");
+          assert.strictEqual(yield* refused(AI_TITLE, "meta"), "PropertyRefused");
+          assert.strictEqual(
+            yield* refused("Arendt 1958 The Human Condition", "title"),
+            "PropertyRefused",
+          );
+
+          yield* notes.setProperty({
+            id: "Arendt 1958 The Human Condition",
+            key: "tags",
+            value: ["political"],
+          });
+          const source = (yield* readGraph(folder)).nodes.find((node) => node.kind === "source");
+          assert.deepStrictEqual(source?.properties.at(-1), {
+            key: "tags",
+            kind: "list",
+            value: ["political"],
+            locked: false,
+          });
+        }),
+    ),
+  );
+});

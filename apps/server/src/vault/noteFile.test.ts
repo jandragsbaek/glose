@@ -1,7 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 
 import { buildGraphView } from "./graphView.ts";
-import { renderNoteFile } from "./noteFile.ts";
+import { renderNoteFile, setNoteFields } from "./noteFile.ts";
 
 const SOURCE = "Brown 2014 Make It Stick";
 
@@ -128,5 +128,14 @@ describe("renderNoteFile", () => {
 
     assert.include(markdown, "\nSe også: [[Hukommelse]]\n");
     assert.include(markdown, "ai: true\nai-title: true\n");
+  });
+});
+
+describe("setNoteFields", () => {
+  it("fills an empty frontmatter block and leaves the text as written", () => {
+    assert.strictEqual(
+      setNoteFields("---\n---\nA thought.\n\n---\n\nAfter a rule.\n", { tags: ["idea"] }),
+      "---\ntags:\n  - idea\n---\nA thought.\n\n---\n\nAfter a rule.\n",
+    );
   });
 });

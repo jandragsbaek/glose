@@ -37,20 +37,9 @@ export function NoteGrowth({
     setBusy(false);
     setFailed(Exit.isFailure(exit));
   };
-  const day = (value: string | null, none: string) => (value === null ? none : g.day(value));
 
   return (
     <div className="graph__growth">
-      <dl>
-        <dt>{g.label}</dt>
-        <dd>{g.names[growth]}</dd>
-        <dt>{g.created}</dt>
-        <dd>{day(node.created, g.unknown)}</dd>
-        <dt>{g.updated}</dt>
-        <dd>{day(node.updated, g.unknown)}</dd>
-        <dt>{g.tended}</dt>
-        <dd>{day(node.tended, g.never)}</dd>
-      </dl>
       {next === null ? (
         <Needs growth={growth} evidence={evidence} />
       ) : (
@@ -116,25 +105,4 @@ function Needs({
     return <p className="graph__help">{needs.links(SAPLING_LINKS, evidence.linkedNotes)}</p>;
   }
   return <p className="graph__help">{needs.tend}</p>;
-}
-
-export function Properties({ node }: { readonly node: GraphNode }) {
-  const t = useT();
-  return (
-    <details className="graph__properties">
-      <summary>{t.graph.properties}</summary>
-      {node.properties.length === 0 ? (
-        <p className="empty">{t.graph.noProperties}</p>
-      ) : (
-        <dl>
-          {node.properties.map(({ key, value }) => (
-            <div key={key}>
-              <dt>{key}</dt>
-              <dd>{value}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
-    </details>
-  );
 }

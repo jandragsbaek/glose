@@ -2686,6 +2686,358 @@ a.written__title:hover {
   margin: 0 0 18px;
 }
 
+/*
+ * Properties: every frontmatter field of a Graph file, as Obsidian shows them. A Hairline box of
+ * rows, a type icon and the name in Mute, the value as a field that reads as text until it is
+ * hovered or focused. Fields Glose keeps wear a lock and read as text.
+ */
+.properties {
+  margin: 0 0 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-variant-numeric: tabular-nums;
+}
+
+.properties__summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+}
+
+.properties__summary::-webkit-details-marker {
+  display: none;
+}
+
+.properties__summary:hover {
+  color: var(--accent);
+}
+
+.properties__chevron {
+  width: 16px;
+  height: 16px;
+  color: var(--mute);
+  stroke-width: 1.8;
+  transition: transform 160ms var(--ease-out);
+}
+
+.properties:not([open]) .properties__chevron {
+  transform: rotate(-90deg);
+}
+
+.properties[open] > .properties__summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.properties__empty {
+  padding: 8px 10px;
+  color: var(--mute);
+  font-size: 13px;
+}
+
+.properties__list {
+  margin: 0;
+}
+
+.properties__row {
+  display: grid;
+  grid-template-columns: minmax(88px, 36%) minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 3px 6px 3px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.properties__key {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--mute);
+  font-size: 13px;
+}
+
+.properties__icon {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  color: var(--mute);
+  stroke-width: 1.8;
+}
+
+.properties__name {
+  overflow-wrap: anywhere;
+}
+
+.properties__value {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
+}
+
+.properties__text {
+  padding: 3px 0;
+  overflow-wrap: anywhere;
+}
+
+.properties__text--other {
+  color: var(--mute);
+  font-size: 13px;
+}
+
+.properties__link {
+  color: var(--accent);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.properties__link:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* A field that reads as text: no border at rest, a Lapis Tint on hover, the focus halo when used. */
+.properties__input {
+  flex: 1;
+  min-width: 0;
+  margin-left: -7px;
+  padding: 3px 6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink);
+  font: 400 14px/1.5 var(--font-ui);
+  font-variant-numeric: tabular-nums;
+  transition:
+    background-color 160ms var(--ease-out),
+    border-color 160ms var(--ease-out),
+    box-shadow 160ms var(--ease-out);
+}
+
+textarea.properties__input {
+  field-sizing: content;
+  min-height: 0;
+  resize: none;
+  overflow-wrap: anywhere;
+}
+
+.properties__input::-webkit-calendar-picker-indicator {
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+.properties__input:hover {
+  background: var(--tint);
+}
+
+.properties__input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--paper);
+  box-shadow: 0 0 0 3px var(--halo);
+}
+
+.properties__input::placeholder {
+  color: var(--mute);
+}
+
+.properties__items {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.properties__token {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  padding: 0 2px 0 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  font-size: 13px;
+  line-height: 22px;
+  overflow-wrap: anywhere;
+}
+
+.properties__token-remove,
+.properties__remove {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--mute);
+  cursor: pointer;
+  transition:
+    color 160ms var(--ease-out),
+    background-color 160ms var(--ease-out),
+    opacity 160ms var(--ease-out);
+}
+
+.properties__token-remove {
+  width: 18px;
+  height: 18px;
+}
+
+.properties__token-remove svg {
+  width: 12px;
+  height: 12px;
+}
+
+.properties__remove {
+  width: 26px;
+  height: 26px;
+  margin-left: auto;
+  opacity: 0;
+}
+
+.properties__remove svg {
+  width: 14px;
+  height: 14px;
+}
+
+.properties__row:hover .properties__remove,
+.properties__remove:focus-visible {
+  opacity: 1;
+}
+
+.properties__token-remove:hover,
+.properties__remove:hover {
+  background: var(--tint);
+  color: var(--ink);
+}
+
+.properties__input--item {
+  min-width: 72px;
+  margin-left: 0;
+}
+
+.properties__input--item::-webkit-calendar-picker-indicator,
+.properties__new-input[list]::-webkit-calendar-picker-indicator {
+  display: none !important;
+}
+
+.properties__add:focus-visible,
+.properties__summary:focus-visible {
+  outline-offset: -2px;
+}
+
+.properties__check {
+  width: 16px;
+  height: 16px;
+  margin: 6px;
+  accent-color: var(--accent);
+}
+
+.properties__select.select .input {
+  min-height: 0;
+  margin-left: -1px;
+  padding: 2px 28px 2px 8px;
+  font-size: 13px;
+}
+
+.properties__select .select__icon {
+  right: 8px;
+  width: 14px;
+  height: 14px;
+}
+
+.properties__add {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 0;
+  background: none;
+  color: var(--mute);
+  font: 600 13px var(--font-ui);
+  text-align: left;
+  cursor: pointer;
+  transition: color 160ms var(--ease-out);
+}
+
+.properties__add:hover {
+  color: var(--ink);
+}
+
+.properties__list:empty + .properties__add,
+.properties__empty + .properties__add {
+  border-top: 1px solid var(--line);
+}
+
+.properties__new {
+  display: grid;
+  gap: 10px;
+  padding: 12px 10px;
+}
+
+.properties__new-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.properties__field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.properties__field--check {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.properties__label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.properties__new-input {
+  padding: 6px 10px;
+  font-size: 14px;
+}
+
+.properties__new .select .input {
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+
+.properties__new-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.properties__error {
+  margin: 0;
+  padding: 8px 10px;
+}
+
+.properties__new .field__error {
+  margin: 0;
+}
+
 .graph__list > li {
   display: flex;
   align-items: baseline;

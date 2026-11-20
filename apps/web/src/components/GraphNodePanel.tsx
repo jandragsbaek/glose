@@ -15,8 +15,9 @@ import { type GraphIndex, holdsAiText } from "../graph/graphIndex.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { cardsAtom } from "../state/cards.ts";
 import { NodeLink, NodeList } from "./GraphLists.tsx";
-import { NoteGrowth, Properties } from "./NoteGrowth.tsx";
+import { NoteGrowth } from "./NoteGrowth.tsx";
 import { AiText, MissingLink, NoteText, type WikilinkPart } from "./NoteText.tsx";
+import { Properties } from "./Properties.tsx";
 import type { Linking } from "./RewriteNote.tsx";
 import { CallNumber, Panel } from "./ui.tsx";
 
@@ -95,6 +96,7 @@ export function NodePanel({
             ) : null}
           </p>
         )}
+        {rewriting ? null : <Properties node={node} index={index} onShow={onShow} />}
         {rewriting ? null : isSource ? (
           <p className="graph__actions">
             <Link to="/sources/$sourceId" params={{ sourceId: node.id }} className="button">
@@ -119,7 +121,6 @@ export function NodePanel({
             renderLink={wikilinks(index, onShow)}
           />
         )}
-        {rewriting ? null : <Properties node={node} />}
       </div>
       {isSource && fromSource.length > 0 ? (
         <div className="panel__body">

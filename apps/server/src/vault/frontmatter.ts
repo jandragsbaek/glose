@@ -1,4 +1,10 @@
-import { localDay } from "@glose/contracts";
+import {
+  localDay,
+  type NoteProperty,
+  type PropertyKind,
+  type PropertyValue,
+  propertyKind,
+} from "@glose/contracts";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import type * as FileSystem from "effect/FileSystem";
@@ -63,14 +69,23 @@ export const writeKeepingFields = Effect.fn("writeKeepingFields")(function* (
 const asText = (value: unknown): string => {
   if (value === null || value === undefined) return "";
   if (value instanceof Date) return Number.isNaN(value.getTime()) ? "" : value.toISOString();
-  if (Array.isArray(value)) return value.map(asText).join(", ");
   if (typeof value === "object") return JSON.stringify(value);
   return String(value);
 };
 
+const asValue = (value: unknown, kind: PropertyKind): PropertyValue => {
+  if (kind === "list") return value as ReadonlyArray<string>;
+  if (kind === "number" || kind === "checkbox") return value as number | boolean;
+  return asText(value);
+};
+
 export const propertiesOf = (
   frontmatter: unknown,
-): ReadonlyArray<{ readonly key: string; readonly value: string }> =>
+  locked: ReadonlySet<string>,
+): ReadonlyArray<NoteProperty> =>
   typeof frontmatter === "object" && frontmatter !== null && !Array.isArray(frontmatter)
-    ? Object.entries(frontmatter).map(([key, value]) => ({ key, value: asText(value) }))
+    ? Object.entries(frontmatter).map(([key, value]) => {
+        const kind = propertyKind(value);
+        return { key, kind, value: asValue(value, kind), locked: locked.has(key) };
+      })
     : [];

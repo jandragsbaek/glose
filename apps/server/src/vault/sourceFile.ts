@@ -12,7 +12,7 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as Yaml from "yaml";
 
-export const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)([\s\S]*)$/;
+export const FRONTMATTER = /^---\r?\n(?:([\s\S]*?)\r?\n)??---[ \t]*(?:\r?\n|$)([\s\S]*)$/;
 
 const MaybeText = Schema.optionalKey(Schema.NullOr(Schema.Union([Schema.String, Schema.Number])));
 const MaybeYear = Schema.optionalKey(Schema.NullOr(Schema.Int));
