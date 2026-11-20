@@ -24,8 +24,8 @@ describe("parseNoteText", () => {
     const [block] = parseNoteText("The finding matters[^q1]: it holds. `[^q2]` and \\[^q3].");
     const parts = block?.kind === "paragraph" ? block.inlines : [];
     assert.deepStrictEqual(
-      parts.map((part) => (part.kind === "text" ? part.text : part.kind)),
-      ["The finding matters", "note", ": it holds. `[^q2]` and \\[^q3]."],
+      parts.map((part) => (part.kind === "text" || part.kind === "code" ? part.text : part.kind)),
+      ["The finding matters", "note", ": it holds. ", "[^q2]", " and \\[^q3]."],
     );
     const [item, heading, code] = parseNoteText(
       "- [^q1]: a list item\n\n## [^q1]: A heading\n\nSee ``[^q1]`` here.",
@@ -40,7 +40,7 @@ describe("parseNoteText", () => {
     assert.include(JSON.stringify(texts(heading)), ": A heading");
     assert.deepStrictEqual(
       texts(code).map((part) => part.kind),
-      ["text"],
+      ["text", "code", "text"],
     );
   });
 
@@ -105,10 +105,13 @@ describe("parseNoteText", () => {
       [
         {
           kind: "paragraph",
-          inlines: [{ kind: "text", text: "Write `[[Natality]]` for a Link." }],
+          inlines: [
+            { kind: "text", text: "Write " },
+            { kind: "code", text: "[[Natality]]" },
+            { kind: "text", text: " for a Link." },
+          ],
         },
-        { kind: "paragraph", inlines: [{ kind: "text", text: "```\n[[Natality]]" }] },
-        { kind: "paragraph", inlines: [{ kind: "text", text: "[[Natality]]\n```" }] },
+        { kind: "code", lang: "", text: "[[Natality]]\n\n[[Natality]]" },
         {
           kind: "paragraph",
           inlines: [
@@ -240,10 +243,8 @@ describe("parseNoteText", () => {
       withoutOffsets(parseNoteText(lines.join("\n"))),
     );
     assert.deepStrictEqual(withoutOffsets(parseNoteText(lines.join("\n"))), [
-      {
-        kind: "paragraph",
-        inlines: [{ kind: "text", text: "Example: ``` > [!ai] # not a heading ```" }],
-      },
+      { kind: "paragraph", inlines: [{ kind: "text", text: "Example:" }] },
+      { kind: "code", lang: "", text: "> [!ai]\n# not a heading" },
       {
         kind: "ai",
         scope: "paragraphs",
@@ -251,5 +252,79 @@ describe("parseNoteText", () => {
         blocks: [{ kind: "paragraph", inlines: [{ kind: "text", text: "Real." }] }],
       },
     ]);
+  });
+
+  it("reads fenced code with its language, as written, with blank lines and indent kept", () => {
+    const markdown = [
+      "Memoise it:",
+      "```Python title=fib.py",
+      "@cache",
+      "def fib(n):",
+      "",
+      "    return n  # [[Not a Link]]",
+      "```",
+      "~~~",
+      "```",
+      "~~~",
+      "Done.",
+    ].join("\r\n");
+    const blocks = parseNoteText(markdown);
+    assert.deepStrictEqual(withoutOffsets(blocks), [
+      { kind: "paragraph", inlines: [{ kind: "text", text: "Memoise it:" }] },
+      {
+        kind: "code",
+        lang: "python",
+        text: "@cache\ndef fib(n):\n\n    return n  # [[Not a Link]]",
+      },
+      { kind: "code", lang: "", text: "```" },
+      { kind: "paragraph", inlines: [{ kind: "text", text: "Done." }] },
+    ]);
+    assert.strictEqual(blocks[1]?.at, markdown.indexOf("```Python"));
+  });
+
+  it("runs an unclosed fence to the end, and needs a closing fence as long as the opening", () => {
+    assert.deepStrictEqual(withoutOffsets(parseNoteText("````js\na()\n```\nb()")), [
+      { kind: "code", lang: "js", text: "a()\n```\nb()" },
+    ]);
+  });
+
+  it("reads a code span by matching backtick runs, and keeps a lone backtick as text", () => {
+    const [block] = parseNoteText("Use `` a`b `` or ` `x` ` and a stray ` tick.");
+    assert.deepStrictEqual(withoutOffsets(block), {
+      kind: "paragraph",
+      inlines: [
+        { kind: "text", text: "Use " },
+        { kind: "code", text: "a`b" },
+        { kind: "text", text: " or " },
+        { kind: "code", text: " " },
+        { kind: "text", text: "x" },
+        { kind: "code", text: " " },
+        { kind: "text", text: " and a stray ` tick." },
+      ],
+    });
+  });
+
+  it("reads fenced code inside an AI callout as code in the AI text", () => {
+    const [block] = parseNoteText(["> [!ai]", "> ```ts", "> const a = 1;", "> ```"].join("\n"));
+    assert.deepStrictEqual(withoutOffsets(block), {
+      kind: "ai",
+      scope: "paragraphs",
+      heading: null,
+      blocks: [{ kind: "code", lang: "ts", text: "const a = 1;" }],
+    });
+  });
+
+  it("keeps a Link whole when its words hold code, and a Link inside code as text", () => {
+    const [block] = parseNoteText("See [[Cache|`load()`]] and `[[Cache]]`.");
+    assert.deepStrictEqual(withoutOffsets(block), {
+      kind: "paragraph",
+      inlines: [
+        { kind: "text", text: "See " },
+        { kind: "link", target: "Cache", label: "`load()`" },
+        { kind: "text", text: " and " },
+        { kind: "code", text: "[[Cache]]" },
+        { kind: "text", text: "." },
+      ],
+    });
   });
 });

@@ -26,4 +26,13 @@ describe("relinkWikilinks", () => {
       "`[[Old]]`\n\n```\n[[Old]]\n```\n\n[[New]]",
     );
   });
+
+  it("leaves a wikilink inside a longer fence as written, past a shorter fence in it", () => {
+    const markdown = "````md\n```\n[[Old]]\n```\n````\n[[Old]]\n~~~~\n[[Old]]\n~~~~~~~\n[[Old]]";
+
+    assert.strictEqual(
+      relinkWikilinks(markdown, "Old", "New"),
+      "````md\n```\n[[Old]]\n```\n````\n[[New]]\n~~~~\n[[Old]]\n~~~~~~~\n[[New]]",
+    );
+  });
 });

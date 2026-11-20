@@ -228,6 +228,11 @@ export const readingMessages = {
     card: "AI-written Card",
     title: "AI-written title",
   },
+  code: {
+    label: (language: string): string => (language === "" ? "Code" : `${language} code`),
+    copy: "Copy code",
+    copied: "Copied",
+  },
   extraction: {
     title: "Core points",
     count: (n: number) => count(n, "point", "points"),

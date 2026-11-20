@@ -19,6 +19,8 @@ import "@fontsource/public-sans/700.css";
 import "@fontsource/courier-prime/400.css";
 import "@fontsource/courier-prime/700.css";
 import "@fontsource/cinzel-decorative/700.css";
+import "@fontsource/fira-code/400.css";
+import "@fontsource/fira-code/600.css";
 import "../styles/app.css";
 
 export const Route = createRootRoute({

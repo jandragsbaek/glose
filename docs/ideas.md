@@ -857,6 +857,27 @@ The details below are the agent's picks.
 - Not yet: renaming a field, changing a field's type, ordering the fields, date with time, and
   Properties on Cards and Writing projects.
 
+## Decided, source code in a Note (November 2026)
+
+Jan asked that a Note can hold source code, highlighted and in a monospaced programming font.
+Shaped with impeccable; Jan chose "Pigment" over "Workbench" (a full editor palette and a head
+strip) and "Listing" (a narrow font, numbered lines that wrap), and asked for Fira Code as the code
+font. The details below are the agent's picks.
+
+- A fenced code block in a Note (` ```python `) shows as code: Fira Code with its ligatures,
+  on Ground in a Hairline box. Code inside a fence is never Markdown: no Links, footnotes, AI marks
+  or headings. Inline code (`` `cache` ``) shows in Fira Code too.
+- The colors come only from the theme: keywords and types in Accent, strings in Verdigris,
+  comments in Mute, function names in 600. Every theme, light and dark, gets them with no new color.
+- The fence's first word names the language, by its name or a short alias (`py`, `ts`). The
+  grammar is Shiki's (the one VS Code uses), loaded only when a Note shows code in that language.
+  An unknown or missing language shows the code plain.
+- The language sits on the box's top edge; Copy beside it shows on hover and focus and copies the
+  code as written. Long lines scroll sideways, so the code keeps its shape.
+- Code in an Article or a Course lesson takes Fira Code too, still without colors.
+- Not yet: highlighted code in Articles, Course lessons and Cards, indented (four-space) code
+  blocks, and code in the editors (they stay plain text fields).
+
 ## Decided, a new Note researched (November 2026)
 
 Jan asked for a way to add a Note to the Graph from blank, with the AI's help to research it and

@@ -2,6 +2,7 @@ import { type ReactNode, useId } from "react";
 
 import { type AiScope, type Block, type Inline, parseNoteText } from "../graph/noteText.ts";
 import { useT } from "../i18n/I18n.tsx";
+import { CodeBlock } from "./CodeBlock.tsx";
 
 export type WikilinkPart = Extract<Inline, { readonly kind: "link" }>;
 
@@ -22,6 +23,10 @@ export function NoteText({
         <sup key={part.at} className="note-ref">
           {part.label}
         </sup>
+      ) : part.kind === "code" ? (
+        <code key={part.at} className="note-code">
+          {part.text}
+        </code>
       ) : (
         renderLink(part)
       ),
@@ -46,6 +51,8 @@ export function NoteText({
           </Tag>
         );
       }
+      case "code":
+        return <CodeBlock key={block.at} lang={block.lang} text={block.text} />;
       case "ai":
         return (
           <AiText key={block.at} scope={block.scope} count={block.blocks.length}>

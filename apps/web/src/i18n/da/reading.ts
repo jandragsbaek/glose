@@ -4,7 +4,7 @@ import type { Messages } from "../en.ts";
 
 export const readingMessages: Pick<
   Messages,
-  "reading" | "start" | "chatgpt" | "session" | "aiText" | "extraction" | "probe"
+  "reading" | "start" | "chatgpt" | "session" | "aiText" | "code" | "extraction" | "probe"
 > = {
   reading: {
     freeText: "Fri tekst",
@@ -208,6 +208,11 @@ export const readingMessages: Pick<
     note: "AI-skrevet note",
     card: "AI-skrevet kort",
     title: "AI-skrevet titel",
+  },
+  code: {
+    label: (language: string): string => (language === "" ? "Kode" : `${language}-kode`),
+    copy: "Kopiér kode",
+    copied: "Kopieret",
   },
   extraction: {
     title: "Kernepunkter",
