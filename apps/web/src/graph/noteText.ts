@@ -1,9 +1,10 @@
-import { AI_CALLOUT, MARKDOWN_CODE, parseWikilink, WIKILINK } from "@glose/contracts";
+import { AI_CALLOUT, parseWikilink, WIKILINK } from "@glose/contracts";
 
 export type Inline =
   | { readonly kind: "text"; readonly at: number; readonly text: string }
   | { readonly kind: "link"; readonly at: number; readonly target: string; readonly label: string }
-  | { readonly kind: "note"; readonly at: number; readonly label: string };
+  | { readonly kind: "note"; readonly at: number; readonly label: string }
+  | { readonly kind: "code"; readonly at: number; readonly text: string };
 
 export interface ListItem {
   readonly at: number;
@@ -19,10 +20,18 @@ export interface Heading {
 
 export type AiScope = "paragraphs" | "part" | "note";
 
+export interface CodeBlock {
+  readonly kind: "code";
+  readonly at: number;
+  readonly lang: string;
+  readonly text: string;
+}
+
 export type Block =
   | { readonly kind: "paragraph"; readonly at: number; readonly inlines: ReadonlyArray<Inline> }
   | { readonly kind: "list"; readonly at: number; readonly items: ReadonlyArray<ListItem> }
   | Heading
+  | CodeBlock
   | {
       readonly kind: "ai";
       readonly at: number;
@@ -31,24 +40,80 @@ export type Block =
       readonly blocks: ReadonlyArray<Block>;
     };
 
-const codeRanges = (text: string, fencedOnly: boolean) =>
-  Array.from(text.matchAll(MARKDOWN_CODE), (match) => ({
-    start: match.index,
-    end: match.index + match[0].length,
-    fenced: /^(?:```|~~~)/.test(match[0]),
-  })).filter((range) => range.fenced || !fencedOnly);
+interface Fence {
+  readonly start: number;
+  readonly end: number;
+  readonly lang: string;
+  readonly text: string;
+}
 
-const codeAt = (ranges: ReturnType<typeof codeRanges>, at: number) =>
-  ranges.find((range) => at >= range.start && at < range.end);
+const FENCE_OPEN = /^( {0,3})(`{3,}|~{3,})(.*)$/;
+const FENCE_CLOSE = /^ {0,3}(`{3,}|~{3,})[ \t]*$/;
+
+const fencesOf = (markdown: string): ReadonlyArray<Fence> => {
+  const fences: Array<Fence> = [];
+  let open: { start: number; indent: number; marker: string; lang: string } | null = null;
+  let lines: Array<string> = [];
+  let offset = 0;
+  for (const raw of markdown.split("\n")) {
+    const line = raw.replace(/\r$/, "");
+    if (open === null) {
+      const match = FENCE_OPEN.exec(line);
+      const marker = match?.[2] ?? "";
+      const info = (match?.[3] ?? "").trim();
+      if (match && !(marker.startsWith("`") && info.includes("`"))) {
+        const lang = (info.split(/\s+/)[0] ?? "").replace(/^\{?\.?/, "").replace(/\}$/, "");
+        open = { start: offset, indent: match[1]?.length ?? 0, marker, lang: lang.toLowerCase() };
+        lines = [];
+      }
+    } else {
+      const close = FENCE_CLOSE.exec(line)?.[1];
+      if (
+        close !== undefined &&
+        close[0] === open.marker[0] &&
+        close.length >= open.marker.length
+      ) {
+        fences.push({ ...open, end: offset + raw.length, text: lines.join("\n") });
+        open = null;
+      } else {
+        lines.push(line.replace(new RegExp(`^ {0,${open.indent}}`), ""));
+      }
+    }
+    offset += raw.length + 1;
+  }
+  if (open !== null) fences.push({ ...open, end: markdown.length, text: lines.join("\n") });
+  return fences;
+};
+
+interface Span {
+  readonly start: number;
+  readonly end: number;
+  readonly text: string;
+}
+
+const codeSpans = (text: string): ReadonlyArray<Span> => {
+  const runs = Array.from(text.matchAll(/`+/g));
+  const spans: Array<Span> = [];
+  for (let index = 0; index < runs.length; index += 1) {
+    const open = runs[index]!;
+    const closeAt = runs.findIndex(
+      (run, other) => other > index && run[0].length === open[0].length,
+    );
+    if (closeAt === -1) continue;
+    const close = runs[closeAt]!;
+    const inner = text.slice(open.index + open[0].length, close.index).replace(/\r?\n/g, " ");
+    const strip = inner.startsWith(" ") && inner.endsWith(" ") && inner.trim() !== "";
+    spans.push({
+      start: open.index,
+      end: close.index + close[0].length,
+      text: strip ? inner.slice(1, -1) : inner,
+    });
+    index = closeAt;
+  }
+  return spans;
+};
 
 const FOOTNOTE = /(?<!\\)\[\^q(\d{1,4})\](:[ \t]?)?/g;
-
-const CODE_SPAN = /(`+)[\s\S]*?\1/g;
-
-const inCode = (text: string, at: number) =>
-  Array.from(text.matchAll(CODE_SPAN)).some(
-    (span) => at >= span.index && at < span.index + span[0].length,
-  );
 
 const withNotes = (
   part: Extract<Inline, { kind: "text" }>,
@@ -57,7 +122,6 @@ const withNotes = (
   const out: Array<Inline> = [];
   let last = 0;
   for (const match of part.text.matchAll(FOOTNOTE)) {
-    if (inCode(part.text, match.index)) continue;
     const definition = paragraph && part.at === 0 && match.index === 0 && match[2] !== undefined;
     const length = definition ? match[0].length : match[0].length - (match[2]?.length ?? 0);
     if (match.index > last) {
@@ -72,21 +136,44 @@ const withNotes = (
   return out;
 };
 
-const inlines = (text: string, paragraph = false): ReadonlyArray<Inline> =>
-  wikilinked(text).flatMap((part) => (part.kind === "text" ? withNotes(part, paragraph) : [part]));
-
-const wikilinked = (text: string): ReadonlyArray<Inline> => {
-  const code = codeRanges(text, false);
+const wikilinked = (text: string, at: number): ReadonlyArray<Inline> => {
   const out: Array<Inline> = [];
   let last = 0;
   for (const match of text.matchAll(WIKILINK)) {
     const start = match.index;
-    if (codeAt(code, start) !== undefined) continue;
-    if (start > last) out.push({ kind: "text", at: last, text: text.slice(last, start) });
-    out.push({ kind: "link", at: start, ...parseWikilink(match[1] ?? "") });
+    if (start > last) out.push({ kind: "text", at: at + last, text: text.slice(last, start) });
+    out.push({ kind: "link", at: at + start, ...parseWikilink(match[1] ?? "") });
     last = start + match[0].length;
   }
-  if (last < text.length) out.push({ kind: "text", at: last, text: text.slice(last) });
+  if (last < text.length) out.push({ kind: "text", at: at + last, text: text.slice(last) });
+  return out;
+};
+
+const outsideLinks = (text: string, spans: ReadonlyArray<Span>): ReadonlyArray<Span> => {
+  const links = Array.from(text.matchAll(WIKILINK)).filter(
+    (link) => !spans.some((span) => link.index >= span.start && link.index < span.end),
+  );
+  return spans.filter(
+    (span) =>
+      !links.some((link) => span.start < link.index + link[0].length && span.end > link.index),
+  );
+};
+
+const inlines = (text: string, paragraph = false): ReadonlyArray<Inline> => {
+  const out: Array<Inline> = [];
+  const prose = (from: number, to: number) => {
+    if (to <= from) return;
+    for (const part of wikilinked(text.slice(from, to), from)) {
+      out.push(...(part.kind === "text" ? withNotes(part, paragraph) : [part]));
+    }
+  };
+  let last = 0;
+  for (const span of outsideLinks(text, codeSpans(text))) {
+    prose(last, span.start);
+    out.push({ kind: "code", at: span.start, text: span.text });
+    last = span.end;
+  }
+  prose(last, text.length);
   return out;
 };
 
@@ -125,9 +212,7 @@ const aiBlock = (lines: ReadonlyArray<string>, at: number): Block => {
   };
 };
 
-type Fences = ReturnType<typeof codeRanges>;
-
-const splitBlock = (text: string, at: number, fences: Fences): ReadonlyArray<Block> => {
+const splitBlock = (text: string, at: number): ReadonlyArray<Block> => {
   const raw = text.split("\n");
   const all = raw.map((line) => line.replace(/\r$/, ""));
   const starts: Array<number> = [];
@@ -136,8 +221,7 @@ const splitBlock = (text: string, at: number, fences: Fences): ReadonlyArray<Blo
     starts.push(offset);
     offset += line.length + 1;
   }
-  const markdownAt = (index: number) => codeAt(fences, starts[index] ?? at) === undefined;
-  const headingAt = (index: number) => markdownAt(index) && HEADING.exec(all[index] ?? "");
+  const headingAt = (index: number) => HEADING.exec(all[index] ?? "");
 
   const blocks: Array<Block> = [];
   let lines: Array<string> = [];
@@ -150,7 +234,7 @@ const splitBlock = (text: string, at: number, fences: Fences): ReadonlyArray<Blo
     const line = all[index] ?? "";
     const lineAt = starts[index] ?? at;
     const heading = headingAt(index);
-    if (markdownAt(index) && AI_CALLOUT.test(line)) {
+    if (AI_CALLOUT.test(line)) {
       flush();
       let end = index + 1;
       while (end < all.length && !headingAt(end)) end += 1;
@@ -180,23 +264,19 @@ const joinPartHeadings = (blocks: ReadonlyArray<Block>): ReadonlyArray<Block> =>
   });
 
 const parseBlocks = (markdown: string): ReadonlyArray<Block> => {
-  const fences = codeRanges(markdown, true);
-  const blocks = Array.from(markdown.matchAll(BLOCK)).flatMap((match): ReadonlyArray<Block> => {
-    const fence = codeAt(fences, match.index);
-    if (fence === undefined) return splitBlock(match[0], match.index, fences);
-    const lineEnd = match[0].indexOf("\n", fence.end - match.index);
-    const cut = lineEnd === -1 ? match[0].length : lineEnd;
-    const after =
-      lineEnd === -1 ? [] : splitBlock(match[0].slice(cut + 1), match.index + cut + 1, fences);
-    return [
-      {
-        kind: "paragraph",
-        at: match.index,
-        inlines: [{ kind: "text", at: 0, text: match[0].slice(0, cut).trimEnd() }],
-      },
-      ...after,
-    ];
-  });
+  const blocks: Array<Block> = [];
+  const prose = (from: number, to: number) => {
+    for (const match of markdown.slice(from, to).matchAll(BLOCK)) {
+      blocks.push(...splitBlock(match[0], from + match.index));
+    }
+  };
+  let last = 0;
+  for (const fence of fencesOf(markdown)) {
+    prose(last, fence.start);
+    blocks.push({ kind: "code", at: fence.start, lang: fence.lang, text: fence.text });
+    last = fence.end;
+  }
+  prose(last, markdown.length);
   return joinPartHeadings(blocks);
 };
 

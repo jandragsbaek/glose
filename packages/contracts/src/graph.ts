@@ -34,7 +34,7 @@ export type GraphView = typeof GraphView.Type;
 
 export const WIKILINK = /!?\[\[([^[\]\n]+?)\]\]/g;
 
-export const MARKDOWN_CODE = /```[\s\S]*?(?:```|$)|~~~[\s\S]*?(?:~~~|$)|`[^`\n]*`/g;
+export const MARKDOWN_CODE = /(`{3,})[\s\S]*?(?:\1`*|$)|(~{3,})[\s\S]*?(?:\2~*|$)|`[^`\n]*`/g;
 
 export const parseWikilink = (
   inner: string,
@@ -65,10 +65,12 @@ export const textParagraphs = (text: string): ReadonlyArray<string> =>
 export const aiCallout = (text: string, part = false): string =>
   [
     part ? "> [!ai-part]" : "> [!ai]",
-    ...textParagraphs(text).flatMap((paragraph, index) => [
-      ...(index === 0 ? [] : [">"]),
-      ...paragraph.split("\n").map((line) => `> ${line}`),
-    ]),
+    ...text
+      .replace(/\r\n?/g, "\n")
+      .replace(/^(?:[ \t]*\n)+/, "")
+      .trimEnd()
+      .split("\n")
+      .map((line) => (line.trim() === "" ? ">" : `> ${line}`)),
   ].join("\n");
 
 export const SaveNote = Schema.Struct({

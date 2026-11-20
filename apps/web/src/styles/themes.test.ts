@@ -132,6 +132,7 @@ const READABLE: ReadonlyArray<readonly [string, string, number]> = [
   ["rubric", "paper", 4.5],
   ["rubric", "rubric-wash", 4.5],
   ["verdigris", "paper", 4.5],
+  ["verdigris", "ground", 4.5],
   ["on-primary", "primary", 4.5],
   ["on-primary", "primary-raised", 4.5],
   ["on-field", "field", 7],

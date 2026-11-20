@@ -786,7 +786,7 @@
       },
       {
         "name": "The Typed Label Rule",
-        "body": "Courier Prime is for call numbers, step numbers, the Probe's question numbers (\"Q6\"), repository names in the Repository Rows (a repository is the Vault's shelf mark on GitHub), a code the user types elsewhere (the GitHub sign-in code), the paragraph numbers that are Locations (\"¶ 8\", in the Reader's gutter and apparatus), note numbers in a read text, and a Course lesson's week·day (in its call number and in the Week · Day field of the lesson table) only. Code in an Article is not a label: it takes the system monospace stack.",
+        "body": "Courier Prime is for call numbers, step numbers, the Probe's question numbers (\"Q6\"), repository names in the Repository Rows (a repository is the Vault's shelf mark on GitHub), a code the user types elsewhere (the GitHub sign-in code), the paragraph numbers that are Locations (\"¶ 8\", in the Reader's gutter and apparatus), note numbers in a read text, and a Course lesson's week·day (in its call number and in the Week · Day field of the lesson table) only. Code in a Note or an Article is not a label: it takes the Code Font.",
         "section": "typography"
       },
       {
@@ -824,7 +824,8 @@
       "Don't use red alone to mean anything; color never carries a message by itself.",
       "Don't add resting shadows (the Crease beside the Writing Desk is the one resting shade) or new fields of color beyond the lapis rail, spine, primary and the Settings window's spine.",
       "Don't use Cinzel Decorative beyond a single heading initial, or Courier Prime beyond call numbers, step numbers, question numbers, repository names, a code the user types elsewhere, paragraph and note numbers, and a lesson's week·day.",
-      "Don't set code in an Article in Courier Prime; it is text, in the system monospace stack.",
+      "Don't set code in a Note or an Article in Courier Prime; it is text, in Fira Code.",
+      "Don't give code colors of its own: it takes Accent, Verdigris, Mute and weight from the theme, and never Rubric or Gilt.",
       "Don't mark AI text with Gilt Wash; Gilt Wash is the reader's own selection and Passages.",
       "Don't cover the heading or the line the reader is selecting with the Mark Bar; flip it below.",
       "Don't fix widths to English text, truncate labels, or block wrapping.",

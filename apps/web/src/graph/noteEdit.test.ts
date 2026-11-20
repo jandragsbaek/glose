@@ -71,6 +71,25 @@ describe("noteSegments and composeBody", () => {
     });
   });
 
+  it("keeps AI code as written when its correction is saved untouched", () => {
+    const body = [
+      "> [!ai]",
+      "> Cache it:",
+      ">",
+      "> ```python",
+      "> def fib(n):",
+      ">",
+      ">",
+      ">     return n",
+      "> ```",
+    ].join("\n");
+    const [segment] = noteSegments(body, false);
+    assert.isDefined(segment);
+    const edit = { ...startEdit(segment!), corrected: segment!.kind === "ai" ? segment!.text : "" };
+
+    assert.strictEqual(composeBody([segment!], [edit]).body, body);
+  });
+
   it("keeps the indent of the user's first line, which makes it a code block", () => {
     const body = "    const kept = true;\n\nThen text.\n\n> [!ai]\n> The AI's line.";
     const segments = noteSegments(body, false);

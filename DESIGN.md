@@ -93,6 +93,11 @@ typography:
     fontWeight: 400
     lineHeight: 1.2
     fontFeature: '"tnum"'
+  code-block:
+    fontFamily: "Fira Code, ui-monospace, monospace"
+    fontSize: "12.5px"
+    fontWeight: 400
+    lineHeight: 1.6
   code:
     fontFamily: "Courier Prime, ui-monospace, monospace"
     fontSize: "28px"
@@ -481,7 +486,8 @@ three small pigments (gold, rubric red, verdigris) each with one job.
 
 - **Ground** (ground): the page behind panels and the setup body; the group rows of the register;
   the band over the Probe and the user's turns in a transcript; the Settings window's body. In the
-  Reader, the band over the desk and the box of code in an Article; on Add Source, the Drop Zone.
+  Reader, the band over the desk and the box of code in an Article; the box of code in a Note; on
+  Add Source, the Drop Zone.
 - **Paper** (paper): panels, the page header, inputs, buttons, call-number labels.
 - **Ink** (ink): text, secondary button border, call-number and typed-code border; at 32%
   (`rgb(20 20 20 / 32%)`) the veil behind a sheet and the Settings window.
@@ -631,10 +637,10 @@ last Ground color.
 **Display and UI Font:** Public Sans 400/500/600/700 (with system-ui, sans-serif)
 **Initial Font:** Cinzel Decorative 700 (with Cinzel, serif)
 **Label Font:** Courier Prime 400/700 (with ui-monospace, monospace)
-**Code Font:** the system monospace stack (ui-monospace, "SF Mono", Menlo, Consolas, monospace),
-for code inside an Article or Course lesson only
+**Code Font:** Fira Code 400/600 with its ligatures (with ui-monospace, "SF Mono", Menlo,
+Consolas, monospace), for code in a Note, an Article or a Course lesson only
 
-All three are self-hosted via @fontsource. **Character:** a plain, civic sans does all the
+All four are self-hosted via @fontsource. **Character:** a plain, civic sans does all the
 working text; a typewriter face types the library labels; a decorated capital appears once per
 heading like an illuminated initial.
 
@@ -657,9 +663,11 @@ heading like an illuminated initial.
   700 18px, h4 700 16px, all 1.3 with balanced wrap, 1.7em above and 0.55em below. Tables in the
   text are 14px/1.45 with tabular numerals and Mute 600 13px heads; captions are Mute 13px; the
   text's own notes are 14px/1.55 under a Hairline.
-- **Code in an Article** (system monospace 400; inline 0.86em on Ground with 2px corners, a block
+- **Code in an Article** (Fira Code 400; inline 0.86em on Ground with 2px corners, a block
   13.5px/1.55 on Ground in a Hairline 4px box): code the author wrote. It is part of the text, not
   a label, so it does not take Courier Prime.
+- **Code in a Note** (Fira Code 400, 12.5px/1.6, names 600; inline 0.86em on Ground in a Hairline
+  2px box): see Code Block.
 - **Review question** (700, 28px, 1.3, -0.01em, max 30ch, balanced wrap; 24px on phones): the
   question on the Review leaf.
 - **Review answer** (400, 21px, 1.5, max 40ch; 18px on phones): the answer on the Review leaf.
@@ -690,8 +698,8 @@ numbers ("Q6"), repository names in the
 Repository Rows (a repository is the Vault's shelf mark on GitHub), a code the user types
 elsewhere (the GitHub sign-in code), the paragraph numbers that are Locations ("¶ 8", in the
 Reader's gutter and apparatus), note numbers in a read text, and a Course lesson's week·day
-(in its call number and in the Week · Day field of the lesson table) only. Code in an Article is
-not a label: it takes the system monospace stack.
+(in its call number and in the Week · Day field of the lesson table) only. Code in a Note or an
+Article is not a label: it takes the Code Font.
 
 ## Layout
 
@@ -1628,6 +1636,24 @@ Note headings in the side panel: 700 15px, 18px above when they follow other tex
 - **A title:** "¶ AI-written title" ("AI-skrevet titel") with the lighter 2px rule, above a
   Note's title in the Graph panel and above the title field of a Point the AI proposed.
 
+### Code Block
+
+Fenced code in a Note, wherever Note text shows (the Graph's side panel, the Rewrite Desk, the
+Graph beside the Writing Desk, Make Cards).
+
+- **Box:** Ground, a Hairline border, 4px corners; the code 14px 14px 12px in, Fira Code 400
+  12.5px/1.6 with its ligatures, tab size 4. Long lines scroll sideways inside the box; the box is
+  a focusable region named "Python code" ("Python-kode"), so the keyboard can scroll it.
+- **Colors:** only the theme's pigments. Keywords, types and tags Accent; strings Verdigris;
+  comments Mute; function names and decorators 600 Ink; the rest Ink. The grammar is Shiki's; the
+  code shows plain at once and takes its colors when its language has loaded.
+- **Tab:** on the box's top edge, 10px from the right, half Paper and half Ground so it sits on the
+  line like a label: the language's name (Mute 600 11px, 0.06em, uppercase) and a 24px Copy button
+  (Paper, Strong Hairline, 4px, 15px Lucide copy icon). Copy shows on hover of the box and on
+  focus; after a copy it shows a Verdigris check for 2s. Without a language only Copy shows.
+- **Space:** 18px above the box, so the tab clears the text or the AI gloss above it.
+- **Inline code:** Fira Code 0.86em on Ground, Hairline border, 2px corners, 1px 4px padding.
+
 ### AI Mark on the Graph (signature: Unwritten Ring)
 
 The AI Text mark carried onto the Graph canvas, where a node has no room for a gloss.
@@ -2236,7 +2262,9 @@ Skeleton bars (14px, 2px corners) shimmer Tint to Ground over 1.4s inside a pane
 - **Don't** use Cinzel Decorative beyond a single heading initial, or Courier Prime beyond call
   numbers, step numbers, question numbers, repository names, a code the user types elsewhere,
   paragraph and note numbers, a lesson's week·day, and a timestamp in a Video.
-- **Don't** set code in an Article in Courier Prime; it is text, in the system monospace stack.
+- **Don't** set code in a Note or an Article in Courier Prime; it is text, in Fira Code.
+- **Don't** give code colors of its own: it takes Accent, Verdigris, Mute and weight from the
+  theme, and never Rubric or Gilt.
 - **Don't** mark AI text with Gilt Wash; Gilt Wash is the reader's own selection and Passages.
 - **Don't** cover the heading or the line the reader is selecting with the Mark Bar; flip it below.
 - **Don't** fix widths to English text, truncate labels, or block wrapping.
