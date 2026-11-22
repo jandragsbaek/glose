@@ -1,4 +1,9 @@
-import { type AdvanceReading, RPC_METHODS, type SaveFreeText } from "@glose/contracts";
+import {
+  type AdvanceReading,
+  RPC_METHODS,
+  type SaveFreeText,
+  type SaveNote,
+} from "@glose/contracts";
 import * as Effect from "effect/Effect";
 import * as Atom from "effect/reactivity/Atom";
 import * as Reactivity from "effect/reactivity/Reactivity";
@@ -46,6 +51,13 @@ export const writeWatchNotesAtom = GloseClient.runtime.fn<typeof SaveFreeText.Ty
       client(RPC_METHODS.sourcesSaveFreeText, payload),
       KEYS.sources,
     );
+  }),
+);
+
+export const savePersonWordsAtom = GloseClient.runtime.fn<typeof SaveNote.Type>()(
+  Effect.fnUntraced(function* (payload) {
+    const client = yield* GloseClient;
+    return yield* Reactivity.mutation(client(RPC_METHODS.notesSave, payload), KEYS.sources);
   }),
 );
 

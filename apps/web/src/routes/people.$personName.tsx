@@ -5,7 +5,8 @@ import * as AsyncResult from "effect/reactivity/AsyncResult";
 import type { ReactNode } from "react";
 
 import { CareerLine } from "../components/CareerLine.tsx";
-import { MissingLink, NoteText, type WikilinkPart } from "../components/NoteText.tsx";
+import { MissingLink, type WikilinkPart } from "../components/NoteText.tsx";
+import { PersonWords } from "../components/PersonWords.tsx";
 import { Properties } from "../components/Properties.tsx";
 import { CallNumber, Page, Panel, SkeletonPanel, StorageProblem } from "../components/ui.tsx";
 import { firstChoice, type LinkedPerson, linkedPeople, worksOf } from "../domain/person.ts";
@@ -110,14 +111,9 @@ function PersonView({
         </span>
       }
       actions={
-        <>
-          <Link to="/graph" search={{ node: person.id }} className="button">
-            {t.people.edit}
-          </Link>
-          <Link to="/sources/new" className="button button--primary">
-            {t.people.addSource}
-          </Link>
-        </>
+        <Link to="/sources/new" search={nameSearch(person)} className="button button--primary">
+          {t.people.addSource}
+        </Link>
       }
     >
       <div className="columns">
@@ -137,6 +133,13 @@ function PersonView({
               )}
             </div>
           </Panel>
+          <PersonWords
+            key={person.id}
+            person={person}
+            view={view}
+            sources={sources}
+            renderLink={renderLink}
+          />
           {chosen === null ? null : (
             <Panel
               title={t.people.from(chosen.source.title)}
@@ -193,19 +196,6 @@ function PersonView({
           )}
         </div>
         <aside className="stack">
-          <Panel title={t.people.words} initial="rubric">
-            <div className="panel__body">
-              {person.body.trim() === "" ? (
-                <p className="empty">{t.people.noWords(person.title)}</p>
-              ) : (
-                <NoteText
-                  markdown={person.body}
-                  aiText={person.aiText && !person.aiTitle}
-                  renderLink={renderLink}
-                />
-              )}
-            </div>
-          </Panel>
           <Panel title={t.people.people} initial="accent" meta={people.length}>
             <div className="panel__body">
               {people.length === 0 ? (
@@ -272,3 +262,9 @@ const personLinks =
       </Link>
     );
   };
+
+const nameSearch = (person: GraphNode): { readonly family?: string; readonly given?: string } => {
+  const name = person.person;
+  if (name === undefined) return {};
+  return name.given === null ? { family: name.family } : { family: name.family, given: name.given };
+};

@@ -75,21 +75,24 @@ export function NodePanel({
         )}
         {isSource ? (
           source === undefined ? null : (
-            <p className="graph__source">
-              <CallNumber source={source} />
-              {author === null ? (
-                <span>{[source.givenName, source.familyName].filter(Boolean).join(" ")}</span>
-              ) : (
-                <Link
-                  to="/people/$personName"
-                  params={{ personName: author.id }}
-                  search={{}}
-                  className="graph__link"
-                >
-                  {author.title}
-                </Link>
-              )}
-            </p>
+            <>
+              <p className="graph__source">
+                <CallNumber source={source} />
+                {author === null ? (
+                  <span>{[source.givenName, source.familyName].filter(Boolean).join(" ")}</span>
+                ) : (
+                  <Link
+                    to="/people/$personName"
+                    params={{ personName: author.id }}
+                    search={{}}
+                    className="graph__link"
+                  >
+                    {author.title}
+                  </Link>
+                )}
+              </p>
+              {author === null && !rewriting ? <PersonProposal author={authorOf(source)} /> : null}
+            </>
           )
         ) : isPerson ? null : source === undefined ? (
           <p className="graph__source graph__source--none">{t.graph.noSource}</p>
@@ -114,16 +117,11 @@ export function NodePanel({
         )}
         {rewriting ? null : <Properties node={node} index={index} onShow={onShow} />}
         {rewriting ? null : isSource ? (
-          <>
-            <p className="graph__actions">
-              <Link to="/sources/$sourceId" params={{ sourceId: node.id }} className="button">
-                {t.graph.openSource}
-              </Link>
-            </p>
-            {source === undefined || author !== null ? null : (
-              <PersonProposal author={authorOf(source)} />
-            )}
-          </>
+          <p className="graph__actions">
+            <Link to="/sources/$sourceId" params={{ sourceId: node.id }} className="button">
+              {t.graph.openSource}
+            </Link>
+          </p>
         ) : isPerson ? (
           <>
             <p className="graph__actions">

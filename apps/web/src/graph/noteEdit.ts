@@ -67,7 +67,7 @@ export const noteSegments = (body: string, wholeNoteAi: boolean): ReadonlyArray<
     segments.push(aiSegment(body.slice(block.at, end).trim(), block.at, block.scope));
   });
   flushOwn(body.length);
-  return segments;
+  return segments.length === 0 ? [{ kind: "own", at: 0, markdown: "" }] : segments;
 };
 
 export interface SegmentEdit {

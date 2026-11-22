@@ -34,11 +34,13 @@ export function FormatBar({
   onFormat,
   onCite,
   onTries,
+  cite,
 }: {
   readonly state: FormatState;
   readonly onFormat: (command: FormatCommand) => void;
   readonly onCite: () => void;
-  readonly onTries: () => void;
+  readonly onTries?: () => void;
+  readonly cite?: { readonly short: string; readonly title: string };
 }) {
   const t = useT();
   const mac = isMac();
@@ -94,21 +96,25 @@ export function FormatBar({
         type="button"
         className="format-bar__button format-bar__button--cite"
         aria-keyshortcuts={mac ? "Meta+K" : "Control+K"}
-        title={`${t.writing.cite} · ${mac ? "⌘K" : "Ctrl+K"}`}
+        title={`${cite?.title ?? t.writing.cite} · ${mac ? "⌘K" : "Ctrl+K"}`}
         onClick={onCite}
       >
-        {t.writing.citeShort}
+        {cite?.short ?? t.writing.citeShort}
       </button>
-      <button
-        type="button"
-        className="format-bar__button format-bar__button--text"
-        aria-keyshortcuts={mac ? "Meta+Shift+A" : "Control+Shift+A"}
-        title={state.tryable ? `${t.tries.open} · ${mac ? "⇧⌘A" : "Ctrl+Shift+A"}` : t.tries.cannot}
-        disabled={!state.tryable}
-        onClick={onTries}
-      >
-        {t.tries.short}
-      </button>
+      {onTries === undefined ? null : (
+        <button
+          type="button"
+          className="format-bar__button format-bar__button--text"
+          aria-keyshortcuts={mac ? "Meta+Shift+A" : "Control+Shift+A"}
+          title={
+            state.tryable ? `${t.tries.open} · ${mac ? "⇧⌘A" : "Ctrl+Shift+A"}` : t.tries.cannot
+          }
+          disabled={!state.tryable}
+          onClick={onTries}
+        >
+          {t.tries.short}
+        </button>
+      )}
     </div>
   );
 }

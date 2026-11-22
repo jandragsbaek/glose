@@ -48,9 +48,12 @@ export const vaultKeys = (index: GraphIndex): ReadonlyMap<string, VaultKey> => {
   );
 };
 
+export const PERSON_KEYS: ReadonlyArray<string> = ["born", "died"];
+
 export const kindFor = (key: string, vault: ReadonlyMap<string, VaultKey>): AddableKind => {
   const known = vault.get(key)?.kind;
   if (known !== undefined && known !== "other") return known;
+  if (PERSON_KEYS.includes(key)) return "number";
   return LIST_KEYS.has(key) ? "list" : "text";
 };
 

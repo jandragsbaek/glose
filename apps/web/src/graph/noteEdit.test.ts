@@ -110,4 +110,13 @@ describe("noteSegments and composeBody", () => {
       { body: "Mine now.", aiNote: false },
     );
   });
+
+  it("gives an empty Note one field, so its first words can be written", () => {
+    const segments = noteSegments("", false);
+
+    assert.deepStrictEqual(
+      composeBody(segments, [{ yours: "Who they are to me.", yourHeading: "", corrected: null }]),
+      { body: "Who they are to me.", aiNote: false },
+    );
+  });
 });

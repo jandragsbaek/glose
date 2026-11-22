@@ -33,16 +33,26 @@ const KINDS = ["book", "article", "lesson", "video"] as const satisfies Readonly
 
 export const Route = createFileRoute("/sources/new")({
   component: AddSource,
-  validateSearch: (search: Record<string, unknown>): { readonly kind?: AddKind } =>
-    search.kind === "article" || search.kind === "lesson" || search.kind === "video"
+  validateSearch: (search: Record<string, unknown>): AddSearch => ({
+    ...(search.kind === "article" || search.kind === "lesson" || search.kind === "video"
       ? { kind: search.kind }
-      : {},
+      : {}),
+    ...(typeof search.family === "string" ? { family: search.family } : {}),
+    ...(typeof search.given === "string" ? { given: search.given } : {}),
+  }),
 });
+
+type AddSearch = {
+  readonly kind?: AddKind;
+  readonly family?: string;
+  readonly given?: string;
+};
 
 function AddSource() {
   const t = useT();
   const navigate = useNavigate();
-  const kind = Route.useSearch().kind ?? "book";
+  const search = Route.useSearch();
+  const kind = search.kind ?? "book";
   const hintId = useId();
   const [saving, setSaving] = useState(false);
   return (
@@ -61,7 +71,11 @@ function AddSource() {
                   onChange={() =>
                     void navigate({
                       to: "/sources/new",
-                      search: option === "book" ? {} : { kind: option },
+                      search: {
+                        ...(option === "book" ? {} : { kind: option }),
+                        ...(search.family === undefined ? {} : { family: search.family }),
+                        ...(search.given === undefined ? {} : { given: search.given }),
+                      },
                       replace: true,
                     })
                   }
@@ -75,16 +89,16 @@ function AddSource() {
           </p>
         </div>
         <div hidden={kind !== "book"}>
-          <AddBook onSaving={setSaving} />
+          <AddBook author={search} onSaving={setSaving} />
         </div>
         <div hidden={kind !== "article"}>
-          <AddArticle onSaving={setSaving} />
+          <AddArticle author={search} onSaving={setSaving} />
         </div>
         <div hidden={kind !== "lesson"}>
           <AddLessons onSaving={setSaving} />
         </div>
         <div hidden={kind !== "video"}>
-          <AddVideo onSaving={setSaving} />
+          <AddVideo author={search} onSaving={setSaving} />
         </div>
       </div>
     </Page>
@@ -135,14 +149,24 @@ type Failure = "fields" | "storage" | { readonly nameTaken: string };
 
 const FOLDED: ReadonlyArray<FieldName> = ["edition", "translator"];
 
-function AddBook({ onSaving }: { readonly onSaving: (saving: boolean) => void }) {
+function AddBook({
+  author,
+  onSaving,
+}: {
+  readonly author: { readonly family?: string; readonly given?: string };
+  readonly onSaving: (saving: boolean) => void;
+}) {
   const t = useT();
   const navigate = useNavigate();
   const createSource = useAtomSet(createSourceAtom, { mode: "promiseExit" });
   const [errors, setErrors] = useState<Partial<Record<FieldName, FieldProblem>>>({});
   const [failure, setFailure] = useState<Failure | null>(null);
   const [busy, setBusy] = useState(false);
-  const [values, setValues] = useState<FormValues>(EMPTY_FORM);
+  const [values, setValues] = useState<FormValues>(() => ({
+    ...EMPTY_FORM,
+    familyName: author.family ?? "",
+    givenName: author.given ?? "",
+  }));
   const [fill, setFill] = useState<Fill | null>(null);
   const [more, setMore] = useState(false);
   const firstFieldRef = useRef<HTMLInputElement>(null);

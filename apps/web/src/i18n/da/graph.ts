@@ -21,7 +21,7 @@ export const graphMessages: Pick<Messages, "graph" | "rewrite" | "newNote" | "re
     canvasLabel: (notes: number, links: number, ai = 0) =>
       `Grafen: ${count(notes, "punkt", "punkter")} forbundet af ${count(links, "link", "links")}.${ai === 0 ? "" : ` ${count(ai, "note", "noter")} har AI-tekst.`} Panelet ved siden af viser de samme kilder og noter.`,
     findLabel: "Søg i grafen",
-    findPlaceholder: "Find en note eller kilde",
+    findPlaceholder: "Find en note, kilde eller person",
     found: (n: number) => (n === 0 ? "Intet fundet" : `${numbers.format(n)} fundet`),
     zoomIn: "Zoom ind",
     zoomOut: "Zoom ud",

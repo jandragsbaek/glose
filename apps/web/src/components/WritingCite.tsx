@@ -2,7 +2,7 @@ import { type GraphNode, linkKey, type Source } from "@glose/contracts";
 import { Search } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 
-import { noteExcerpt } from "../domain/writing.ts";
+import { noteExcerpt, rankOf } from "../domain/writing.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { CallNumber } from "./ui.tsx";
 import { isMac } from "./WritingDeskBar.tsx";
@@ -25,13 +25,6 @@ type Match = {
   readonly node: GraphNode;
   readonly source: Source | null;
   readonly rank: number;
-};
-
-const rankOf = (words: ReadonlyArray<string>, title: string, about: string, body: string) => {
-  if (words.every((word) => title.includes(word))) return 0;
-  if (words.every((word) => `${title} ${about}`.includes(word))) return 1;
-  if (words.every((word) => `${title} ${about} ${body}`.includes(word))) return 2;
-  return null;
 };
 
 export function CiteSlip({
