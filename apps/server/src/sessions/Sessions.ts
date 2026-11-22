@@ -41,6 +41,8 @@ import { type Live, patch } from "./liveSession.ts";
 import * as PageDecisions from "./pageDecisions.ts";
 import * as PointDecisions from "./pointDecisions.ts";
 import * as Probe from "./probe.ts";
+import * as ProbeAnswers from "./probeAnswers.ts";
+import * as ReadingReset from "./readingReset.ts";
 import { pointsOf } from "./sessionEntries.ts";
 import { type VaultError, type SessionRecord, viewOf } from "./sessionRecord.ts";
 import * as SessionStore from "./sessionStore.ts";
@@ -134,6 +136,9 @@ export class Sessions extends Context.Service<
       readonly passage: string;
       readonly title: string;
     }) => Effect.Effect<void, SourceNotFound | PassageRefused | VaultError>;
+    readonly setAsideSource: (source: string) => Effect.Effect<void, VaultError>;
+    readonly forgetSource: (source: string) => Effect.Effect<void, VaultError>;
+    readonly setAsideCount: (source: string) => Effect.Effect<number, VaultError>;
     readonly addBookPassagesPoint: (input: {
       readonly source: string;
       readonly passages: ReadonlyArray<string>;
@@ -157,7 +162,8 @@ export const make = Effect.gen(function* () {
   const turns = yield* FiberMap.make<string>();
   yield* chatGpt.beforeSignOut(FiberMap.clear(turns));
 
-  const { save, readRecords, readRecord } = yield* SessionStore.make;
+  const store = yield* SessionStore.make;
+  const { save, readRecords, readRecord } = store;
   const { propose, pendingProposals } = yield* CardJudging.make({ turns, save });
   const { beginTurn } = yield* SessionTurn.make({ live, turns, save, readRecords, propose });
 
@@ -233,6 +239,9 @@ export const make = Effect.gen(function* () {
     };
     return yield* adopt(record);
   });
+
+  const readingReset = ReadingReset.make({ live, turns, deciding, store });
+  const probeAnswers = ProbeAnswers.make({ load, save, deciding, beginTurn });
 
   const pageDecisions = yield* PageDecisions.make({
     load,
@@ -379,76 +388,7 @@ export const make = Effect.gen(function* () {
 
     ...pageDecisions,
 
-    answerProbe: Effect.fn("Sessions.answerProbe")(
-      function* ({ id, question, reasoning, answer, teachMe, choice, confidence }) {
-        const session = yield* load(id);
-        const view = yield* SubscriptionRef.get(session.view);
-        const open = view.kind === "probe" ? openQuestion(view.entries) : null;
-        if (open === null || open.number !== question) {
-          return yield* new QuestionNotOpen({ id, question });
-        }
-        const picked = teachMe ? undefined : Probe.validChoice(open, choice);
-        if (!teachMe && (open.choice === undefined ? answer === "" : picked === undefined)) {
-          return yield* new QuestionNotOpen({ id, question });
-        }
-        const entry = {
-          _tag: "ProbeAnswer" as const,
-          question,
-          reasoning,
-          answer: teachMe || open.choice !== undefined ? "" : answer,
-          teachMe,
-          ...(picked === undefined ? {} : { choice: picked }),
-          ...(teachMe || confidence === undefined ? {} : { confidence }),
-        };
-        yield* beginTurn(
-          session,
-          [entry],
-          [{ type: "message", role: "user", content: Probe.answerMessage(entry, open) }],
-        );
-      },
-      (effect) => deciding.withPermit(effect),
-    ),
-
-    askHint: Effect.fn("Sessions.askHint")(
-      function* ({ id, question }) {
-        const session = yield* load(id);
-        const view = yield* SubscriptionRef.get(session.view);
-        const open = view.kind === "probe" ? openQuestion(view.entries) : null;
-        if (open === null || open.number !== question) {
-          return yield* new QuestionNotOpen({ id, question });
-        }
-        yield* beginTurn(
-          session,
-          [{ _tag: "ProbeHintAsked", question }],
-          [{ type: "message", role: "user", content: Probe.hintMessage(question) }],
-        );
-      },
-      (effect) => deciding.withPermit(effect),
-    ),
-
-    finishProbe: Effect.fn("Sessions.finishProbe")(
-      function* (id) {
-        const session = yield* load(id);
-        const at = yield* Clock.currentTimeMillis;
-        const finished = yield* SubscriptionRef.modify(session.view, (view) => {
-          if (view.working) return ["busy" as const, view];
-          if (view.entries.some((entry) => entry._tag === "ProbeFinished")) {
-            return ["already" as const, view];
-          }
-          return [
-            "now" as const,
-            {
-              ...view,
-              problem: null,
-              entries: [...view.entries, { _tag: "ProbeFinished" as const, at }],
-            },
-          ];
-        });
-        if (finished === "busy") return yield* new SessionBusy({ id });
-        if (finished === "now") yield* save(session);
-      },
-      (effect) => deciding.withPermit(effect),
-    ),
+    ...probeAnswers,
 
     goDeeper: Effect.fn("Sessions.goDeeper")(function* ({ source: asked, passage: id }) {
       const source = yield* sources.get(asked);
@@ -489,6 +429,8 @@ export const make = Effect.gen(function* () {
     }),
 
     addPassagePoint: passagePoints.addPassagePoint,
+
+    ...readingReset,
 
     addBookPassagesPoint: passagePoints.addBookPassagesPoint,
   });

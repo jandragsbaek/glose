@@ -7,7 +7,12 @@ import { useT } from "../i18n/I18n.tsx";
 import { chooseStartAtom, KEYS } from "../state/vault.ts";
 import { Notice, Panel } from "./ui.tsx";
 
-const STARTS = ["reading", "write", "probe", "catch-up"] as const satisfies ReadonlyArray<Start>;
+export const STARTS = [
+  "reading",
+  "write",
+  "probe",
+  "catch-up",
+] as const satisfies ReadonlyArray<Start>;
 
 export function ReadingStart({ source }: { readonly source: Source }) {
   const t = useT();

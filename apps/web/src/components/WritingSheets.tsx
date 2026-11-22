@@ -4,52 +4,13 @@ import * as Cause from "effect/Cause";
 import * as Exit from "effect/Exit";
 import * as Option from "effect/Option";
 import { CircleAlert } from "lucide-react";
-import { type ReactNode, useId, useState } from "react";
+import { useId, useState } from "react";
 
 import { useT } from "../i18n/I18n.tsx";
 import { KEYS } from "../state/vault.ts";
 import { setSiteFolderAtom } from "../state/writing.ts";
 import { SheetFoot } from "./Backup.tsx";
-import { Flourish } from "./ui.tsx";
-
-function Sheet({
-  title,
-  onClose,
-  children,
-}: {
-  readonly title: string;
-  readonly onClose: () => void;
-  readonly children: ReactNode;
-}) {
-  const titleId = useId();
-  return (
-    <dialog
-      className="sheet"
-      aria-labelledby={titleId}
-      ref={(node) => {
-        if (node === null || node.open) return;
-        node.showModal();
-        node.querySelector<HTMLElement>("[data-autofocus]")?.focus();
-      }}
-      onCancel={(event) => {
-        event.preventDefault();
-        onClose();
-      }}
-    >
-      <div className="panel" data-initial="rubric">
-        <div className="panel__head">
-          <h2 className="panel__title" id={titleId}>
-            {title}
-          </h2>
-        </div>
-        <div className="panel__rule" aria-hidden="true">
-          <Flourish />
-        </div>
-        <div className="panel__body sheet__body">{children}</div>
-      </div>
-    </dialog>
-  );
-}
+import { Sheet } from "./ui.tsx";
 
 export function SiteFolderSheet({
   initial,

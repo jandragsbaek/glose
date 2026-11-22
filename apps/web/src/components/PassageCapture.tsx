@@ -26,6 +26,8 @@ const readDraft = (source: string): string => {
   }
 };
 
+export const forgetPassageDraft = (source: string) => writeDraft(source, "");
+
 const writeDraft = (source: string, words: string) => {
   try {
     if (words === "") window.localStorage.removeItem(draftKey(source));

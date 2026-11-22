@@ -16,8 +16,6 @@ import {
   type Source,
   type SetLessonVideo,
   type SourceDetails,
-  COURSE_VIDEOS_DIR,
-  courseVideoExtension,
   NotALesson,
   SourceNameTaken,
   SourceNotFound,
@@ -41,8 +39,10 @@ import * as Stream from "effect/Stream";
 
 import * as Settings from "../settings/Settings.ts";
 import { writeFileAtomic } from "../storage.ts";
-import { ignoreCourseVideos, NotAVideoFile, ownVideoFile } from "./courseVideoFiles.ts";
+import type { NotAVideoFile } from "./courseVideoFiles.ts";
 import { writeKeepingFields } from "./frontmatter.ts";
+import { lessonVideos } from "./lessonVideos.ts";
+import { sourceEnds } from "./sourceEnds.ts";
 import {
   parseSourceFile,
   renderSourceFile,
@@ -69,6 +69,11 @@ export class Sources extends Context.Service<
       readonly id: string;
       readonly start: ReadingStart;
     }) => Effect.Effect<Source, SourceNotFound | VaultError>;
+    readonly startOver: (input: {
+      readonly id: string;
+      readonly start: ReadingStart | null;
+    }) => Effect.Effect<Source, SourceNotFound | VaultError>;
+    readonly remove: (id: string) => Effect.Effect<void, SourceNotFound | VaultError>;
     readonly advance: (input: {
       readonly id: string;
       readonly from: ReadingStep;
@@ -263,12 +268,6 @@ export const make = Effect.gen(function* () {
     (effect) => writing.withPermit(effect),
   );
 
-  const lessonOf = Effect.fn("Sources.lessonOf")(function* (id: string) {
-    const source = yield* get(id);
-    if (source.kind !== "lesson") return yield* new NotALesson({ id });
-    return source;
-  });
-
   return Sources.of({
     list: Effect.gen(function* () {
       const folder = yield* vaultFolder;
@@ -330,6 +329,8 @@ export const make = Effect.gen(function* () {
       },
       (effect) => writing.withPermit(effect),
     ),
+
+    ...sourceEnds({ fs, path, vaultFolder, get, writeSource, fileOf, articleOf, writing }),
 
     advance: Effect.fn("Sources.advance")(
       function* ({ id, from }) {
@@ -417,66 +418,7 @@ export const make = Effect.gen(function* () {
       (effect) => writing.withPermit(effect),
     ),
 
-    setLessonVideo: Effect.fn("Sources.setLessonVideo")(
-      function* ({ id, link, removeFile }) {
-        const source = yield* lessonOf(id);
-        const folder = yield* vaultFolder;
-        const stored = ownVideoFile(id, source.videoFile);
-        if (removeFile && stored !== null) {
-          yield* fs
-            .remove(path.join(folder, COURSE_VIDEOS_DIR, stored), { force: true })
-            .pipe(Effect.mapError(storageError));
-        }
-        return yield* writeSource(folder, id, {
-          ...source,
-          videoLink: link,
-          videoFile: removeFile ? null : source.videoFile,
-        }).pipe(Effect.mapError(storageError));
-      },
-      (effect) => writing.withPermit(effect),
-    ),
-
-    saveLessonVideoFile: Effect.fn("Sources.saveLessonVideoFile")(function* ({ id, name, body }) {
-      const extension = courseVideoExtension(name);
-      if (extension === null) return yield* new NotAVideoFile({ name });
-      yield* lessonOf(id);
-      const folder = yield* vaultFolder;
-      const videos = path.join(folder, COURSE_VIDEOS_DIR);
-      const fileName = `${id}.${extension}`;
-      const target = path.join(videos, fileName);
-      const temporary = `${target}.${crypto.randomUUID()}.glose-tmp`;
-      const removeTemporary = fs.remove(temporary, { force: true }).pipe(Effect.ignore);
-      yield* Effect.gen(function* () {
-        yield* fs.makeDirectory(videos, { recursive: true });
-        yield* writing.withPermit(ignoreCourseVideos(fs, path, folder));
-        yield* body.pipe(Stream.run(fs.sink(temporary)));
-      }).pipe(
-        Effect.onError(() => removeTemporary),
-        Effect.mapError(storageError),
-      );
-      return yield* writing.withPermit(
-        Effect.gen(function* () {
-          const source = yield* lessonOf(id);
-          yield* fs.rename(temporary, target).pipe(Effect.mapError(storageError));
-          const written = yield* writeSource(folder, id, { ...source, videoFile: fileName }).pipe(
-            Effect.mapError(storageError),
-          );
-          const old = ownVideoFile(id, source.videoFile);
-          if (old !== null && old !== fileName) {
-            yield* fs.remove(path.join(videos, old), { force: true }).pipe(Effect.ignore);
-          }
-          return written;
-        }).pipe(Effect.onError(() => removeTemporary)),
-      );
-    }),
-
-    lessonVideoFile: Effect.fn("Sources.lessonVideoFile")(function* (id) {
-      const source = yield* get(id);
-      const folder = yield* vaultFolder;
-      const stored = ownVideoFile(id, source.videoFile);
-      if (stored === null) return yield* new SourceNotFound({ id });
-      return path.join(folder, COURSE_VIDEOS_DIR, stored);
-    }),
+    ...lessonVideos({ fs, path, vaultFolder, get, writeSource, writing }),
 
     articleText,
 

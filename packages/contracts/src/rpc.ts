@@ -82,9 +82,12 @@ import {
   SaveFreeText,
   Source,
   SourceDetails,
+  SourceFootprint,
+  SourceInUse,
   SourceNameTaken,
   SourceNotFound,
   SourceRef,
+  StartSourceOver,
 } from "./source.ts";
 import { LookupVideo, VideoFound, VideoNotFound } from "./video.ts";
 import { BackUpToGitHub, EndDay, RemoteRefused, SetRemote, VersionsStatus } from "./versions.ts";
@@ -124,6 +127,9 @@ export const RPC_METHODS = {
   sourcesAddVideo: "sources.addVideo",
   sourcesSetLessonVideo: "sources.setLessonVideo",
   sourcesLookupVideo: "sources.lookupVideo",
+  sourcesFootprint: "sources.footprint",
+  sourcesStartOver: "sources.startOver",
+  sourcesDelete: "sources.delete",
   articlesGet: "articles.get",
   articlesMarkPassage: "articles.markPassage",
   articlesRemovePassage: "articles.removePassage",
@@ -252,6 +258,20 @@ export const GloseRpcGroup = RpcGroup.make(
     payload: SetReadingPlace,
     success: Source,
     error: Schema.Union([SourceNotFound, VaultFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.sourcesFootprint, {
+    payload: SourceRef,
+    success: SourceFootprint,
+    error: Schema.Union([SourceNotFound, VaultFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.sourcesStartOver, {
+    payload: StartSourceOver,
+    success: Source,
+    error: Schema.Union([SourceNotFound, VaultFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.sourcesDelete, {
+    payload: SourceRef,
+    error: Schema.Union([SourceNotFound, SourceInUse, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.sourcesSetLessonVideo, {
     payload: SetLessonVideo,

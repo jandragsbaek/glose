@@ -9,6 +9,7 @@ import * as Atom from "effect/reactivity/Atom";
 import * as Reactivity from "effect/reactivity/Reactivity";
 
 import { GloseClient } from "../rpc/client.ts";
+import { SESSION_KEYS } from "./sessions.ts";
 
 export const KEYS = {
   settings: ["settings"],
@@ -30,6 +31,15 @@ export const graphAtom = GloseClient.query(RPC_METHODS.graphRead, undefined, {
 export const sourceAtom = Atom.family((id: string) =>
   GloseClient.query(RPC_METHODS.sourcesGet, { id }, { reactivityKeys: KEYS.sources }),
 );
+
+export const SOURCE_RESET_KEYS = [...KEYS.sources, ...SESSION_KEYS.sessions];
+
+export const sourceFootprintAtom = Atom.family((id: string) =>
+  GloseClient.query(RPC_METHODS.sourcesFootprint, { id }, { reactivityKeys: SOURCE_RESET_KEYS }),
+);
+
+export const startSourceOverAtom = GloseClient.mutation(RPC_METHODS.sourcesStartOver);
+export const deleteSourceAtom = GloseClient.mutation(RPC_METHODS.sourcesDelete);
 
 export const setLanguageAtom = GloseClient.mutation(RPC_METHODS.settingsSetLanguage);
 export const completeSetupAtom = GloseClient.mutation(RPC_METHODS.setupComplete);
