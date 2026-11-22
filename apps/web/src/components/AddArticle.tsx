@@ -45,7 +45,13 @@ import { Panel } from "./ui.tsx";
 
 type Say = (t: Messages) => string;
 
-export function AddArticle({ onSaving }: { readonly onSaving: (saving: boolean) => void }) {
+export function AddArticle({
+  author,
+  onSaving,
+}: {
+  readonly author: { readonly family?: string; readonly given?: string };
+  readonly onSaving: (saving: boolean) => void;
+}) {
   const t = useT();
   const navigate = useNavigate();
   const importText = useAtomSet(importTextAtom, { mode: "promiseExit" });
@@ -67,7 +73,12 @@ export function AddArticle({ onSaving }: { readonly onSaving: (saving: boolean) 
     typeRef.current = next;
     setTypeState(next);
   };
-  const [values, setValues] = useState<ArticleValues>({ ...EMPTY_ARTICLE, accessed: today() });
+  const [values, setValues] = useState<ArticleValues>(() => ({
+    ...EMPTY_ARTICLE,
+    familyName: author.family ?? "",
+    givenName: author.given ?? "",
+    accessed: today(),
+  }));
   const [filled, setFilled] = useState<ReadonlyArray<ArticleField>>([]);
   const [problem, setProblem] = useState<{ readonly say: Say } | null>(null);
   const [submitProblem, setSubmitProblem] = useState<{ readonly say: Say } | null>(null);

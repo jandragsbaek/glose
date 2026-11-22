@@ -28,8 +28,12 @@ import { noSessionAtom, sessionAtom } from "../state/sessions.ts";
 
 export const Route = createFileRoute("/graph")({
   component: GraphSection,
-  validateSearch: (search: Record<string, unknown>): { readonly node?: string } =>
-    typeof search.node === "string" ? { node: search.node } : {},
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { readonly node?: string; readonly rewrite?: true } =>
+    typeof search.node === "string"
+      ? { node: search.node, ...(search.rewrite === true ? { rewrite: true as const } : {}) }
+      : {},
 });
 
 function GraphSection() {
@@ -143,11 +147,15 @@ function GraphPage({
 }) {
   const t = useT();
   const navigate = useNavigate();
-  const { node: selectedId } = Route.useSearch();
+  const { node: selectedId, rewrite: rewriteAtOpen } = Route.useSearch();
   const [canvas, setCanvas] = useState<GraphCanvas | null>(null);
   const [query, setQuery] = useState("");
   const [desk, setDesk] = useState<Desk | null>(() =>
-    startNew ? { kind: "new", draft: newDraftId() } : null,
+    startNew
+      ? { kind: "new", draft: newDraftId() }
+      : rewriteAtOpen === true && selectedId !== undefined
+        ? { kind: "rewrite", id: selectedId }
+        : null,
   );
   const [unsaved, setUnsaved] = useState(false);
   const [requested, setRequested] = useState<Wanted | null>(null);
@@ -241,6 +249,13 @@ function GraphPage({
       setDesk(null);
       setUnsaved(false);
     });
+    if (rewriteAtOpen === true) {
+      void navigate({
+        to: "/graph",
+        search: selectedId === undefined ? {} : { node: selectedId },
+        replace: true,
+      });
+    }
     if (view.nodes.length === 0) onEmpty();
     else returnFocus(was);
   };

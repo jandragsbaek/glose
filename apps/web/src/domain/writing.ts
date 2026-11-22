@@ -196,6 +196,18 @@ export const headingOf = (
 export const hugWord = (body: string, at: number): number =>
   at > 1 && body[at - 1] === " " && /\S/.test(body[at - 2] ?? "") ? at - 1 : at;
 
+export const rankOf = (
+  words: ReadonlyArray<string>,
+  title: string,
+  about: string,
+  body: string,
+): number | null => {
+  if (words.every((word) => title.includes(word))) return 0;
+  if (words.every((word) => `${title} ${about}`.includes(word))) return 1;
+  if (words.every((word) => `${title} ${about} ${body}`.includes(word))) return 2;
+  return null;
+};
+
 export const noteExcerpt = (body: string, words: ReadonlyArray<string> = [], max = 140): string => {
   const text = body
     .replace(/^---[\s\S]*?---\s*/, "")

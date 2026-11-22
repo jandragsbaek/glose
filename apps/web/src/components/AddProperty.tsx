@@ -6,6 +6,7 @@ import {
   ADDABLE,
   type AddableKind,
   kindFor,
+  PERSON_KEYS,
   type Save,
   splitItems,
   type VaultKey,
@@ -40,7 +41,10 @@ export function AddProperty({
   const [busy, setBusy] = useState(false);
 
   const taken = new Set(node.properties.map((property) => property.key));
-  const names = [...vault.keys()].filter((key) => !taken.has(key)).sort();
+  const offered = node.kind === "person" ? PERSON_KEYS : [];
+  const names = [...new Set([...offered, ...[...vault.keys()].sort()])].filter(
+    (key) => !taken.has(key),
+  );
 
   const close = () => {
     setOpen(false);

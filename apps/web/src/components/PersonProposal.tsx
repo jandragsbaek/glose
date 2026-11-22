@@ -10,7 +10,13 @@ import { useState } from "react";
 import { useT } from "../i18n/I18n.tsx";
 import { createPersonAtom, KEYS } from "../state/vault.ts";
 
-export function PersonProposal({ author }: { readonly author: PersonName }) {
+export function PersonProposal({
+  author,
+  inline = false,
+}: {
+  readonly author: PersonName;
+  readonly inline?: boolean;
+}) {
   const t = useT();
   const navigate = useNavigate();
   const create = useAtomSet(createPersonAtom, { mode: "promiseExit" });
@@ -30,6 +36,30 @@ export function PersonProposal({ author }: { readonly author: PersonName }) {
     const error = Option.getOrUndefined(Cause.findErrorOption(exit.cause));
     setProblem(error?._tag === "NoteNameTaken" ? t.people.taken(name) : t.people.failed);
   };
+
+  if (inline) {
+    return (
+      <span className="person-proposal person-proposal--inline">
+        <button
+          type="button"
+          className="button button--quiet person-proposal__inline"
+          disabled={making}
+          aria-label={t.people.makePerson(name)}
+          title={t.people.makePerson(name)}
+          onClick={() => void make()}
+        >
+          <UserPlus size={16} aria-hidden="true" />
+          {making ? t.people.making : t.people.makeShort}
+        </button>
+        {problem === null ? null : (
+          <span className="field__error" role="alert">
+            <CircleAlert className="field__error-icon" aria-hidden="true" />
+            {problem}
+          </span>
+        )}
+      </span>
+    );
+  }
 
   return (
     <div className="person-proposal">

@@ -59,7 +59,13 @@ const fillFrom = (
   return { values: next, filled: marked };
 };
 
-export function AddVideo({ onSaving }: { readonly onSaving: (saving: boolean) => void }) {
+export function AddVideo({
+  author,
+  onSaving,
+}: {
+  readonly author: { readonly family?: string; readonly given?: string };
+  readonly onSaving: (saving: boolean) => void;
+}) {
   const t = useT();
   const navigate = useNavigate();
   const lookupVideo = useAtomSet(lookupVideoAtom, { mode: "promiseExit" });
@@ -74,7 +80,11 @@ export function AddVideo({ onSaving }: { readonly onSaving: (saving: boolean) =>
   const [address, setAddress] = useState("");
   const [addressProblem, setAddressProblem] = useState<Say | null>(null);
   const [lookup, setLookup] = useState<Lookup>({ _tag: "Idle" });
-  const [values, setValues] = useState<VideoValues>(EMPTY);
+  const [values, setValues] = useState<VideoValues>(() => ({
+    ...EMPTY,
+    familyName: author.family ?? "",
+    givenName: author.given ?? "",
+  }));
   const [filled, setFilled] = useState<ReadonlyArray<VideoField>>([]);
   const valuesRef = useRef(values);
   const filledRef = useRef(filled);

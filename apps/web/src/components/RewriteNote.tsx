@@ -82,6 +82,7 @@ export function RewriteNote({
   ).trim();
   const aiRuns = segments.filter((segment) => segment.kind === "ai").length;
   const total = aiRuns + (node.aiTitle ? 1 : 0);
+  const deskTitle = total > 0 ? "titleAi" : "titleOwn";
   const done =
     segments.filter((segment, index) => {
       const edit = edits[index];
@@ -172,7 +173,7 @@ export function RewriteNote({
 
   return (
     <Panel
-      title={total > 0 ? t.rewrite.titleAi : t.rewrite.titleOwn}
+      title={node.kind === "person" ? t.people.wordsLabel(node.title) : t.rewrite[deskTitle]}
       initial="accent"
       meta={
         source === undefined ? undefined : (

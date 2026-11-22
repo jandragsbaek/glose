@@ -8,6 +8,7 @@ import { type ReactNode, useId, useState } from "react";
 import { Extraction } from "../components/Extraction.tsx";
 import { Probe } from "../components/Probe.tsx";
 import { PassagesLink, PassagesStage } from "../components/Passages.tsx";
+import { PersonProposal } from "../components/PersonProposal.tsx";
 import { Reader } from "../components/Reader.tsx";
 import { ReadingStart } from "../components/ReadingStart.tsx";
 import { StepBar } from "../components/StepBar.tsx";
@@ -21,10 +22,11 @@ import {
   Spine,
   StorageProblem,
 } from "../components/ui.tsx";
+import { authorOf, peopleIn, personOfSource } from "../domain/person.ts";
 import { asksWhereToStart, missingDetails, wordCount } from "../domain/source.ts";
 import { videoIdOf, youtubeAt } from "../domain/video.ts";
 import { useT } from "../i18n/I18n.tsx";
-import { KEYS, saveFreeTextAtom, sourceAtom } from "../state/vault.ts";
+import { graphAtom, KEYS, saveFreeTextAtom, sourceAtom } from "../state/vault.ts";
 
 interface SourceSearch {
   readonly text?: 1;
@@ -100,7 +102,7 @@ function SourceView({ source }: { readonly source: Source }) {
           : null;
   const sub = (
     <span className="button-row">
-      {author}
+      <AuthorName source={source} name={author} />
       {source.kind === "lesson" && source.container !== null ? (
         <span className="page-head__where">
           <Link
@@ -205,6 +207,30 @@ function SourceView({ source }: { readonly source: Source }) {
 }
 
 type SaveState = "idle" | "saving" | "saved" | "failed";
+
+function AuthorName({ source, name }: { readonly source: Source; readonly name: string }) {
+  const graph = useAtomValue(graphAtom);
+  if (!AsyncResult.isSuccess(graph)) return <span>{name}</span>;
+  const person = personOfSource(source, peopleIn(graph.value));
+  if (person === null) {
+    return (
+      <span className="page-head__author">
+        <span>{name}</span>
+        <PersonProposal author={authorOf(source)} inline />
+      </span>
+    );
+  }
+  return (
+    <Link
+      to="/people/$personName"
+      params={{ personName: person.id }}
+      search={{}}
+      className="page-head__crumb"
+    >
+      {person.title}
+    </Link>
+  );
+}
 
 function FreeText({ source }: { readonly source: Source }) {
   const t = useT();

@@ -17,7 +17,6 @@ export const peopleMessages: typeof english = {
     lived: (born: string, died: string) => `${born}–${died}`,
     notFound: (name: string) => `Ingen person hedder ${name} i dette arkiv.`,
     backToGraph: "Tilbage til grafen",
-    edit: "Redigér i grafen",
     addSource: "Tilføj en kilde",
     works: "Værker og foredrag",
     worksMeta: "efter år for første udgivelse",
@@ -51,8 +50,15 @@ export const peopleMessages: typeof english = {
     openSource: "Åbn kilden",
     noNotes: (title: string) => `Ingen noter fra ${title} endnu.`,
     words: "Med dine ord",
-    noWords: (name: string) =>
-      `Intet skrevet om ${name} endnu. Redigér personen i grafen for at skrive, hvem de er for dig.`,
+    wordsLabel: (name: string) => `Dine ord om ${name}`,
+    wordsPlaceholder: (name: string) => `Hvem er ${name} for dig?`,
+    linkHint: (open: string) =>
+      `Skriv [[ for at oprette et link til en note, en kilde eller en person. ${open}+klik på et link for at åbne det.`,
+    saving: "Gemmer…",
+    saved: "Gemt",
+    saveFailed: "Glose kunne ikke gemme dine ord. Skriv videre, så prøver den igen.",
+    aiWords: "Noget af teksten er AI-tekst. Skriv den om i grafen, så kan du skrive her.",
+    rewrite: "Skriv om i grafen",
     people: "Personer",
     noPeople:
       "Ingen links til andre personer endnu. Nævn en person med dine ord som et link, fx [[Mihaly Csikszentmihalyi]].",
@@ -64,5 +70,15 @@ export const peopleMessages: typeof english = {
       `En fil hedder allerede ${name}. Omdøb den, eller ret dens egenskaber.`,
     failed: "Glose kunne ikke lave personnoten. Prøv igen.",
     openPerson: (name: string) => `Åbn ${name}`,
+    makeShort: "Lav en personnote",
+  },
+  links: {
+    title: "Link til en note, kilde eller person",
+    find: "Find en note, kilde eller person",
+    empty: "Intet i grafen passer.",
+    missing: (name: string) => `Link til »${name}«, som ikke er i grafen endnu`,
+    action: "Link",
+    short: "Link",
+    kinds: { note: "Note", source: "Kilde", person: "Person" },
   },
 };

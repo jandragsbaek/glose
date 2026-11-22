@@ -22,7 +22,7 @@ export const graphMessages = {
     canvasLabel: (notes: number, links: number, ai = 0) =>
       `The Graph: ${count(notes, "node", "nodes")} joined by ${count(links, "Link", "Links")}.${ai === 0 ? "" : ` ${count(ai, "Note holds", "Notes hold")} AI text.`} The panel beside it lists the same Sources and Notes.`,
     findLabel: "Find in the Graph",
-    findPlaceholder: "Find a Note or Source",
+    findPlaceholder: "Find a Note, Source or Person",
     found: (n: number) => (n === 0 ? "Nothing found" : `${numbers.format(n)} found`),
     zoomIn: "Zoom in",
     zoomOut: "Zoom out",

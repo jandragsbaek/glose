@@ -959,9 +959,10 @@ Person has no single Source. The details below are the agent's picks.
   no Growth. A file without `family` takes its name from the file name (the last word as family).
 - The person's works are the Sources whose `author-family` is their `family` (case aside), and
   whose `author-given` is their `given` when both are known. Only the first author counts for now.
-- Glose proposes a Person: the Graph's panel of a Source whose author has none says so and offers
-  "Make a Person note for <name>" (`people.create`), which writes the file and opens the page. The
-  author's name in that panel links to their Person once there is one.
+- Glose proposes a Person: the Graph's panel of a Source whose author has none says so, under the
+  author's name and above the Properties, and offers "Make a Person note for <name>"
+  (`people.create`), which writes the file and opens the page. The Source's page head offers the
+  same beside the author's name. In both, the name links to their Person once there is one.
 - The Person page, `/people/<Person>` (the chosen work as `?work=<Source>`), belongs to the Graph
   in the rail. "Works and talks" is the Career Line: every work as its call number, title and
   its Reading marks and "Book · 9 Notes" over a year rule (at least ten years wide; works of one year stack); a
@@ -971,15 +972,46 @@ Person has no single Source. The details below are the agent's picks.
   whose works share Links with this one's. An Accent ring sits at the work where their Links meet,
   named with their works and the count ("Flow · 17 Links"; "named in 1 Note" when the Links reach
   their own file).
-- The side column: In your words (the body), People (each with the sentence that links them, from
-  either Person's words, else "Linked through their works"), and Properties. Editing happens in
-  the Graph ("Edit in the Graph"), on the same desk as a Note.
+- The side column: People (each with the sentence that links them, from either Person's words,
+  else "Linked through their works") and Properties, which edit in place.
 - On the Graph a Person is a Lapis medallion (a Paper ring inside the disc) with its name always
   shown; with AI text it is the hollow Rubric ring, like a Note. The Graph's panel lists People
   under the Sources, and a Person cannot be cited in a Writing project.
-- Not yet: co-authors and aliases in the matching, prefilling Add Source with the person, Links
+- Not yet: co-authors and aliases in the matching, Links
   from a Person to their own works on the Graph canvas (a Person floats apart from them), events
   (conferences) as their own notes, and a People list outside the Graph.
+
+## Decided, writing a Person (November 2026)
+
+A council review of adding a Person and its details scored it 4/10: a new Person had no field to
+write in (the Graph's desk drew one field per run of text, and an empty body has none), and the
+only way to make a Person sat at the foot of the Graph's Source panel. Jan turned down three
+sketched flows (write on the page with Save, mend the Graph desk, a slip of fields before making
+the Person) and chose that a Person is written like a Note, with the Link tools of the writer.
+
+- The Person page is the note. Under "Works and talks", "In your words" is an editor that is
+  always open and is saved as the user pauses (the shared `notes.save`); until the save is
+  confirmed the words are kept as a local draft, as a Video's notes are, so closing Glose in the
+  pause loses nothing. A new, empty Person opens with the cursor in it. "Edit in the Graph" is gone from the page head.
+- The editor is the Writing desk's, cut to a Note: Markdown with bold, italic and headings from
+  the same format bar, and `[[` (or Ctrl+K, or the bar's Link button) opens a slip to find a Note,
+  Source or Person. The pick goes in as a plain Link, `[[Name]]`; a Link has no page, so the slip
+  has none. No Tries. Selected text becomes the search and is replaced by the Link. The slip's
+  last row links to the typed name when nothing in the Graph has it, so a Link can come before
+  its Note; Escape puts back what was typed. Ctrl+click (⌘ on a Mac) or Ctrl+Enter on a Link
+  opens it.
+- A Person whose words hold AI text shows them marked, with "Rewrite in the Graph", which opens
+  the Graph's desk on it at once (titled with the Person's name); the editor takes over once the
+  AI text is rewritten, so AI text is never edited unmarked.
+- "Add a Source" on a Person opens the form with their family and given name filled in, for a
+  book, an article or a talk.
+- "Add property" on a Person offers `born` and `died` first, as numbers.
+- The Graph's desk gives an empty Note one field, so its first words can be written there too.
+- Not yet: one place to fix a Person's name (the desk's Title renames the file, `family` and
+  `given` set the matching, and the two can drift apart), and the same editor for a Note's words.
+- Known gap, shared with a Video's notes: the desktop app gets a new port on each launch, so a
+  draft left by a quit inside the save pause is not found on the next launch (local storage
+  belongs to the old address). It needs a stable desktop origin, checked on a Mac.
 
 ## Decided, the first page of a Source (November 2026)
 

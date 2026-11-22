@@ -16,7 +16,6 @@ export const peopleMessages = {
     lived: (born: string, died: string) => `${born}–${died}`,
     notFound: (name: string) => `No Person is named ${name} in this Vault.`,
     backToGraph: "Back to the Graph",
-    edit: "Edit in the Graph",
     addSource: "Add a Source",
     works: "Works and talks",
     worksMeta: "by year of first publication",
@@ -50,8 +49,15 @@ export const peopleMessages = {
     openSource: "Open the Source",
     noNotes: (title: string) => `No Notes from ${title} yet.`,
     words: "In your words",
-    noWords: (name: string) =>
-      `Nothing written about ${name} yet. Edit the Person in the Graph to say who they are to you.`,
+    wordsLabel: (name: string) => `Your words on ${name}`,
+    wordsPlaceholder: (name: string) => `Who is ${name} to you?`,
+    linkHint: (open: string) =>
+      `Type [[ to link a Note, Source or Person. ${open}+click a Link to open it.`,
+    saving: "Saving…",
+    saved: "Saved",
+    saveFailed: "Glose could not save your words. Keep typing, and it tries again.",
+    aiWords: "Some of these words are AI text. Rewrite them in the Graph, then you can write here.",
+    rewrite: "Rewrite in the Graph",
     people: "People",
     noPeople:
       "No Links to other People yet. Name a Person in your words as a Link, such as [[Mihaly Csikszentmihalyi]].",
@@ -62,5 +68,15 @@ export const peopleMessages = {
     taken: (name: string) => `A file is named ${name} already. Rename it, or set its properties.`,
     failed: "Glose could not make the Person note. Try again.",
     openPerson: (name: string) => `Open ${name}`,
+    makeShort: "Make a Person note",
+  },
+  links: {
+    title: "Link to a Note, Source or Person",
+    find: "Find a Note, Source or Person",
+    empty: "Nothing in the Graph matches.",
+    missing: (name: string) => `Link to “${name}”, which is not in the Graph yet`,
+    action: "Link",
+    short: "Link",
+    kinds: { note: "Note", source: "Source", person: "Person" },
   },
 };
