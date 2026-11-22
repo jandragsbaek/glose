@@ -7,6 +7,7 @@ import { type ReactNode, useId, useState } from "react";
 
 import { Extraction } from "../components/Extraction.tsx";
 import { Probe } from "../components/Probe.tsx";
+import { PassagesLink, PassagesStage } from "../components/Passages.tsx";
 import { Reader } from "../components/Reader.tsx";
 import { ReadingStart } from "../components/ReadingStart.tsx";
 import { StepBar } from "../components/StepBar.tsx";
@@ -30,6 +31,7 @@ interface SourceSearch {
   readonly p?: number;
   readonly watch?: 1;
   readonly t?: number;
+  readonly passages?: 1;
 }
 
 export const Route = createFileRoute("/sources/$sourceId")({
@@ -41,6 +43,7 @@ export const Route = createFileRoute("/sources/$sourceId")({
       ...(search.text === 1 || search.text === "1" ? { text: 1 as const } : {}),
       ...(Number.isInteger(p) && p > 0 ? { p } : {}),
       ...(search.watch === 1 || search.watch === "1" ? { watch: 1 as const } : {}),
+      ...(search.passages === 1 || search.passages === "1" ? { passages: 1 as const } : {}),
       ...(search.t !== undefined && Number.isInteger(at) && at >= 0 ? { t: at } : {}),
     };
   },
@@ -119,6 +122,9 @@ function SourceView({ source }: { readonly source: Source }) {
   if (source.hasText && (source.readingStep === "read" || search.text === 1)) {
     return <Reader source={source} sub={sub} focus={search.p ?? null} />;
   }
+  if (source.kind === "book" && (source.readingStep === "passages" || search.passages === 1)) {
+    return <PassagesStage source={source} sub={sub} />;
+  }
   if (
     source.kind === "video" &&
     (source.readingStep === "free-text" || search.watch === 1 || search.t !== undefined)
@@ -160,6 +166,8 @@ function SourceView({ source }: { readonly source: Source }) {
             >
               {t.watch.watchVideo}
             </Link>
+          ) : source.kind === "book" ? (
+            <PassagesLink source={source} />
           ) : undefined
         }
       >
@@ -178,7 +186,11 @@ function SourceView({ source }: { readonly source: Source }) {
     );
   }
   return (
-    <Page title={source.title} sub={sub}>
+    <Page
+      title={source.title}
+      sub={sub}
+      actions={source.kind === "book" ? <PassagesLink source={source} /> : undefined}
+    >
       <div className="columns">
         <div className="stack">
           <StepBar source={source} />

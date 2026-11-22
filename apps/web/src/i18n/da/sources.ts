@@ -1,4 +1,4 @@
-import { isTimestamp, type ReadingStep } from "@glose/contracts";
+import { isPageNumber, isTimestamp, type ReadingStep } from "@glose/contracts";
 import type { MissingDetail } from "../../domain/source.ts";
 import { numbers, count, list, monthYear, capitalised } from "./format.ts";
 import type { Messages } from "../en.ts";
@@ -8,7 +8,9 @@ export const sourceMessages: Pick<Messages, "source" | "sources" | "addSource"> 
     firstPublished: (year: number) => `først udgivet ${year}`,
     callNumberLabel: (callNumber: string) => `Opstillingssignatur ${callNumber}`,
     page: (page: string, video = false) =>
-      page.startsWith("¶") || (video && isTimestamp(page)) ? page : `s. ${page}`,
+      page.startsWith("¶") || (video && isTimestamp(page)) || !isPageNumber(page)
+        ? page
+        : `s. ${page}`,
     missingTitle: "Mangler for en korrekt kildehenvisning",
     missing: {
       firstPublished: "Året for første udgivelse",
@@ -57,6 +59,7 @@ export const sourceMessages: Pick<Messages, "source" | "sources" | "addSource"> 
       ({
         "free-text": `Fri tekst · ${count(words, "ord", "ord")}`,
         read: "Læser",
+        passages: `Passager · ${count(notes, "note", "noter")} skrevet`,
         extraction: `Udtræk · ${count(notes, "note", "noter")} skrevet`,
         probe: `Sondering · ${count(notes, "note", "noter")}`,
       })[step],
@@ -102,6 +105,7 @@ export const sourceMessages: Pick<Messages, "source" | "sources" | "addSource"> 
     steps: {
       "free-text": "I fri tekst",
       read: "Læses",
+      passages: "I passager",
       extraction: "I udtræk",
       probe: "I sondering",
       done: "Læst",

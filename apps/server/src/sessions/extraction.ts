@@ -1,16 +1,14 @@
 import {
   findInArticle,
   type Language,
+  type BookPassage,
   linkKey,
-  type PlainNotes,
   plainNotes,
   plainStamps,
   type Point,
   type PointLink,
   type SessionEntry,
   type Source,
-  timestampSeconds,
-  timestampText,
   youtubeId,
 } from "@glose/contracts";
 import * as Effect from "effect/Effect";
@@ -18,10 +16,13 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import type * as Graph from "../vault/Graph.ts";
+import type * as Passages from "../vault/Passages.ts";
 import type * as Sources from "../vault/Sources.ts";
 import type { AgentTool, InputItem } from "./agent.ts";
 import { articleOf, readArticleTool } from "./articleTools.ts";
 import { readNoteTool, searchGraphTool } from "./graphTools.ts";
+import { passageWith, readPassagesTool } from "./passageTools.ts";
+import { findInNotes, findQuote } from "./quotes.ts";
 
 const NO_ARGUMENTS = {
   type: "object",
@@ -44,6 +45,7 @@ How to work:
 - Start with read_source: the Source's bibliographic data and the user's Free text, what they wrote freely about it. When its readingStart is "probe" or "catch-up", the user began with a Probe: call read_probe, which gives every question, the user's Reasoning and answers, how each was judged, and what the Probe found per topic. Propose Points first on what the Probe found: the topics the user knows, and the gaps it taught. Then use search_graph a few times, with different words for the Source's main ideas, and read_note on the Notes that matter, so you know what the user's Graph already holds. Call list_sources when other Sources may matter.
 - Propose Points only through propose_points, a few at a time (at most ${MAX_POINTS}), the ones that matter most first. list_points shows the Points already in the Session; do not propose one again.
 - An Article or a Course lesson (read_source gives its kind) brings its text: call read_article. Read it all; propose the Source's core points from the text, and first the points the user's Passages mark (what they highlighted while reading, with their own words on it). Use origin "article" for a Point the text states: give the quote, the exact words of the text, copied character for character, and Glose sets its Location from the paragraph. The text is the user's own copy, so do not use origin "ai" for what the text says.
+- A book may have Passages: words the user copied from their own copy while reading, each with its page and their own words on it. Call read_passages. A Passage holds the author's words; the user's Notes hold theirs. Propose Points first from the Passages no Note uses yet (usedBy is empty); for a Passage a Note already uses, propose a Point only for a claim that Note does not make, and name that Note in repeats when it does. Use origin "passage" for a Point that rests on a Passage: give the quote, the Passage's exact words, copied character for character, and Glose cites the Passage. A Point the user makes from their Passages has origin "passage" too; when they ask for a draft of it, the draft shows beside their own words, not in place of them.
 - A Video (kind "video", a talk or another video on YouTube) brings no text, and you have not seen it: Glose holds no transcript. Its Free text is the user's watch notes, where [12:34] marks the time in the video that the words after it are about. Propose its Points from the notes, with origin "free-text", the notes' exact words as the quote (words after one timestamp, never across two), and that timestamp in timestamp (such as "12:34"); Glose checks the words are there and sets the Point's Location to that time. Use origin "ai" only for what you truly know of the talk, and say so.
 - Say where each Point comes from. Origin "free-text" when the user's Free text holds it: give the quote, the exact words of the Free text, copied character for character. Origin "probe" when the user's own Reasoning or answers in the Probe hold it: give the quote, their exact words, copied character for character. Origin "ai" when it comes from your knowledge of the Source and not from the Free text. Never present your knowledge as something the user wrote. If you are unsure what the Source says, say so.
 - Use the Graph. When a Note already says the Point, name it in repeats. When a Note disagrees with the Point or pulls against it, name it in pulls_against_note and say how. Propose links to the Notes the Point's Note should link to, each with a short reason. Name only Notes that search_graph or read_note showed you, by their exact names.
@@ -56,11 +58,19 @@ How to work:
 - When the user writes a Point as a Note, you hear what they wrote. Comment only when something is wrong, missing or worth linking; propose_links adds Links to a kept Point.
 - Write your messages in the language of the user's messages, or the interface language named in the first message. Write plain text, short enough to read in a narrow column.`;
 
+const KICKOFF = "Start the Extraction now.";
+
 export const kickoff = (language: Language): InputItem => ({
   type: "message",
   role: "developer",
-  content: `Start the Extraction now. The user's interface language is ${LANGUAGE_NAMES[language]}.`,
+  content: `${KICKOFF} The user's interface language is ${LANGUAGE_NAMES[language]}.`,
 });
+
+export const isKickoff = (item: InputItem): boolean =>
+  "role" in item &&
+  item.role === "developer" &&
+  typeof item.content === "string" &&
+  item.content.startsWith(KICKOFF);
 
 export const aboutMessage = (point: Point, text: string): string =>
   `(About point ${numberOf(point)}: "${point.title}")\n\n${text}`;
@@ -98,7 +108,7 @@ const ProposeArguments = Schema.Struct({
   points: Schema.Array(
     Schema.Struct({
       title: Schema.String,
-      origin: Schema.Literals(["free-text", "probe", "article", "ai"]),
+      origin: Schema.Literals(["free-text", "probe", "article", "passage", "ai"]),
       quote: NullableString,
       repeats: NullableString,
       pulls_against_note: NullableString,
@@ -118,50 +128,6 @@ const decodePropose = Schema.decodeUnknownOption(ProposeArguments);
 const decodeLinks = Schema.decodeUnknownOption(LinksArguments);
 const decodeDraft = Schema.decodeUnknownOption(DraftArguments);
 
-const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-const quotePattern = (quote: string, flags: string): RegExp | null => {
-  const words = quote
-    .trim()
-    .replace(/^["'“”‘’«»„…\s]+|["'“”‘’«»„…\s]+$/g, "")
-    .split(/\s+/)
-    .filter((word) => word !== "");
-  if (words.length === 0) return null;
-  return new RegExp(words.map(escape).join("\\s+"), flags);
-};
-
-export const findQuote = (freeText: string, quote: string): string | null =>
-  quotePattern(quote, "iu")?.exec(freeText)?.[0] ?? null;
-
-const EDGE_STAMPS = /^(?:\s*\[[0-9:]+\])+\s*|\s*(?:\[[0-9:]+\]\s*)+$/g;
-
-const timeOf = (text: string | null) => {
-  const seconds = text === null ? null : timestampSeconds(text.replace(/^\[|\]$/g, ""));
-  return seconds === null ? null : timestampText(seconds);
-};
-
-export const findInNotes = (
-  { text: notes, stamps }: PlainNotes,
-  quote: string,
-  timestamp: string | null,
-): { readonly text: string; readonly page: string | null } | null => {
-  const pattern = quotePattern(quote.replace(EDGE_STAMPS, ""), "giu");
-  if (pattern === null) return null;
-  const found = Array.from(notes.matchAll(pattern)).flatMap((match) => {
-    const start = match.index;
-    const end = start + match[0].length;
-    if (stamps.some((stamp) => stamp.start < end && stamp.end > start)) return [];
-    const page = stamps.filter((stamp) => stamp.end <= start).at(-1)?.label ?? null;
-    return [{ text: match[0], page }];
-  });
-  const [first] = found;
-  if (first === undefined) return null;
-  const named = timeOf(timestamp);
-  const chosen = found.find((match) => named !== null && match.page === named);
-  if (chosen !== undefined) return chosen;
-  return found.every((match) => match.page === first.page) ? first : { ...first, page: null };
-};
-
 const LINK_ITEMS = {
   type: "array",
   items: {
@@ -180,6 +146,7 @@ const nullable = (description: string) => ({ type: ["string", "null"], descripti
 export interface Context {
   readonly sources: Sources.Sources["Service"];
   readonly graph: Graph.Graph["Service"];
+  readonly passages: Passages.Passages["Service"];
   readonly source: string;
   readonly points: Effect.Effect<ReadonlyArray<Point>>;
   readonly propose: (points: ReadonlyArray<ProposedPoint>) => Effect.Effect<ReadonlyArray<number>>;
@@ -193,6 +160,7 @@ export interface Context {
 export const tools = ({
   sources,
   graph,
+  passages,
   source,
   points,
   propose,
@@ -274,6 +242,7 @@ export const tools = ({
           ),
         ),
     },
+    readPassagesTool(passages, source),
     {
       name: "list_points",
       entry: null,
@@ -310,9 +279,12 @@ export const tools = ({
                   type: "string",
                   description: "The claim, as a full sentence: the Note's title.",
                 },
-                origin: { type: "string", enum: ["free-text", "probe", "article", "ai"] },
+                origin: {
+                  type: "string",
+                  enum: ["free-text", "probe", "article", "passage", "ai"],
+                },
                 quote: nullable(
-                  "The exact words the Point comes from: the user's in the Free text or in their Reasoning or answers in the Probe, or the text's own words for origin article.",
+                  "The exact words the Point comes from: the user's in the Free text or in their Reasoning or answers in the Probe, the text's own words for origin article, or a Passage's words for origin passage.",
                 ),
                 repeats: nullable("A Note that already says this Point."),
                 pulls_against_note: nullable("A Note that disagrees with this Point."),
@@ -359,6 +331,9 @@ export const tools = ({
         const probeEntries = yield* probe;
         const probeText = probeEntries === null ? "" : probeWords(probeEntries);
         const article = yield* articleOf(sources, source);
+        const kept = yield* passages
+          .list(source)
+          .pipe(Effect.orElseSucceed((): ReadonlyArray<BookPassage> => []));
         const existing = new Set((yield* points).map((point) => linkKey(point.title)));
         const proposed: Array<ProposedPoint> = [];
         const unquoted: Array<boolean> = [];
@@ -371,6 +346,10 @@ export const tools = ({
             point.origin === "article" && point.quote !== null && article !== null
               ? findInArticle(article, point.quote)
               : null;
+          const inPassage =
+            point.origin === "passage" && point.quote !== null
+              ? passageWith(kept, point.quote)
+              : null;
           const inNotes =
             notes !== null && point.origin === "free-text" && point.quote !== null
               ? findInNotes(notes, point.quote, point.timestamp ?? null)
@@ -380,15 +359,38 @@ export const tools = ({
               ? null
               : point.origin === "article"
                 ? (inArticle?.text.replace(/\s+/g, " ") ?? null)
-                : notes !== null && point.origin === "free-text"
-                  ? (inNotes?.text ?? null)
-                  : findQuote(point.origin === "probe" ? probeText : freeText, point.quote);
+                : point.origin === "passage"
+                  ? (inPassage?.text ?? null)
+                  : notes !== null && point.origin === "free-text"
+                    ? (inNotes?.text ?? null)
+                    : findQuote(point.origin === "probe" ? probeText : freeText, point.quote);
           unquoted.push(point.quote !== null && quote === null);
           proposed.push({
             title,
-            origin: point.origin === "article" && article === null ? "ai" : point.origin,
+            origin:
+              (point.origin === "article" && article === null) ||
+              (point.origin === "passage" && inPassage === null)
+                ? "ai"
+                : point.origin,
             quote,
-            page: inArticle !== null ? `¶ ${inArticle.n}` : (inNotes?.page ?? null),
+            page:
+              inArticle !== null
+                ? `¶ ${inArticle.n}`
+                : inPassage !== null
+                  ? inPassage.passage.page
+                  : (inNotes?.page ?? null),
+            ...(inPassage === null
+              ? {}
+              : {
+                  aiTitle: true,
+                  passages: [
+                    {
+                      id: inPassage.passage.id,
+                      page: inPassage.passage.page,
+                      words: inPassage.passage.words,
+                    },
+                  ],
+                }),
             repeats: resolve(point.repeats),
             pullsAgainst:
               against === null

@@ -1,4 +1,4 @@
-import { isTimestamp, type ReadingStep } from "@glose/contracts";
+import { isPageNumber, isTimestamp, type ReadingStep } from "@glose/contracts";
 import type { MissingDetail } from "../../domain/source.ts";
 import { numbers, count, list, monthYear } from "./format.ts";
 
@@ -7,7 +7,9 @@ export const sourceMessages = {
     firstPublished: (year: number) => `first published ${year}`,
     callNumberLabel: (callNumber: string) => `Call number ${callNumber}`,
     page: (page: string, video = false) =>
-      page.startsWith("¶") || (video && isTimestamp(page)) ? page : `p. ${page}`,
+      page.startsWith("¶") || (video && isTimestamp(page)) || !isPageNumber(page)
+        ? page
+        : `p. ${page}`,
     missingTitle: "Missing for a correct Citation",
     missing: {
       firstPublished: "The year of first publication",
@@ -55,6 +57,7 @@ export const sourceMessages = {
       ({
         "free-text": `Free text · ${count(words, "word", "words")}`,
         read: "Reading",
+        passages: `Passages · ${count(notes, "Note", "Notes")} written`,
         extraction: `Extraction · ${count(notes, "Note", "Notes")} written`,
         probe: `Probe · ${count(notes, "Note", "Notes")}`,
       })[step],
@@ -100,6 +103,7 @@ export const sourceMessages = {
     steps: {
       "free-text": "In Free text",
       read: "Reading",
+      passages: "In Passages",
       extraction: "In Extraction",
       probe: "In Probe",
       done: "Read",

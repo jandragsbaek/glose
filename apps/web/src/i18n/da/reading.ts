@@ -26,11 +26,14 @@ export const readingMessages: Pick<
     title: "Hvor er du med denne bog?",
     hint: "Dit svar bestemmer det første trin. Du kan stadig tage den anden vej senere.",
     choices: {
+      reading: "Jeg er i gang med at læse den",
       write: "Jeg har tanker, jeg vil skrive ned",
       probe: "Jeg har læst den, og jeg vil udspørges om den",
       "catch-up": "Jeg læste den for længe siden, eller kun delvist",
     },
     choiceHints: {
+      reading:
+        "Gem passager efter hver læsning, og skriv noter undervejs. Udtræk og sondering kommer, når du er færdig.",
       write: "Begynd med fri tekst med dine egne ord.",
       probe: "AI'en spørger; du svarer med din begrundelse.",
       "catch-up": "AI'en spørger og forklarer de dele, du mangler.",
@@ -40,11 +43,13 @@ export const readingMessages: Pick<
     stepNotes: {
       "free-text": "dine egne ord",
       read: "teksten, i Glose",
+      passages: "efter hver læsning",
       extraction: "kernepunkter som noter",
       probe: "spørgsmål og svar",
     },
     startWriting: "Begynd fri tekst",
     startProbe: "Begynd sonderingen",
+    startPassages: "Begynd passager",
     starting: "Begynder",
   },
   chatgpt: {
@@ -319,11 +324,14 @@ export const readingMessages: Pick<
         .filter((part) => part !== null)
         .join(" · "),
     startLead: {
+      reading: "Bliv spurgt om bogen",
       write: "Bliv spurgt om bogen",
       probe: "Bliv spurgt om bogen",
       "catch-up": "Kom ajour med bogen, og bliv så spurgt",
     },
     startBody: {
+      reading:
+        "AI'en spørger om bogens hovedidéer, ét spørgsmål ad gangen, og afprøver de noter, du har lavet. Svar med dit ræsonnement, hvordan du kom frem til det, og så dit svar. Hvor et svar viser et hul, underviser AI'en i netop den del og spørger igen.",
       write:
         "AI'en spørger om bogens hovedidéer, ét spørgsmål ad gangen, og afprøver de noter, du har lavet. Svar med dit ræsonnement, hvordan du kom frem til det, og så dit svar. Hvor et svar viser et hul, underviser AI'en i netop den del og spørger igen.",
       probe:

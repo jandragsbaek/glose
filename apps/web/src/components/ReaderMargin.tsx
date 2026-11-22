@@ -110,13 +110,19 @@ export function Notebook({
   passages,
   pendingNotes,
   onLost,
-  onSaved,
+  onSaved = () => undefined,
+  title,
+  hint,
+  foot,
 }: {
   readonly source: Source;
   readonly passages: number;
   readonly pendingNotes: string | null;
-  readonly onLost: (text: string) => void;
-  readonly onSaved: () => void;
+  readonly onLost?: (text: string) => void;
+  readonly onSaved?: () => void;
+  readonly title?: string;
+  readonly hint?: string;
+  readonly foot?: string;
 }) {
   const t = useT();
   const fieldId = useId();
@@ -136,13 +142,13 @@ export function Notebook({
     onLost,
   );
   return (
-    <Panel title={t.reader.margin.notebook} initial="rubric">
+    <Panel title={title ?? t.reader.margin.notebook} initial="rubric">
       <div className="panel__body margin__body">
         <label className="sr-only" htmlFor={fieldId}>
-          {t.reader.margin.notebook}
+          {title ?? t.reader.margin.notebook}
         </label>
         <p className="field__hint" id={hintId}>
-          {t.reader.margin.notebookHint}
+          {hint ?? t.reader.margin.notebookHint}
         </p>
         <textarea
           id={fieldId}
@@ -157,7 +163,7 @@ export function Notebook({
         <SaveLine state={state} onRetry={flush} />
       </div>
       <div className="panel__body margin__body">
-        <p className="margin__passages">{t.reader.margin.passages(passages)}</p>
+        <p className="margin__passages">{foot ?? t.reader.margin.passages(passages)}</p>
       </div>
     </Panel>
   );

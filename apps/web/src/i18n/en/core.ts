@@ -127,6 +127,7 @@ export const coreMessages = {
     continue: {
       "free-text": "Continue Free text",
       read: "Continue reading",
+      passages: "Continue Passages",
       extraction: "Continue Extraction",
       probe: "Continue Probe",
       done: "Open Source",
@@ -162,6 +163,7 @@ export const coreMessages = {
     names: {
       "free-text": "Free text",
       read: "Read",
+      passages: "Passages",
       extraction: "Extraction",
       probe: "Probe",
     },

@@ -4,6 +4,8 @@ import type * as Semaphore from "effect/Semaphore";
 import * as SubscriptionRef from "effect/SubscriptionRef";
 
 import * as Notes from "../vault/Notes.ts";
+import * as Passages from "../vault/Passages.ts";
+import { passageCite } from "../vault/passageFile.ts";
 import * as Settings from "../settings/Settings.ts";
 import { addPoints, type Live, type Load, patch } from "./liveSession.ts";
 import { mapPoint, pointName, pointsOf } from "./sessionEntries.ts";
@@ -25,6 +27,7 @@ export const make = Effect.fn("Sessions.makePointDecisions")(function* ({
 }) {
   const settings = yield* Settings.Settings;
   const notes = yield* Notes.Notes;
+  const passages = yield* Passages.Passages;
 
   const findPoint = Effect.fn("Sessions.findPoint")(function* (
     session: Live,
@@ -147,15 +150,25 @@ export const make = Effect.fn("Sessions.makePointDecisions")(function* ({
         .map((link) => link.note);
       const draft = aiText && text !== "" ? text : null;
       const own = draft === null ? text : "";
+      const cites = yield* Effect.forEach(point.passages ?? [], (cited) =>
+        passages.get(cited.id).pipe(
+          Effect.map((now) => ({ id: now.id, page: now.page, words: now.words })),
+          Effect.orElseSucceed(() => cited),
+        ),
+      );
       const note = yield* notes.create({
         title,
         source: view.subject,
         page,
         text: own,
         draft,
-        aiTitle: point.origin !== "user" && point.origin !== "passage",
+        aiTitle: (point.origin !== "user" && point.origin !== "passage") || point.aiTitle === true,
         related,
         language: language ?? "en",
+        footnotes: cites.map((cited, index) => ({
+          label: `q${index + 1}`,
+          text: passageCite(cited.id, cited.page, cited.words, language ?? "en"),
+        })),
       });
       const added = new Set(related.map(linkKey));
       yield* decidePoint(

@@ -58,6 +58,8 @@ How to work:
 - Write in the language the user answers in; before their first answer, in the interface language named in the first message. Write plain text.`;
 
 const START_NOTES: Record<ReadingStart, string> = {
+  reading:
+    "The user read the book over several sittings, kept Passages (words they copied from their copy, with the page) and wrote Notes from them as they went, then made more Notes in Extraction. Question them on the Source; list_notes shows the Notes they wrote, so you can test what the Notes claim.",
   write:
     "The user started by writing Free text, then made Notes in Extraction. Question them on the Source; list_notes shows the Notes they wrote, so you can test what the Notes claim.",
   probe:

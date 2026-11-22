@@ -15,12 +15,14 @@ export function StepBar({
   extractionNote,
   probeNote,
   readNote,
+  passagesNote,
   freeTextAction,
 }: {
   readonly source: Source;
   readonly extractionNote?: string;
   readonly probeNote?: string;
   readonly readNote?: string;
+  readonly passagesNote?: string;
   readonly freeTextAction?: ReactNode;
 }) {
   const t = useT();
@@ -40,6 +42,7 @@ export function StepBar({
     }
     if (step === "free-text") return t.steps.words(words);
     if (step === "read") return readNote ?? t.start.stepNotes.read;
+    if (step === "passages") return passagesNote ?? t.start.stepNotes.passages;
     const given = step === "extraction" ? extractionNote : probeNote;
     if (given !== undefined) return given;
     return t.steps.withChatGpt;

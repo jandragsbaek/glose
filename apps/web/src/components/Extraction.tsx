@@ -9,7 +9,8 @@ import { type ReactNode, useId, useState } from "react";
 import { useT } from "../i18n/I18n.tsx";
 import { advanceReadingAtom, KEYS } from "../state/vault.ts";
 import { extractionSessionAtom, sessionAtom } from "../state/sessions.ts";
-import { Desk, PointsPanel, StartExtraction } from "./ExtractionDesk.tsx";
+import { Desk, PointsPanel, StartExtraction, StartGroup } from "./ExtractionDesk.tsx";
+import { PassageNote } from "./PassageNote.tsx";
 import { elementOf, PointRow } from "./PointRow.tsx";
 import { PointsFoot } from "./PointsFoot.tsx";
 import { ProposedPoints } from "./ProposedPoints.tsx";
@@ -141,6 +142,7 @@ function ExtractionView({
   return (
     <Desk source={source} sourcePanels={sourcePanels} points={points} margin={margin}>
       <PointsPanel count={counted.length}>
+        {session.started === false && !session.working ? <StartGroup source={source} /> : null}
         {points.length === 0 ? (
           <div className="points__group">
             <p className="empty">
@@ -152,14 +154,27 @@ function ExtractionView({
           <div className="points__group">
             {groups.kept.map((point) => (
               <div key={point.id} hidden={point.id !== writing.id}>
-                <WritePoint
-                  session={session}
-                  point={point}
-                  video={source.kind === "video"}
-                  shown={point.id === writing.id}
-                  about={about?.id === point.id}
-                  onAbout={() => setAbout(point.id)}
-                />
+                {point.passages !== undefined && point.passages.length > 0 ? (
+                  <PassageNote
+                    cites={point.passages}
+                    ids={{ session: session.id, point: point.id }}
+                    session={session}
+                    point={point}
+                    ensure={async () => ({ session: session.id, point: point.id })}
+                    onSaved={() => undefined}
+                    onClose={() => undefined}
+                    closeLabel={t.extraction.drop}
+                  />
+                ) : (
+                  <WritePoint
+                    session={session}
+                    point={point}
+                    video={source.kind === "video"}
+                    shown={point.id === writing.id}
+                    about={about?.id === point.id}
+                    onAbout={() => setAbout(point.id)}
+                  />
+                )}
               </div>
             ))}
           </div>

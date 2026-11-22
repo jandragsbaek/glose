@@ -88,9 +88,11 @@ A **Source** that is a talk or another video on YouTube, watched in Glose. It br
 _Avoid_: clip, recording, talk (as the term), media
 
 **Passage**:
-Words of an **Article** or a **Course lesson** that the user marks while reading. The user's own
-words on it are kept with it. A **Passage** can be taken deeper in the **Probe**, or become a
-**Point**.
+Words of a **Source** that the user keeps: marked while reading an **Article** or a **Course
+lesson**, or copied from their own copy of a book, where each **Passage** is a file of its own with
+its **Location**. The user's own words on it are kept with it. A **Passage** holds the author's
+words, a **Note** the user's; a **Note** cites the **Passages** it rests on. A **Passage** can be
+taken deeper in the **Probe**, or become a **Point**.
 _Avoid_: highlight, mark (that is the **AI mark** or a Reading mark), annotation, excerpt, quote
 
 **Catalog**:
@@ -201,6 +203,8 @@ _Avoid_: alternative, variant, version, suggestion
 - Every **Note** has a **Source**; **Links** join **Notes** into the **Graph**
 - A **Note** with **AI text** stays a Seed; a **Note** in the user's words can grow, and a Tree
   has been tended
+- A book read now keeps **Passages** after each sitting, and the user writes **Notes** from them
+  as they go; **Extraction** later starts with the **Passages** no **Note** cites
 - A **Source** is a book (read elsewhere), an **Article**, a **Course lesson** or a **Video**; an
   **Article** and a **Course lesson** bring their text, so the Reading **Stage** starts by reading it
   in Glose and marking **Passages**; a **Video** starts by watching it in Glose and writing the

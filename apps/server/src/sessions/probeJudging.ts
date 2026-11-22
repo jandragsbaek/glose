@@ -15,7 +15,7 @@ import {
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-import { findQuote } from "./extraction.ts";
+import { findQuote } from "./quotes.ts";
 
 type Question = Extract<SessionEntry, { _tag: "ProbeQuestion" }>;
 type Answer = Extract<SessionEntry, { _tag: "ProbeAnswer" }>;

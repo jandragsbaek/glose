@@ -33,11 +33,14 @@ export const readingMessages = {
     title: "Where are you with this book?",
     hint: "Your answer sets the first step. You can still take the other path later.",
     choices: {
+      reading: "I'm reading it now",
       write: "I have thoughts I want to write down",
       probe: "I read it, and I want to be questioned on it",
       "catch-up": "I read it a while ago, or only in part",
     },
     choiceHints: {
+      reading:
+        "Keep Passages after each sitting and write Notes as you go. Extraction and the Probe come when you finish.",
       write: "Start with Free text in your own words.",
       probe: "The AI asks; you answer with your Reasoning.",
       "catch-up": "The AI asks, and explains the parts you are missing.",
@@ -47,11 +50,13 @@ export const readingMessages = {
     stepNotes: {
       "free-text": "your own words",
       read: "the text, in Glose",
+      passages: "after each sitting",
       extraction: "core points as Notes",
       probe: "questions and answers",
     },
     startWriting: "Start Free text",
     startProbe: "Start the Probe",
+    startPassages: "Start Passages",
     starting: "Starting",
   },
   chatgpt: {
@@ -345,11 +350,14 @@ export const readingMessages = {
         .filter((part) => part !== null)
         .join(" · "),
     startLead: {
+      reading: "Be questioned on the book",
       write: "Be questioned on the book",
       probe: "Be questioned on the book",
       "catch-up": "Catch up on the book, then be questioned",
     } satisfies Record<ReadingStart, string>,
     startBody: {
+      reading:
+        "The AI asks about the book's main ideas, one question at a time, and tests the Notes you made. Answer with your Reasoning, how you got there, then your answer. Where an answer shows a gap, the AI teaches that part and asks again.",
       write:
         "The AI asks about the book's main ideas, one question at a time, and tests the Notes you made. Answer with your Reasoning, how you got there, then your answer. Where an answer shows a gap, the AI teaches that part and asks again.",
       probe:

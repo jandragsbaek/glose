@@ -24,6 +24,7 @@ import {
 import { AnswerBox, useAnswerDraft } from "./ProbeAnswer.tsx";
 import { ProbeRow, type RowContext, rowsOf } from "./ProbeRows.tsx";
 import { Live, NeedsChatGpt, SessionProblem, useChatGptReady } from "./Session.tsx";
+import { PassagesLink } from "./Passages.tsx";
 import { StepBar } from "./StepBar.tsx";
 import { Findings } from "./ProbeFindings.tsx";
 import { followRow, waitsForWhole, WholeProbe } from "./ProbeWhole.tsx";
@@ -141,6 +142,8 @@ function ProbePage({
         >
           {t.watch.watchVideo}
         </Link>
+      ) : source.kind === "book" ? (
+        <PassagesLink source={source} />
       ) : null}
       <button
         type="button"
