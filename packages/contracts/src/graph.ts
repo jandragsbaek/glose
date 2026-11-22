@@ -33,9 +33,13 @@ export type GraphNode = typeof GraphNode.Type;
 export const GraphLink = Schema.Struct({ from: Schema.String, to: Schema.String });
 export type GraphLink = typeof GraphLink.Type;
 
+export const GraphPassage = Schema.Struct({ id: Schema.String, source: Schema.String });
+export type GraphPassage = typeof GraphPassage.Type;
+
 export const GraphView = Schema.Struct({
   nodes: Schema.Array(GraphNode),
   links: Schema.Array(GraphLink),
+  passages: Schema.optionalKey(Schema.Array(GraphPassage)),
 });
 export type GraphView = typeof GraphView.Type;
 

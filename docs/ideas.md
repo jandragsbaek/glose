@@ -1288,6 +1288,59 @@ Sheet keeps the book's Reading Stage, adds one new mark to the Markdown, and nee
 - Stored: the open answer is `answer` with an empty `reasoning`. Older Probes that hold both still
   show and judge both.
 
+## Decided, Passages from a book (November 2026)
+
+Jan asked for extracts from books as their own node type: a quote from the book that he, or the
+AI, then writes a Note about, with Notes linked as in a real zettelkasten, and a flow for working
+through a book over weeks. The flow was reviewed by a three-model council (Claude Opus 7 → 9, GPT
+Sol 7 → 8 → 9, Muse Wonder Full 7 → 9); the reviewed flow is `docs/drafts/passages-flow.md`. Jan
+liked two layouts on the impeccable decision page and chose the one that joins them, "Edition with
+a Desk", over "The Slip Drawer" and "The Book's Own Edition" (and "The Copy Desk"). He accepted
+the term Passage over "extract" ("Extract" clashes with Extraction).
+
+- A book's quote is a **Passage**, as in an Article: the author's words the user copied from their
+  copy. A Passage holds the author's words, a Note holds the user's. It is never a Note, has no
+  Growth, and is no debt: Glose never counts unused Passages as work owed.
+- A book's Passage is its own file, `Passages/<Source file name> <Location> <first words>.md`
+  (`glose: passage`, `source`, `page` as the Location string, `created`), the words as a blockquote
+  and the user's words on it under them. The name is fixed at capture (more words when two names
+  clash). The Location is not required; without one the Passage says "No page: cannot be cited".
+  An e-reader location ("Loc 2210") is kept as given and never gets "p.".
+- A Note cites a Passage in a footnote that carries the words: `[^q1]: “words” [[<Passage>|p. 47]]`.
+  Editing a used Passage rewrites those footnotes; Delete is withheld while a Note cites it. The
+  Graph reads only the top of the Vault, so Passages are no nodes and never reach Graph search,
+  Links or Note counts; a footnote link to a Passage opens the book's Passages page.
+- "Where are you with this book?" gets a fourth answer, "I'm reading it now" (`reading-start:
+  reading`): Passages → Extraction → Probe (`reading-step: passages`). Passages stays open from
+  every step of a book ("Passages" in the page head, `?passages=1`).
+- The Passages page is set like the Reader: Pages (bands of 20 pages with counts; Passages without
+  a page number last) and "Unused only" at the left, a Paper leaf of the Passages in page order
+  (same page: in the order kept) with the Location in the gutter, and the Free text in the margin.
+  Each Passage says what it became: "In 1 Note:" with the Notes as links, or nothing.
+- The capture line is the leaf's foot ("Next Passage": page, the words, your words on it).
+  Ctrl+Enter keeps; the page carries within a visit ("as before"), a new visit shows "Last time:
+  p. 87". The words box keeps a draft in local storage. A paste is kept as pasted: an e-reader
+  tail offers "Use Loc 2210 as the page", broken lines offer "Join the lines". The same words again
+  warn and never block.
+- X chooses Passages, W (or Write a Note) opens the desk: Pages folds to a strip and the margin
+  becomes the desk, with the chosen Passages numbered on Gilt Wash, the title (required before Save
+  and before a draft), the user's words in a blank field, and the AI's draft beside it (under it
+  when the desk is narrow) with "Take it in". Find Links runs only when asked. Save writes the Note
+  and closes the desk on the next unused Passage; Cancel with words asks first.
+- The desk's AI is the Source's Extraction Session: Write a Note makes a kept Point with
+  `origin: passage` and its Passages (`sessions.addBookPassagesPoint`), "Ask the AI for a draft"
+  and Find Links are messages about that Point (`draft_note`, `propose_links`). A Point that rests
+  on Passages shows its draft beside the field in Extraction too, and every Note from Passages
+  cites them, whichever way it came.
+- Extraction reads the Passages (`read_passages`, each with the Notes that cite it), the unused
+  first, and may propose Points with `origin: passage`; Glose keeps the quote only when a Passage
+  holds those words, and the Point then rests on that Passage.
+- Done reading is the colophon after the last Passage: a summary and "Continue to Extraction".
+  "Question me first" is left out for now: the Probe before Extraction needs another step order.
+- Not yet: photo capture (words the user confirms), Kindle `My Clippings.txt` import, the Probe
+  reading the Passages, Write a Note on an Article's Passages, Passages as nodes near a selected
+  Source or Note on the Graph canvas, and "Question me first" after Passages.
+
 ## Reasoning as part of the answer
 
 Taken from learnharness: the user thinks out loud, by typing or by dictation, and the reasoning is recorded and transcribed.

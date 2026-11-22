@@ -1,7 +1,12 @@
+import { useAtomValue } from "@effect/atom-react";
+import { linkKey } from "@glose/contracts";
+import { Link } from "@tanstack/react-router";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { type ReactNode, useId } from "react";
 
 import { type AiScope, type Block, type Inline, parseNoteText } from "../graph/noteText.ts";
 import { useT } from "../i18n/I18n.tsx";
+import { graphAtom } from "../state/vault.ts";
 import { CodeBlock } from "./CodeBlock.tsx";
 
 export type WikilinkPart = Extract<Inline, { readonly kind: "link" }>;
@@ -112,6 +117,21 @@ export function AiText({
 
 export function MissingLink({ name, label }: { readonly name: string; readonly label: string }) {
   const t = useT();
+  const view = AsyncResult.getOrElse(useAtomValue(graphAtom), () => null);
+  const passage = view?.passages?.find((other) => linkKey(other.id) === linkKey(name));
+  if (passage !== undefined) {
+    return (
+      <Link
+        to="/sources/$sourceId"
+        params={{ sourceId: passage.source }}
+        search={{ passages: 1 }}
+        className="graph__wikilink"
+        title={t.passages.openPassage}
+      >
+        {label}
+      </Link>
+    );
+  }
   return (
     <span className="graph__wikilink graph__wikilink--missing" title={t.graph.missingLink(name)}>
       {label}

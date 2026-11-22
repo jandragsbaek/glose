@@ -10,6 +10,7 @@ import { articleMessages } from "./da/article.ts";
 import { videoMessages } from "./da/video.ts";
 import { courseMessages } from "./da/course.ts";
 import { peopleMessages } from "./da/people.ts";
+import { passageMessages } from "./da/passages.ts";
 import type { Messages } from "./en.ts";
 
 export const da: Messages = {
@@ -25,4 +26,5 @@ export const da: Messages = {
   ...videoMessages,
   ...courseMessages,
   ...peopleMessages,
+  ...passageMessages,
 };

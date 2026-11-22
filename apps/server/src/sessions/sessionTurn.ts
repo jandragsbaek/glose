@@ -14,6 +14,7 @@ import * as Cards from "../cards/Cards.ts";
 import * as ChatGpt from "../chatgpt/ChatGpt.ts";
 import { Responses, type ResponsesError } from "../chatgpt/Responses.ts";
 import * as Graph from "../vault/Graph.ts";
+import * as Passages from "../vault/Passages.ts";
 import * as Sources from "../vault/Sources.ts";
 import * as WebPages from "../research/WebPages.ts";
 import { type InputItem, runTurn, type WebSearch } from "./agent.ts";
@@ -60,6 +61,7 @@ export const make = Effect.fn("Sessions.makeSessionTurn")(function* ({
 }) {
   const sources = yield* Sources.Sources;
   const graph = yield* Graph.Graph;
+  const passages = yield* Passages.Passages;
   const cards = yield* Cards.Cards;
   const chatGpt = yield* ChatGpt.ChatGpt;
   const responses = yield* Responses;
@@ -172,6 +174,7 @@ export const make = Effect.fn("Sessions.makeSessionTurn")(function* ({
           tools: Extraction.tools({
             sources,
             graph,
+            passages,
             source: subject,
             points: SubscriptionRef.get(session.view).pipe(
               Effect.map((view) => pointsOf(view.entries)),

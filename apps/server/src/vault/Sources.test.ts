@@ -190,12 +190,16 @@ it.layer(NodeServices.layer)("Sources", (it) => {
         const markdown = yield* fs.readFileString(path.join(folder, `${writer.id}.md`));
         const prober = yield* sources.create({ ...ARENDT, title: "Between Past and Future" });
         const probed = yield* sources.chooseStart({ id: prober.id, start: "catch-up" });
+        const reader = yield* sources.create({ ...ARENDT, title: "On Revolution" });
+        const reading = yield* sources.chooseStart({ id: reader.id, start: "reading" });
+        const read = yield* sources.advance({ id: reader.id, from: "passages" });
 
         assert.include(markdown, "reading-step: free-text\nreading-start: write\n");
         assert.deepStrictEqual(
           [written.readingStep, probed.readingStep, (yield* sources.get(prober.id)).readingStart],
           ["free-text", "probe", "catch-up"],
         );
+        assert.deepStrictEqual([reading.readingStep, read.readingStep], ["passages", "extraction"]);
       }),
     ),
   );

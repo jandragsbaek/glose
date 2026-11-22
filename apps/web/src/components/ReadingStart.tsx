@@ -7,7 +7,7 @@ import { useT } from "../i18n/I18n.tsx";
 import { chooseStartAtom, KEYS } from "../state/vault.ts";
 import { Notice, Panel } from "./ui.tsx";
 
-const STARTS = ["write", "probe", "catch-up"] as const satisfies ReadonlyArray<Start>;
+const STARTS = ["reading", "write", "probe", "catch-up"] as const satisfies ReadonlyArray<Start>;
 
 export function ReadingStart({ source }: { readonly source: Source }) {
   const t = useT();
@@ -91,9 +91,11 @@ export function ReadingStart({ source }: { readonly source: Source }) {
           >
             {state === "saving"
               ? t.start.starting
-              : start === null || start === "write"
-                ? t.start.startWriting
-                : t.start.startProbe}
+              : start === "reading"
+                ? t.start.startPassages
+                : start === null || start === "write"
+                  ? t.start.startWriting
+                  : t.start.startProbe}
           </button>
         </div>
       </div>

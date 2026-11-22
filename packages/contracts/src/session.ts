@@ -58,6 +58,13 @@ export const PointLink = Schema.Struct({
 });
 export type PointLink = typeof PointLink.Type;
 
+export const PointPassage = Schema.Struct({
+  id: Schema.String,
+  page: Schema.NullOr(Schema.String),
+  words: Schema.String,
+});
+export type PointPassage = typeof PointPassage.Type;
+
 export const Point = Schema.Struct({
   id: Schema.String,
   title: Schema.String,
@@ -70,6 +77,8 @@ export const Point = Schema.Struct({
   state: PointState,
   note: Schema.NullOr(Schema.String),
   page: Schema.NullOr(Schema.String),
+  passages: Schema.optionalKey(Schema.Array(PointPassage)),
+  aiTitle: Schema.optionalKey(Schema.Boolean),
 });
 export type Point = typeof Point.Type;
 
@@ -214,6 +223,7 @@ export const Session = Schema.Struct({
   working: Schema.Boolean,
   draft: Schema.String,
   problem: Schema.NullOr(SessionProblem),
+  started: Schema.optionalKey(Schema.Boolean),
 });
 export type Session = typeof Session.Type;
 
@@ -269,6 +279,14 @@ export const AddPassagePoint = Schema.Struct({
   passage: Schema.String,
   title: Schema.Trim.pipe(Schema.check(Schema.isNonEmpty())),
 });
+
+export const AddBookPassagesPoint = Schema.Struct({
+  source: Schema.String,
+  passages: Schema.NonEmptyArray(Schema.String),
+  title: Schema.Trim.pipe(Schema.check(Schema.isNonEmpty())),
+});
+
+export const AddedPoint = Schema.Struct({ session: Schema.String, point: Schema.String });
 
 export const KeepPoint = Schema.Struct({ ...PointRef.fields, title: Words });
 

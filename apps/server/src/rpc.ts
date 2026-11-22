@@ -10,6 +10,7 @@ import * as ChatGpt from "./chatgpt/ChatGpt.ts";
 import * as GitHub from "./github/GitHub.ts";
 import * as Graph from "./vault/Graph.ts";
 import * as Notes from "./vault/Notes.ts";
+import * as Passages from "./vault/Passages.ts";
 import * as Sources from "./vault/Sources.ts";
 import * as ServerInfo from "./info/ServerInfo.ts";
 import * as Recall from "./recall/Recall.ts";
@@ -27,6 +28,7 @@ export const layer = GloseRpcGroup.toLayer(
     const sources = yield* Sources.Sources;
     const graph = yield* Graph.Graph;
     const notes = yield* Notes.Notes;
+    const passages = yield* Passages.Passages;
     const catalog = yield* Catalog.Catalog;
     const videos = yield* Videos.Videos;
     const chatGpt = yield* ChatGpt.ChatGpt;
@@ -105,6 +107,11 @@ export const layer = GloseRpcGroup.toLayer(
         sessions.goDeeper(input).pipe(Effect.map(publicSession)),
       [RPC_METHODS.sessionsContinueProbe]: ({ id }) => sessions.continueProbe(id),
       [RPC_METHODS.sessionsAddPassagePoint]: (input) => sessions.addPassagePoint(input),
+      [RPC_METHODS.sessionsAddBookPassagesPoint]: (input) => sessions.addBookPassagesPoint(input),
+      [RPC_METHODS.passagesList]: ({ source }) => passages.list(source),
+      [RPC_METHODS.passagesCreate]: (input) => passages.create(input),
+      [RPC_METHODS.passagesUpdate]: (input) => passages.update(input),
+      [RPC_METHODS.passagesDelete]: ({ id }) => passages.remove(id),
       [RPC_METHODS.cardsList]: () => cards.list.pipe(Effect.flatMap(checks.score)),
       [RPC_METHODS.cardsJudge]: ({ files }) => checks.judgeFiles(files),
       [RPC_METHODS.cardsCreate]: (input) => cards.create({ ...input, ai: false }),

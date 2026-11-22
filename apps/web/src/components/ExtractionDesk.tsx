@@ -58,6 +58,14 @@ export function Desk({
 }
 
 export function StartExtraction({ source }: { readonly source: Source }) {
+  return (
+    <PointsPanel count={null}>
+      <StartGroup source={source} />
+    </PointsPanel>
+  );
+}
+
+export function StartGroup({ source }: { readonly source: Source }) {
   const t = useT();
   const ready = useChatGptReady();
   const [failed, setFailed] = useState(false);
@@ -75,35 +83,33 @@ export function StartExtraction({ source }: { readonly source: Source }) {
   };
 
   return (
-    <PointsPanel count={null}>
-      <div className="points__group">
-        {ready ? (
-          <div className="stack points__start">
-            <div>
-              <p className="empty empty--lead">{t.extraction.startLead}</p>
-              <p className="empty">{t.extraction.startBody}</p>
-            </div>
-            {failed ? (
-              <Notice tone="error" title={t.errors.storage}>
-                <p>{t.errors.storageRecovery}</p>
-              </Notice>
-            ) : null}
-            <div className="button-row">
-              <button
-                type="button"
-                className="button button--primary"
-                disabled={busy}
-                onClick={begin}
-              >
-                {t.extraction.start}
-              </button>
-            </div>
+    <div className="points__group">
+      {ready ? (
+        <div className="stack points__start">
+          <div>
+            <p className="empty empty--lead">{t.extraction.startLead}</p>
+            <p className="empty">{t.extraction.startBody}</p>
           </div>
-        ) : (
-          <NeedsChatGpt title={t.session.needsChatGpt} body={t.session.needsChatGptBody} />
-        )}
-      </div>
-    </PointsPanel>
+          {failed ? (
+            <Notice tone="error" title={t.errors.storage}>
+              <p>{t.errors.storageRecovery}</p>
+            </Notice>
+          ) : null}
+          <div className="button-row">
+            <button
+              type="button"
+              className="button button--primary"
+              disabled={busy}
+              onClick={begin}
+            >
+              {t.extraction.start}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <NeedsChatGpt title={t.session.needsChatGpt} body={t.session.needsChatGptBody} />
+      )}
+    </div>
   );
 }
 

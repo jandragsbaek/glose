@@ -23,6 +23,7 @@ import * as ServerConfig from "./config.ts";
 import * as CourseVideoRoutes from "./vault/courseVideoRoutes.ts";
 import * as Graph from "./vault/Graph.ts";
 import * as Notes from "./vault/Notes.ts";
+import * as Passages from "./vault/Passages.ts";
 import * as Sources from "./vault/Sources.ts";
 import * as ServerInfo from "./info/ServerInfo.ts";
 import * as WebPages from "./research/WebPages.ts";
@@ -80,6 +81,7 @@ export const layerAppWith = (webPages: Layer.Layer<WebPages.WebPages>) =>
         ),
       ),
     ),
+    Layer.provideMerge(Passages.layer),
     Layer.provideMerge(Layer.mergeAll(Sources.layer, Graph.layer, Notes.layer, Cards.layer)),
     Layer.provideMerge(Settings.layer),
   );

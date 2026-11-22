@@ -322,7 +322,7 @@ export const make = Effect.gen(function* () {
           source.readingStep === "read"
             ? nextReadingStep(start, "read", source.kind)
             : start !== "write" && source.readingStep === "free-text"
-              ? "probe"
+              ? nextReadingStep(start, "free-text")
               : source.readingStep;
         return yield* writeSource(folder, id, { ...source, readingStart: start, readingStep }).pipe(
           Effect.mapError(storageError),

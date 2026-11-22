@@ -1,4 +1,5 @@
 import {
+  type BookPassageNotFound,
   isDraftId,
   NoteNotFound,
   parseArticle,
@@ -31,11 +32,12 @@ import * as ChatGpt from "../chatgpt/ChatGpt.ts";
 import * as Graph from "../vault/Graph.ts";
 import * as Sources from "../vault/Sources.ts";
 import * as Settings from "../settings/Settings.ts";
+import * as PassagePoints from "./passagePoints.ts";
 import * as CardDecisions from "./cardDecisions.ts";
 import * as CardExtraction from "./cardExtraction.ts";
 import * as CardJudging from "./cardJudging.ts";
 import * as Extraction from "./extraction.ts";
-import { addPoints, type Live } from "./liveSession.ts";
+import { type Live, patch } from "./liveSession.ts";
 import * as PageDecisions from "./pageDecisions.ts";
 import * as PointDecisions from "./pointDecisions.ts";
 import * as Probe from "./probe.ts";
@@ -132,6 +134,14 @@ export class Sessions extends Context.Service<
       readonly passage: string;
       readonly title: string;
     }) => Effect.Effect<void, SourceNotFound | PassageRefused | VaultError>;
+    readonly addBookPassagesPoint: (input: {
+      readonly source: string;
+      readonly passages: ReadonlyArray<string>;
+      readonly title: string;
+    }) => Effect.Effect<
+      { readonly session: string; readonly point: string },
+      SourceNotFound | BookPassageNotFound | VaultError
+    >;
   } & PageDecisions.PageDecisions
 >()("glose/sessions/Sessions") {}
 
@@ -242,6 +252,16 @@ export const make = Effect.gen(function* () {
     return passage;
   });
 
+  const passagePoints = yield* PassagePoints.make({
+    open: (source) =>
+      Effect.flatMap(latestRecord("extraction", source), (existing) =>
+        existing === null ? newSession("extraction", source) : adopt(existing),
+      ),
+    save,
+    deciding,
+    passageOf,
+  });
+
   return Sessions.of({
     find: Effect.fn("Sessions.find")(function* ({ kind, subject }) {
       const latest = yield* latestRecord(kind, subject);
@@ -254,11 +274,15 @@ export const make = Effect.gen(function* () {
       const { language } = (yield* settings.get).settings;
       if (kind === "extraction") {
         const waiting = yield* latestRecord(kind, subject);
-        if (waiting !== null && waiting.items.length === 0) {
+        if (waiting !== null && !waiting.items.some(Extraction.isKickoff)) {
           const session = yield* adopt(waiting);
           yield* beginTurn(session, [], [Extraction.kickoff(language ?? "en")]).pipe(
             Effect.catchTags({ SessionBusy: () => Effect.void }),
           );
+          yield* patch(session, (view) => ({
+            ...view,
+            started: session.items.some(Extraction.isKickoff),
+          }));
           return yield* SubscriptionRef.get(session.view);
         }
       }
@@ -289,6 +313,7 @@ export const make = Effect.gen(function* () {
       yield* beginTurn(session, opening.entries, opening.items).pipe(
         Effect.catchTags({ SessionBusy: () => Effect.void }),
       );
+      if (kind === "extraction") yield* patch(session, (view) => ({ ...view, started: true }));
       return yield* SubscriptionRef.get(session.view);
     }),
 
@@ -463,36 +488,9 @@ export const make = Effect.gen(function* () {
       );
     }),
 
-    addPassagePoint: Effect.fn("Sessions.addPassagePoint")(
-      function* ({ source: asked, passage: id, title }) {
-        const source = yield* sources.get(asked);
-        const passage = yield* passageOf(source.id, id);
-        const existing = yield* latestRecord("extraction", source.id);
-        const session =
-          existing === null ? yield* newSession("extraction", source.id) : yield* adopt(existing);
-        const [point] = yield* addPoints(session, [
-          {
-            title,
-            origin: "passage",
-            quote: passage.text,
-            repeats: null,
-            pullsAgainst: null,
-            links: [],
-            draft: null,
-            state: "kept",
-            note: null,
-            page: `¶ ${passage.n}`,
-          },
-        ]);
-        if (point !== undefined) {
-          session.decisions.push(
-            `Made point ${point.id.slice(1)} ("${point.title}") from a Passage they marked while reading, ¶ ${passage.n}: "${passage.text}". It is theirs to write.`,
-          );
-        }
-        yield* save(session);
-      },
-      (effect) => deciding.withPermit(effect),
-    ),
+    addPassagePoint: passagePoints.addPassagePoint,
+
+    addBookPassagesPoint: passagePoints.addBookPassagesPoint,
   });
 });
 

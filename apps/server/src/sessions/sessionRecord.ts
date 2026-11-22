@@ -8,6 +8,8 @@ import {
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
+import { isKickoff } from "./extraction.ts";
+
 export type VaultError = VaultFolderNotSet | StorageError;
 
 export const SessionRecord = Schema.Struct({
@@ -50,4 +52,5 @@ export const viewOf = (record: SessionRecord): Session => ({
   working: false,
   draft: "",
   problem: null,
+  ...(record.kind === "extraction" ? { started: record.items.some(isKickoff) } : {}),
 });

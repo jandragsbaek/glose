@@ -123,6 +123,7 @@ export const coreMessages: Pick<
     continue: {
       "free-text": "Fortsæt fri tekst",
       read: "Læs videre",
+      passages: "Fortsæt passager",
       extraction: "Fortsæt udtræk",
       probe: "Fortsæt sondering",
       done: "Åbn kilde",
@@ -158,6 +159,7 @@ export const coreMessages: Pick<
     names: {
       "free-text": "Fri tekst",
       read: "Læs",
+      passages: "Passager",
       extraction: "Udtræk",
       probe: "Sondering",
     },

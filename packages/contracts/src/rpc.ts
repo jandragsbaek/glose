@@ -22,6 +22,17 @@ import { RecordReview, ReviewQueue } from "./recall.ts";
 import { CreateNote, PageDecision, PageRefused, StartResearch } from "./research.ts";
 import { ServerInfo } from "./server.ts";
 import {
+  BookPassage,
+  BookPassageInUse,
+  BookPassageNotFound,
+  BookPassageRef,
+  CreateBookPassage,
+  PassagesOfSource,
+  UpdateBookPassage,
+} from "./passage.ts";
+import {
+  AddBookPassagesPoint,
+  AddedPoint,
   AddPassagePoint,
   AddPoint,
   AnswerProbe,
@@ -158,6 +169,11 @@ export const RPC_METHODS = {
   sessionsGoDeeper: "sessions.goDeeper",
   sessionsContinueProbe: "sessions.continueProbe",
   sessionsAddPassagePoint: "sessions.addPassagePoint",
+  sessionsAddBookPassagesPoint: "sessions.addBookPassagesPoint",
+  passagesList: "passages.list",
+  passagesCreate: "passages.create",
+  passagesUpdate: "passages.update",
+  passagesDelete: "passages.delete",
   cardsList: "cards.list",
   cardsJudge: "cards.judge",
   cardsCreate: "cards.create",
@@ -434,6 +450,30 @@ export const GloseRpcGroup = RpcGroup.make(
   Rpc.make(RPC_METHODS.sessionsAddPassagePoint, {
     payload: AddPassagePoint,
     error: Schema.Union([SourceNotFound, PassageRefused, VaultFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.sessionsAddBookPassagesPoint, {
+    payload: AddBookPassagesPoint,
+    success: AddedPoint,
+    error: Schema.Union([SourceNotFound, BookPassageNotFound, VaultFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.passagesList, {
+    payload: PassagesOfSource,
+    success: Schema.Array(BookPassage),
+    error: Schema.Union([SourceNotFound, VaultFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.passagesCreate, {
+    payload: CreateBookPassage,
+    success: BookPassage,
+    error: Schema.Union([SourceNotFound, VaultFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.passagesUpdate, {
+    payload: UpdateBookPassage,
+    success: BookPassage,
+    error: Schema.Union([BookPassageNotFound, VaultFolderNotSet, StorageError]),
+  }),
+  Rpc.make(RPC_METHODS.passagesDelete, {
+    payload: BookPassageRef,
+    error: Schema.Union([BookPassageNotFound, BookPassageInUse, VaultFolderNotSet, StorageError]),
   }),
   Rpc.make(RPC_METHODS.sessionsAskHint, {
     payload: AskHint,

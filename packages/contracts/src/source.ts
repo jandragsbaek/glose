@@ -1,9 +1,16 @@
 import * as Schema from "effect/Schema";
 
-export const ReadingStep = Schema.Literals(["free-text", "read", "extraction", "probe", "done"]);
+export const ReadingStep = Schema.Literals([
+  "free-text",
+  "read",
+  "passages",
+  "extraction",
+  "probe",
+  "done",
+]);
 export type ReadingStep = typeof ReadingStep.Type;
 
-export const ReadingStart = Schema.Literals(["write", "probe", "catch-up"]);
+export const ReadingStart = Schema.Literals(["reading", "write", "probe", "catch-up"]);
 export type ReadingStart = typeof ReadingStart.Type;
 
 export type WorkStep = Exclude<ReadingStep, "done">;
@@ -30,7 +37,9 @@ export const readingStepsOf = (
         : ["read", "extraction", "probe"]
       : start === "probe" || start === "catch-up"
         ? ["probe", "extraction"]
-        : ["free-text", "extraction", "probe"];
+        : start === "reading"
+          ? ["passages", "extraction", "probe"]
+          : ["free-text", "extraction", "probe"];
 
 export const nextReadingStep = (
   start: ReadingStart | null,

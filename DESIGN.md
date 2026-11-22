@@ -1208,7 +1208,7 @@ The first page of a Source that has not started: the Reading Stage's columns, wi
 (rubric Initial) "Where are you with this book?" ("Hvor er du med denne bog?") in the main column
 and the Source's details (lapis Initial) in the side column.
 
-- **Answers:** a Mute 13px hint, then three stacked Choice rows (640px max, 10px gaps, 12px 16px
+- **Answers:** a Mute 13px hint, then four stacked Choice rows ("I'm reading it now" first) (640px max, 10px gaps, 12px 16px
   padding): the radio at the first line, a 600 label over a Mute 13px hint. Hover darkens the
   border to Mute; checked turns it Lapis on Lapis Tint.
 - **What follows:** under a Hairline, a Mute 600 13px uppercase label (no Initial), then the
@@ -1222,7 +1222,8 @@ and the Source's details (lapis Initial) in the side column.
 
 The Reading steps in the order the Source's start gives them, in one bordered strip of equal
 columns divided by Hairlines: three for a Source started by writing (Free text, Extraction,
-Probe), two for one started with the Probe or a catch-up (Probe, Extraction). An Article or Course
+Probe), two for one started with the Probe or a catch-up (Probe, Extraction), three for a book
+the user is reading now (Passages, Extraction, Probe; "4 Passages · to p. 87"). An Article or Course
 lesson has its own text, so its first step is Read: Read, Extraction, Probe, or Read, Probe,
 Extraction. Read's note counts the Passages and the place ("2 Passages · ¶ 8 of 40"). Each step: a Courier
 step number, a Label name, a Meta note ("203 words", "0 of 1 point written", "6 questions", or
@@ -1361,6 +1362,49 @@ The page head's actions on a Course lesson: the lesson before as a quiet button 
 and the lesson after as a secondary button with a right arrow, each named by its week and day
 ("Week 1 · Day 3"; screen readers hear "Next lesson: Week 1 · Day 3") with the lesson's title as its
 tooltip. 8px apart; it wraps. The first lesson has only the next; the last only the one before.
+
+### Passages (signature: Edition with a Desk)
+
+A book's Passages page (`/sources/<Source>` at the Passages step, or `?passages=1` from any step),
+set like the Reader because the user's Passages are the only text of the book Glose holds. Jan
+chose it on the impeccable decision page as the join of "The Book's Own Edition" and "The Slip
+Drawer".
+
+- **Frame:** the Reader's band (Step Bar, then the keys "Ctrl+Enter keeps · X chooses · W writes a
+  Note" in Mute 13px) and its three columns: Pages, the leaf column and the margin.
+- **Pages:** the Contents set (lapis Initial, "Pages"), one row per band of 20 pages ("pp. 40–59")
+  with its tabular count; Passages without a page number last. A row is a button that scrolls the
+  leaf to its first Passage and takes the Gilt "here" edge. Under the rows, an "Unused only"
+  checkbox in Mute 13px.
+- **Leaf:** the Reader's Paper leaf with its 88px gutter. Each Passage: its Location in the gutter
+  (Call set, Lapis 700), a small checkbox just left of the words, the words at 17px/1.7 as a
+  Passage mark (Gilt Wash, 1px Gilt underline at 70%; Verdigris once a Note cites it; the 2px Gilt
+  underline while chosen), the user's words on it in Mute 14px, and what it became in 600 13px:
+  a Verdigris check and "In 1 Note:" with the Notes as Verdigris links, or "On the desk · [1]" in
+  Accent. A Passage without a Location adds a Rubric triangle and "No page: cannot be cited" in Ink.
+  Edit and Delete (quiet, small) show on hover and focus; Delete is off while a Note cites it.
+  Each Passage is focusable; X chooses it, W opens the desk.
+- **Chosen line:** while Passages are chosen, a Tint strip over the capture line says "from 2
+  Passages, in your words" beside Write a Note (primary, small, with its W key cap).
+- **Capture line:** the leaf column's foot, as the Apparatus is in the Reader: Paper, a Hairline
+  border with a 2px Ink rule on top. "Next Passage" in the apparatus title set, then a grid: the
+  page (76px, Courier 700, right-aligned; under it Mute 11px "as before" or "Last time: p. 87"),
+  the words box (15px/1.5, 56–160px), Keep (primary, with its key cap), and under them the user's
+  words as a borderless line field and a Mute 12px status line (draft saved, the paste offers, the
+  same-words warning with a Rubric triangle).
+- **Margin:** the Reader's reading notes panel, titled Free text, ending in "Write Notes as you go.
+  When you finish the book, Extraction starts with the Passages you have not used."
+- **Desk:** W folds Pages into a 40px vertical strip ("PAGES", Mute 600 12px) and the margin opens
+  into a panel at least 520px wide (lapis Initial, "Write a Note", Meta "from 2 Passages, in your
+  words"). In it: the chosen Passages numbered on Gilt Wash (Courier [1] and Location in Lapis), the
+  title as the borderless title field, "In your words" over a blank 16px/1.65 field at least 200px
+  tall, the Note's page, and the word count; beside them (under them when the panel is under 600px,
+  a container query) "Ask the AI for a draft", or the AI's draft under the AI Text mark ("¶ AI
+  paragraph · not in your Note yet") with "Take it in". Taken in, the field wears the AI Text mark
+  until "I rewrote it". Under a Hairline, Find Links and the proposed Links (as in Extraction); under
+  another, Save Note (primary) and Cancel (quiet), which asks "Discard what you wrote?" first.
+- **Below 1240px** the desk takes half the row and the strip goes; **below 900px** one column, as
+  the Reader.
 
 ### Watch (signature: The Cue Sheet)
 
