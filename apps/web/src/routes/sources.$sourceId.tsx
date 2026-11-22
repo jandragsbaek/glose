@@ -11,12 +11,14 @@ import { PassagesLink, PassagesStage } from "../components/Passages.tsx";
 import { PersonProposal } from "../components/PersonProposal.tsx";
 import { Reader } from "../components/Reader.tsx";
 import { ReadingStart } from "../components/ReadingStart.tsx";
+import { SourceMenu } from "../components/SourceMenu.tsx";
 import { StepBar } from "../components/StepBar.tsx";
 import { VideoNotes, Watch } from "../components/Watch.tsx";
 import {
   CallNumber,
   Notice,
   Page,
+  PageMenu,
   Panel,
   SkeletonPanel,
   Spine,
@@ -82,7 +84,11 @@ function ReadingStage() {
         <StorageProblem onRetry={refresh} />
       </Page>
     ),
-    onSuccess: ({ value }) => <SourceView key={value.id} source={value} />,
+    onSuccess: ({ value }) => (
+      <PageMenu value={<SourceMenu source={value} />}>
+        <SourceView key={value.id} source={value} />
+      </PageMenu>
+    ),
   });
 }
 

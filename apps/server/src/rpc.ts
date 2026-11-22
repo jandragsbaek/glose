@@ -15,6 +15,7 @@ import * as Sources from "./vault/Sources.ts";
 import * as ServerInfo from "./info/ServerInfo.ts";
 import * as Recall from "./recall/Recall.ts";
 import * as Sessions from "./sessions/Sessions.ts";
+import * as SourceReset from "./sessions/SourceReset.ts";
 import * as Settings from "./settings/Settings.ts";
 import * as Setup from "./settings/Setup.ts";
 import * as Versions from "./versions/Versions.ts";
@@ -33,6 +34,7 @@ export const layer = GloseRpcGroup.toLayer(
     const videos = yield* Videos.Videos;
     const chatGpt = yield* ChatGpt.ChatGpt;
     const sessions = yield* Sessions.Sessions;
+    const reset = yield* SourceReset.SourceReset;
     const cards = yield* Cards.Cards;
     const checks = yield* CardChecks.CardChecks;
     const recall = yield* Recall.Recall;
@@ -56,6 +58,9 @@ export const layer = GloseRpcGroup.toLayer(
       [RPC_METHODS.sourcesAddVideo]: (input) => sources.addVideo(input),
       [RPC_METHODS.sourcesSetLessonVideo]: (input) => sources.setLessonVideo(input),
       [RPC_METHODS.sourcesLookupVideo]: ({ url }) => videos.lookup(url),
+      [RPC_METHODS.sourcesFootprint]: ({ id }) => reset.footprint(id),
+      [RPC_METHODS.sourcesStartOver]: (input) => reset.startOver(input),
+      [RPC_METHODS.sourcesDelete]: ({ id }) => reset.remove(id),
       [RPC_METHODS.articlesGet]: ({ id }) =>
         sources.articleText(id).pipe(Effect.map((markdown) => ({ markdown }))),
       [RPC_METHODS.articlesMarkPassage]: (input) => sources.markPassage(input),

@@ -41,6 +41,9 @@ export const readingStepsOf = (
           ? ["passages", "extraction", "probe"]
           : ["free-text", "extraction", "probe"];
 
+export const firstReadingStep = (start: ReadingStart | null, kind: SourceKind): WorkStep =>
+  readingStepsOf(start, kind)[0] ?? "free-text";
+
 export const nextReadingStep = (
   start: ReadingStart | null,
   step: ReadingStep,
@@ -132,6 +135,23 @@ export const ChooseReadingStart = Schema.Struct({
 
 export const AdvanceReading = Schema.Struct({ id: Schema.String, from: ReadingStep });
 
+export const StartSourceOver = Schema.Struct({
+  id: Schema.String,
+  start: Schema.NullOr(ReadingStart),
+});
+export type StartSourceOver = typeof StartSourceOver.Type;
+
+export const SourceFootprint = Schema.Struct({
+  notes: Schema.Array(Schema.String),
+  writing: Schema.Array(Schema.String),
+  linkedFrom: Schema.Array(Schema.String),
+  passages: Schema.Int,
+  probeQuestions: Schema.NullOr(Schema.Int),
+  extraction: Schema.Boolean,
+  setAside: Schema.Int,
+});
+export type SourceFootprint = typeof SourceFootprint.Type;
+
 export const SetReadingPlace = Schema.Struct({ id: Schema.String, place: Schema.Int });
 
 export const WebLink = Schema.Trim.pipe(
@@ -211,6 +231,12 @@ export class PassageRefused extends Schema.TaggedError<PassageRefused>()("Passag
 
 export class SourceNotFound extends Schema.TaggedError<SourceNotFound>()("SourceNotFound", {
   id: Schema.String,
+}) {}
+
+export class SourceInUse extends Schema.TaggedError<SourceInUse>()("SourceInUse", {
+  id: Schema.String,
+  notes: Schema.Array(Schema.String),
+  writing: Schema.Array(Schema.String),
 }) {}
 
 export class SourceNameTaken extends Schema.TaggedError<SourceNameTaken>()("SourceNameTaken", {

@@ -30,6 +30,7 @@ import * as WebPages from "./research/WebPages.ts";
 import * as Recall from "./recall/Recall.ts";
 import * as Rpc from "./rpc.ts";
 import * as Sessions from "./sessions/Sessions.ts";
+import * as SourceReset from "./sessions/SourceReset.ts";
 import * as Settings from "./settings/Settings.ts";
 import * as Setup from "./settings/Setup.ts";
 import * as GitHub from "./github/GitHub.ts";
@@ -65,7 +66,8 @@ const layerHttpServer = Layer.unwrap(
 const layerChatGpt = ChatGpt.layer.pipe(Layer.provide([ChatGpt.layerCrypto, Credentials.layer]));
 
 export const layerAppWith = (webPages: Layer.Layer<WebPages.WebPages>) =>
-  Layer.mergeAll(Sessions.layer, Writing.layer).pipe(
+  SourceReset.layer.pipe(
+    Layer.provideMerge(Layer.mergeAll(Sessions.layer, Writing.layer)),
     Layer.provideMerge(CardChecks.layer),
     Layer.provideMerge(
       Layer.mergeAll(

@@ -1373,6 +1373,30 @@ the term Passage over "extract" ("Extract" clashes with Extraction).
   reading the Passages, Write a Note on an Article's Passages, Passages as nodes near a selected
   Source or Note on the Graph canvas, and "Question me first" after Passages.
 
+## Decided, starting a Source over and deleting it (November 2026)
+
+Jan was mid-Probe on a book he had read and wanted to start that Source over; Glose had no way to
+do it. He chose both actions, with the old Probe kept out of sight, the menu in the page head, and
+the start question inside the Start over sheet.
+
+- Every page of a Source has a quiet "⋯" at the right end of its head. It opens a short menu:
+  "Start over…" and "Delete Source…".
+- Start over is one sheet. For a book it asks "Where are you with this book now?" with the four
+  answers, and the button names the first step ("Start over: Probe"). Other kinds start over at
+  their first step with no question. The sheet says what is put out of sight (the Probe and how
+  many questions, Extraction) and what stays (Free text, Passages, Notes).
+- Start over writes `reading-start` and sets `reading-step` to the first step of that start. The
+  Source's Probe and Extraction Sessions move to `.glose/sessions/set-aside/`, and the Probe record
+  moves to `Probes/Set aside/<Source> <day>.md`. Nothing is deleted: Free text, Passages, Notes and
+  Cards stay, and the page then shows no Probe until a new one starts.
+- Delete Source is withheld while a Note has the Source, a Note cites one of its Passages, or a
+  Writing project has a Reference to it. The sheet names that work and offers Start over instead.
+- Otherwise the sheet lists what goes: the Source file, its Article text or saved Lesson video,
+  Free text, Passages, Probe and record (set-aside ones too), and Extraction. Notes that only link
+  to it are named; those Links then point to nothing. When Versions are on, it says that an
+  earlier Version keeps a copy. After the delete, Glose opens Sources. The same book added again
+  starts clean.
+
 ## Reasoning as part of the answer
 
 Taken from learnharness: the user thinks out loud, by typing or by dictation, and the reasoning is recorded and transcribed.

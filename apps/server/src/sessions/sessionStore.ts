@@ -1,5 +1,7 @@
 import {
   VaultFolderNotSet,
+  linkKey,
+  localDay,
   publicEntries,
   type Session,
   SessionNotFound,
@@ -20,6 +22,19 @@ import type { Live } from "./liveSession.ts";
 import * as ProbeRecord from "./probeRecord.ts";
 import { decodeRecord, encodeRecord, type SessionRecord, storageError } from "./sessionRecord.ts";
 
+export const SET_ASIDE_FOLDER = "set-aside";
+
+export const SET_ASIDE_PROBES_FOLDER = "Set aside";
+
+const asideProbeOf = (source: string, name: string): boolean => {
+  if (!name.endsWith(".md")) return false;
+  const rest = name.slice(0, -".md".length);
+  return (
+    linkKey(rest.slice(0, source.length)) === linkKey(source) &&
+    /^ \d{4}-\d{2}-\d{2}(?: \d+)?$/.test(rest.slice(source.length))
+  );
+};
+
 export const make = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -27,13 +42,13 @@ export const make = Effect.gen(function* () {
   const sources = yield* Sources.Sources;
   const saving = yield* Semaphore.make(1);
 
-  const sessionsFolder = settings.get.pipe(
+  const vault = settings.get.pipe(
     Effect.flatMap(({ settings: { vaultFolder } }) =>
-      vaultFolder === null
-        ? Effect.fail(new VaultFolderNotSet())
-        : Effect.succeed(path.join(vaultFolder, GLOSE_DIR, "sessions")),
+      vaultFolder === null ? Effect.fail(new VaultFolderNotSet()) : Effect.succeed(vaultFolder),
     ),
   );
+  const sessionsFolder = Effect.map(vault, (folder) => path.join(folder, GLOSE_DIR, "sessions"));
+  const probesFolder = Effect.map(vault, (folder) => path.join(folder, ProbeRecord.PROBES_FOLDER));
 
   const fileOf = (folder: string, id: string) => path.join(folder, `${id}.json`);
 
@@ -83,8 +98,7 @@ export const make = Effect.gen(function* () {
     (effect) => saving.withPermit(effect),
   );
 
-  const readRecords = Effect.gen(function* () {
-    const folder = yield* sessionsFolder;
+  const readFolder = Effect.fn("Sessions.readFolder")(function* (folder: string) {
     if (!(yield* fs.exists(folder).pipe(Effect.mapError(storageError)))) return [];
     const names = yield* fs.readDirectory(folder).pipe(Effect.mapError(storageError));
     const records = yield* Effect.forEach(
@@ -98,6 +112,65 @@ export const make = Effect.gen(function* () {
     return records.flatMap((record) => Option.toArray(record));
   });
 
+  const readRecords = Effect.flatMap(sessionsFolder, readFolder);
+
+  const freeAsideName = Effect.fn("Sessions.freeAsideName")(function* (
+    folder: string,
+    source: string,
+    day: string,
+  ) {
+    const taken = new Set(
+      (yield* fs.exists(folder)) ? (yield* fs.readDirectory(folder)).map(linkKey) : [],
+    );
+    let name = `${source} ${day}.md`;
+    for (let n = 2; taken.has(linkKey(name)); n++) name = `${source} ${day} ${n}.md`;
+    return name;
+  });
+
+  const setAside = Effect.fn("Sessions.setAside")(
+    function* (record: SessionRecord) {
+      const folder = yield* sessionsFolder;
+      const aside = path.join(folder, SET_ASIDE_FOLDER);
+      yield* Effect.gen(function* () {
+        yield* fs.makeDirectory(aside, { recursive: true });
+        yield* fs.rename(fileOf(folder, record.id), fileOf(aside, record.id));
+        if (record.kind !== "probe") return;
+        const probes = yield* probesFolder;
+        const kept = path.join(probes, `${record.subject}.md`);
+        if (!(yield* fs.exists(kept))) return;
+        const asideProbes = path.join(probes, SET_ASIDE_PROBES_FOLDER);
+        yield* fs.makeDirectory(asideProbes, { recursive: true });
+        const name = yield* freeAsideName(asideProbes, record.subject, localDay(record.created));
+        yield* fs.rename(kept, path.join(asideProbes, name));
+      }).pipe(Effect.mapError(storageError));
+    },
+    (effect) => saving.withPermit(effect),
+  );
+
+  const forget = Effect.fn("Sessions.forget")(
+    function* (source: string, ids: ReadonlyArray<string>) {
+      const folder = yield* sessionsFolder;
+      const probes = yield* probesFolder;
+      const asideProbes = path.join(probes, SET_ASIDE_PROBES_FOLDER);
+      yield* Effect.gen(function* () {
+        for (const id of ids) {
+          yield* fs.remove(fileOf(folder, id), { force: true });
+          yield* fs.remove(fileOf(path.join(folder, SET_ASIDE_FOLDER), id), { force: true });
+        }
+        yield* fs.remove(path.join(probes, `${source}.md`), { force: true });
+        if (!(yield* fs.exists(asideProbes))) return;
+        for (const name of yield* fs.readDirectory(asideProbes)) {
+          if (asideProbeOf(source, name)) yield* fs.remove(path.join(asideProbes, name));
+        }
+      }).pipe(Effect.mapError(storageError));
+    },
+    (effect) => saving.withPermit(effect),
+  );
+
+  const readSetAside = Effect.flatMap(sessionsFolder, (folder) =>
+    readFolder(path.join(folder, SET_ASIDE_FOLDER)),
+  );
+
   const readRecord = Effect.fn("Sessions.readRecord")(function* (id: string) {
     const notFound = new SessionNotFound({ id });
     if (!isFileName(id)) return yield* notFound;
@@ -108,7 +181,7 @@ export const make = Effect.gen(function* () {
       .pipe(Effect.flatMap(decodeRecord), Effect.mapError(storageError));
   });
 
-  return { save, readRecords, readRecord };
+  return { save, readRecords, readRecord, readSetAside, setAside, forget };
 });
 
 export type SessionStore = Effect.Success<typeof make>;

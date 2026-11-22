@@ -3,7 +3,10 @@ import type { MissingDetail } from "../../domain/source.ts";
 import { numbers, count, list, monthYear, capitalised } from "./format.ts";
 import type { Messages } from "../en.ts";
 
-export const sourceMessages: Pick<Messages, "source" | "sources" | "addSource"> = {
+export const sourceMessages: Pick<
+  Messages,
+  "source" | "sources" | "addSource" | "sourceMenu" | "startOver" | "deleteSource"
+> = {
   source: {
     firstPublished: (year: number) => `først udgivet ${year}`,
     callNumberLabel: (callNumber: string) => `Opstillingssignatur ${callNumber}`,
@@ -182,5 +185,57 @@ export const sourceMessages: Pick<Messages, "source" | "sources" | "addSource"> 
     cancel: "Annullér",
     nameTaken: (fileName: string) =>
       `Arkivet har allerede en fil med navnet "${fileName}". Ret titlen, eller åbn den kilde, der findes.`,
+  },
+  sourceMenu: {
+    label: "Mere for denne kilde",
+    startOver: "Begynd forfra…",
+    delete: "Slet kilde…",
+  },
+  startOver: {
+    title: (title: string) => `Begynd forfra på ${title}`,
+    where: "Hvor er du med denne bog nu?",
+    lead: "Din læsning begynder igen ved første trin. Den gamle sondering og det gamle udtræk lægges til side.",
+    setAside: "Lægges til side",
+    setAsideHint: "Gemmes i arkivet: optegnelsen over sonderingen flyttes til Probes/Set aside.",
+    stays: "Bliver",
+    probe: (questions: number) => `Sonderingen (${count(questions, "spørgsmål", "spørgsmål")})`,
+    extraction: "Udtrækket og dets kernepunkter",
+    nothingSetAside: "Intet endnu.",
+    freeText: (words: number) => `Fri tekst (${count(words, "ord", "ord")})`,
+    passages: (n: number) => count(n, "passage", "passager"),
+    notes: (n: number) => count(n, "note", "noter"),
+    nothingStays: "Intet endnu.",
+    loading: "Ser på kilden",
+    start: "Begynd forfra",
+    startAt: (step: string) => `Begynd forfra: ${step}`,
+    starting: "Begynder forfra",
+    cancel: "Annullér",
+  },
+  deleteSource: {
+    title: (title: string) => `Slet ${title}?`,
+    lead: "Det fjerner kilden og det, der kun hører til den:",
+    file: (fileName: string) => `Kildefilen, ${fileName}`,
+    text: "Dens tekst i Articles",
+    video: "Dens gemte lektionsvideo",
+    freeText: (words: number) => `Dens fri tekst (${count(words, "ord", "ord")})`,
+    passages: (n: number) => `Dens ${count(n, "passage", "passager")}`,
+    probe: (questions: number) =>
+      `Dens sondering (${count(questions, "spørgsmål", "spørgsmål")}) og optegnelsen i Probes`,
+    extraction: "Dens udtræk",
+    setAside: (n: number) =>
+      `${count(n, "sondering eller udtræk", "sonderinger og udtræk")}, der blev lagt til side ved Begynd forfra`,
+    linkedFrom: (n: number) =>
+      `${count(n, "note linker", "noter linker")} til den. De links vil pege på intet:`,
+    versions: "En tidligere version gemmer en kopi.",
+    inUseTitle: "Glose kan ikke slette denne kilde endnu",
+    inUse:
+      "Andet arbejde bygger på den. Slet eller flyt det arbejde først, eller begynd forfra på kilden.",
+    notes: "Noter fra denne kilde:",
+    writing: "Skriveprojekter, der henviser til den:",
+    startOverInstead: "Begynd forfra i stedet…",
+    delete: "Slet kilde",
+    deleting: "Sletter",
+    cancel: "Annullér",
+    close: "Luk",
   },
 };

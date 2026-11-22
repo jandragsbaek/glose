@@ -1,9 +1,11 @@
 import type { Source } from "@glose/contracts";
 import { CircleAlert, Info, TriangleAlert } from "lucide-react";
-import { type ReactNode, useId } from "react";
+import { createContext, type ReactNode, useContext, useId } from "react";
 
 import { type CallNumbered, callNumber } from "../domain/source.ts";
 import { useT } from "../i18n/I18n.tsx";
+
+export const PageMenu = createContext<ReactNode>(null);
 
 export function Page({
   title,
@@ -20,12 +22,18 @@ export function Page({
   readonly flush?: boolean;
   readonly children: ReactNode;
 }) {
+  const menu = useContext(PageMenu);
   return (
     <>
       <header className="page-head">
         <h1>{title}</h1>
         {sub === undefined ? null : <span className="page-head__sub">{sub}</span>}
-        {actions === undefined ? null : <div className="page-head__actions">{actions}</div>}
+        {actions === undefined && menu === null ? null : (
+          <div className="page-head__actions">
+            {actions}
+            {menu}
+          </div>
+        )}
       </header>
       <div
         className={
@@ -176,5 +184,44 @@ export function StorageProblem({ onRetry }: { readonly onRetry: () => void }) {
         </button>
       </p>
     </Notice>
+  );
+}
+
+export function Sheet({
+  title,
+  onClose,
+  children,
+}: {
+  readonly title: string;
+  readonly onClose: () => void;
+  readonly children: ReactNode;
+}) {
+  const titleId = useId();
+  return (
+    <dialog
+      className="sheet"
+      aria-labelledby={titleId}
+      ref={(node) => {
+        if (node === null || node.open) return;
+        node.showModal();
+        node.querySelector<HTMLElement>("[data-autofocus]")?.focus();
+      }}
+      onCancel={(event) => {
+        event.preventDefault();
+        onClose();
+      }}
+    >
+      <div className="panel" data-initial="rubric">
+        <div className="panel__head">
+          <h2 className="panel__title" id={titleId}>
+            {title}
+          </h2>
+        </div>
+        <div className="panel__rule" aria-hidden="true">
+          <Flourish />
+        </div>
+        <div className="panel__body sheet__body">{children}</div>
+      </div>
+    </dialog>
   );
 }
