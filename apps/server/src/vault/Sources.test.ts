@@ -62,6 +62,7 @@ it.layer(NodeServices.layer)("Sources", (it) => {
           path.join(folder, "No author.md"),
           '---\nglose: source\nauthor-family: ""\ntitle: Anonymous\n---\n',
         );
+        yield* fs.makeDirectory(path.join(folder, "assets.md"));
 
         const listed = yield* sources.list;
 
