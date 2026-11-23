@@ -318,9 +318,11 @@ const openSlip = StateEffect.define<PencilMark | null>();
 const slipField = StateField.define<PencilMark | null>({
   create: () => null,
   update: (value, transaction) => {
-    for (const effect of transaction.effects) if (effect.is(openSlip)) return effect.value;
-    if (value === null || !transaction.docChanged) return value;
-    return null;
+    for (const effect of transaction.effects) {
+      if (effect.is(openSlip)) return effect.value;
+      if (effect.is(setPencil)) return null;
+    }
+    return transaction.docChanged ? null : value;
   },
   provide: (field) =>
     showTooltip.from(field, (mark): Tooltip | null =>
