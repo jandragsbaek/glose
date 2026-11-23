@@ -49,6 +49,7 @@ import {
 } from "./WritingGraph.tsx";
 import { Proof } from "./WritingProof.tsx";
 import { useDeskTries } from "./TriesSlip.tsx";
+import { movePencilMemory, useDeskPencil } from "./WritingPencil.tsx";
 import { useWritingSave } from "./WritingSave.ts";
 import { ReplaceSheet, SiteFolderSheet } from "./WritingSheets.tsx";
 
@@ -80,6 +81,7 @@ export function WritingDesk({
     project,
     (id) => {
       moveGraphMemory(graphKey.current, id);
+      movePencilMemory(graphKey.current, id);
       graphKey.current = id;
       onRenamed(id);
     },
@@ -101,6 +103,7 @@ export function WritingDesk({
   const editor = useRef<ProseHandle | null>(null);
   const { leftMargin, rightMargin, editorBox, latestPlace } = useMarginPlacement(editor, mode);
   const tries = useDeskTries(editor, editorBox, fields, (saved) => update({ tries: saved }));
+  const pencil = useDeskPencil(graphKey, fields.language);
 
   const graph = AsyncResult.getOrElse(useAtomValue(graphAtom), () => null);
   const sources = AsyncResult.getOrElse(useAtomValue(sourcesAtom), () => null);
@@ -304,6 +307,7 @@ export function WritingDesk({
         postFile={postFile}
         publishing={publish.kind === "writing"}
         onPublish={() => void runPublish(false)}
+        pencil={pencil.button}
         graph={
           graphFits
             ? {
@@ -377,6 +381,7 @@ export function WritingDesk({
                       placeholder={t.writing.placeholder(shortcut)}
                       referenceLabel={t.writing.referenceMarkLabel}
                       {...tries.editorProps}
+                      {...pencil.editorProps}
                       onChange={(body) => update({ body })}
                       onLayout={() => window.requestAnimationFrame(() => latestPlace.current())}
                       onCite={(from, to, typed) => openCite(from, to, null, false, typed)}

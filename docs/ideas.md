@@ -260,6 +260,35 @@ Decided, Tries on the desk (November 2026), chosen with impeccable ("Tries Slip"
 - A word for a Try includes an apostrophe, hyphen or underscore between letters (`can't`,
   `AI-genereret`, `user_id`). Bold or italic that covers only words of a Try becomes part of it.
 
+Decided, the Pencil (November 2026), chosen with impeccable ("Pencil as you go"):
+
+- The idea comes from a screenshot of another writing app's "Prose Assist": groups of rules that
+  mark weak spots in prose as you write. In Glose it is the **Pencil** (Danish: Blyant). Code
+  runs it at once and offline; it never writes or changes the prose, so it keeps the Writing
+  projects rule.
+- Four groups, each on or off in a slip under the "Pencil" button in the desk bar (Write only),
+  which shows how many marks are in view. Habits: crutch words (just, actually), filtered verbs
+  (decided to), words that say it twice (whispered quietly), an intensifier on an adverb (very
+  quickly), the passive voice, "There is" openings, and three sentences or paragraphs in a row
+  that open on the same word. Clichés: a written list. Repetition: words in the caret's paragraph
+  that match the word at the caret. Mechanics: doubled words, and quotes, brackets, bold or italic
+  left open.
+- Habits and Clichés know English and Danish, from the piece's language; other languages get
+  Repetition and Mechanics. The word lists are Glose's own.
+- Marks show in a paragraph once the writer leaves it, never while they type in it; clicking into
+  a paragraph keeps its marks. A habit is a graphite underline, a cliché sits in graphite corner
+  brackets, and an echo of the caret's word is Lapis Tint. Rubric stays for AI text and the dotted
+  Mute underline for Tries.
+- A slip on a mark (hover, or ⌘. / Ctrl+. at the caret) names the rule, says why it may be weak,
+  quotes the words and offers "Try other words" (the Tries Slip on those words), "Keep it here"
+  and the Pencil settings. "Keep it here" hides that mark until its sentence changes.
+- The groups that are on are a setting of this computer for every piece; the marks kept are a
+  setting of this computer for one piece. Neither is in the file.
+
+- Not yet for the Pencil: turning single rules off or adding your own crutch words, marks in
+  Preview or in the AI review, a daily count of words written, and settings that differ by
+  Writing project type (passive voice in a University assignment).
+
 - Not yet: the University assignment's own flow and PDF, a Writing project of several files,
   publishing straight into the site's git repository, removing the old post file when a published
   title changes, and the AI's suggestions shown while typing (today the writer asks for a review).

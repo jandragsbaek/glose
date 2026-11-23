@@ -32,6 +32,7 @@ export function DeskBar({
   postFile,
   publishing,
   onPublish,
+  pencil,
   graph,
 }: {
   readonly deskId: string;
@@ -48,6 +49,7 @@ export function DeskBar({
   readonly postFile: string;
   readonly publishing: boolean;
   readonly onPublish: () => void;
+  readonly pencil: React.ReactNode;
   readonly graph: {
     readonly open: boolean;
     readonly ready: boolean;
@@ -110,6 +112,7 @@ export function DeskBar({
         )}
         {mode === "write" ? (
           <>
+            {pencil}
             <button
               type="button"
               className="button"

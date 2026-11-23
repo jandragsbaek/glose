@@ -6607,6 +6607,220 @@ textarea.properties__input {
   font-size: 12px;
 }
 
+/* Pencil: code's marks on words the writer may want to look at again. Graphite, so they read as
+   the writer's own pencil and never as AI text (Rubric) or Tries (dotted Mute). */
+.prose-editor {
+  --pencil: color-mix(in srgb, var(--mute) 82%, var(--paper));
+}
+
+.prose-editor .pencil-mark--habit,
+.prose-editor .pencil-mark--mechanics {
+  text-decoration: underline solid 1.5px var(--pencil);
+  text-decoration-skip-ink: none;
+  text-underline-offset: 4px;
+}
+
+.prose-editor .pencil-bracket {
+  position: relative;
+}
+
+.prose-editor .pencil-bracket::before {
+  content: "";
+  position: absolute;
+  top: 0.1em;
+  width: 5px;
+  height: 1.15em;
+  border: 0 solid var(--pencil);
+  pointer-events: none;
+}
+
+.prose-editor .pencil-bracket--open::before {
+  left: -3px;
+  border-top-width: 1.5px;
+  border-left-width: 1.5px;
+  height: 0.6em;
+}
+
+.prose-editor .pencil-bracket--close::before {
+  right: -3px;
+  top: auto;
+  bottom: -0.2em;
+  height: 0.6em;
+  border-right-width: 1.5px;
+  border-bottom-width: 1.5px;
+}
+
+.prose-editor .pencil-echo {
+  border-radius: 2px;
+  background: var(--tint);
+  box-shadow: inset 0 -1.5px 0 var(--accent);
+}
+
+.prose-editor .cm-tooltip:has(.pencil-slip) {
+  border: 0;
+  background: none;
+}
+
+.pencil-slip {
+  width: min(340px, calc(100vw - 32px));
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 14px/1.45 var(--font-ui);
+}
+
+.pencil-slip__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 12px;
+  padding: 10px 14px 4px;
+}
+
+.pencil-slip__rule {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pencil-slip__group {
+  color: var(--mute);
+  font-size: 12px;
+}
+
+.pencil-slip__why {
+  margin: 0;
+  padding: 0 14px 8px;
+}
+
+.pencil-slip__words {
+  margin: 0;
+  padding: 8px 14px;
+  border-top: 1px solid var(--line);
+  color: var(--mute);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.pencil-slip__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--line);
+  background: var(--ground);
+}
+
+.pencil {
+  position: relative;
+}
+
+.pencil__button {
+  list-style: none;
+}
+
+.pencil__button::-webkit-details-marker {
+  display: none;
+}
+
+.pencil[open] > .pencil__button {
+  border-color: var(--accent);
+  background: var(--tint);
+  color: var(--accent);
+}
+
+.pencil__count {
+  color: var(--mute);
+  font-weight: 400;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pencil__panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 4;
+  width: min(360px, calc(100vw - 32px));
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--paper);
+  white-space: normal;
+}
+
+.pencil__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 12px;
+  margin: 0;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.pencil__title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pencil__lead {
+  color: var(--mute);
+  font-size: 12px;
+}
+
+.pencil__group {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.pencil__group:hover {
+  background: var(--tint);
+}
+
+.pencil__group > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.pencil__group input {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+}
+
+.pencil__group-name {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pencil__group-text {
+  display: block;
+  color: var(--mute);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.pencil__note {
+  margin: 0;
+  padding: 10px 14px 12px;
+  color: var(--mute);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .tries-slip {
   position: absolute;
   z-index: 5;

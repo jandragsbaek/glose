@@ -2108,6 +2108,31 @@ they stay neutral; Rubric appears only for the AI's words.
 - **Format Bar:** "Tries" follows "Cite", in On-Lapis White; it is dimmed while the selection
   cannot be a Try (across paragraphs, or over a Reference).
 
+### Pencil
+
+Code's marks on words the writer may want to look at again, in Write only. The marks are
+graphite (Mute mixed 82% with Paper), so they read as the writer's own pencil, never as AI text
+(Rubric) or as Tries (the dotted Mute underline).
+
+- **In the text:** a habit or a mechanics mark is a 1.5px solid graphite underline, 4px off; a
+  cliché sits between two graphite corner brackets (1.5px, at its top left and bottom right),
+  drawn as widgets of no width so the text never moves; the words that echo the word at the caret
+  in its paragraph are Lapis Tint with a 1.5px Lapis underline inside. A paragraph the writer is
+  typing in shows no marks until the caret leaves it.
+- **Button:** "Pencil" as a secondary button in the desk bar before "Cite a Note", with the count
+  of marks in view in Mute 400 13px tabular; "off" when every group is off. Open, it is Lapis Tint
+  with a Lapis border and label, as the pressed Graph toggle.
+- **Groups slip:** under the button, right-aligned, 360px, Paper, Strong Hairline, 4px corners, no
+  shadow: a head with "Pencil" in the uppercase 12px set and its lead in Mute 12px, then one row
+  per group (name 600 14px, what it marks in Mute 13px, a checkbox on the right; Lapis Tint on
+  hover), and a Mute 13px note on when marks show. Click outside or Esc closes it.
+- **Mark slip:** under the words, 340px, Paper, 1px Lapis border, 4px corners, no shadow, as the
+  Cite Slip: the rule in the uppercase 12px set with "Pencil · your judgement" in Mute 12px, why
+  it may be weak in Ink 14px, the words quoted in Mute 13px over a Hairline, and a Ground foot with
+  "Try other words" (small secondary with its Key Cap; not on a mechanics mark), "Keep it here"
+  and "Pencil settings…" as link buttons. Opened from the keys, it takes focus on its first
+  button; Esc returns to the text.
+
 ### Cite Slip
 
 Citing happens in a slip under the line being written, not in a sheet, so the sentence stays in
