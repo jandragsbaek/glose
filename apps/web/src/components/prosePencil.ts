@@ -23,7 +23,7 @@ import {
   pencilMarks,
   type PencilRule,
 } from "../domain/pencil.ts";
-import { openTriesAt } from "./proseTries.ts";
+import { canTry, openTriesAt } from "./proseTries.ts";
 
 export interface PencilText {
   readonly name: string;
@@ -47,17 +47,13 @@ export interface PencilConfig {
   readonly onCount: (count: number) => void;
 }
 
-export type PencilProps = Omit<PencilConfig, "language">;
+export type PencilProps = PencilConfig;
 
-export const pencilConfigOf = (
-  props: PencilProps,
-  language: string,
-  latest: () => PencilProps,
-): PencilConfig => ({
+export const pencilConfigOf = (props: PencilProps, latest: () => PencilProps): PencilConfig => ({
   on: props.on,
   kept: props.kept,
   text: props.text,
-  language,
+  language: props.language,
   onKeep: (key) => latest().onKeep(key),
   onSettings: () => latest().onSettings(),
   onCount: (n) => latest().onCount(n),
@@ -71,13 +67,12 @@ export const useSyncPencil = (
   view: RefObject<EditorView | null>,
   latest: LatestPencil,
   props: PencilProps,
-  language: string,
 ) => {
   // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- CodeMirror is outside React: the Pencil's groups, kept marks, words and the text's language reach its marks.
   useEffect(() => {
-    const config = pencilConfigOf(props, language, () => latest.current.pencil);
+    const config = pencilConfigOf(props, () => latest.current.pencil);
     view.current?.dispatch({ effects: setPencil.of(config) });
-  }, [view, props, language, latest]);
+  }, [view, props, latest]);
 };
 
 const configField = StateField.define<PencilConfig | null>({
@@ -140,7 +135,8 @@ const pencilView = ViewPlugin.fromClass(
 
     read(state: EditorState) {
       const config = configOf(state);
-      this.all = config === null ? [] : pencilMarks(state.doc.toString(), config.language);
+      this.all =
+        config === null ? [] : pencilMarks(state.doc.toString(), config.language, config.on);
     }
 
     update(update: ViewUpdate) {
@@ -294,8 +290,10 @@ const slipDom = (view: EditorView, mark: PencilMark, focus: boolean) => {
     view.dispatch({ effects: openSlip.of(null) });
     config.onSettings();
   });
-  const isMechanics = GROUP_OF[mark.rule] === "mechanics";
-  if (isMechanics) foot.append(keep, settings);
+  const tryable =
+    GROUP_OF[mark.rule] !== "mechanics" &&
+    canTry(view.state.update({ selection: { anchor: mark.from, head: mark.to } }).state);
+  if (!tryable) foot.append(keep, settings);
   else foot.append(tryButton, keep, settings);
 
   dom.append(head, why, quote, foot);
@@ -360,8 +358,8 @@ const showAtCaret = (view: EditorView) => {
   return true;
 };
 
-export const pencilExtension = (props: PencilProps, language: string, latest: LatestPencil) => {
-  const initial = pencilConfigOf(props, language, () => latest.current.pencil);
+export const pencilExtension = (latest: LatestPencil) => {
+  const initial = pencilConfigOf(latest.current.pencil, () => latest.current.pencil);
   return [
     configField.init(() => initial),
     pencilView,

@@ -29,6 +29,30 @@ describe("pencilMarks", () => {
     ]);
   });
 
+  it("gives the smaller marks back when Clichés are off", () => {
+    const body = "It was a dark and stormy night. I just just left.";
+    const habitsAndMechanics = new Set(["habits", "mechanics"] as const);
+    assert.deepStrictEqual(
+      pencilMarks(body, "en", habitsAndMechanics).map(
+        (mark) => `${mark.rule}:${body.slice(mark.from, mark.to)}`,
+      ),
+      ["there-is:It was", "crutch:just", "doubled:just"],
+    );
+  });
+
+  it("keeps its place after an emoji in code", () => {
+    assert.deepStrictEqual(marked("An `😀` just test."), ["crutch:just"]);
+  });
+
+  it("reads a sentence that opens in bold", () => {
+    assert.deepStrictEqual(marked("**There is** trouble. I ran. **I** hid. I slept."), [
+      "there-is:There is",
+      "same-start:I",
+      "same-start:I",
+      "same-start:I",
+    ]);
+  });
+
   it("finds phrases across bold, italic and a line break", () => {
     assert.deepStrictEqual(marked("Little did *I\nknow* what came."), [
       "cliche:Little did *I\nknow",

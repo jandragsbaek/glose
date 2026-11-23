@@ -347,7 +347,7 @@ const DA: PencilWords = {
     "gentage igen",
     "vende tilbage igen",
   ],
-  intensifiers: ["meget", "rigtig", "virkelig", "helt", "utroligt", "ekstremt", "alt for"],
+  intensifiers: [],
   expletive: ["der er", "der var", "der har været", "det er", "det var"],
   cliches: [
     "når alt kommer til alt",

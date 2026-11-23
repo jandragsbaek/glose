@@ -68,10 +68,12 @@ export function useDeskPencil(piece: React.RefObject<string>, language: string) 
     if (next.has(group)) next.delete(group);
     else next.add(group);
     setOn(next);
-    write(
-      GROUPS_KEY,
-      PENCIL_GROUPS.filter((each) => next.has(each)),
-    );
+    try {
+      window.localStorage.setItem(
+        GROUPS_KEY,
+        JSON.stringify(PENCIL_GROUPS.filter((each) => next.has(each))),
+      );
+    } catch {}
     if (next.size === 0) setCount(0);
   };
   const keep = (key: string) => {
@@ -89,6 +91,7 @@ export function useDeskPencil(piece: React.RefObject<string>, language: string) 
   return {
     editorProps: {
       pencil: {
+        language,
         on,
         kept,
         text,

@@ -358,7 +358,7 @@ export function ProseEditor({
           words.current.of(wording(mount.current)),
           formattingMarks,
           triesExtension(fromSaved(mount.current.initialTries)),
-          pencilExtension(pencil, language, latest),
+          pencilExtension(latest),
           EditorView.domEventHandlers({
             mousedown: (event, editor) => {
               const mark =
@@ -416,7 +416,7 @@ export function ProseEditor({
     });
   }, [label, placeholder, referenceLabel, triesText.hint]);
 
-  useSyncPencil(view, latest, pencil, language);
+  useSyncPencil(view, latest, pencil);
   const format = (command: FormatCommand) => {
     const editor = view.current;
     if (editor === null) return;

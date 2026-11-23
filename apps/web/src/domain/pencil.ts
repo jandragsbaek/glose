@@ -54,6 +54,7 @@ export interface Span {
 }
 
 const RANK: ReadonlyArray<PencilRule> = [
+  "doubled",
   "cliche",
   "redundant",
   "adverb",
@@ -62,7 +63,6 @@ const RANK: ReadonlyArray<PencilRule> = [
   "there-is",
   "same-start",
   "crutch",
-  "doubled",
   "open-quote",
   "open-bracket",
   "open-emphasis",
@@ -136,7 +136,7 @@ const patternsFor = (language: string): Patterns | null => {
 };
 
 const blank = (text: string, from: number, to: number) =>
-  text.slice(0, from) + text.slice(from, to).replace(/[^\n]/gu, " ") + text.slice(to);
+  text.slice(0, from) + text.slice(from, to).replace(/[^\n]/g, " ") + text.slice(to);
 
 export const pencilText = (body: string): string => {
   let text = body;
@@ -163,7 +163,7 @@ export const pencilText = (body: string): string => {
   return text.replaceAll("’", "'");
 };
 
-const SENTENCE_START = /(?:^|[.!?…]["'”»)\]]*\s+)(?=["'“„»(]*[\p{L}])/gu;
+const SENTENCE_START = /(?:^|[.!?…]["'”»)\]*_]*\s+)(?=["'“„»(*_]*[\p{L}])/gu;
 
 const sentenceStarts = (text: string, from: number, to: number): ReadonlyArray<number> => {
   const part = text.slice(from, to);
@@ -325,7 +325,11 @@ const resolve = (marks: ReadonlyArray<PencilMark>): ReadonlyArray<PencilMark> =>
 
 const DOUBLED_OK = new Set(["had", "that", "der", "det", "at"]);
 
-export const pencilMarks = (body: string, language: string): ReadonlyArray<PencilMark> => {
+export const pencilMarks = (
+  body: string,
+  language: string,
+  on: ReadonlySet<PencilGroup> = new Set(PENCIL_GROUPS),
+): ReadonlyArray<PencilMark> => {
   const base = language.toLowerCase().split("-")[0] ?? "";
   const patterns = patternsFor(base);
   const text = pencilText(body);
@@ -377,7 +381,7 @@ export const pencilMarks = (body: string, language: string): ReadonlyArray<Penci
       }
     }
   }
-  return resolve(out);
+  return resolve(out.filter((mark) => on.has(GROUP_OF[mark.rule])));
 };
 
 const EN_SUFFIX = /(?:'s|ing|ies|(?<=[sxz]|ch|sh)es|ed|ly|s)$/u;
