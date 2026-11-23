@@ -28,6 +28,7 @@ import {
   setBlockStyle,
   toggleEmphasis,
 } from "./proseFormatting.ts";
+import { pencilExtension, type PencilProps, useSyncPencil } from "./prosePencil.ts";
 import {
   canTry,
   fromSaved,
@@ -227,6 +228,7 @@ export function ProseEditor({
   referenceLabel,
   initialTries,
   triesText,
+  pencil,
   onChange,
   onTries,
   onLayout,
@@ -242,6 +244,7 @@ export function ProseEditor({
   readonly referenceLabel: (n: number, flagged: boolean) => string;
   readonly initialTries: ReadonlyArray<TryGroup>;
   readonly triesText: TriesText;
+  readonly pencil: PencilProps;
   readonly onChange: (body: string) => void;
   readonly onTries: (tries: TriesState) => void;
   readonly onLayout: () => void;
@@ -264,6 +267,7 @@ export function ProseEditor({
     setBar,
     setSaid,
     triesText,
+    pencil,
   });
   const mount = useRef({
     initial,
@@ -284,6 +288,7 @@ export function ProseEditor({
       setBar,
       setSaid,
       triesText,
+      pencil,
     };
   });
 
@@ -353,6 +358,7 @@ export function ProseEditor({
           words.current.of(wording(mount.current)),
           formattingMarks,
           triesExtension(fromSaved(mount.current.initialTries)),
+          pencilExtension(latest),
           EditorView.domEventHandlers({
             mousedown: (event, editor) => {
               const mark =
@@ -410,6 +416,7 @@ export function ProseEditor({
     });
   }, [label, placeholder, referenceLabel, triesText.hint]);
 
+  useSyncPencil(view, latest, pencil);
   const format = (command: FormatCommand) => {
     const editor = view.current;
     if (editor === null) return;

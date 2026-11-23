@@ -221,5 +221,63 @@ export const writingMessages: Pick<Messages, "writing"> = {
     findMore: (n: number) => `${numbers.format(n)} mere. Skriv mere af navnet.`,
     notFound: "Skriveprojektet findes ikke. Filen kan være omdøbt eller slettet.",
     backToList: "Tilbage til skriveprojekter",
+    pencil: {
+      name: "Blyant",
+      off: "fra",
+      countLabel: (n: number) => count(n, "mærke", "mærker"),
+      lead: "Ord, du måske vil se på igen",
+      when: (key: string) =>
+        `Mærker vises, når du forlader et afsnit, aldrig mens du skriver i det. Hold musen over et mærke, eller tryk ${key} på det.`,
+      otherLanguage:
+        "Vaner og Klicheer kender engelsk og dansk. Tekst på andre sprog får Gentagelser og Mekanik.",
+      judgement: "din vurdering",
+      tryOther: "Prøv andre ord",
+      keep: "Behold det her",
+      settings: "Blyantens indstillinger…",
+      groups: {
+        habits: "Vaner",
+        cliches: "Klicheer",
+        repetition: "Gentagelser",
+        mechanics: "Mekanik",
+      },
+      groupText: {
+        habits:
+          "Fyldord, filtrerede verber (besluttede at), forstærkede biord, passiv, og sætninger eller afsnit, der begynder ens.",
+        cliches: "Vendinger, læserne ikke længere ser: blodet frøs til is, når alt kommer til alt.",
+        repetition: "Ord i dette afsnit, der matcher ordet ved markøren.",
+        mechanics:
+          "Dobbelte ord, og anførselstegn, parenteser, fed eller kursiv, der ikke er lukket.",
+      },
+      rules: {
+        crutch: "Fyldord",
+        filter: "Filtreret verbum",
+        redundant: "Siger det to gange",
+        adverb: "Forstærket biord",
+        passive: "Passiv",
+        "there-is": "Svag indledning",
+        "same-start": "Samme begyndelse",
+        cliche: "Kliché",
+        doubled: "Dobbelt ord",
+        "open-quote": "Åbent citat",
+        "open-bracket": "Åben parentes",
+        "open-emphasis": "Åben fed eller kursiv",
+      },
+      why: {
+        crutch: "Et ord, der tilføjer lidt. Læs sætningen uden det.",
+        filter: "Et verbum, der står mellem læseren og det, der sker. Sig, hvad der skete.",
+        redundant: "Det andet ord gentager det første. Ét af dem er nok.",
+        adverb: "Et forstærkerord på et biord. Et stærkere verbum siger det måske bedre.",
+        passive:
+          "Hvem der handler, er skjult eller kommer sent. Sig, hvem der handler, hvis det betyder noget.",
+        "there-is": "»Der er« udskyder grundleddet. Begynd med det, sætningen handler om.",
+        "same-start": "Flere sætninger eller afsnit i træk begynder med samme ord.",
+        cliche:
+          "En vending, læserne har mødt så tit, at de ikke længere ser den. Sig det med dine egne ord.",
+        doubled: "Det samme ord to gange i træk.",
+        "open-quote": "Dette anførselstegn har ingen partner i afsnittet.",
+        "open-bracket": "Denne parentes er ikke lukket i afsnittet.",
+        "open-emphasis": "Disse stjerner har ingen partner, så læserne ser stjernerne.",
+      },
+    },
   },
 };

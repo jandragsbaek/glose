@@ -197,6 +197,12 @@ One of the ways the user tried a word or a few words in a **Writing project**. T
 **Try** that shows; the others wait at the end of the file.
 _Avoid_: alternative, variant, version, suggestion
 
+**Pencil**:
+Code's marks on words in a **Writing project** the writer may want to look at again: habits,
+clichés, repetition and mechanics. A mark is advice; the Pencil never changes the text. Danish:
+Blyant.
+_Avoid_: lint, Check (that is a **Card**'s), grammar check, prose assist, highlight
+
 ## Relationships
 
 - A **Vault** holds one **Graph**; moving, sharing or backing up the folder takes all of it along

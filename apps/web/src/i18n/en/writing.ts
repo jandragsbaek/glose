@@ -5,6 +5,7 @@ import type {
   SiteFolderUnavailable,
   WritingProjectType,
 } from "@glose/contracts";
+import type { PencilGroup, PencilRule } from "../../domain/pencil.ts";
 import { numbers, count, list, shortDate, longDate } from "./format.ts";
 
 export const writingMessages = {
@@ -225,5 +226,61 @@ export const writingMessages = {
     findMore: (n: number) => `${numbers.format(n)} more. Type more of the name.`,
     notFound: "This Writing project does not exist. Its file may have been renamed or deleted.",
     backToList: "Back to Writing projects",
+    pencil: {
+      name: "Pencil",
+      off: "off",
+      countLabel: (n: number) => count(n, "mark", "marks"),
+      lead: "Words you may want to look at again",
+      when: (key: string) =>
+        `Marks show once you leave a paragraph, never while you type in it. Hover a mark, or press ${key} on it.`,
+      otherLanguage:
+        "Habits and Clichés know English and Danish. Text in other languages gets Repetition and Mechanics.",
+      judgement: "your judgement",
+      tryOther: "Try other words",
+      keep: "Keep it here",
+      settings: "Pencil settings…",
+      groups: {
+        habits: "Habits",
+        cliches: "Clichés",
+        repetition: "Repetition",
+        mechanics: "Mechanics",
+      } satisfies Record<PencilGroup, string>,
+      groupText: {
+        habits:
+          "Crutch words, filtered verbs (decided to), piled adverbs, passive voice, and sentences or paragraphs that open the same way.",
+        cliches: "Phrases readers no longer see: blood ran cold, at the end of the day.",
+        repetition: "Words in this paragraph that match the word at the caret.",
+        mechanics: "Doubled words, and quotes, brackets, bold or italic left open.",
+      } satisfies Record<PencilGroup, string>,
+      rules: {
+        crutch: "Crutch word",
+        filter: "Filtered verb",
+        redundant: "Says it twice",
+        adverb: "Piled adverb",
+        passive: "Passive voice",
+        "there-is": "Weak opening",
+        "same-start": "Same opening",
+        cliche: "Cliché",
+        doubled: "Doubled word",
+        "open-quote": "Quote left open",
+        "open-bracket": "Bracket left open",
+        "open-emphasis": "Bold or italic left open",
+      } satisfies Record<PencilRule, string>,
+      why: {
+        crutch: "A word that adds little. Read the sentence without it.",
+        filter: "A verb that stands between the reader and what happens. Say what happened.",
+        redundant: "The second word repeats the first. One of them is enough.",
+        adverb: "An intensifier on an adverb. A stronger verb may say it better.",
+        passive: "Who acts is hidden or comes late. Say who acts, if it matters.",
+        "there-is": "“There is” puts off the subject. Start with what the sentence is about.",
+        "same-start": "Several sentences or paragraphs in a row open on the same word.",
+        cliche:
+          "A phrase readers have met so often that they no longer see it. Say what you mean in your own words.",
+        doubled: "The same word twice in a row.",
+        "open-quote": "This quotation mark has no partner in the paragraph.",
+        "open-bracket": "This bracket is not closed in the paragraph.",
+        "open-emphasis": "These stars have no partner, so readers see the stars.",
+      } satisfies Record<PencilRule, string>,
+    },
   },
 };
