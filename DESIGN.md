@@ -570,7 +570,7 @@ them by role:
 
 - **Field** (`--field`, `--field-raised`, `--field-line`, `--on-field`, `--on-field-mute`): the one
   large color field: the rail, a Source's spine, the Settings window's spine and border, the
-  setup band, the Format Bar and the Mark Bar.
+  Format Bar and the Mark Bar.
 - **Primary** (`--primary`, `--primary-raised`, `--on-primary`): the primary button and the status
   bar's "go" item. In dark it is a step lighter than the field, so it stands on dark Paper.
 - **Accent** (`--accent`): Lapis as a mark on Paper: links, focus outlines, the caret, rings,
@@ -651,8 +651,9 @@ heading like an illuminated initial.
 
 ### Hierarchy
 
-- **Display** (700, 30px, 1.2, -0.015em): the first-start title only, with a Cinzel initial
-  at 1.35em.
+- **Display** (700, 30px, 1.2, -0.015em): the largest title. The first-start title ("Set up
+  Glose") is one step down, 700 28px at the same line height and tracking, and plain: it has no
+  Initial. In the first start the Initials are on each step Panel's heading.
 - **Headline** (700, 22px, -0.01em): the page title in the white header, and "Settings" in the
   Settings window's head.
 - **Title** (700, 21px, 1.25): the current Source's title on Today.
@@ -694,8 +695,8 @@ heading like an illuminated initial.
 
 ### Named Rules
 
-**The One Initial Rule.** Cinzel Decorative appears only as the first letter of a panel heading,
-the setup title or the Review bar title, through `::first-letter`, so the heading text stays
+**The One Initial Rule.** Cinzel Decorative appears only as the first letter of a panel heading
+or the Review bar title, through `::first-letter`, so the heading text stays
 whole for screen readers. Never on data, buttons or body.
 
 **The Typed Label Rule.** Courier Prime is for call numbers, step numbers, the Probe's question
@@ -717,8 +718,13 @@ rail stays a full-height spine.
 
 Working pages use a main column plus a 300 to 380px side column with 20px gaps; panels stack in
 each column with 20px gaps. Below 1080px the columns become one, in reading order. Form and
-single-topic pages cap at 760px. First start keeps a bare lapis band at rail width with the
-setup body at 48px top.
+single-topic pages cap at 760px.
+
+The first start has no rail, no page header and no band. It is a grid on Ground, centred up to
+1120px (56px 32px 72px padding): a 300px step column (see Setup Steps), 48px of gap, then the step
+Panel in the rest. The step column is sticky, 32px from the top, so the steps stay in view while a
+long step Panel scrolls. Below 860px the two become one column (28px gap, 32px 20px 48px
+padding), and the step list is no longer sticky.
 
 Spacing steps through 4, 6, 8, 12, 16, 20, 24 and 32px; panel bodies pad 16px 20px 20px and
 heads pad 14px 20px. Forms use a two-column field grid (16px row, 20px column gaps) with wide
@@ -1155,17 +1161,83 @@ over a Mute "Yours" or "Shared by <owner>". Vaults come first; the rest fold und
 disclosure, "Other repositories (7)", with a hint that one becomes a Vault as it is. Below 520px the
 states drop under the name.
 
+### Setup Steps
+
+The step column of the first start, on Ground. From the top: the GLO call-number label; the title
+"Set up Glose" (700 28px, 18px below the label, no Initial); the purpose in one 15px/1.5 sentence,
+10px below; a Mute 13px line that says how long it is and that Settings can change the language and
+look; then the steps, 24px below.
+
+- **List:** an ordered list in a `nav` named "Steps", with a Hairline above and under each row.
+  The five steps always show: Language and look, Vault, How Glose works, ChatGPT, Your first book.
+- **Row:** three columns (24px, the rest, 16px; 10px apart), 13px 14px 13px 16px padding. The step
+  number in Courier Prime 400 14px/1.4 in Mute; the step name in 600 15px; under the name, the
+  chosen value in Mute 13px/1.4 that wraps anywhere ("English · Lapis", "Glose, in your home
+  folder (nayena)", "Later", "Connected", "Read"), or a short hint before it is chosen ("The folder
+  for your work", "Optional"). An empty value takes no room.
+- **Current:** Lapis Tint with a 3px Gilt edge on the left (an inset shadow, so the row does not
+  move), the number in Accent, and `aria-current="step"`. The current row is not a button.
+- **Done:** a 16px Verdigris check in the third column. A step is done when the user went past it;
+  the Vault is done when it is made or opened.
+- **Open:** a step the user reached before is a button. Hover gives it Lapis Tint in 160ms on the
+  shared ease-out; focus is a 2px Accent outline inside the row.
+- **Locked and skipped:** a step the user has not reached yet, every step while Glose saves the
+  Vault or the book, and a skipped step are plain text, not clickable, with the name in Mute. A hidden line tells a screen reader the state ("After the Vault", "Skipped"). A Vault that
+  already holds Sources skips How Glose works (its value is "Skipped") and turns Your first book's
+  value into "Your Vault has 12 Sources".
+- **Focus:** when a step changes, its Panel heading takes focus.
+
+### Setup Step Panel
+
+One Panel per step, beside the step column, with the panel heading, its Initial and the flourish.
+The Initials alternate: rubric (Language and look), lapis (Vault), rubric (How Glose works), lapis
+(ChatGPT), rubric (Your first book). The body is a grid with 18px gaps (18px 20px 22px padding);
+lead sentences are 15px/1.55 and cap at 62ch.
+
+- **Language and look:** the Interface language as stacked Choice rows under a field legend, with
+  a Meta hint, then the Appearance Panel's two fieldsets as they are in Settings (Light or dark,
+  Theme with its Bindings). A choice repaints and relabels the page at once.
+- **Step foot:** a second panel body under a Hairline (16px 20px 20px padding). Back is a quiet
+  button at the left; its words line up with the content edge (the button's own padding sits
+  outside it). The actions sit at the right in a wrapping row with 12px gaps, the primary last.
+  Language and look has no Back; its Continue still sits at the right. A step with a way out puts
+  "Go to Today" there as a quiet button. ChatGPT's own action is "Later" (secondary) until ChatGPT
+  is connected, then Continue (primary). Your first book uses the Add Source book panel's foot:
+  Back at the left, "Add the book" (primary) pushed right, and "Not now" (quiet) at the right end
+  of the lead sentence, its words on the right content edge.
+- **Where row (Vault):** under the choices and a Hairline (14px above, 12px gaps): a Meta hint for
+  the chosen way ("Glose makes a new folder for your work."), then the Facts row "Where". Its value
+  is the folder as a place: an 18px Lucide folder icon in Accent, the folder's name in bold 15px,
+  then "in your home folder (nayena)" or "in Documents" in Ink; under it the full path in Public
+  Sans 12px/1.4, Mute, wrapping anywhere. With no folder yet it is "No folder chosen yet" in Mute.
+  On the desktop, a button with a 16px folder-open icon opens the native folder picker: "Change…"
+  (secondary), or "Choose the folder…" (primary) while Open an existing folder has no folder. A
+  quiet disclosure, "Type a path instead", holds the Folder path field; it opens by itself if the
+  picker fails. In a browser there is no picker, and the field shows at once. A field error sits
+  under the button; a storage error is an error Notice. The Meta privacy line ends the body.
+- **Vault made:** a sentence, the same place (icon, name, where, path), and a Meta line with the
+  count of Sources; Back and Continue (primary, focused).
+- **How Glose works:** a lead sentence, then the three Sections as rows between Hairlines (16px 0
+  padding; a 28px column and the text, 14px apart). Each row: the rail's 24px Lucide icon in Accent
+  (Waypoints, NotebookPen, Layers), the name in 700 16px, what it holds in Body, and what the AI may
+  do there in Mute 14px. Graph and Recall then show the real AI mark on a sample line (see AI Text),
+  6px below: Graph the paragraph mark ("¶ AI paragraph") on a Note sentence, Recall the whole-Card
+  mark ("§ AI-written Card") on a question. Writing projects has no sample, as the AI never writes
+  prose there.
+
 ### Setup Remote Ledger
 
 In the first start's Vault panel, "Get it from GitHub" is the third choice. Under the choices,
 a Hairline, then the Facts ("From": "Not chosen yet" in Mute, or the place, such as
-`github.com/jandragsbaek/glose-vault`, with "Yours" or "Shared by <owner>" in Mute 13px), a Meta line
-that Glose keeps the backup there, an error line when the copy failed, and the buttons: Choose on
-GitHub (primary until a remote is chosen, then the secondary Choose another) and a quiet Use another
-git remote. The folder field follows, 14px below. While Glose copies, the start button reads
-"Copying your Vault…" with the live tick and "A large Vault can take a few minutes." beside it. A
-copy from GitHub that fails says so in its own words (check the connection, or choose again); the
-sheet hands focus back to the button that opened it.
+`github.com/jandragsbaek/glose-vault`, with "Yours" or "Shared by <owner>" in Mute 13px), once a
+remote is chosen a Meta line that Glose keeps the backup there, an error line (no remote chosen, or
+the copy failed), and the buttons, 10px below: Choose on GitHub (primary until a remote is chosen,
+then the secondary Choose another) and a quiet Use another git remote. The Where row follows under
+its own Hairline, 14px below. The step's submit, "Copy the Vault", is secondary until a remote and
+a folder are chosen. While Glose copies, it reads "Copying your Vault…", and the live line "A
+large Vault can take a few minutes." with its tick stands beside it at the left. A copy from GitHub
+that fails says so in its own words (check the connection, or choose again); the sheet hands focus
+back to the button that opened it.
 
 ### Typed Code
 

@@ -47,31 +47,112 @@ export const coreMessages = {
     backToToday: "Back to Today",
   },
   setup: {
-    title: "Welcome to Glose",
-    intro:
-      "Three choices, then Glose opens on Today. Nothing leaves your computer except what you keep on GitHub or send to ChatGPT.",
-    languageStep: "Language",
+    title: "Set up Glose",
+    purpose:
+      "Glose helps you read a book, keep what matters from it, and write about it in your own words.",
+    length: "Five short steps. You can change the language and look later in Settings.",
+    stepsLabel: "Steps",
+    steps: {
+      look: "Language and look",
+      vault: "Vault",
+      sections: "How Glose works",
+      chatgpt: "ChatGPT",
+      book: "Your first book",
+    },
+    stepHints: {
+      look: "",
+      vault: "The folder for your work",
+      sections: "Graph, Writing projects, Recall",
+      chatgpt: "Optional",
+      book: "Optional",
+    },
+    stepState: {
+      done: "Done",
+      current: "Current step",
+      locked: "After the Vault",
+      skipped: "Skipped",
+    },
+    lookValue: (language: string, theme: string) => `${language} · ${theme}`,
+    sectionsRead: "Read",
+    chatgptConnected: "Connected",
+    chatgptLater: "Later",
+    vaultHasSources: (n: number) => `Your Vault has ${count(n, "Source", "Sources")}`,
+    languageLegend: "Interface language",
     languageHint:
-      "The language of the interface. Notes and Writing projects can be in any language. You can change this later in Settings.",
-    folderStep: "Vault",
+      "The language of the interface. Notes and Writing projects can be in any language.",
     folderHint:
-      "Glose keeps every Source and Note as a Markdown file in this folder, and its own settings in a hidden .glose folder inside it. Move the folder, or share it through Dropbox or git, and the Vault goes with it.",
+      "Your Vault is one ordinary folder on this computer. Glose keeps all your Sources, Notes and Cards in it as plain files, so they stay yours and other programs can open them too.",
+    privacy: "Your files stay on this computer, except what you keep on GitHub or send to ChatGPT.",
     folderActions: {
       create: "Start a new Vault",
       open: "Open an existing folder",
       clone: "Get it from GitHub",
     } satisfies Record<VaultFolderAction, string>,
     folderActionHints: {
-      create: "Glose creates an empty folder at this path.",
+      create: "Glose makes a new folder for your work.",
       open: "A Vault that you moved or that someone shares with you, or a folder of Markdown files.",
-      clone:
-        "Glose copies the Vault into a new folder at this path. The folder must be missing or empty.",
+      clone: "Glose puts the copy in a new folder.",
     } satisfies Record<VaultFolderAction, string>,
     folderLabel: "Folder path",
-    chatgptStep: "ChatGPT",
+    where: "Where",
+    folderNotChosen: "No folder chosen yet",
+    placeHome: (home: string) => `in your home folder (${home})`,
+    placeIn: (trail: string) => `in ${trail}`,
+    change: "Change…",
+    chooseOpen: "Choose the folder…",
+    typePath: "Type a path instead",
+    folderNeeded: "Choose the folder that holds your Vault first.",
+    pickTitle: {
+      create: "Choose where Glose makes the folder for your Vault",
+      open: "Choose the folder that holds your Vault",
+      clone: "Choose where Glose puts the copy of your Vault",
+    } satisfies Record<VaultFolderAction, string>,
+    pickButton: {
+      create: "Choose this place",
+      open: "Open this folder",
+      clone: "Choose this place",
+    } satisfies Record<VaultFolderAction, string>,
+    vaultSubmit: {
+      create: "Make the Vault",
+      open: "Open the Vault",
+      clone: "Copy the Vault",
+    } satisfies Record<VaultFolderAction, string>,
+    vaultDone: "Glose keeps your work in this folder.",
+    vaultFound: (n: number) =>
+      n === 0 ? "It holds no Sources yet." : `It holds ${count(n, "Source", "Sources")}.`,
+    sectionsIntro:
+      "Glose has three Sections. After setup you find them at the left of the window. The AI does different work in each.",
+    sections: {
+      graph: {
+        holds:
+          "Notes from what you read, linked to each other. Every Note comes from a Source, so you can find the page again.",
+        ai: "The AI may write Notes. Its text carries this mark until you rewrite it in your own words.",
+        sample: "Busyness is a proxy for productivity: it feels like work getting done.",
+      },
+      writing: {
+        holds: "Your own prose: blog posts and university assignments that cite your Notes.",
+        ai: "The AI suggests Notes to cite and checks your References. It never writes your prose.",
+      },
+      recall: {
+        holds: "Cards made from your Notes, brought back just before you would forget them.",
+        ai: "The AI may propose Cards. They carry the same mark until you rewrite them.",
+        sample: "What does attention residue do to the next task?",
+      },
+    },
+    bookIntro: "Add the book you are reading now. Glose then opens it, ready to start.",
+    bookKnown: (n: number) =>
+      `Your Vault already holds ${count(n, "Source", "Sources")}. Today shows the ones in progress.`,
+    continue: "Continue",
+    back: "Back",
+    toToday: "Go to Today",
+    later: "Later",
+    laterToday: "Later, go to Today",
+    addBook: "Add the book",
+    chatgptIntro:
+      "The AI in Glose runs on your own ChatGPT plan. It helps turn what you write about a book into Notes, asks you questions about the book, and proposes Cards. Glose has no account of its own: ChatGPT asks you to allow Glose to use your plan.",
+    notNow: "Not now",
     chatgptHint:
       "Optional. You can also connect later in Settings. Without ChatGPT you can still add Sources and write Free text.",
-    submit: "Start using Glose",
     copying: "Copying your Vault…",
     remote: {
       from: "From",

@@ -34,8 +34,9 @@ Working notes from early conversations. Nothing here is final.
 
 ## First start
 
-- A short setup: interface language, Vault, and an optional ChatGPT connection (it can
-  also be made later in Settings).
+- A short setup in steps: interface language and look, Vault, how Glose works, an optional
+  ChatGPT connection (it can also be made later in Settings) and an optional first book. See
+  "Decided, first open as steps".
 - The Vault is the folder that holds the Graph, the Sources, the Cards, the Writing projects and
   the Sessions, like an Obsidian vault. The setup either starts a new Vault (suggested: `Glose` in
   the home folder; the folder must be missing or empty) or opens a folder that exists.
@@ -50,8 +51,7 @@ Working notes from early conversations. Nothing here is final.
   `GLOSE_DATA_DIR` overrides the folder.
 - The setup can also copy a Vault from GitHub or another git remote; see "Decided, a Vault from
   GitHub at first start".
-- Not built yet: noticing a Vault that moved or went missing, a native folder picker, and
-  switching between Vaults.
+- Not built yet: noticing a Vault that moved or went missing, and switching between Vaults.
 - Decided, the Vault (November 2026): Jan renamed the folder from Graph to Vault ("I like that
   terminology much better"). Graph stays the name of the Notes and their Links, and of the
   Section that draws them. Danish: Arkiv. Computer settings saved under the old key `graphFolder`
@@ -562,16 +562,41 @@ Decided, Backup (November 2026):
   `apps/server/src/github/GitHubApi.ts`; `GLOSE_GITHUB_CLIENT_ID` replaces it.
 - Opening a backup on a second computer: see "Decided, a Vault from GitHub at first start".
 
+Decided, first open as steps (November 2026), chosen with impeccable ("Steps on a leaf") after a
+three-model council (Claude Opus, GPT Sol, Muse Wonder Full):
+
+- First open is five steps, listed at the left with what was chosen in each, one step at a time at
+  the right: 1 Language and look (interface language, theme and Light/Dark; both change the page
+  at once), 2 Vault, 3 How Glose works (the three Sections and the AI rule of each, with the real
+  AI mark), 4 ChatGPT (optional), 5 Your first book (optional; the Add Source book form, and the
+  new Source opens at its Reading Start). Jan's scope: no sample Vault.
+- The council's rules: language first; the Vault is the only required step and is saved the
+  moment it succeeds; ChatGPT and the first book have an equal way out ("Later", "Not now", "Go to
+  Today"); the AI rules come before the ChatGPT question; a Vault that already holds Sources goes
+  from the Vault to ChatGPT and then to Today, and the step list marks the intro as skipped; the
+  step list opens only steps already reached.
+- The interface language is saved when it is picked. Closing the app before the Vault step starts
+  first open again with that language; closing it after opens Today.
+- No folder path to type, for a non-technical user (Jan: "that 'folder path' thing is very
+  difficult to understand for a non technical person"). A "Where" row names the folder in words
+  ("Glose, in your home folder (anna)", "in Documents") with the full path small under it. On the
+  desktop, "Change…" (new Vault, GitHub copy: choose a place, Glose adds the folder `Glose`
+  unless the chosen folder already has that name) and "Choose the folder…" (open a folder) open the
+  system's folder dialog. "Type a path instead" folds the field away. The browser build, which has
+  no folder dialog, shows the field.
+- Not yet: changing the Vault folder in Settings, and the system's own names for folders such as
+  Documents ("Dokumenter" on a Danish Mac).
+
 Decided, a Vault from GitHub at first start (November 2026):
 
 - The Vault step of the first start has a third way in, "Get it from GitHub", beside
   starting a new Vault and opening a folder. It copies (clones) a Vault the user keeps on GitHub or
   on another git remote: their own backup on a second computer, or a Vault another person shares
   with them on GitHub.
-- The setup page stays one column. The step shows a short ledger, "From", and the choosing happens
-  in a sheet, the Backup sheet run the other way. Jan chose this ("Ledger and sheet") with
-  impeccable over a two-column page that lists the Vaults found and over a setup in steps under the
-  step bar.
+- The Vault step shows a short ledger, "From", and the choosing happens in a sheet, the Backup
+  sheet run the other way. Jan chose this ("Ledger and sheet") with impeccable over a two-column
+  page that lists the Vaults found and over a setup in steps under the step bar. The setup itself
+  became a list of steps later; see "Decided, first open as steps".
 - GitHub: step 1 connects with the device code, as Backup does. Step 2 lists the private
   repositories the account owns or that are shared with it, Vaults first (a repository holding
   `.glose/settings.json`), the latest pushed Vault chosen. Each row names the repository as a typed

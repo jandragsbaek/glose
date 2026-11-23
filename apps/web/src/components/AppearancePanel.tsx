@@ -10,61 +10,70 @@ const MODE_ICONS: Record<Mode, LucideIcon> = { light: Sun, dark: Moon, system: M
 
 export function AppearancePanel() {
   const t = useT();
+  return (
+    <Panel title={t.appearance.title} initial="accent" level={3}>
+      <div className="panel__body">
+        <AppearanceChoices />
+      </div>
+    </Panel>
+  );
+}
+
+export function AppearanceChoices() {
+  const t = useT();
   const id = useId();
   const painted = useAppearance();
   return (
-    <Panel title={t.appearance.title} initial="accent" level={3}>
-      <div className="panel__body appearance">
-        <fieldset className="appearance__group">
-          <legend className="appearance__legend">{t.appearance.mode}</legend>
-          <div className="segmented appearance__modes">
-            {MODES.map((mode) => {
-              const Icon = MODE_ICONS[mode];
-              return (
-                <label key={mode}>
-                  <input
-                    type="radio"
-                    name={`${id}-mode`}
-                    checked={painted.mode === mode}
-                    onChange={() => void chooseAppearance({ mode })}
-                  />
-                  <span>
-                    <Icon className="appearance__mode-icon" aria-hidden="true" />
-                    {t.appearance.modes[mode]}
-                  </span>
-                </label>
-              );
-            })}
-          </div>
-          <p className="field__hint appearance__now" aria-live="polite">
-            {painted.mode === "system" && painted.settled
-              ? t.appearance.systemNow[painted.appearance]
-              : ""}
-          </p>
-        </fieldset>
-        <fieldset className="appearance__group">
-          <legend className="appearance__legend">{t.appearance.theme}</legend>
-          <div className="bindings">
-            {THEMES.map((theme) => (
-              <label key={theme} className="binding">
+    <div className="appearance">
+      <fieldset className="appearance__group">
+        <legend className="appearance__legend">{t.appearance.mode}</legend>
+        <div className="segmented appearance__modes">
+          {MODES.map((mode) => {
+            const Icon = MODE_ICONS[mode];
+            return (
+              <label key={mode}>
                 <input
                   type="radio"
-                  name={`${id}-theme`}
-                  checked={painted.theme === theme}
-                  onChange={() => void chooseAppearance({ theme })}
+                  name={`${id}-mode`}
+                  checked={painted.mode === mode}
+                  onChange={() => void chooseAppearance({ mode })}
                 />
-                <span className="binding__specimen" aria-hidden="true">
-                  <Leaf theme={theme} appearance="light" />
-                  <Leaf theme={theme} appearance="dark" />
+                <span>
+                  <Icon className="appearance__mode-icon" aria-hidden="true" />
+                  {t.appearance.modes[mode]}
                 </span>
-                <span className="binding__name">{t.appearance.themes[theme]}</span>
               </label>
-            ))}
-          </div>
-          <p className="field__hint">{t.appearance.hint}</p>
-        </fieldset>
-      </div>
-    </Panel>
+            );
+          })}
+        </div>
+        <p className="field__hint appearance__now" aria-live="polite">
+          {painted.mode === "system" && painted.settled
+            ? t.appearance.systemNow[painted.appearance]
+            : ""}
+        </p>
+      </fieldset>
+      <fieldset className="appearance__group">
+        <legend className="appearance__legend">{t.appearance.theme}</legend>
+        <div className="bindings">
+          {THEMES.map((theme) => (
+            <label key={theme} className="binding">
+              <input
+                type="radio"
+                name={`${id}-theme`}
+                checked={painted.theme === theme}
+                onChange={() => void chooseAppearance({ theme })}
+              />
+              <span className="binding__specimen" aria-hidden="true">
+                <Leaf theme={theme} appearance="light" />
+                <Leaf theme={theme} appearance="dark" />
+              </span>
+              <span className="binding__name">{t.appearance.themes[theme]}</span>
+            </label>
+          ))}
+        </div>
+        <p className="field__hint">{t.appearance.hint}</p>
+      </fieldset>
+    </div>
   );
 }
 

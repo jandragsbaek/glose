@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-17T12:00:00+00:00",
+  "generatedAt": "2026-11-23T12:00:00+00:00",
   "title": "Design System: Glose",
   "extensions": {
     "colorMeta": {
@@ -293,7 +293,7 @@
     "typographyMeta": {
       "display": {
         "displayName": "Display",
-        "purpose": "The first-start title only, with a Cinzel initial at 1.35em."
+        "purpose": "The largest title. The first-start title is one step down (700 28px), plain, with no Initial; there the Initials sit on each step Panel's heading."
       },
       "headline": {
         "displayName": "Headline",
@@ -556,6 +556,14 @@
       "css": ".ds-steps { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); margin:0; padding:0; list-style:none; border:1px solid var(--line,#dedde3); border-radius:4px; overflow:hidden; font-family:'Public Sans',system-ui,sans-serif; color:var(--ink,#141414); } .ds-step { padding:10px 14px 9px; border-right:1px solid var(--line,#dedde3); border-bottom:3px solid transparent; } .ds-step:last-child { border-right:0; } .ds-sname { display:flex; align-items:center; gap:6px; font-size:14px; font-weight:600; } .ds-num { font-family:'Courier Prime',ui-monospace,monospace; font-weight:700; } .ds-note { display:block; font-size:13px; color:var(--mute,#5c5f6a); font-variant-numeric:tabular-nums; } .ds-done { border-bottom-color:var(--verdigris,#3e7c5a); } .ds-check { width:15px; height:15px; color:var(--verdigris,#3e7c5a); } .ds-step[aria-current=step] { background:var(--tint,#eef0f8); border-bottom-color:var(--gold,#c8a040); }"
     },
     {
+      "name": "Setup Steps",
+      "kind": "nav",
+      "refersTo": "step-current",
+      "description": "The first start's step column: every step with its chosen value; current has Lapis Tint and a 3px Gilt edge, done a Verdigris check, locked and skipped rows are plain Mute text.",
+      "html": "<nav aria-label=\"Steps\"><ol class=\"ds-setup-steps\"><li><button type=\"button\" class=\"ds-setup-step\"><span class=\"ds-setup-num\">1</span><span class=\"ds-setup-name\">Language and look</span><svg class=\"ds-check\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M20 6 9 17l-5-5\"/></svg><span class=\"ds-setup-value\">English · Lapis</span></button></li><li><span class=\"ds-setup-step\" aria-current=\"step\"><span class=\"ds-setup-num\">2</span><span class=\"ds-setup-name\">Vault</span><span class=\"ds-setup-value\">The folder for your work</span></span></li><li><span class=\"ds-setup-step\" data-locked=\"\"><span class=\"ds-setup-num\">3</span><span class=\"ds-setup-name\">How Glose works</span><span class=\"ds-setup-value\">Graph, Writing projects, Recall</span></span></li></ol></nav>",
+      "css": ".ds-setup-steps { width:300px; margin:0; padding:0; list-style:none; border-top:1px solid var(--line,#dedde3); font-family:'Public Sans',system-ui,sans-serif; } .ds-setup-steps > li { border-bottom:1px solid var(--line,#dedde3); } .ds-setup-step { display:grid; grid-template-columns:24px minmax(0,1fr) 16px; column-gap:10px; row-gap:2px; width:100%; padding:13px 14px 13px 16px; border:0; background:none; color:var(--ink,#141414); font:inherit; text-align:left; } button.ds-setup-step { cursor:pointer; transition:background-color 160ms cubic-bezier(0.22,1,0.36,1); } button.ds-setup-step:hover { background:var(--tint,#eef0f8); } button.ds-setup-step:focus-visible { outline:2px solid var(--accent,#1e2f7a); outline-offset:-2px; } .ds-setup-step[aria-current=step] { background:var(--tint,#eef0f8); box-shadow:inset 3px 0 0 var(--gold,#c8a040); } .ds-setup-num { padding-top:1px; color:var(--mute,#5c5f6a); font:14px/1.4 'Courier Prime',ui-monospace,monospace; } .ds-setup-step[aria-current=step] .ds-setup-num { color:var(--accent,#1e2f7a); } .ds-setup-name { font-size:15px; font-weight:600; line-height:1.4; } .ds-setup-step[data-locked] .ds-setup-name { color:var(--mute,#5c5f6a); } .ds-setup-step .ds-check { grid-row:1; grid-column:3; width:16px; height:16px; margin-top:2px; color:var(--verdigris,#3e7c5a); } .ds-setup-value { grid-column:2; color:var(--mute,#5c5f6a); font-size:13px; line-height:1.4; overflow-wrap:anywhere; }"
+    },
+    {
       "name": "Warning Notice",
       "kind": "custom",
       "refersTo": "notice-warning",
@@ -781,7 +789,7 @@
       },
       {
         "name": "The One Initial Rule",
-        "body": "Cinzel Decorative appears only as the first letter of a panel heading, the setup title or the Review bar title, through `::first-letter`, so the heading text stays whole for screen readers. Never on data, buttons or body.",
+        "body": "Cinzel Decorative appears only as the first letter of a panel heading or the Review bar title, through `::first-letter`, so the heading text stays whole for screen readers. Never on data, buttons or body.",
         "section": "typography"
       },
       {

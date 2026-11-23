@@ -3,6 +3,7 @@ import * as Electron from "electron";
 import * as NodePath from "node:path";
 
 import * as Appearance from "./Appearance.ts";
+import * as Folders from "./Folders.ts";
 
 const isWebUrl = (url: string) => url.startsWith("https://") || url.startsWith("http://");
 
@@ -71,6 +72,7 @@ export const open = Effect.fn("MainWindow.open")(function* (url: string) {
   yield* Effect.sync(() => {
     setMenu();
     Appearance.follow(new URL(url).origin);
+    Folders.answer(new URL(url).origin);
     create(url);
 
     Electron.app.on("second-instance", () => {
