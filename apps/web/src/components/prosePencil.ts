@@ -349,7 +349,11 @@ const hoverSlip = hoverTooltip(
       create: (editor) => slipDom(editor, mark, false),
     };
   },
-  { hoverTime: 300, hideOnChange: true },
+  {
+    hoverTime: 300,
+    hideOnChange: true,
+    hideOn: (transaction) => transaction.effects.some((effect) => effect.is(setPencil)),
+  },
 );
 
 const showAtCaret = (view: EditorView) => {
