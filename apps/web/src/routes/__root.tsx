@@ -1,5 +1,6 @@
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
-import { createRootRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { createRootRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useState } from "react";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 
 import { PlanNotice } from "../components/PlanNotice.tsx";
@@ -34,6 +35,18 @@ const FOCUS_SCREENS: ReadonlySet<string> = new Set(["/review"]);
 function Root() {
   const settings = useAtomValue(settingsAtom);
   const focus = useRouterState({ select: (state) => FOCUS_SCREENS.has(state.location.pathname) });
+  const navigate = useNavigate();
+  const [setupPhase, setSetupPhase] = useState<"none" | "open" | "done">("none");
+  const settingUp = setupPhase === "open";
+  const needsSetup =
+    AsyncResult.isSuccess(settings) && settings.value.settings.vaultFolder === null;
+  if (needsSetup && setupPhase === "none") setSetupPhase("open");
+  const finishSetup = (sourceId: string | null) => {
+    setSetupPhase("done");
+    void (sourceId === null
+      ? navigate({ to: "/" })
+      : navigate({ to: "/sources/$sourceId", params: { sourceId } }));
+  };
   return AsyncResult.matchWithError(settings, {
     onInitial: () => null,
     onError: () => (
@@ -48,8 +61,8 @@ function Root() {
     ),
     onSuccess: ({ value }) => {
       const language = value.settings.language ?? systemLanguage();
-      if (value.settings.vaultFolder === null) {
-        return <Setup view={value} initialLanguage={language} />;
+      if (settingUp) {
+        return <Setup view={value} initialLanguage={language} onFinish={finishSetup} />;
       }
       if (focus) {
         return (

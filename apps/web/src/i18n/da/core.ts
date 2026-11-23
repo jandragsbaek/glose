@@ -43,31 +43,111 @@ export const coreMessages: Pick<
     backToToday: "Tilbage til I dag",
   },
   setup: {
-    title: "Velkommen til Glose",
-    intro:
-      "Tre valg, så åbner Glose på I dag. Intet forlader din computer, undtagen det du gemmer på GitHub eller sender til ChatGPT.",
-    languageStep: "Sprog",
-    languageHint:
-      "Sproget i programmet. Noter og skriveprojekter kan være på alle sprog. Du kan ændre det senere under Indstillinger.",
-    folderStep: "Arkiv",
+    title: "Sæt Glose op",
+    purpose:
+      "Glose hjælper dig med at læse en bog, gemme det vigtige fra den og skrive om den med dine egne ord.",
+    length: "Fem korte trin. Du kan ændre sprog og udseende senere under Indstillinger.",
+    stepsLabel: "Trin",
+    steps: {
+      look: "Sprog og udseende",
+      vault: "Arkiv",
+      sections: "Sådan virker Glose",
+      chatgpt: "ChatGPT",
+      book: "Din første bog",
+    },
+    stepHints: {
+      look: "",
+      vault: "Mappen til dit arbejde",
+      sections: "Graf, Skriveprojekter, Genkaldelse",
+      chatgpt: "Valgfrit",
+      book: "Valgfrit",
+    },
+    stepState: {
+      done: "Færdig",
+      current: "Nuværende trin",
+      locked: "Efter arkivet",
+      skipped: "Sprunget over",
+    },
+    lookValue: (language, theme) => `${language} · ${theme}`,
+    sectionsRead: "Læst",
+    chatgptConnected: "Forbundet",
+    chatgptLater: "Senere",
+    vaultHasSources: (n) => `Dit arkiv har ${count(n, "kilde", "kilder")}`,
+    languageLegend: "Sprog i programmet",
+    languageHint: "Sproget i programmet. Noter og skriveprojekter kan være på alle sprog.",
     folderHint:
-      "Glose gemmer hver kilde og note som en Markdown-fil i denne mappe, og sine egne indstillinger i en skjult .glose-mappe i den. Flyt mappen, eller del den gennem Dropbox eller git, så følger arkivet med.",
+      "Dit arkiv er en helt almindelig mappe på denne computer. Glose gemmer alle dine kilder, noter og kort i den som almindelige filer, så de forbliver dine, og andre programmer også kan åbne dem.",
+    privacy:
+      "Dine filer bliver på denne computer, undtagen det du gemmer på GitHub eller sender til ChatGPT.",
     folderActions: {
       create: "Start et nyt arkiv",
       open: "Åbn en eksisterende mappe",
       clone: "Hent det fra GitHub",
     },
     folderActionHints: {
-      create: "Glose opretter en tom mappe på denne sti.",
+      create: "Glose opretter en ny mappe til dit arbejde.",
       open: "Et arkiv, som du har flyttet, eller som nogen deler med dig, eller en mappe med Markdown-filer.",
-      clone:
-        "Glose kopierer arkivet til en ny mappe på denne sti. Mappen må ikke findes eller skal være tom.",
+      clone: "Glose lægger kopien i en ny mappe.",
     },
     folderLabel: "Mappens sti",
-    chatgptStep: "ChatGPT",
+    where: "Hvor",
+    folderNotChosen: "Ingen mappe valgt endnu",
+    placeHome: (home) => `i din hjemmemappe (${home})`,
+    placeIn: (trail) => `i ${trail}`,
+    change: "Skift…",
+    chooseOpen: "Vælg mappen…",
+    typePath: "Skriv en sti i stedet",
+    folderNeeded: "Vælg først den mappe, dit arkiv ligger i.",
+    pickTitle: {
+      create: "Vælg, hvor Glose skal oprette mappen til dit arkiv",
+      open: "Vælg den mappe, dit arkiv ligger i",
+      clone: "Vælg, hvor Glose skal lægge kopien af dit arkiv",
+    },
+    pickButton: {
+      create: "Vælg dette sted",
+      open: "Åbn denne mappe",
+      clone: "Vælg dette sted",
+    },
+    vaultSubmit: {
+      create: "Opret arkivet",
+      open: "Åbn arkivet",
+      clone: "Kopiér arkivet",
+    },
+    vaultDone: "Glose gemmer dit arbejde i denne mappe.",
+    vaultFound: (n) =>
+      n === 0 ? "Den har ingen kilder endnu." : `Den har ${count(n, "kilde", "kilder")}.`,
+    sectionsIntro:
+      "Glose har tre afsnit. Efter opsætningen finder du dem i venstre side af vinduet. AI'en gør forskelligt arbejde i hvert.",
+    sections: {
+      graph: {
+        holds:
+          "Noter fra det, du læser, forbundet med hinanden. Hver note kommer fra en kilde, så du kan finde siden igen.",
+        ai: "AI'en må skrive noter. Dens tekst har dette mærke, indtil du skriver den om med dine egne ord.",
+        sample:
+          "Travlhed er en stedfortræder for produktivitet: det føles, som om arbejdet bliver gjort.",
+      },
+      writing: {
+        holds: "Din egen prosa: blogindlæg og universitetsopgaver, der henviser til dine noter.",
+        ai: "AI'en foreslår noter at henvise til og tjekker dine kildehenvisninger. Den skriver aldrig din prosa.",
+      },
+      recall: {
+        holds: "Kort lavet af dine noter, som kommer igen lige før, du ville glemme dem.",
+        ai: "AI'en må foreslå kort. De har samme mærke, indtil du skriver dem om.",
+        sample: "Hvad gør opmærksomhedsrester ved den næste opgave?",
+      },
+    },
+    bookIntro: "Tilføj den bog, du læser nu. Så åbner Glose den, klar til at begynde.",
+    continue: "Fortsæt",
+    back: "Tilbage",
+    toToday: "Gå til I dag",
+    later: "Senere",
+    laterToday: "Senere, gå til I dag",
+    addBook: "Tilføj bogen",
+    chatgptIntro:
+      "AI'en i Glose bruger dit eget ChatGPT-abonnement. Den hjælper med at gøre det, du skriver om en bog, til noter, stiller dig spørgsmål om bogen og foreslår kort. Glose har ingen konto selv: ChatGPT beder dig give Glose lov til at bruge dit abonnement.",
+    notNow: "Ikke nu",
     chatgptHint:
       "Valgfrit. Du kan også forbinde senere under Indstillinger. Uden ChatGPT kan du stadig tilføje kilder og skrive fri tekst.",
-    submit: "Begynd at bruge Glose",
     copying: "Kopierer dit arkiv…",
     remote: {
       from: "Fra",

@@ -1,5 +1,6 @@
 import {
   type AdvanceReading,
+  type CompleteSetup,
   RPC_METHODS,
   type SaveFreeText,
   type SaveNote,
@@ -42,7 +43,6 @@ export const startSourceOverAtom = GloseClient.mutation(RPC_METHODS.sourcesStart
 export const deleteSourceAtom = GloseClient.mutation(RPC_METHODS.sourcesDelete);
 
 export const setLanguageAtom = GloseClient.mutation(RPC_METHODS.settingsSetLanguage);
-export const completeSetupAtom = GloseClient.mutation(RPC_METHODS.setupComplete);
 export const checkRemoteAtom = GloseClient.mutation(RPC_METHODS.setupCheckRemote);
 export const createSourceAtom = GloseClient.mutation(RPC_METHODS.sourcesCreate);
 export const saveFreeTextAtom = GloseClient.mutation(RPC_METHODS.sourcesSaveFreeText);
@@ -97,4 +97,19 @@ export const setPassageWordsAtom = GloseClient.mutation(RPC_METHODS.articlesSetP
 
 export const unsavedWordsAtom = Atom.make<ReadonlyMap<string, string>>(new Map()).pipe(
   Atom.keepAlive,
+);
+
+export const openVaultAtom = GloseClient.runtime.fn<CompleteSetup>()(
+  Effect.fnUntraced(function* (payload) {
+    const client = yield* GloseClient;
+    const view = yield* Reactivity.mutation(
+      client(RPC_METHODS.setupComplete, payload),
+      KEYS.settings,
+    );
+    const sources = yield* client(RPC_METHODS.sourcesList, undefined).pipe(
+      Effect.map((list) => list.length),
+      Effect.orElseSucceed(() => 0),
+    );
+    return { folder: view.settings.vaultFolder ?? payload.vaultFolder, sources };
+  }),
 );

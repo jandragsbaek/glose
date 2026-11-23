@@ -187,10 +187,17 @@ export const make = Effect.gen(function* () {
   });
 
   const markdownNames = Effect.fn("Sources.markdownNames")(function* (folder: string) {
-    const entries = yield* fs.readDirectory(folder);
-    return entries
-      .filter((entry) => entry.endsWith(MARKDOWN))
-      .map((entry) => entry.slice(0, -MARKDOWN.length));
+    const entries = (yield* fs.readDirectory(folder)).filter((entry) => entry.endsWith(MARKDOWN));
+    const files = yield* Effect.filter(
+      entries,
+      (entry) =>
+        fs.stat(path.join(folder, entry)).pipe(
+          Effect.map((info) => info.type === "File"),
+          Effect.orElseSucceed(() => false),
+        ),
+      { concurrency: 16 },
+    );
+    return files.map((entry) => entry.slice(0, -MARKDOWN.length));
   });
 
   const writeSource = Effect.fn("Sources.writeSource")(function* (

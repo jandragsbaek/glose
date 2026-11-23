@@ -6,6 +6,9 @@ const bridge: DesktopBridge = {
   appearance: {
     set: (mode, grounds) => Electron.ipcRenderer.invoke(DESKTOP_IPC.appearanceSet, mode, grounds),
   },
+  folders: {
+    choose: (request) => Electron.ipcRenderer.invoke(DESKTOP_IPC.foldersChoose, request),
+  },
   updates: {
     status: () => Electron.ipcRenderer.invoke(DESKTOP_IPC.updatesStatus),
     watch: (listener) => {

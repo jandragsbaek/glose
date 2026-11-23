@@ -134,6 +134,29 @@ it.layer(NodeServices.layer)("Settings", (it) => {
     }).pipe(Effect.scoped),
   );
 
+  it.effect("keeps the Vault when a language change saves at the same time", () =>
+    Effect.gen(function* () {
+      const path = yield* Path.Path;
+      const dirs = yield* makeDirs;
+      const vaultFolder = path.join(dirs.homeDir, "Glose");
+
+      const settings = yield* Effect.gen(function* () {
+        const service = yield* Settings.Settings;
+        yield* Effect.all(
+          [
+            ...Array.from({ length: 20 }, () => service.setLanguage("da")),
+            service.completeSetup({ language: "da", vaultFolder, action: "create" }),
+            ...Array.from({ length: 20 }, () => service.setLanguage("da")),
+          ],
+          { concurrency: "unbounded" },
+        );
+        return (yield* service.get).settings;
+      }).pipe(onComputer(dirs));
+
+      assert.deepStrictEqual(settings, { language: "da", vaultFolder });
+    }).pipe(Effect.scoped),
+  );
+
   it.effect("refuses folders that do not fit the action", () =>
     Effect.gen(function* () {
       const dirs = yield* makeDirs;

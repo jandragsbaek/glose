@@ -7,9 +7,18 @@ export interface AppearanceGrounds {
   readonly dark: string;
 }
 
+export interface FolderRequest {
+  readonly startIn: string;
+  readonly title: string;
+  readonly button: string;
+}
+
 export interface DesktopBridge {
   readonly appearance: {
     readonly set: (mode: AppearanceMode, grounds: AppearanceGrounds) => Promise<boolean>;
+  };
+  readonly folders: {
+    readonly choose: (request: FolderRequest) => Promise<string | null>;
   };
   readonly updates: {
     readonly status: () => Promise<UpdatesStatus>;
@@ -22,6 +31,7 @@ export interface DesktopBridge {
 
 export const DESKTOP_IPC = {
   appearanceSet: "glose:appearance:set",
+  foldersChoose: "glose:folders:choose",
   updatesStatus: "glose:updates:status",
   updatesChanged: "glose:updates:changed",
   updatesCheck: "glose:updates:check",
