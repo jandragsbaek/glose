@@ -14,6 +14,8 @@
   --font-call: "Courier Prime", ui-monospace, monospace;
   --font-initial: "Cinzel Decorative", "Cinzel", serif;
   --font-code: "Fira Code", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-book: "Source Serif 4", Georgia, serif;
+  --font-typewriter: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
 
   --radius: 4px;
   --rail: 96px;
@@ -5090,6 +5092,276 @@ textarea.properties__input {
   color: var(--accent);
 }
 
+/* Settings → Text: a sample leaf drawn with the chosen text, then the three choices. */
+.text-settings {
+  display: grid;
+  gap: 18px;
+}
+
+.text-settings__lead {
+  margin-top: -4px;
+  color: var(--mute);
+}
+
+.text-specimen {
+  margin: 0;
+  padding: 16px 20px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--ground);
+  overflow: hidden;
+}
+
+.text-specimen__leaf {
+  width: min(100%, calc(var(--prose-measure) + 40px));
+  padding: 14px 20px 10px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.text-specimen__prose {
+  font: 400 var(--prose-size) / var(--prose-leading) var(--prose-font);
+}
+
+.text-specimen__prose .prose-editor__ref {
+  vertical-align: super;
+}
+
+.text-specimen__gloss {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  margin-top: 10px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line-strong);
+  color: var(--mute);
+  font-size: 12px;
+}
+
+.text-specimen__number {
+  color: var(--accent);
+  font: 700 11px/1 var(--font-call);
+}
+
+.text-specimen__note {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.text-specimen__ruler {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+  color: var(--mute);
+  font-size: 12px;
+}
+
+.text-specimen__rule {
+  width: min(100%, calc(var(--prose-measure) + 40px));
+  height: 7px;
+  border-right: 1px solid var(--mute);
+  border-left: 1px solid var(--mute);
+  background: linear-gradient(var(--mute), var(--mute)) center / 100% 1px no-repeat;
+}
+
+.text-settings__group {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.text-settings__legend {
+  margin-bottom: 8px;
+  padding: 0;
+  color: var(--mute);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.text-settings__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 18px 32px;
+}
+
+.text-faces {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(184px, 1fr));
+  gap: 12px;
+}
+
+.text-face,
+.text-width {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--paper);
+  cursor: pointer;
+  transition:
+    border-color 160ms var(--ease-out),
+    background-color 160ms var(--ease-out);
+}
+
+.text-face {
+  padding: 8px 14px 9px;
+}
+
+.text-width {
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 12px;
+}
+
+.text-face:hover,
+.text-width:hover {
+  border-color: var(--mute);
+}
+
+.text-face:has(input:checked) {
+  border-color: var(--accent);
+  box-shadow: inset 0 -3px 0 var(--gold);
+}
+
+.text-width:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--tint);
+}
+
+.text-face:has(input:focus-visible),
+.text-width:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.text-face input,
+.text-width input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.text-face__sample {
+  flex: none;
+  width: 52px;
+  font: 400 30px/1.1 var(--prose-font);
+}
+
+.text-face__name,
+.text-width__name {
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+.text-width__name {
+  font-size: 14px;
+}
+
+.text-face:has(input:checked) .text-face__name,
+.text-width:has(input:checked) .text-width__name {
+  color: var(--accent);
+}
+
+.text-sizes label > span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 52px;
+  height: 46px;
+  padding: 0 0 5px;
+  line-height: 1;
+}
+
+.text-sizes label > span > span {
+  padding: 0;
+  background: none;
+}
+
+.text-sizes__glyph {
+  font-family: var(--prose-font);
+  font-weight: 400;
+}
+
+.text-sizes .text-sizes__number {
+  margin-top: 4px;
+  color: var(--mute);
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.text-sizes label:has(input:checked) .text-sizes__number {
+  color: var(--accent);
+}
+
+.text-sizes label:has(input:checked) > span {
+  box-shadow: inset 0 -3px 0 var(--gold);
+}
+
+.text-widths {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.text-width__page {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--mute);
+  border-radius: 2px;
+  background: repeating-linear-gradient(var(--paper) 0 5px, var(--line-strong) 5px 6px) center /
+    var(--lines, 14px) 100% no-repeat;
+}
+
+.text-width__page[data-width="narrow"] {
+  --lines: 8px;
+}
+
+.text-width__page[data-width="wide"] {
+  --lines: 20px;
+}
+
+.text-settings__focus {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  color: var(--mute);
+  font-size: 14px;
+}
+
+.text-settings__focus strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.text-settings__focus-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: 280ms;
@@ -6400,8 +6672,8 @@ textarea.properties__input {
   display: grid;
   flex: 1;
   grid-template-columns:
-    minmax(16px, 1fr) minmax(180px, 250px) minmax(0, 680px) minmax(200px, 290px)
-    minmax(16px, 1fr);
+    minmax(16px, 1fr) minmax(180px, 250px) minmax(0, var(--leaf-width, 680px))
+    minmax(200px, 290px) minmax(16px, 1fr);
   align-items: start;
   padding: 32px 0 0;
 }
@@ -6481,11 +6753,27 @@ textarea.properties__input {
   font-variant-numeric: tabular-nums;
 }
 
-/* The prose: CodeMirror, set as the Free text is, with no editor chrome. */
+/* The prose: CodeMirror with no editor chrome, in the typeface and size chosen under Settings →
+   Text. Each typeface carries its own line height; headings and Reference numbers scale in em. */
+.writing-text {
+  --prose-font: var(--font-ui);
+  --prose-leading: 1.65;
+}
+
+.writing-text[data-face="book"] {
+  --prose-font: var(--font-book);
+  --prose-leading: 1.6;
+}
+
+.writing-text[data-face="typewriter"] {
+  --prose-font: var(--font-typewriter);
+  --prose-leading: 1.7;
+}
+
 .prose-editor .cm-editor {
   background: none;
   color: var(--ink);
-  font: 400 16px/1.65 var(--font-ui);
+  font: 400 var(--prose-size, 16px) / var(--prose-leading, 1.65) var(--prose-font, var(--font-ui));
 }
 
 .prose-editor .cm-editor.cm-focused {
@@ -6531,7 +6819,7 @@ textarea.properties__input {
 .prose-editor__ref {
   margin: 0 1px;
   color: var(--accent);
-  font: 700 12px/1 var(--font-call);
+  font: 700 0.75em/1 var(--font-call);
   font-variant-numeric: tabular-nums;
   cursor: pointer;
 }
@@ -6546,14 +6834,14 @@ textarea.properties__input {
 
 /* Formatting shows as it will read; its marks come back, faint, where the caret is. */
 .prose-editor .cm-line.prose-h2 {
-  padding: 18px 0 2px;
-  font: 700 22px/1.3 var(--font-ui);
+  padding: 1.125em 0 0.125em;
+  font: 700 1.375em/1.3 var(--prose-font, var(--font-ui));
   letter-spacing: -0.01em;
 }
 
 .prose-editor .cm-line.prose-h3 {
-  padding: 12px 0 0;
-  font: 700 18px/1.35 var(--font-ui);
+  padding: 0.75em 0 0;
+  font: 700 1.125em/1.35 var(--prose-font, var(--font-ui));
   letter-spacing: -0.005em;
 }
 
@@ -7578,101 +7866,99 @@ textarea.properties__input {
 }
 
 /*
- * Below a wide desk the margins fold under the leaf, in reading order. The desk is a container,
- * so the margins fold by its own width: a narrow window, or the Graph open beside it. The widths
- * are the window widths of old less the 96px rail.
+ * Below a wide desk the margins fold under the leaf, in reading order. The desk sets data-fold
+ * from its own width and the leaf's (see foldOf in WritingDesk.tsx), so a narrow window, the
+ * Graph open beside it, or a wider text all fold them.
  */
-@container desk (max-width: 1103px) {
-  .writing-desk {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 20px;
-    padding: 24px 24px 40px;
-  }
+.writing-desk:where([data-fold]) {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  padding: 24px 24px 40px;
+}
 
-  .writing-desk__margin--left,
-  .writing-desk__margin--right,
-  .leaf {
-    grid-row: auto;
-    grid-column: 1;
-    width: 100%;
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 0;
-  }
+:where(.writing-desk[data-fold]) .writing-desk__margin--left,
+:where(.writing-desk[data-fold]) .writing-desk__margin--right,
+:where(.writing-desk[data-fold]) .leaf {
+  grid-row: auto;
+  grid-column: 1;
+  width: 100%;
+  max-width: var(--leaf-folded, 680px);
+  margin: 0 auto;
+  padding: 0;
+}
 
-  .leaf {
-    order: 1;
-    padding: 32px 32px 40px;
-    border-bottom: 1px solid var(--line);
-    border-radius: var(--radius);
-    min-height: 0;
-  }
+:where(.writing-desk[data-fold]) .leaf {
+  order: 1;
+  padding: 32px 32px 40px;
+  border-bottom: 1px solid var(--line);
+  border-radius: var(--radius);
+  min-height: 0;
+}
 
-  .writing-desk__margin--left {
-    order: 2;
-  }
+:where(.writing-desk[data-fold]) .writing-desk__margin--left {
+  order: 2;
+}
 
-  .writing-desk__margin--right {
-    order: 3;
-  }
+:where(.writing-desk[data-fold]) .writing-desk__margin--right {
+  order: 3;
+}
 
-  .writing-desk__margin {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
+:where(.writing-desk[data-fold]) .writing-desk__margin {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
 
-  .writing-desk[data-mode="write"] .writing-desk__margin > [data-pos] {
-    position: static;
-  }
+.writing-desk[data-mode="write"]:where([data-fold]) .writing-desk__margin > [data-pos] {
+  position: static;
+}
 
-  .flag {
-    align-items: flex-start;
-    text-align: left;
-  }
+:where(.writing-desk[data-fold]) .flag {
+  align-items: flex-start;
+  text-align: left;
+}
 
-  .flag .link-button {
-    text-align: left;
-  }
+:where(.writing-desk[data-fold]) .flag .link-button {
+  text-align: left;
+}
 
-  .flag--ai {
-    padding: 0 0 0 10px;
-    border-right: 0;
-    border-left: 2px solid var(--rubric);
-  }
+:where(.writing-desk[data-fold]) .flag--ai {
+  padding: 0 0 0 10px;
+  border-right: 0;
+  border-left: 2px solid var(--rubric);
 }
 
 /* Between the two, the glosses stay beside their lines; only the AI's flags fold under. */
-@container desk (min-width: 864px) and (max-width: 1103px) {
-  .writing-desk {
-    grid-template-columns: minmax(0, 680px) minmax(200px, 260px);
-    justify-content: center;
-    gap: 20px 0;
-  }
+.writing-desk:where([data-fold="left"]) {
+  grid-template-columns: minmax(0, var(--leaf-width, 680px)) minmax(200px, 260px);
+  justify-content: center;
+  gap: 20px 0;
+}
 
-  .leaf {
-    grid-row: 1;
-    grid-column: 1;
-    max-width: none;
-  }
+:where(.writing-desk[data-fold="left"]) .leaf {
+  grid-row: 1;
+  grid-column: 1;
+  max-width: none;
+}
 
-  .writing-desk__margin--right {
-    display: block;
-    grid-row: 1;
-    grid-column: 2;
-    max-width: none;
-    padding-left: 22px;
-  }
+:where(.writing-desk[data-fold="left"]) .writing-desk__margin--right {
+  display: block;
+  grid-row: 1;
+  grid-column: 2;
+  max-width: none;
+  padding-left: 22px;
+}
 
-  .writing-desk__margin--left {
-    grid-row: 2;
-    grid-column: 1;
-    max-width: none;
-  }
+:where(.writing-desk[data-fold="left"]) .writing-desk__margin--left {
+  grid-row: 2;
+  grid-column: 1;
+  max-width: none;
+}
 
-  .writing-desk[data-mode="write"] .writing-desk__margin--right > [data-pos] {
-    position: absolute;
-  }
+.writing-desk[data-mode="write"]:where([data-fold="left"])
+  .writing-desk__margin--right
+  > [data-pos] {
+  position: absolute;
 }
 
 @media (max-width: 720px) {
@@ -7681,6 +7967,58 @@ textarea.properties__input {
     padding-right: 16px;
     padding-left: 16px;
   }
+}
+
+/*
+ * Focus: only the text stays. The rail, the status bar, the desk bar and both margins step aside;
+ * the leaf keeps its width and lies on the Ground. A quiet foot holds the save state, the words
+ * and the way out.
+ */
+:root[data-writing-focus] .frame {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+:root[data-writing-focus] .rail,
+:root[data-writing-focus] .status-bar,
+.desk-frame[data-focus] .desk-bar,
+.desk-frame[data-focus] .desk-note {
+  display: none;
+}
+
+.writing-desk[data-focus] {
+  grid-template-columns: minmax(16px, 1fr) minmax(0, var(--leaf-width, 680px)) minmax(16px, 1fr);
+  padding: 56px 0 96px;
+}
+
+.writing-desk[data-focus] .writing-desk__margin {
+  display: none;
+}
+
+.writing-desk[data-focus] .leaf {
+  grid-column: 2;
+  border-color: transparent;
+  background: none;
+}
+
+.writing-desk[data-focus] .leaf__meta {
+  visibility: hidden;
+}
+
+.focus-foot {
+  position: fixed;
+  right: 24px;
+  bottom: 16px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--mute);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.focus-foot__leave {
+  gap: 8px;
 }
 
 @container desk (max-width: 624px) {
@@ -8201,7 +8539,8 @@ textarea.properties__input {
 }
 
 @media (max-width: 1399px) {
-  .desk-bar__graph .key {
+  .desk-bar__graph .key,
+  .desk-bar__focus .key {
     display: none;
   }
 }

@@ -318,9 +318,15 @@ importers:
       '@fontsource/fira-code':
         specifier: ^5.3.0
         version: 5.3.0
+      '@fontsource/ibm-plex-mono':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@fontsource/public-sans':
         specifier: ^5.3.0
         version: 5.3.0
+      '@fontsource/source-serif-4':
+        specifier: ^5.3.1
+        version: 5.3.1
       '@glose/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
@@ -580,8 +586,14 @@ packages:
   '@fontsource/fira-code@5.3.0':
     resolution: {integrity: sha512-EJL968RJRkakubAj/coU8pSUaeTE5UNoRjtzAr6kGiSZ3jWuN8/AKWHwym/PFUaQL1q7IL/H+EXs4358YhrTBQ==}
 
+  '@fontsource/ibm-plex-mono@5.3.0':
+    resolution: {integrity: sha512-eTgnZjZEGk1QtD3ZstF+Vclo2HLAni8YMy34/DxllwZvyz1lR/1RF/xTiAquOBO7MvqBx8D2Ig2WCPMVfdZu7Q==}
+
   '@fontsource/public-sans@5.3.0':
     resolution: {integrity: sha512-kjODI0S3zdv0mBYCIQ8TbBayaiqszpc2UbhJiO3bjIqVVXzcWfHSt2o3WBCLOY3juaGaQoy4MoWCcgmfI5hCuA==}
+
+  '@fontsource/source-serif-4@5.3.1':
+    resolution: {integrity: sha512-cWcTCXjYYrgF9A67fThVir1VSc0lPEYmwQ6jA4pPt01s2MSCi/maINUcZoCzaqnU8fyUReDO97eGcBUkHgOeug==}
 
   '@isaacs/fs-minipass@4.0.1':
     resolution: {integrity: sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w==}
@@ -3613,7 +3625,11 @@ snapshots:
 
   '@fontsource/fira-code@5.3.0': {}
 
+  '@fontsource/ibm-plex-mono@5.3.0': {}
+
   '@fontsource/public-sans@5.3.0': {}
+
+  '@fontsource/source-serif-4@5.3.1': {}
 
   '@isaacs/fs-minipass@4.0.1':
     dependencies:

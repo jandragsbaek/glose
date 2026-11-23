@@ -192,6 +192,11 @@ export const writingMessages: Pick<Messages, "writing"> = {
     replace: "Erstat det",
     keep: "Behold det",
     publishFailed: "Glose kunne ikke skrive indlægget. Prøv igen.",
+    focus: "Fokus",
+    focusTitle: "Skjul alt undtagen din tekst",
+    leaveFocus: "Forlad Fokus",
+    focusState: (saved: string, words: number) =>
+      saved === "" ? count(words, "ord", "ord") : `${saved} · ${count(words, "ord", "ord")}`,
     graphToggle: "Graf",
     graphToggleTitle: "Læs grafen ved siden af din tekst",
     graphPanel: "Grafen ved siden af din tekst",

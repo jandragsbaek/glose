@@ -197,6 +197,11 @@ export const writingMessages = {
     replace: "Replace it",
     keep: "Keep it",
     publishFailed: "Glose could not write the post. Try again.",
+    focus: "Focus",
+    focusTitle: "Hide everything but your text",
+    leaveFocus: "Leave Focus",
+    focusState: (saved: string, words: number) =>
+      saved === "" ? count(words, "word", "words") : `${saved} · ${count(words, "word", "words")}`,
     graphToggle: "Graph",
     graphToggleTitle: "Read the Graph beside your text",
     graphPanel: "The Graph beside your text",

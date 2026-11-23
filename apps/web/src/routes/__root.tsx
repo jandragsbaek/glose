@@ -22,6 +22,14 @@ import "@fontsource/courier-prime/700.css";
 import "@fontsource/cinzel-decorative/700.css";
 import "@fontsource/fira-code/400.css";
 import "@fontsource/fira-code/600.css";
+import "@fontsource/ibm-plex-mono/400.css";
+import "@fontsource/ibm-plex-mono/400-italic.css";
+import "@fontsource/ibm-plex-mono/700.css";
+import "@fontsource/ibm-plex-mono/700-italic.css";
+import "@fontsource/source-serif-4/400.css";
+import "@fontsource/source-serif-4/400-italic.css";
+import "@fontsource/source-serif-4/700.css";
+import "@fontsource/source-serif-4/700-italic.css";
 import "../styles/app.css";
 
 export const Route = createRootRoute({

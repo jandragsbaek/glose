@@ -80,14 +80,14 @@ The core loop depends on the stage the user is in. Stages known so far:
   the AI needs ChatGPT. Esc, the close button or a click beside the window puts the user back on
   the same page.
 - The window shows one page of settings at a time, after T3 Code's settings pages: Interface
-  language, Appearance, Vault, Backup, ChatGPT and Your website. The list of pages at its
+  language, Appearance, Text, Vault, Backup, ChatGPT and Your website. The list of pages at its
   side marks the page shown and opens another on a click. Jan asked for pages in place of the
   first design, one scrolling column of every section (November 2026).
 - A page the user leaves keeps its state while the window is open, so a ChatGPT sign-in and its
   outcome stay while the user looks at another page.
 - The address keeps the window: `?settings=<page>` on any page with the rail (not the Review
-  focus screen) opens it at that page (`language`, `appearance`, `vault-folder`, `backup`,
-  `chatgpt`, `site`). There is no `/settings` page.
+  focus screen) opens it at that page (`language`, `appearance`, `text`, `vault-folder`,
+  `backup`, `chatgpt`, `site`). There is no `/settings` page.
 
 ## Decided, themes with light and dark (November 2026)
 
@@ -288,6 +288,37 @@ Decided, the Pencil (November 2026), chosen with impeccable ("Pencil as you go")
 - Not yet for the Pencil: turning single rules off or adding your own crutch words, marks in
   Preview or in the AI review, a daily count of words written, and settings that differ by
   Writing project type (passive voice in a University assignment).
+
+Decided, the text in Write and Focus (November 2026), brainstormed and cut by a three-model
+council (Claude Opus, GPT Sol, Muse Wonder Full), then chosen from three impeccable sketches:
+
+- Jan asked for settings for the font, its size, the width of the writing area and other options
+  for a distraction-free desk. The council kept three settings and one mode, and cut the rest.
+- **Settings → Text** (Danish: Tekst; `?settings=text`), after Appearance. Not "Writing", which the
+  rail already uses for Writing projects. A sample leaf drawn with the chosen text (a Reference
+  number, its gloss, æ ø å) and a ruler with the line length in characters, then:
+  - Typeface, named by look: Plain (Public Sans, the default), Book (Source Serif 4) and
+    Typewriter (IBM Plex Mono). Each has its own line height (1.65, 1.6, 1.7).
+  - Text size: 15, 16 (the default, as before), 18, 20 and 22. Headings and Reference numbers
+    scale with it. App zoom (Ctrl +) covers anyone who needs more.
+  - Width: Narrow, Standard (as before: a 680px leaf at 16) and Wide, set in em so a line keeps
+    its number of characters when the size grows.
+- The three belong to the computer, like the theme (local storage), not to the Vault or a piece.
+  They apply in Write only; Preview shows the post as readers will see it.
+- The margins fold by the leaf's real width, not a fixed window width: both beside the leaf from
+  424px more than the leaf, the glosses alone from 184px more, else both under it.
+- **Focus** (Danish: Fokus): a button in the desk bar in Write, or Ctrl+Shift+F (⇧⌘F). It hides
+  the rail, the status bar, the desk bar, both margins and the Pencil's marks; the leaf lies on
+  the Ground. Reference numbers stay, and a click on one opens the Cite Slip; ⌘K and Tries work.
+  A foot at the bottom right holds the save state, the words and "Leave Focus" (Esc, once no slip
+  takes the key). Preview and ⌘G end it (⌘G opens the Graph beside the desk). Not saved: the desk
+  always opens as normal.
+- F11 turns full screen on and off in the desktop app on Windows, which has no menu for it; macOS
+  keeps its own full screen.
+- Cut: a word target and Danish normalsider (a follow-up for the University assignment flow),
+  dimming the other paragraphs and a typewriter line (they fight Pencil, Tries and the Cite
+  Slip), line-height and spacing sliders, sounds, caret options, streaks and timers, paper
+  colours, the user's own fonts, and text settings for each piece.
 
 - Not yet: the University assignment's own flow and PDF, a Writing project of several files,
   publishing straight into the site's git repository, removing the old post file when a published

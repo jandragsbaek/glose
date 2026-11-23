@@ -5,7 +5,7 @@ import type { Messages } from "../en.ts";
 
 export const settingsMessages: Pick<
   Messages,
-  "updates" | "versions" | "backup" | "appearance" | "settings"
+  "updates" | "versions" | "backup" | "appearance" | "text" | "settings"
 > = {
   updates: {
     version: (version: string) => {
@@ -165,6 +165,30 @@ export const settingsMessages: Pick<
     theme: "Tema",
     themes: { lapis: "Lapis", murex: "Murex", sepia: "Sepia" },
     hint: "Hvert tema findes i en lys og en mørk udgave.",
+  },
+  text: {
+    title: "Tekst",
+    lead: "Sådan ser dine ord ud, mens du skriver.",
+    sampleLabel: "Et eksempel på din tekst",
+    faceSample: "Ag",
+    sizeGlyph: "A",
+    sample: "Ahrens siger det enkelt: at skrive er det medie, tænkningen sker i.",
+    sampleLetters: "Æble, ø og å.",
+    sampleNote: "At skrive er tænkningens medie",
+    sampleCall: "AHR 2017 · s. 26",
+    lineLength: (width: string, characters: number) =>
+      `${width}: omkring ${numbers.format(characters)} tegn på en linje`,
+    scope:
+      "For alle tekster på denne computer. Forhåndsvisning viser indlægget, som læserne vil se det.",
+    face: "Skrift",
+    faces: { plain: "Enkel", book: "Bog", typewriter: "Skrivemaskine" },
+    size: "Tekststørrelse",
+    sizeLabel: (size: number) => `${numbers.format(size)} pixel`,
+    sizeHint: (size: number) => `${numbers.format(size)} er standardstørrelsen.`,
+    width: "Bredde",
+    widths: { narrow: "Smal", standard: "Standard", wide: "Bred" },
+    focusLead: "skjuler alt på skrivebordet undtagen din tekst.",
+    focusWays: "Knappen Fokus på skrivebordet, eller",
   },
   settings: {
     title: "Indstillinger",
