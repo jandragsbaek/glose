@@ -1453,7 +1453,9 @@ Taken from learnharness: the user thinks out loud, by typing or by dictation, an
   channel. Only the 5 newest nightlies stay; an older one is deleted with its tag. A stable
   channel can come later.
 - Each nightly has a Linux AppImage, for Jan's Omarchy laptop, and a Windows installer. macOS
-  joins when the app can be signed.
+  joins when the app can be signed. Until then, a Mac builds Glose itself with
+  `scripts/install-mac.sh` (newest `main`, ad-hoc signed, no Apple Developer account), and the
+  script, not Glose, updates it (November 2026).
 - Updating works as in T3 Code: Glose looks for a newer nightly every hour and when the user
   asks, the user downloads it, then restarts Glose to install it (a downloaded update also
   installs at quit). One button in the status bar is always the next step; a failed hourly check

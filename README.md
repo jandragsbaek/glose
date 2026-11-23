@@ -44,6 +44,11 @@ pnpm --filter @glose/desktop start
 pnpm dist:desktop   # installer for this platform, in apps/desktop/release
 ```
 
+On a Mac, until the nightlies include macOS, `scripts/install-mac.sh` pulls the newest `main`,
+builds Glose and installs it as `/Applications/Glose.app`. No Apple Developer account is needed:
+the build is local, so macOS opens it without asking, and it is ad-hoc signed. Glose does not
+update itself there; run the script again for a new version.
+
 `pnpm check` runs everything CI runs (format, lint, typecheck, tests).
 
 | Variable               | Default     | Purpose                                             |
