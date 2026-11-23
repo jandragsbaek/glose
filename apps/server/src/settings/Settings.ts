@@ -13,6 +13,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 import * as NodeCrypto from "node:crypto";
 
 import * as ServerConfig from "../config.ts";
@@ -77,6 +78,16 @@ export const make = Effect.gen(function* () {
 
   const view = (settings: SettingsData): SettingsView => ({ settings, suggestedVaultFolder });
 
+  const lock = yield* Semaphore.make(1);
+  const update = (change: (settings: SettingsData) => SettingsData) =>
+    lock.withPermit(
+      Effect.gen(function* () {
+        const next = change(yield* read);
+        yield* write(next);
+        return view(next);
+      }),
+    );
+
   const computerFile = path.join(dataDir, "computer.json");
   const computerId = Effect.gen(function* () {
     if (yield* fs.exists(computerFile)) {
@@ -94,9 +105,7 @@ export const make = Effect.gen(function* () {
     get: read.pipe(Effect.map(view)),
     computerId,
     setLanguage: Effect.fn("Settings.setLanguage")(function* (language) {
-      const next = { ...(yield* read), language };
-      yield* write(next);
-      return view(next);
+      return yield* update((settings) => ({ ...settings, language }));
     }),
     completeSetup: Effect.fn("Settings.completeSetup")(function* ({
       language,
@@ -105,9 +114,11 @@ export const make = Effect.gen(function* () {
     }) {
       const folder = vaultFolder.trim();
       yield* vaultFolders[action](folder);
-      const next = { ...(yield* read), language, vaultFolder: path.resolve(folder) };
-      yield* write(next);
-      return view(next);
+      return yield* update((settings) => ({
+        ...settings,
+        language,
+        vaultFolder: path.resolve(folder),
+      }));
     }),
     setSiteFolder: Effect.fn("Settings.setSiteFolder")(function* (siteFolder) {
       const folder = siteFolder.trim();
@@ -121,9 +132,7 @@ export const make = Effect.gen(function* () {
         );
       if (!(yield* isFolder(folder))) return yield* unavailable("not-found");
       if (!(yield* isFolder(path.join(folder, "src")))) return yield* unavailable("not-bridgetown");
-      const next = { ...(yield* read), siteFolder: path.resolve(folder) };
-      yield* write(next);
-      return view(next);
+      return yield* update((settings) => ({ ...settings, siteFolder: path.resolve(folder) }));
     }),
   });
 });

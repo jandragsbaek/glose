@@ -188,13 +188,11 @@ export function ChatGptStep({
 }
 
 export function BookStep({
-  known,
   onBusy,
   onBack,
   onAdded,
   onToday,
 }: {
-  readonly known: number;
   readonly onBusy: (busy: boolean) => void;
   readonly onBack: () => void;
   readonly onAdded: (sourceId: string) => void;
@@ -202,20 +200,6 @@ export function BookStep({
 }) {
   const t = useT();
   const [saving, setSaving] = useState(false);
-  if (known > 0) {
-    return (
-      <Panel title={t.setup.steps.book} initial="rubric">
-        <div className="panel__body setup__fields">
-          <p className="setup__lede">{t.setup.bookKnown(known)}</p>
-        </div>
-        <StepFoot onBack={onBack}>
-          <button type="button" className="button button--primary" onClick={onToday}>
-            {t.setup.toToday}
-          </button>
-        </StepFoot>
-      </Panel>
-    );
-  }
   const notNow = (
     <button type="button" className="button button--quiet" disabled={saving} onClick={onToday}>
       {t.setup.notNow}

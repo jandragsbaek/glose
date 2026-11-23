@@ -73,7 +73,6 @@ export function AddBook({
   author,
   onSaving,
   onAdded,
-  cancel,
   title,
   intro,
   submitLabel,
@@ -82,7 +81,6 @@ export function AddBook({
   readonly author: { readonly family?: string; readonly given?: string };
   readonly onSaving: (saving: boolean) => void;
   readonly onAdded?: (sourceId: string) => void;
-  readonly cancel?: ReactNode;
   readonly title?: string;
   readonly intro?: ReactNode;
   readonly submitLabel?: string;
@@ -261,13 +259,11 @@ export function AddBook({
           <button type="submit" className="button button--primary" disabled={busy}>
             {busy ? t.importText.adding : (submitLabel ?? t.addSource.submit)}
           </button>
-          {back !== undefined
-            ? null
-            : (cancel ?? (
-                <Link to="/sources" className="button button--quiet">
-                  {t.addSource.cancel}
-                </Link>
-              ))}
+          {back !== undefined ? null : (
+            <Link to="/sources" className="button button--quiet">
+              {t.addSource.cancel}
+            </Link>
+          )}
         </FormFoot>
       </form>
     </Panel>

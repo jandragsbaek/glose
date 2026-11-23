@@ -140,8 +140,6 @@ export const coreMessages = {
       },
     },
     bookIntro: "Add the book you are reading now. Glose then opens it, ready to start.",
-    bookKnown: (n: number) =>
-      `Your Vault already holds ${count(n, "Source", "Sources")}. Today shows the ones in progress.`,
     continue: "Continue",
     back: "Back",
     toToday: "Go to Today",

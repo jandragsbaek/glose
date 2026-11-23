@@ -49,7 +49,7 @@ function SetupFlow({
   const [vault, setVault] = useState<Vault | null>(null);
   const [busy, setBusy] = useState(false);
   const [chatGptLater, setChatGptLater] = useState(false);
-  const stage = useRef<HTMLDivElement>(null);
+  const stage = useRef<HTMLElement>(null);
 
   const flow = setupFlow(vault?.sources ?? null);
   const at = flow.indexOf(step);
@@ -124,7 +124,7 @@ function SetupFlow({
             </ol>
           </nav>
         </aside>
-        <div className="setup__stage" ref={stage}>
+        <main className="setup__stage" ref={stage}>
           <div data-step="look" hidden={step !== "look"}>
             <LookStep language={language} onLanguage={chooseLanguage} onNext={forward} />
           </div>
@@ -156,17 +156,11 @@ function SetupFlow({
                 />
               </div>
               <div data-step="book" hidden={step !== "book"}>
-                <BookStep
-                  known={vault.sources}
-                  onBusy={setBusy}
-                  onBack={back}
-                  onAdded={onFinish}
-                  onToday={toToday}
-                />
+                <BookStep onBusy={setBusy} onBack={back} onAdded={onFinish} onToday={toToday} />
               </div>
             </>
           )}
-        </div>
+        </main>
       </div>
     </div>
   );

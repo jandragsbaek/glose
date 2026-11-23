@@ -137,8 +137,6 @@ export const coreMessages: Pick<
       },
     },
     bookIntro: "Tilføj den bog, du læser nu. Så åbner Glose den, klar til at begynde.",
-    bookKnown: (n) =>
-      `Dit arkiv har allerede ${count(n, "kilde", "kilder")}. I dag viser dem, du er i gang med.`,
     continue: "Fortsæt",
     back: "Tilbage",
     toToday: "Gå til I dag",
