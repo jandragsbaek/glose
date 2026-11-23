@@ -644,8 +644,11 @@ last Ground color.
 **Label Font:** Courier Prime 400/700 (with ui-monospace, monospace)
 **Code Font:** Fira Code 400/600 with its ligatures (with ui-monospace, "SF Mono", Menlo,
 Consolas, monospace), for code in a Note, an Article or a Course lesson only
+**Writing Fonts:** the prose in Write takes the typeface chosen under Settings → Text: Public Sans
+(Plain, the default), Source Serif 4 400/700 with italics (Book) or IBM Plex Mono 400/700 with
+italics (Typewriter). Nowhere else.
 
-All four are self-hosted via @fontsource. **Character:** a plain, civic sans does all the
+All are self-hosted via @fontsource. **Character:** a plain, civic sans does all the
 working text; a typewriter face types the library labels; a decorated capital appears once per
 heading like an illuminated initial.
 
@@ -664,6 +667,9 @@ heading like an illuminated initial.
   first letter, in rubric or lapis.
 - **Body** (400, 15px, 1.5): all running text; empty states cap at 62ch.
 - **Body for writing** (400, 16px, 1.65, max 72ch): the Free text area.
+- **Prose in Write** (400, the chosen size: 15, 16, 18, 20 or 22px; line height 1.65 Plain, 1.6
+  Book, 1.7 Typewriter): the Writing Desk's text. Its headings (1.375em and 1.125em) and Reference
+  numbers (0.75em) scale with it.
 - **Body for reading** (400, 17px, 1.7, max 66ch): the text of an Article or Course lesson in the
   Reader. It is one step above writing, for long reading. Its headings: h2 700 22px (-0.01em), h3
   700 18px, h4 700 16px, all 1.3 with balanced wrap, 1.7em above and 0.55em below. Tables in the
@@ -1032,13 +1038,13 @@ All settings in one window over the page the user is on, like a small bound volu
 desk. A native `<dialog>` opened with `showModal`, `min(1040px, 100vw - 64px)` by
 `min(720px, 100vh - 64px)`, centred, so the page shows 32px around it at the least. The address
 holds it: `?settings=<section>` on any page with the rail (not the Review focus screen) opens it at that section (`language`,
-`appearance`, `vault-folder`, `backup`, `chatgpt`, `site`).
+`appearance`, `text`, `vault-folder`, `backup`, `chatgpt`, `site`).
 
 - **Window:** Paper, a 1px Lapis border, 4px corners, no shadow. Two columns: the 220px spine, then
   the leaf.
 - **Spine:** a Lapis field (76px 10px 26px padding, so its first section lines up with the first
   panel under the head; its own scroll), closed at the top and the foot by
-  two 2px Gilt bands, 6px apart (8px and 14px from the end). It lists the six sections in the
+  two 2px Gilt bands, 6px apart (8px and 14px from the end). It lists the seven sections in the
   rail's vocabulary: a 20px Lucide icon (1.6 stroke) and the name in 500 14px/1.3, 12px apart, in
   a 42px row (9px 12px padding, 4px corners, 4px gaps). Names hyphenate and break anywhere.
   Resting sections are Lapis Mist. The section shown fills Raised Lapis with white text, turns its
@@ -1053,7 +1059,7 @@ holds it: `?settings=<section>` on any page with the rail (not the Review focus 
 - **Body:** Ground, its own scroll (20px 32px 40px). It shows one section at a time, after T3
   Code's settings pages: its panel as on any page, up to 760px wide, with its own Initial,
   and its title an `h3` under the window's `h2`. The sections: Interface language (choice
-  rows), Appearance (the Appearance Panel), Vault (the path as a Call Number label that
+  rows), Appearance (the Appearance Panel), Text (the Text Panel), Vault (the path as a Call Number label that
   wraps, and a Meta hint), Backup (the Backup Panel), ChatGPT and Your website. A sheet opened from a panel opens over the window.
 - **Spine and pages:** the window opens at the section in the address. A click on a spine section
   puts it in the address (replacing the entry, so Back does not walk the sections) and shows it
@@ -1094,6 +1100,31 @@ under a field legend:
   Cinzel "G", an Ink, a Mute and an Accent line, and a small Primary bar. The specimen sets
   `data-theme` and `data-appearance` on each leaf, so it is drawn by the real tokens. Under it,
   the theme's name in 600 15px.
+
+### Text Panel
+
+The third page in Settings ("Tekst", `?settings=text`, a Lucide Type icon), with a lapis Initial:
+how the prose looks in Write, for every piece on this computer.
+
+- **Lead:** "How your words look while you write." in Mute.
+- **Sample:** a Ground well (Strong Hairline, 4px) holding a Paper leaf drawn with the chosen
+  typeface and size, as wide as its real line (narrower only when the window is): a sample
+  sentence in the interface language with a raised Reference number, "Æble, ø og å.", and under a
+  Strong Hairline the gloss (Courier number, Ink 600 Note title, Mute call). Under it a ruler as
+  wide as the line and its caption in Mute 12px ("Standard: about 70 characters a line"), which
+  always names the true count.
+- **Scope:** "For every piece on this computer. Preview shows the post as readers will see it."
+  in Meta.
+- **Typeface:** three radio tiles (184px at the least, 12px gaps): "Ag" at 30px in the face and
+  the name in 600 15px (Plain, Book, Typewriter). Checked: Accent border and name, the 3px Gilt
+  underline, as a Binding.
+- **Text size** beside **Width** (they wrap as wholes): a Segmented control of five steps, each an
+  "A" in the face at its size over its number in Mute 12px, named "18 pixels"; the checked step
+  takes the Gilt underline. A hint under it names 16 as the standard size. Width is three tiles
+  (44px, a 24px page icon whose lines grow with the width, the name in 600 14px); checked is
+  Lapis Tint with an Accent border.
+- **Focus:** a closing line over a Hairline: "Focus hides everything on the desk but your text."
+  and the way in ("The Focus button on the desk, or" and the key cap).
 
 ### Sheet
 
@@ -2107,8 +2138,8 @@ Reference's gloss in the right margin beside its line, and the AI review's flags
 - **Leaf:** the title as a borderless 700 30px field over a Strong Hairline (Lapis on focus,
   Rubric with the field error when taken), a meta line in Mute 13px with the type, words and
   References on the left and the format keys on the right ("Format: ⌘B bold · ⌘I italic · ⌥⌘2
-  heading"; Ctrl+B, Ctrl+I, Ctrl+Shift+2 off the Mac), then the prose at 16px/1.65 in CodeMirror
-  with no chrome; Gilt Wash selection, Lapis caret, spellcheck on, `lang` from the piece.
+  heading"; Ctrl+B, Ctrl+I, Ctrl+Shift+2 off the Mac), then the prose in CodeMirror in the Prose in
+  Write set (16px/1.65 Public Sans unless Settings → Text says otherwise) with no chrome; Gilt Wash selection, Lapis caret, spellcheck on, `lang` from the piece.
 - **Formatting in Write:** the text shows as it will read. `## ` is a heading (700 22px/1.3, 18px
   above), `### ` a subheading (700 18px), `**bold**` 700, `*italic*` italic; one parser serves
   Write and Preview. The marks are hidden and come back in Strong Hairline grey on the line or span
@@ -2141,11 +2172,23 @@ Reference's gloss in the right margin beside its line, and the AI review's flags
   Reference" in Rubric uppercase 12px with a triangle, the reason in Mute, and "Find a Note"; and
   Notes for a passage under the AI Text mark (a 2px Rubric rule on the margin side and a ¶ gloss),
   each with "Cite".
-- **Widths:** measured on the desk, not the window (a container query, so the Graph beside the
-  desk folds the margins too). From 1104px of desk (a 1200px window) the five tracks hold both
-  margins. From 864px to 1103px the leaf (up to 680px) keeps the glosses beside it (200 to 260px) and
-  the AI's flags fold under the leaf. Below 864px both margins fold under the leaf, which keeps its
-  680px measure. The glosses' placement reads the CSS's choice, so the two never disagree.
+- **Widths:** measured on the desk, not the window (the desk watches its own width, so the Graph
+  beside the desk folds the margins too), against the leaf's real width: 680px for Standard at
+  16px, wider for a larger or wider text (the line is set in em, plus 112px of padding). From 424px
+  more than the leaf (1104px of desk at 680) the five tracks hold both margins. From 184px more
+  (864px at 680) the leaf keeps the glosses beside it (200 to 260px) and the AI's flags fold under
+  the leaf. Below that both margins fold under the leaf, which keeps its measure (the line plus
+  64px). The desk writes its choice as `data-fold`, and the glosses' placement reads the CSS's
+  choice, so the two never disagree. In Preview the leaf keeps 680px.
+- **Focus:** "Focus" (a Maximize icon and its key cap, ⇧⌘F or Ctrl+Shift+F, hidden below a
+  1400px window as the Graph's is) sits before Pencil in Write. In Focus the rail, the status bar,
+  the desk bar, the line under it and both margins step aside, the Pencil's marks go quiet, and the
+  leaf lies on the Ground with no border at its chosen width, 56px from the top; its meta line
+  keeps its place, unseen. Reference numbers stay, Rubric when flagged, and open the Cite Slip on
+  a click. A foot fixed 24px from the right and 16px from the bottom holds the save state and the
+  words in Mute 13px tabular ("Saved · 166 words") and "Leave Focus" as a small secondary button
+  with its Esc key cap. Esc leaves once no slip takes it; Preview and ⌘G end Focus (⌘G with the
+  Graph beside the desk). The line the writer was at stays in place both ways.
 - **Preview:** the leaf shows the post as readers will see it, in its Reference form: raised
   numbers and a numbered note list under a Hairline (footnotes), the short Citation in brackets and
   a list of Sources (links + list), or notes under each paragraph (side notes). A flagged

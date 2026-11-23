@@ -9,6 +9,7 @@ import {
   MessageSquareText,
   Palette,
   CloudUpload,
+  Type,
   X,
 } from "lucide-react";
 import { type ReactNode, useId, useLayoutEffect, useRef, useState } from "react";
@@ -18,12 +19,14 @@ import { KEYS, setLanguageAtom, settingsAtom } from "../state/vault.ts";
 import { AppearancePanel } from "./AppearancePanel.tsx";
 import { BackupPanel } from "./Backup.tsx";
 import { ChatGptConnection } from "./ChatGptConnection.tsx";
+import { TextPanel } from "./TextPanel.tsx";
 import { Panel } from "./ui.tsx";
 import { SiteFolderSheet } from "./WritingSheets.tsx";
 
 export const SETTINGS_SECTIONS = [
   "language",
   "appearance",
+  "text",
   "vault-folder",
   "backup",
   "chatgpt",
@@ -35,6 +38,7 @@ export type SettingsSection = (typeof SETTINGS_SECTIONS)[number];
 const SECTION_ICONS: Record<SettingsSection, LucideIcon> = {
   language: Languages,
   appearance: Palette,
+  text: Type,
   "vault-folder": Folder,
   backup: CloudUpload,
   chatgpt: MessageSquareText,
@@ -213,6 +217,8 @@ function sectionTitle(t: ReturnType<typeof useT>, section: SettingsSection) {
       return t.settings.language;
     case "appearance":
       return t.appearance.title;
+    case "text":
+      return t.text.title;
     case "vault-folder":
       return t.settings.vaultFolder;
     case "backup":
@@ -294,6 +300,9 @@ function SettingsPages({
       </SettingsPage>
       <SettingsPage section="appearance" idPrefix={idPrefix} shown={shown}>
         <AppearancePanel />
+      </SettingsPage>
+      <SettingsPage section="text" idPrefix={idPrefix} shown={shown}>
+        <TextPanel />
       </SettingsPage>
       <SettingsPage section="vault-folder" idPrefix={idPrefix} shown={shown}>
         <Panel title={t.settings.vaultFolder} initial="rubric" level={3}>

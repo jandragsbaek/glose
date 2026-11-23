@@ -1,8 +1,9 @@
 import { POSTS_FOLDER, type WritingProjectFields } from "@glose/contracts";
 import { Link } from "@tanstack/react-router";
-import { Check, TriangleAlert, Waypoints } from "lucide-react";
+import { Check, Maximize2, TriangleAlert, Waypoints } from "lucide-react";
 
 import { useT } from "../i18n/I18n.tsx";
+import type { Messages } from "../i18n/en.ts";
 import { OpenSettingsButton } from "./SettingsWindow.tsx";
 import { PieceSettings } from "./WritingPieceSettings.tsx";
 import type { ShownReview } from "./WritingMargins.tsx";
@@ -16,6 +17,15 @@ export type PublishState =
   | { readonly kind: "failed" };
 
 export const isMac = () => /mac|iphone|ipad/i.test(navigator.platform || navigator.userAgent);
+
+export const saveLabel = (t: Messages, saveState: SaveState, pending: boolean) =>
+  saveState === "saving"
+    ? t.writing.saving
+    : saveState === "failed" || saveState === "taken"
+      ? t.writing.notSaved
+      : pending
+        ? ""
+        : t.writing.saved;
 
 export function DeskBar({
   deskId,
@@ -34,6 +44,7 @@ export function DeskBar({
   onPublish,
   pencil,
   graph,
+  onFocus,
 }: {
   readonly deskId: string;
   readonly fields: WritingProjectFields;
@@ -56,6 +67,7 @@ export function DeskBar({
     readonly panelId: string;
     readonly onToggle: () => void;
   } | null;
+  readonly onFocus: () => void;
 }) {
   const t = useT();
   const shortcut = isMac() ? "⌘K" : "Ctrl+K";
@@ -70,13 +82,7 @@ export function DeskBar({
       </div>
       <div className="desk-bar__tools">
         <span className="desk-bar__status" role="status">
-          {saveState === "saving"
-            ? t.writing.saving
-            : saveState === "failed" || saveState === "taken"
-              ? t.writing.notSaved
-              : pending
-                ? ""
-                : t.writing.saved}
+          {saveLabel(t, saveState, pending)}
         </span>
         <fieldset className="segmented desk-bar__mode">
           <legend className="sr-only">{t.writing.mode}</legend>
@@ -112,6 +118,19 @@ export function DeskBar({
         )}
         {mode === "write" ? (
           <>
+            <button
+              type="button"
+              className="button desk-bar__focus"
+              aria-keyshortcuts={isMac() ? "Meta+Shift+F" : "Control+Shift+F"}
+              title={t.writing.focusTitle}
+              onClick={onFocus}
+            >
+              <Maximize2 className="button__icon" aria-hidden="true" />
+              {t.writing.focus}
+              <kbd className="key" aria-hidden="true">
+                {isMac() ? "⇧⌘F" : "Ctrl+Shift+F"}
+              </kbd>
+            </button>
             {pencil}
             <button
               type="button"

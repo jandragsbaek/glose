@@ -6,6 +6,7 @@ import { isMac } from "./WritingDeskBar.tsx";
 import type { PencilText } from "./prosePencil.ts";
 
 const GROUPS_KEY = "glose:pencil-groups";
+const NO_GROUPS: ReadonlySet<PencilGroup> = new Set();
 const keptKey = (pieceId: string) => `glose:pencil-kept:${pieceId}`;
 
 const readGroups = (): ReadonlySet<PencilGroup> => {
@@ -45,7 +46,7 @@ export const movePencilMemory = (from: string, to: string) => {
   write(keptKey(from), []);
 };
 
-export function useDeskPencil(piece: React.RefObject<string>, language: string) {
+export function useDeskPencil(piece: React.RefObject<string>, language: string, quiet = false) {
   const t = useT();
   const [on, setOn] = useState(readGroups);
   const [kept, setKept] = useState(() => readKept(piece.current));
@@ -92,7 +93,7 @@ export function useDeskPencil(piece: React.RefObject<string>, language: string) 
     editorProps: {
       pencil: {
         language,
-        on,
+        on: quiet ? NO_GROUPS : on,
         kept,
         text,
         onKeep: keep,

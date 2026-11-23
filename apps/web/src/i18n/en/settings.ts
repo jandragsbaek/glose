@@ -6,6 +6,7 @@ import type {
   VersionsProblem,
 } from "@glose/contracts";
 import type { Appearance, Mode, ThemeId } from "../../theme/paint.ts";
+import type { Face, Width } from "../../theme/writingText.ts";
 import { nightlyOf } from "../../domain/appVersion.ts";
 import { numbers, count, clockTime, shortDate } from "./format.ts";
 
@@ -173,6 +174,35 @@ export const settingsMessages = {
     theme: "Theme",
     themes: { lapis: "Lapis", murex: "Murex", sepia: "Sepia" } satisfies Record<ThemeId, string>,
     hint: "Every theme comes in a light and a dark version.",
+  },
+  text: {
+    title: "Text",
+    lead: "How your words look while you write.",
+    sampleLabel: "A sample of your text",
+    faceSample: "Ag",
+    sizeGlyph: "A",
+    sample: "Ahrens puts it plainly: writing is the medium the thinking happens in.",
+    sampleLetters: "Æble, ø og å.",
+    sampleNote: "Writing is the medium of thinking",
+    sampleCall: "AHR 2017 · p. 26",
+    lineLength: (width: string, characters: number) =>
+      `${width}: about ${numbers.format(characters)} characters a line`,
+    scope: "For every piece on this computer. Preview shows the post as readers will see it.",
+    face: "Typeface",
+    faces: { plain: "Plain", book: "Book", typewriter: "Typewriter" } satisfies Record<
+      Face,
+      string
+    >,
+    size: "Text size",
+    sizeLabel: (size: number) => `${numbers.format(size)} pixels`,
+    sizeHint: (size: number) => `${numbers.format(size)} is the standard size.`,
+    width: "Width",
+    widths: { narrow: "Narrow", standard: "Standard", wide: "Wide" } satisfies Record<
+      Width,
+      string
+    >,
+    focusLead: "hides everything on the desk but your text.",
+    focusWays: "The Focus button on the desk, or",
   },
   settings: {
     title: "Settings",

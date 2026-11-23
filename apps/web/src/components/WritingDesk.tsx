@@ -14,7 +14,7 @@ import * as Exit from "effect/Exit";
 import * as Option from "effect/Option";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { TriangleAlert } from "lucide-react";
-import { useId, useLayoutEffect, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 
 import { hugWord, proseWords, referenceLead } from "../domain/writing.ts";
 import { useT } from "../i18n/I18n.tsx";
@@ -27,8 +27,8 @@ import {
   isMac,
   type PublishState,
   type ReviewState,
+  saveLabel,
 } from "./WritingDeskBar.tsx";
-import { keepPlace, type PlaceInText, placeInProof, placeInText } from "./deskPlace.ts";
 import { CiteSlip, type CiteTarget, type CloseReason } from "./WritingCite.tsx";
 import {
   Checks,
@@ -38,15 +38,8 @@ import {
   shownReview,
   useMarginPlacement,
 } from "./WritingMargins.tsx";
-import {
-  followTrail,
-  graphWasOpen,
-  moveGraphMemory,
-  rememberGraph,
-  useGraphFits,
-  useGraphKey,
-  WritingGraph,
-} from "./WritingGraph.tsx";
+import { followTrail, moveGraphMemory, WritingGraph } from "./WritingGraph.tsx";
+import { FocusFoot, useDeskLayout } from "./WritingLayout.tsx";
 import { Proof } from "./WritingProof.tsx";
 import { useDeskTries } from "./TriesSlip.tsx";
 import { movePencilMemory, useDeskPencil } from "./WritingPencil.tsx";
@@ -95,17 +88,26 @@ export function WritingDesk({
   const [cite, setCite] = useState<CiteTarget | null>(null);
   const [sheet, setSheet] = useState<"site" | { readonly replace: string } | null>(null);
   const [publish, setPublish] = useState<PublishState>({ kind: "idle" });
-  const [graphOpen, setGraphOpen] = useState(() => graphWasOpen(project.id));
   const [trail, setTrail] = useState<ReadonlyArray<string>>([]);
   const [reading, setReading] = useState<string | null>(null);
-  const graphFits = useGraphFits();
 
   const editor = useRef<ProseHandle | null>(null);
   const { leftMargin, rightMargin, editorBox, latestPlace } = useMarginPlacement(editor, mode);
   const tries = useDeskTries(editor, editorBox, fields, (saved) => update({ tries: saved }));
-  const pencil = useDeskPencil(graphKey, fields.language);
-
   const graph = AsyncResult.getOrElse(useAtomValue(graphAtom), () => null);
+  const { focus, besideOpen, graphFits, toggleGraph, toggleFocus, chooseMode, deskBox, deskText } =
+    useDeskLayout({
+      pieceId: project.id,
+      savedId,
+      mode,
+      setMode,
+      editor,
+      editorBox,
+      leaf,
+      graphReady: graph !== null,
+    });
+  const pencil = useDeskPencil(graphKey, fields.language, focus);
+
   const sources = AsyncResult.getOrElse(useAtomValue(sourcesAtom), () => null);
   const settings = AsyncResult.getOrElse(useAtomValue(settingsAtom), () => null);
   const reviewWriting = useAtomSet(reviewWritingAtom, { mode: "promiseExit" });
@@ -230,40 +232,6 @@ export function WritingDesk({
 
   const addPage = (reference: ResolvedReference) => editReference(reference, true);
 
-  const place = useRef<PlaceInText | null>(null);
-  const toggleGraph = () => {
-    const next = !graphOpen;
-    const kept =
-      mode === "write"
-        ? placeInText(editor.current, editorBox.current)
-        : placeInProof(leaf.current);
-    const refocus = !next && document.activeElement?.closest(".graph-beside") != null;
-    place.current = {
-      pos: kept?.pos ?? null,
-      anchor: kept?.anchor ?? null,
-      offset: kept?.offset ?? 0,
-      refocus,
-    };
-    setGraphOpen(next);
-    rememberGraph(savedId.current, next);
-  };
-  const besideOpen = graphFits && graphOpen && graph !== null;
-  useGraphKey(graphFits && graph !== null, toggleGraph, isMac());
-  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- scroll and focus, not state: the line the writer was at stays where it was when the desk changes width, and focus comes back to the text from a closing panel.
-  useLayoutEffect(() => {
-    const kept = place.current;
-    place.current = null;
-    if (kept === null) return;
-    keepPlace(kept, editor.current, editorBox.current);
-    window.requestAnimationFrame(() =>
-      window.requestAnimationFrame(() => keepPlace(kept, editor.current, editorBox.current)),
-    );
-    if (kept.refocus && !besideOpen) {
-      if (mode === "write") editor.current?.focus();
-      else document.querySelector<HTMLElement>(".desk-bar__graph")?.focus();
-    }
-  }, [besideOpen, mode, editorBox]);
-
   const words = proseWords(fields.body);
   const shortcut = isMac() ? "⌘K" : "Ctrl+K";
   const titleError = saveState === "taken" ? t.writing.titleTaken : null;
@@ -274,6 +242,7 @@ export function WritingDesk({
     <div
       className="desk-frame"
       data-graph={besideOpen ? "open" : undefined}
+      data-focus={focus ? "" : undefined}
       onKeyDown={(event) => {
         if (
           mode !== "write" ||
@@ -296,7 +265,7 @@ export function WritingDesk({
         saveState={saveState}
         pending={pending}
         mode={mode}
-        onMode={setMode}
+        onMode={chooseMode}
         onCite={() => {
           const at = editor.current?.citePoint() ?? fields.body.length;
           openCite(at, at);
@@ -318,6 +287,7 @@ export function WritingDesk({
               }
             : null
         }
+        onFocus={toggleFocus}
       />
       <DeskNote
         reviewState={reviewState}
@@ -326,8 +296,8 @@ export function WritingDesk({
         publish={publish}
       />
       <div className="desk-body">
-        <div className="desk-body__desk">
-          <div className="writing-desk" data-mode={mode}>
+        <div className="desk-body__desk" ref={deskBox}>
+          <div {...deskText} data-mode={mode} data-focus={focus ? "" : undefined}>
             <article ref={leaf} className="leaf" aria-label={t.writing.deskLabel}>
               {mode === "write" ? (
                 <>
@@ -446,7 +416,7 @@ export function WritingDesk({
                   claims={claims.length}
                   reviewed={shown !== null && reviewedBody === fields.body}
                   onFix={(reference) => {
-                    setMode("write");
+                    chooseMode("write");
                     window.setTimeout(() => {
                       editor.current?.select(reference.start, reference.start);
                       window.requestAnimationFrame(() =>
@@ -460,7 +430,7 @@ export function WritingDesk({
             </aside>
           </div>
         </div>
-        {besideOpen ? (
+        {besideOpen && graph !== null ? (
           <WritingGraph
             id={`${deskId}-graph`}
             view={graph}
@@ -480,6 +450,9 @@ export function WritingDesk({
         ) : null}
       </div>
 
+      {focus ? (
+        <FocusFoot saved={saveLabel(t, saveState, pending)} words={words} onLeave={toggleFocus} />
+      ) : null}
       {sheet === "site" ? (
         <SiteFolderSheet
           initial={siteFolder ?? ""}

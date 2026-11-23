@@ -4,6 +4,7 @@ import * as NodePath from "node:path";
 
 import * as Appearance from "./Appearance.ts";
 import * as Folders from "./Folders.ts";
+import { isFullScreenKey } from "./fullScreenKey.ts";
 
 const isWebUrl = (url: string) => url.startsWith("https://") || url.startsWith("http://");
 
@@ -50,6 +51,11 @@ const create = (url: string) => {
     if (isWebUrl(target)) void Electron.shell.openExternal(target);
   });
 
+  window.webContents.on("before-input-event", (event, input) => {
+    if (!isFullScreenKey(input, process.platform)) return;
+    event.preventDefault();
+    window.setFullScreen(!window.isFullScreen());
+  });
   if (!Electron.app.isPackaged) addDevShortcuts(window);
 
   void window.loadURL(url);
