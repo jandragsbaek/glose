@@ -6672,7 +6672,7 @@ textarea.properties__input {
   display: grid;
   flex: 1;
   grid-template-columns:
-    minmax(16px, 1fr) minmax(180px, 250px) minmax(0, var(--leaf-width, 680px))
+    minmax(16px, 1fr) minmax(180px, 250px) var(--leaf-width, 680px)
     minmax(200px, 290px) minmax(16px, 1fr);
   align-items: start;
   padding: 32px 0 0;

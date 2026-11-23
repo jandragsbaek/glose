@@ -167,7 +167,7 @@ export function useDeskLayout({
     if (focus) {
       holdPlace(true);
       setFocus(false);
-      if (!graphOpen) showGraph(true);
+      if (!graphOpen && graphFits && graphReady) showGraph(true);
       return;
     }
     holdPlace(graphOpen && document.activeElement?.closest(".graph-beside") != null);
@@ -183,10 +183,10 @@ export function useDeskLayout({
     setMode(next);
   };
   const besideOpen = graphFits && graphOpen && graphReady && !focus;
-  useGraphKey(graphFits && graphReady, toggleGraph, isMac());
+  useGraphKey(focus || (graphFits && graphReady), toggleGraph, isMac());
   useFocusKeys(mode === "write", focus, toggleFocus, isMac());
   useFocusPage(focus);
-  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- scroll and focus, not state: the line the writer was at stays where it was when the desk changes width, and focus comes back to the text from a closing panel or from Focus.
+  // oxlint-disable-next-line jandragsbaek/no-unreasoned-state-sync -- scroll and focus, not state: the line the writer was at stays where it was when the desk changes width, and focus comes back to the text from a closing panel or from Focus. It runs after every render and acts only when a place is held.
   useLayoutEffect(() => {
     const kept = place.current;
     place.current = null;
@@ -195,11 +195,11 @@ export function useDeskLayout({
     window.requestAnimationFrame(() =>
       window.requestAnimationFrame(() => keepPlace(kept, editor.current, editorBox.current)),
     );
-    if (kept.refocus && (focus || !besideOpen)) {
+    if (kept.refocus) {
       if (mode === "write") editor.current?.focus();
       else document.querySelector<HTMLElement>(".desk-bar__graph")?.focus();
     }
-  }, [besideOpen, mode, editor, editorBox, focus]);
+  });
 
   return { focus, besideOpen, graphFits, toggleGraph, toggleFocus, chooseMode, deskBox, deskText };
 }
