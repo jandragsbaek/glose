@@ -131,6 +131,18 @@ export function TextPanel() {
           </fieldset>
         </div>
 
+        <label className="text-settings__overview">
+          <input
+            type="checkbox"
+            checked={text.overview}
+            onChange={(event) => chooseWritingText({ overview: event.target.checked })}
+          />
+          <span>
+            <span className="text-settings__overview-name">{words.overview}</span>
+            <span className="text-settings__overview-lead">{words.overviewLead}</span>
+          </span>
+        </label>
+
         <p className="text-settings__focus">
           <span>
             <strong>{t.writing.focus}</strong> {words.focusLead}

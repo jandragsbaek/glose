@@ -203,6 +203,9 @@ export const settingsMessages = {
     >,
     focusLead: "hides everything on the desk but your text.",
     focusWays: "The Focus button on the desk, or",
+    overview: "Show an overview beside the text",
+    overviewLead:
+      "A small picture of the whole piece at the right edge of the desk, in Write. Click it to go to a place, or drag the box to scroll. It shows when the window has room for it.",
   },
   settings: {
     title: "Settings",

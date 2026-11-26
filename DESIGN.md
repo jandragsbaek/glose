@@ -2248,6 +2248,31 @@ graphite (Mute mixed 82% with Paper), so they read as the writer's own pencil, n
   and "Pencil settings…" as link buttons. Opened from the keys, it takes focus on its first
   button; Esc returns to the text.
 
+### Overview (signature: Fore-edge)
+
+The whole piece drawn small at the desk's right edge, as the page edge of a closed book seen from
+the side. In Write only, when Settings → Text turns it on and the desk has room.
+
+- **Place:** its own 56px track after the right margin's gutter, then 14px to the scrollbar
+  (`.writing-desk[data-overview]`). Sticky 20px under the desk bar, down to 20px over the window's
+  foot. It shows only when the desk holds the leaf, both margins at their least widths and the
+  strip; it never folds a margin.
+- **Picture:** a canvas at 0.14px for each px of the leaf. The book block is Paper with a Hairline
+  on its inner edge. Each wrapped line is a graphite hairline (Mute at 88%, 1.4px) at its real
+  length; a heading is an Ink line (1.5px) with a Lapis tab (16px, 12px for `###`, 6px tall, 1px
+  corners) that reaches 6px out of the inner edge, as a thumb index; the title is a tab too. Each
+  Reference is a Lapis dot (r 1.4px) on the inner edge.
+- **View box:** a Lapis wash (Lapis at 11%) between a 1px Lapis rule at its top and bottom, with a
+  3px Gilt bar on the outer edge (Gilt marks "here").
+- **Use:** a click puts that place a third of the way down the screen; a press in the box that
+  moves more than 3px drags it (the cursor is a grabbing hand); the wheel scrolls the desk. The
+  caret never moves. On a pointer rest within 6px of a tab, a Paper label with a Strong Hairline
+  (2px corners, Ink 600 13px, one line) names the heading, 14px left of the strip.
+- **Length:** a picture taller than the strip moves with the desk's scroll, so its top and bottom
+  meet the piece's at the two ends.
+- `aria-hidden`, out of the Tab order. In Settings → Text, a checkbox row under a Hairline: the
+  name in 600 14px and what it does in Mute 13px.
+
 ### Cite Slip
 
 Citing happens in a slip under the line being written, not in a sheet, so the sentence stays in

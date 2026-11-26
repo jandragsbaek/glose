@@ -1,25 +1,11 @@
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
-import {
-  Compartment,
-  EditorSelection,
-  EditorState,
-  StateEffect,
-  StateField,
-} from "@codemirror/state";
-import {
-  Decoration,
-  type DecorationSet,
-  EditorView,
-  keymap,
-  placeholder as placeholderText,
-  ViewPlugin,
-  type ViewUpdate,
-  WidgetType,
-} from "@codemirror/view";
-import { findReferences, linkKey, type TryGroup } from "@glose/contracts";
+import { Compartment, EditorSelection, EditorState } from "@codemirror/state";
+import { EditorView, keymap, placeholder as placeholderText } from "@codemirror/view";
+import type { TryGroup } from "@glose/contracts";
 import { type Ref, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
 
-import { referenceLead } from "../domain/writing.ts";
+import type { OverviewLine } from "./overviewMap.ts";
+import { flaggedField, referenceAt, referenceMarks, setFlagged } from "./proseReferences.ts";
 import { FormatBar, type FormatCommand, type FormatState } from "./FormatBar.tsx";
 import {
   activeStyles,
@@ -56,7 +42,14 @@ export interface ProseHandle {
   readonly focus: () => void;
   readonly format: (command: FormatCommand) => void;
   readonly leftOf: (pos: number) => number | null;
+  readonly lines: () => ProseLines | null;
   readonly tries: TriesHandle;
+}
+
+export interface ProseLines {
+  readonly lines: ReadonlyArray<OverviewLine>;
+  readonly columns: number;
+  readonly lineHeight: number;
 }
 
 const FORMAT: Record<FormatCommand, (view: EditorView) => boolean> = {
@@ -71,111 +64,6 @@ const blockKey = (level: BlockStyle) => ({
   mac: `Cmd-Alt-${level}`,
   run: setBlockStyle(level),
 });
-
-const leadOf = referenceLead;
-
-const referenceAt = (state: EditorState, pos: number) => {
-  const body = state.doc.toString();
-  return findReferences(body).find((token) => leadOf(body, token.start) === pos) ?? null;
-};
-
-export const referenceKey = (target: string, location: string | null) =>
-  `${linkKey(target)}|${location ?? ""}`;
-
-const setFlagged = StateEffect.define<ReadonlySet<string>>();
-
-export const flaggedKeys = (keys: Iterable<string>) => [...new Set(keys)].sort().join("\n");
-const flaggedField = StateField.define<ReadonlySet<string>>({
-  create: () => new Set(),
-  update: (value, transaction) => {
-    for (const effect of transaction.effects) if (effect.is(setFlagged)) return effect.value;
-    return value;
-  },
-});
-
-class ReferenceMark extends WidgetType {
-  readonly number: number;
-  readonly flagged: boolean;
-  readonly label: string;
-  readonly joined: boolean;
-  constructor(number: number, flagged: boolean, label: string, joined: boolean) {
-    super();
-    this.number = number;
-    this.flagged = flagged;
-    this.label = label;
-    this.joined = joined;
-  }
-  override eq(other: ReferenceMark) {
-    return (
-      other.number === this.number &&
-      other.flagged === this.flagged &&
-      other.label === this.label &&
-      other.joined === this.joined
-    );
-  }
-  override toDOM() {
-    const mark = document.createElement("sup");
-    mark.className = [
-      "prose-editor__ref",
-      this.flagged ? "prose-editor__ref--flagged" : "",
-      this.joined ? "prose-editor__ref--joined" : "",
-    ]
-      .filter(Boolean)
-      .join(" ");
-    if (this.joined) {
-      const comma = document.createElement("span");
-      comma.className = "ref-sep";
-      comma.textContent = ",";
-      mark.append(comma);
-    }
-    mark.append(String(this.number));
-    mark.setAttribute("role", "doc-noteref");
-    mark.setAttribute("aria-label", this.label);
-    return mark;
-  }
-  override ignoreEvent() {
-    return false;
-  }
-}
-
-const referenceMarks = (label: (n: number, flagged: boolean) => string) =>
-  ViewPlugin.fromClass(
-    class {
-      decorations: DecorationSet;
-      constructor(view: EditorView) {
-        this.decorations = this.build(view);
-      }
-      update(update: ViewUpdate) {
-        if (
-          update.docChanged ||
-          update.startState.field(flaggedField) !== update.state.field(flaggedField)
-        ) {
-          this.decorations = this.build(update.view);
-        }
-      }
-      build(view: EditorView) {
-        const { state } = view;
-        const flagged = state.field(flaggedField);
-        const body = state.doc.toString();
-        const tokens = findReferences(body);
-        return Decoration.set(
-          tokens.map((token, index) => {
-            const bad = flagged.has(referenceKey(token.target, token.location));
-            const lead = leadOf(body, token.start);
-            const joined = tokens[index - 1]?.end === lead;
-            return Decoration.replace({
-              widget: new ReferenceMark(index + 1, bad, label(index + 1, bad), joined),
-            }).range(lead, token.end);
-          }),
-        );
-      }
-    },
-    {
-      decorations: (plugin) => plugin.decorations,
-      provide: (plugin) =>
-        EditorView.atomicRanges.of((view) => view.plugin(plugin)?.decorations ?? Decoration.none),
-    },
-  );
 
 const wording = (text: {
   label: string;
@@ -473,6 +361,28 @@ export function ProseEditor({
     focus: () => view.current?.focus(),
     format,
     leftOf: (pos) => leftOfPos(view.current, host.current, pos),
+    lines: () => {
+      const editor = view.current;
+      const node = host.current;
+      if (editor === null || node === null) return null;
+      const shift = editor.documentTop - node.getBoundingClientRect().top;
+      const { doc } = editor.state;
+      const lines: Array<OverviewLine> = [];
+      for (let number = 1; number <= doc.lines; number++) {
+        const line = doc.line(number);
+        const block = editor.lineBlockAt(line.from);
+        lines.push({ top: block.top + shift, height: block.height, text: line.text });
+      }
+      const first = editor.contentDOM.querySelector(".cm-line");
+      const style = first === null ? null : getComputedStyle(first);
+      const inset =
+        style === null ? 0 : parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+      return {
+        lines,
+        columns: (editor.contentDOM.clientWidth - inset) / editor.defaultCharacterWidth,
+        lineHeight: editor.defaultLineHeight,
+      };
+    },
     tries: triesHandle(() => view.current),
   }));
 

@@ -189,6 +189,9 @@ export const settingsMessages: Pick<
     widths: { narrow: "Smal", standard: "Standard", wide: "Bred" },
     focusLead: "skjuler alt på skrivebordet undtagen din tekst.",
     focusWays: "Knappen Fokus på skrivebordet, eller",
+    overview: "Vis et overblik ved siden af teksten",
+    overviewLead:
+      "Et lille billede af hele teksten i skrivebordets højre kant, i Skriv. Klik på det for at gå til et sted, eller træk i rammen for at rulle. Det vises, når vinduet har plads til det.",
   },
   settings: {
     title: "Indstillinger",

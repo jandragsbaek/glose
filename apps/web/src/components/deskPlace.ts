@@ -7,7 +7,7 @@ export interface PlaceInText {
   readonly refocus: boolean;
 }
 
-const scrollerOf = (element: Element | null): HTMLElement | null => {
+export const scrollerOf = (element: Element | null): HTMLElement | null => {
   for (let at = element?.parentElement ?? null; at !== null; at = at.parentElement) {
     const overflow = getComputedStyle(at).overflowY;
     if (overflow === "auto" || overflow === "scroll") return at;

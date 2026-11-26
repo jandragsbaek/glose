@@ -20,7 +20,8 @@ import { hugWord, proseWords, referenceLead } from "../domain/writing.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { graphAtom, settingsAtom, sourcesAtom } from "../state/vault.ts";
 import { publishWritingAtom, reviewWritingAtom, WRITING_KEYS } from "../state/writing.ts";
-import { flaggedKeys, ProseEditor, type ProseHandle, referenceKey } from "./ProseEditor.tsx";
+import { ProseEditor, type ProseHandle } from "./ProseEditor.tsx";
+import { flaggedKeys, referenceKey } from "./proseReferences.ts";
 import {
   DeskBar,
   DeskNote,
@@ -40,6 +41,7 @@ import {
 } from "./WritingMargins.tsx";
 import { followTrail, moveGraphMemory, WritingGraph } from "./WritingGraph.tsx";
 import { FocusFoot, useDeskLayout } from "./WritingLayout.tsx";
+import { type OverviewHandle, WritingOverview } from "./WritingOverview.tsx";
 import { Proof } from "./WritingProof.tsx";
 import { useDeskTries } from "./TriesSlip.tsx";
 import { movePencilMemory, useDeskPencil } from "./WritingPencil.tsx";
@@ -95,17 +97,27 @@ export function WritingDesk({
   const { leftMargin, rightMargin, editorBox, latestPlace } = useMarginPlacement(editor, mode);
   const tries = useDeskTries(editor, editorBox, fields, (saved) => update({ tries: saved }));
   const graph = AsyncResult.getOrElse(useAtomValue(graphAtom), () => null);
-  const { focus, besideOpen, graphFits, toggleGraph, toggleFocus, chooseMode, deskBox, deskText } =
-    useDeskLayout({
-      pieceId: project.id,
-      savedId,
-      mode,
-      setMode,
-      editor,
-      editorBox,
-      leaf,
-      graphReady: graph !== null,
-    });
+  const overviewMap = useRef<OverviewHandle | null>(null);
+  const {
+    focus,
+    besideOpen,
+    graphFits,
+    toggleGraph,
+    toggleFocus,
+    chooseMode,
+    deskBox,
+    deskText,
+    overview,
+  } = useDeskLayout({
+    pieceId: project.id,
+    savedId,
+    mode,
+    setMode,
+    editor,
+    editorBox,
+    leaf,
+    graphReady: graph !== null,
+  });
   const pencil = useDeskPencil(graphKey, fields.language, focus);
 
   const sources = AsyncResult.getOrElse(useAtomValue(sourcesAtom), () => null);
@@ -315,6 +327,7 @@ export function WritingDesk({
                     aria-invalid={titleError === null ? undefined : true}
                     onChange={(event) => {
                       setTitleInput(event.target.value);
+                      overviewMap.current?.refresh();
                       if (event.target.value.trim() === "") setSaveState("empty");
                       else update({ title: event.target.value.trim() });
                     }}
@@ -353,7 +366,10 @@ export function WritingDesk({
                       {...tries.editorProps}
                       {...pencil.editorProps}
                       onChange={(body) => update({ body })}
-                      onLayout={() => window.requestAnimationFrame(() => latestPlace.current())}
+                      onLayout={() => {
+                        window.requestAnimationFrame(() => latestPlace.current());
+                        overviewMap.current?.refresh();
+                      }}
                       onCite={(from, to, typed) => openCite(from, to, null, false, typed)}
                       onEditReference={(start) => {
                         const reference = references.find((item) => item.start === start);
@@ -401,6 +417,14 @@ export function WritingDesk({
                 />
               )}
             </aside>
+            {overview ? (
+              <WritingOverview
+                ref={overviewMap}
+                editor={editor}
+                editorBox={editorBox}
+                leaf={leaf}
+              />
+            ) : null}
             <aside className="writing-desk__margin writing-desk__margin--left" ref={leftMargin}>
               {mode === "write" ? (
                 <ReviewFlags
