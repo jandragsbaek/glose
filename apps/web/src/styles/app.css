@@ -5338,6 +5338,35 @@ textarea.properties__input {
   --lines: 20px;
 }
 
+.text-settings__overview {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.text-settings__overview input {
+  flex: none;
+  margin-top: 3px;
+  accent-color: var(--accent);
+}
+
+.text-settings__overview-name {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.text-settings__overview-lead {
+  display: block;
+  max-width: 64ch;
+  color: var(--mute);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .text-settings__focus {
   display: flex;
   flex-wrap: wrap;
@@ -6692,6 +6721,78 @@ textarea.properties__input {
 .writing-desk__margin--right {
   grid-column: 4;
   padding-left: 22px;
+}
+
+/* The Overview, "Fore-edge": the whole piece drawn small at the desk's right edge, as the page
+   edge of a closed book. Lines are graphite hairlines, headings Lapis thumb-index tabs, and the
+   part in view a Lapis wash between two Lapis rules with a Gilt bar on the outer edge. */
+.writing-desk[data-overview] {
+  grid-template-columns:
+    minmax(16px, 1fr) minmax(180px, 250px) var(--leaf-width, 680px)
+    minmax(200px, 290px) minmax(16px, 1fr) 56px 14px;
+}
+
+.overview-col {
+  grid-row: 1;
+  grid-column: 6;
+  align-self: stretch;
+  min-width: 0;
+}
+
+.overview {
+  position: sticky;
+  top: 0;
+  width: 56px;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+
+.overview[data-dragging] {
+  cursor: grabbing;
+}
+
+.overview__picture {
+  position: absolute;
+  top: 0;
+  left: -8px;
+  display: block;
+}
+
+.overview__view {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 5px;
+  border-top: 1px solid var(--accent);
+  border-right: 3px solid var(--gold);
+  border-bottom: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 11%, transparent);
+  pointer-events: none;
+}
+
+.overview__label {
+  position: absolute;
+  right: calc(100% + 14px);
+  max-width: 240px;
+  overflow: hidden;
+  padding: 3px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.overview__label[hidden],
+.overview__probe {
+  display: none;
 }
 
 .writing-desk[data-mode="write"] .writing-desk__margin > [data-pos] {

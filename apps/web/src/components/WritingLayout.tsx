@@ -7,6 +7,7 @@ import {
   LEAF_FOLDED_PADDING,
   leafWidthOf,
   measureOf,
+  overviewFits,
   useWritingText,
 } from "../theme/writingText.ts";
 import type { ProseHandle } from "./ProseEditor.tsx";
@@ -33,27 +34,34 @@ export function useDeskText(
   desk: React.RefObject<HTMLElement | null>,
   mode: "write" | "proof",
   focus: boolean,
+  graphBeside: boolean,
 ) {
   const text = useWritingText();
   const width = useDeskWidth(desk);
   if (mode !== "write") {
     const fold = width === null ? "none" : foldOf(width, leafWidthOf(DEFAULT_TEXT));
     return {
-      className: "writing-desk",
-      "data-fold": fold === "none" ? undefined : fold,
+      overview: false,
+      props: { className: "writing-desk", "data-fold": fold === "none" ? undefined : fold },
     };
   }
   const leaf = leafWidthOf(text);
   const fold = width === null ? "none" : foldOf(width, leaf);
+  const overview =
+    text.overview && !focus && !graphBeside && width !== null && overviewFits(width, leaf);
   return {
-    className: "writing-desk writing-text",
-    "data-face": text.face,
-    "data-fold": focus || fold === "none" ? undefined : fold,
-    style: {
-      "--prose-size": `${text.size}px`,
-      "--leaf-width": `${leaf}px`,
-      "--leaf-folded": `${measureOf(text) + LEAF_FOLDED_PADDING}px`,
-    } as React.CSSProperties,
+    overview,
+    props: {
+      className: "writing-desk writing-text",
+      "data-face": text.face,
+      "data-fold": focus || fold === "none" ? undefined : fold,
+      "data-overview": overview ? "" : undefined,
+      style: {
+        "--prose-size": `${text.size}px`,
+        "--leaf-width": `${leaf}px`,
+        "--leaf-folded": `${measureOf(text) + LEAF_FOLDED_PADDING}px`,
+      } as React.CSSProperties,
+    },
   };
 }
 
@@ -144,7 +152,8 @@ export function useDeskLayout({
   const [focus, setFocus] = useState(false);
   const graphFits = useGraphFits();
   const deskBox = useRef<HTMLDivElement | null>(null);
-  const deskText = useDeskText(deskBox, mode, focus);
+  const besideOpen = graphFits && graphOpen && graphReady && !focus;
+  const deskText = useDeskText(deskBox, mode, focus, besideOpen);
   const place = useRef<PlaceInText | null>(null);
 
   const holdPlace = (refocus: boolean) => {
@@ -182,7 +191,6 @@ export function useDeskLayout({
     if (next === "proof") setFocus(false);
     setMode(next);
   };
-  const besideOpen = graphFits && graphOpen && graphReady && !focus;
   useGraphKey(focus || (graphFits && graphReady), toggleGraph, isMac());
   useFocusKeys(mode === "write", focus, toggleFocus, isMac());
   useFocusPage(focus);
@@ -201,5 +209,15 @@ export function useDeskLayout({
     }
   });
 
-  return { focus, besideOpen, graphFits, toggleGraph, toggleFocus, chooseMode, deskBox, deskText };
+  return {
+    focus,
+    besideOpen,
+    graphFits,
+    toggleGraph,
+    toggleFocus,
+    chooseMode,
+    deskBox,
+    deskText: deskText.props,
+    overview: deskText.overview,
+  };
 }

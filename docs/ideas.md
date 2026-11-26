@@ -320,6 +320,32 @@ council (Claude Opus, GPT Sol, Muse Wonder Full), then chosen from three impecca
   Slip), line-height and spacing sliders, sounds, caret options, streaks and timers, paper
   colours, the user's own fonts, and text settings for each piece.
 
+Decided, the Overview (November 2026), after VS Code's minimap: a three-model council (Claude
+Opus, GPT Sol, Muse Wonder Full) shaped it, three impeccable sketches were drawn on the real desk,
+the council chose "Fore-edge" (round 3: 8, passed at 9, 9), and Jan approved it:
+
+- **Overview** (Danish: Overblik): a 56px strip at the desk's right edge, under the desk bar, that
+  draws the whole piece small. "Minimap" is not used in the interface.
+- It draws each wrapped line as a graphite hairline at its real length, headings as Lapis tabs
+  that reach out of the strip like a thumb index, and each Reference as a Lapis dot. Pencil
+  marks, Tries, AI flags and search hits are not drawn.
+- A box shows the part in view: a Lapis wash between two Lapis rules, with a Gilt bar on the outer
+  edge. A click puts that place a third of the way down the screen; dragging the box scrolls; the
+  wheel scrolls the desk. The caret and selection never move. Resting the pointer on a tab shows
+  the heading.
+- The scale is fixed (proportional, as VS Code's default): when the picture is taller than the
+  strip, it moves with the text, so its ends meet the piece's ends.
+- Write only. Hidden in Preview, in Focus and with the Graph beside the desk, and when the desk
+  has no room for it beside the leaf and both margins (it never folds a margin). The normal
+  scrollbar stays. Not on the Rewrite desk, Free text or the Reader.
+- One checkbox in Settings → Text, "Show an overview beside the text", kept on this computer like
+  the other text settings. Off by default.
+- The strip is hidden from screen readers and is not in the Tab order; the page keys scroll.
+- It is drawn from CodeMirror's height map, not from the page, since CodeMirror puts only the
+  lines on screen into the page.
+- Cut: tiny letters, a map that never scrolls ("fill"), settings for scale, side and size, keyboard
+  focus on the strip, a magnified preview on hover, and Rubric for flagged References.
+
 - Not yet: the University assignment's own flow and PDF, a Writing project of several files,
   publishing straight into the site's git repository, removing the old post file when a published
   title changes, and the AI's suggestions shown while typing (today the writer asks for a review).

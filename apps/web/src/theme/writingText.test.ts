@@ -52,6 +52,7 @@ describe("the text in Write", () => {
       face: "book",
       size: 20,
       width: "standard",
+      overview: false,
     });
   });
 
@@ -64,6 +65,33 @@ describe("the text in Write", () => {
       face: "plain",
       size: 20,
       width: "wide",
+      overview: false,
     });
+  });
+
+  it("keeps the Overview off until the writer turns it on, then remembers it", async () => {
+    const before = await load(JSON.stringify({ face: "book", size: 18, width: "wide" }));
+    before.chooseWritingText({});
+    expect(JSON.parse(before.saved.get(KEY) ?? "null")).toMatchObject({ overview: false });
+
+    const after = await load(
+      JSON.stringify({ face: "book", size: 18, width: "wide", overview: true }),
+    );
+    after.chooseWritingText({});
+    expect(JSON.parse(after.saved.get(KEY) ?? "null")).toMatchObject({
+      face: "book",
+      overview: true,
+    });
+  });
+
+  it("shows the Overview only beside both margins, so it never folds one", async () => {
+    const { DEFAULT_TEXT, foldOf, leafWidthOf, overviewFits } = await load();
+    const leaf = leafWidthOf(DEFAULT_TEXT);
+    const desk1280 = 1280 - 96 - 17;
+    expect(overviewFits(desk1280, leaf)).toBe(true);
+    expect(foldOf(desk1280, leaf)).toBe("none");
+    expect(overviewFits(1161, leaf)).toBe(false);
+    const wide = leafWidthOf({ face: "typewriter", size: 22, width: "wide" });
+    expect(overviewFits(desk1280, wide)).toBe(false);
   });
 });

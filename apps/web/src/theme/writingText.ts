@@ -13,9 +13,17 @@ export interface WritingText {
   readonly face: Face;
   readonly size: Size;
   readonly width: Width;
+  readonly overview: boolean;
 }
 
-export const DEFAULT_TEXT: WritingText = { face: "plain", size: 16, width: "standard" };
+type TextShape = Pick<WritingText, "face" | "size" | "width">;
+
+export const DEFAULT_TEXT: WritingText = {
+  face: "plain",
+  size: 16,
+  width: "standard",
+  overview: false,
+};
 
 const KEY = "glose:writing-text";
 
@@ -35,11 +43,18 @@ const GLOSSES_ONLY = 184;
 export const foldOf = (desk: number, leaf: number): Fold =>
   desk >= leaf + BOTH_MARGINS ? "none" : desk >= leaf + GLOSSES_ONLY ? "left" : "both";
 
-export const measureOf = (text: WritingText) => Math.round(text.size * MEASURE_EM[text.width]);
+const OVERVIEW_ROOM = 70;
 
-export const leafWidthOf = (text: WritingText) => measureOf(text) + LEAF_PADDING;
+const LEAST_MARGIN_TRACKS = 180 + 200 + 16 + 16;
 
-export const charactersOf = (text: WritingText) =>
+export const overviewFits = (desk: number, leaf: number) =>
+  foldOf(desk, leaf) === "none" && desk >= leaf + LEAST_MARGIN_TRACKS + OVERVIEW_ROOM;
+
+export const measureOf = (text: TextShape) => Math.round(text.size * MEASURE_EM[text.width]);
+
+export const leafWidthOf = (text: TextShape) => measureOf(text) + LEAF_PADDING;
+
+export const charactersOf = (text: TextShape) =>
   Math.round(MEASURE_EM[text.width] / CHARACTER_EM[text.face] / 5) * 5;
 
 const read = (): WritingText => {
@@ -54,6 +69,7 @@ const read = (): WritingText => {
       face: field("face", FACES, DEFAULT_TEXT.face),
       size: field("size", SIZES, DEFAULT_TEXT.size),
       width: field("width", WIDTHS, DEFAULT_TEXT.width),
+      overview: field("overview", [true, false], DEFAULT_TEXT.overview),
     };
   } catch {
     return DEFAULT_TEXT;

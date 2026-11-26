@@ -203,6 +203,12 @@ clichés, repetition and mechanics. A mark is advice; the Pencil never changes t
 Blyant.
 _Avoid_: lint, Check (that is a **Card**'s), grammar check, prose assist, highlight
 
+**Overview**:
+A small picture of a whole **Writing project** at the right edge of the desk in Write: its lines,
+headings and **References**, and a box over the part in view. A click goes to a place; the box
+can be dragged. Danish: Overblik.
+_Avoid_: minimap, map, scrollbar, outline
+
 ## Relationships
 
 - A **Vault** holds one **Graph**; moving, sharing or backing up the folder takes all of it along
