@@ -14,7 +14,7 @@ import type { AgentTool } from "./agent.ts";
 
 export const MAX_MATCHES = 10;
 
-export const MAX_LINKED_FROM = 30;
+const MAX_LINKED_FROM = 30;
 
 const SNIPPET = 240;
 

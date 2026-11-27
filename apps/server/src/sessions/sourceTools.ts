@@ -6,7 +6,7 @@ import * as Schema from "effect/Schema";
 import type * as Sources from "../vault/Sources.ts";
 import type { AgentTool } from "./agent.ts";
 
-export const MAX_SOURCES = 30;
+const MAX_SOURCES = 30;
 
 const ListSourcesArguments = Schema.Struct({
   words: Schema.optionalKey(Schema.NullOr(Schema.String)),
@@ -68,7 +68,12 @@ export const listSources = (all: ReadonlyArray<Source>, words: string | null) =>
       : all
           .map((source) => {
             const text = findText(source);
-            return { source, hits: asked.filter((word) => text.includes(word)).length };
+            const whole = new Set(wordsOf(text));
+            const hits = asked.reduce(
+              (sum, word) => sum + (whole.has(word) ? 2 : text.includes(word) ? 1 : 0),
+              0,
+            );
+            return { source, hits };
           })
           .filter(({ hits }) => hits > 0)
           .sort((a, b) => b.hits - a.hits)
@@ -79,7 +84,7 @@ export const listSources = (all: ReadonlyArray<Source>, words: string | null) =>
 export const listSourcesTool = (sources: Sources.Sources["Service"]): AgentTool => ({
   name: "list_sources",
   entry: "list-sources",
-  description: `List the Sources in the user's Graph, with bibliographic data and reading step, without Free text. Returns at most ${MAX_SOURCES}: without words the most recently changed, with words the Sources whose author, title, year or publisher hold the most of them. total says how many there are; when it is more, look up a Source by its author or title words.`,
+  description: `List the Sources in the user's Graph, with bibliographic data and reading step, without Free text. Returns at most ${MAX_SOURCES}: without words the most recently changed, with words the Sources whose author, title, year or publisher hold the most of them, whole words before parts of words. total says how many there are; when it is more, look up a Source by its author or title words.`,
   parameters: {
     type: "object",
     properties: {

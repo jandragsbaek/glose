@@ -1,7 +1,7 @@
 import type { GraphNode } from "@glose/contracts";
 import { assert, describe, it } from "@effect/vitest";
 
-import { MAX_LINKED_FROM, readNote, searchGraph } from "./graphTools.ts";
+import { readNote, searchGraph } from "./graphTools.ts";
 
 const note = (title: string, body: string, updated: string | null = null): GraphNode => ({
   id: title,
@@ -51,7 +51,7 @@ describe("readNote", () => {
       "Note 39",
       "Note 38",
     ]);
-    assert.strictEqual("linkedFrom" in read && read.linkedFrom.length, MAX_LINKED_FROM);
+    assert.strictEqual("linkedFrom" in read && read.linkedFrom.length, 30);
     assert.strictEqual("linkedFromTotal" in read && read.linkedFromTotal, 40);
   });
 });

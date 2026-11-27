@@ -2,7 +2,7 @@ import { BOOK_TEXT_DETAILS, type Source } from "@glose/contracts";
 import { assert, describe, it } from "@effect/vitest";
 
 import { ARENDT } from "../testkit/sources.ts";
-import { listSources, MAX_SOURCES } from "./sourceTools.ts";
+import { listSources } from "./sourceTools.ts";
 
 const source = (id: string, details: Partial<Source> = {}): Source => ({
   id,
@@ -34,7 +34,7 @@ describe("listSources", () => {
     const listed = listSources(recentFirst, null);
     assert.deepStrictEqual(
       listed.sources.map((found) => found.id),
-      recentFirst.slice(0, MAX_SOURCES).map((found) => found.id),
+      recentFirst.slice(0, 30).map((found) => found.id),
     );
     assert.strictEqual(listed.total, 41);
   });
@@ -43,5 +43,18 @@ describe("listSources", () => {
     const listed = listSources(recentFirst, "arendt, Human Condition");
     assert.strictEqual(listed.sources[0]?.id, "Arendt 1958 The Human Condition");
     assert.strictEqual(listed.total, 1);
+  });
+
+  it("finds an author by the whole name before longer names that hold it", () => {
+    const listed = listSources(
+      [
+        ...Array.from({ length: 40 }, (_, index) =>
+          source(`Miller ${index}`, { familyName: "Miller" }),
+        ),
+        source("Mill 1859 On Liberty", { familyName: "Mill", title: "On Liberty" }),
+      ],
+      "Mill",
+    );
+    assert.strictEqual(listed.sources[0]?.id, "Mill 1859 On Liberty");
   });
 });
