@@ -131,17 +131,14 @@ interface Marked {
 
 const MARKDOWN = ".md";
 
-const PLAIN_KIND = /^glose:[ \t]*([\w-]+)[ \t]*$/;
+const FIRST_KIND = /^glose:[ \t]*([\w-]+)[ \t]*(?:\r?\n|$)/;
 
 const cannotBeSource = (markdown: string): boolean => {
   const frontmatter = FRONTMATTER.exec(markdown)?.[1];
   if (frontmatter === undefined) return true;
-  if (!frontmatter.includes("glose") && !frontmatter.includes("\\")) return true;
-  if (/^\s*\{/.test(frontmatter)) return false;
-  const kind = frontmatter
-    .split(/\r?\n/)
-    .map((line) => PLAIN_KIND.exec(line)?.[1])
-    .find((found) => found !== undefined);
+  if (/[\\!]/.test(frontmatter)) return false;
+  if (!frontmatter.includes("glose")) return true;
+  const kind = FIRST_KIND.exec(frontmatter)?.[1];
   return kind !== undefined && kind !== "source";
 };
 

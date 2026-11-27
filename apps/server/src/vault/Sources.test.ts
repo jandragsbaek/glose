@@ -107,6 +107,9 @@ it.layer(NodeServices.layer)("Sources", (it) => {
           "Locke 1690 Essay":
             'title: "An\u2028glose: person\u2028Essay"\nglose: source\nauthor-family: Locke',
           "Spinoza 1677 Ethics": '{glose: "source", author-family: Spinoza, title: Ethics}',
+          "Vico 1725 New Science":
+            "# hand-written\n{a: {b: 1,\nglose: person}, glose: source, author-family: Vico, title: New Science}",
+          "Wolff 1720 Thoughts": "!!binary Z2xvc2U=: source\nauthor-family: Wolff\ntitle: Thoughts",
         };
         for (const [id, frontmatter] of Object.entries(files)) {
           yield* fs.writeFileString(path.join(folder, `${id}.md`), `---\n${frontmatter}\n---\n`);
