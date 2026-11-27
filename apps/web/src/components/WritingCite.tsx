@@ -2,7 +2,7 @@ import { type GraphNode, linkKey, type Source } from "@glose/contracts";
 import { Search } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 
-import { noteExcerpt, rankOf } from "../domain/writing.ts";
+import { byText, noteExcerpt, rankOf, slipIndex } from "../domain/writing.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { CallNumber } from "./ui.tsx";
 import { isMac } from "./WritingDeskBar.tsx";
@@ -24,6 +24,7 @@ export type CloseReason = "escape" | "outside";
 type Match = {
   readonly node: GraphNode;
   readonly source: Source | null;
+  readonly key: string;
   readonly rank: number;
 };
 
@@ -57,43 +58,28 @@ export function CiteSlip({
   const [page, setPage] = useState(editing?.location ?? "");
   const [inherited, setInherited] = useState(editing?.location != null);
 
-  const sourceById = new Map(sources.map((source) => [linkKey(source.id), source]));
-  const sourceOf = (node: GraphNode) =>
-    node.kind === "source"
-      ? (sourceById.get(linkKey(node.id)) ?? null)
-      : node.sourceId === null
-        ? null
-        : (sourceById.get(linkKey(node.sourceId)) ?? null);
+  const { entries, sourceOf } = slipIndex(nodes, sources);
   const current = linkKey(editing?.target ?? "");
   const first = new Set(cited.map(linkKey));
   const words = query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
-  const matches: ReadonlyArray<Match> = nodes
-    .flatMap((node): ReadonlyArray<Match> => {
-      if (node.kind === "person") return [];
-      const source = sourceOf(node);
-      const about =
-        source === null ? "" : `${source.givenName ?? ""} ${source.familyName} ${source.title}`;
-      const rank = rankOf(
-        words,
-        `${node.id} ${node.title}`.toLocaleLowerCase(),
-        about.toLocaleLowerCase(),
-        node.body.toLocaleLowerCase(),
-      );
-      return rank === null ? [] : [{ node, source, rank }];
+  const matches: ReadonlyArray<Match> = entries
+    .flatMap((entry): ReadonlyArray<Match> => {
+      if (entry.node.kind === "person") return [];
+      const rank = rankOf(words, entry);
+      return rank === null
+        ? []
+        : [{ node: entry.node, source: entry.source, key: entry.key, rank }];
     })
     .sort(
       (a, b) =>
-        (words.length === 0
-          ? Number(linkKey(b.node.id) === current) - Number(linkKey(a.node.id) === current)
-          : 0) ||
+        (words.length === 0 ? Number(b.key === current) - Number(a.key === current) : 0) ||
         a.rank - b.rank ||
-        Number(!first.has(linkKey(a.node.id))) - Number(!first.has(linkKey(b.node.id))) ||
+        Number(!first.has(a.key)) - Number(!first.has(b.key)) ||
         Number(a.node.kind === "source") - Number(b.node.kind === "source") ||
-        a.node.id.localeCompare(b.node.id),
+        byText(a.node.id, b.node.id),
     )
     .slice(0, MAX_MATCHES);
-  const picked =
-    matches.find((match) => linkKey(match.node.id) === linkKey(active ?? ""))?.node ?? null;
+  const picked = matches.find((match) => match.key === linkKey(active ?? ""))?.node ?? null;
   const missing =
     editing !== null && picked === null && linkKey(active ?? "") === current
       ? editing.target

@@ -1,4 +1,12 @@
-import { REFERENCE, type ResolvedReference } from "@glose/contracts";
+import {
+  type GraphNode,
+  linkKey,
+  REFERENCE,
+  type ReferenceLookup,
+  referenceLookup,
+  type ResolvedReference,
+  type Source,
+} from "@glose/contracts";
 
 import { emphasisSpans, REFERENCE_MASK, textBlocks } from "./emphasis.ts";
 import { wordCount } from "./source.ts";
@@ -196,16 +204,83 @@ export const headingOf = (
 export const hugWord = (body: string, at: number): number =>
   at > 1 && body[at - 1] === " " && /\S/.test(body[at - 2] ?? "") ? at - 1 : at;
 
-export const rankOf = (
-  words: ReadonlyArray<string>,
-  title: string,
-  about: string,
-  body: string,
-): number | null => {
-  if (words.every((word) => title.includes(word))) return 0;
-  if (words.every((word) => `${title} ${about}`.includes(word))) return 1;
-  if (words.every((word) => `${title} ${about} ${body}`.includes(word))) return 2;
+export interface SlipEntry {
+  readonly node: GraphNode;
+  readonly key: string;
+  readonly source: Source | null;
+  readonly title: string;
+  readonly titleAbout: string;
+  readonly all: string;
+}
+
+export interface SlipIndex {
+  readonly entries: ReadonlyArray<SlipEntry>;
+  readonly sourceOf: (node: GraphNode) => Source | null;
+}
+
+const slipIndexes = new WeakMap<
+  ReadonlyArray<GraphNode>,
+  { readonly sources: ReadonlyArray<Source>; readonly index: SlipIndex }
+>();
+
+export const slipIndex = (
+  nodes: ReadonlyArray<GraphNode>,
+  sources: ReadonlyArray<Source>,
+): SlipIndex => {
+  const kept = slipIndexes.get(nodes);
+  const sameSources = (a: ReadonlyArray<Source>) =>
+    a === sources || (a.length === 0 && sources.length === 0);
+  if (kept !== undefined && sameSources(kept.sources)) return kept.index;
+  const sourceByKey = new Map(sources.map((source) => [linkKey(source.id), source]));
+  const sourceOf = (node: GraphNode) =>
+    node.kind === "source"
+      ? (sourceByKey.get(linkKey(node.id)) ?? null)
+      : node.sourceId === null
+        ? null
+        : (sourceByKey.get(linkKey(node.sourceId)) ?? null);
+  const entries = nodes.map((node): SlipEntry => {
+    const source = sourceOf(node);
+    const about =
+      source === null ? "" : `${source.givenName ?? ""} ${source.familyName} ${source.title}`;
+    const title = `${node.id} ${node.title}`.toLocaleLowerCase();
+    const titleAbout = `${title} ${about.toLocaleLowerCase()}`;
+    return {
+      node,
+      key: linkKey(node.id),
+      source,
+      title,
+      titleAbout,
+      all: `${titleAbout} ${node.body.toLocaleLowerCase()}`,
+    };
+  });
+  const index = { entries, sourceOf };
+  slipIndexes.set(nodes, { sources, index });
+  return index;
+};
+
+export const rankOf = (words: ReadonlyArray<string>, entry: SlipEntry): number | null => {
+  if (words.every((word) => entry.title.includes(word))) return 0;
+  if (words.every((word) => entry.titleAbout.includes(word))) return 1;
+  if (words.every((word) => entry.all.includes(word))) return 2;
   return null;
+};
+
+export const byText = new Intl.Collator().compare;
+
+const referenceLookups = new WeakMap<
+  ReadonlyArray<GraphNode>,
+  { readonly sources: ReadonlyArray<Source>; readonly lookup: ReferenceLookup }
+>();
+
+export const graphReferences = (
+  nodes: ReadonlyArray<GraphNode>,
+  sources: ReadonlyArray<Source>,
+): ReferenceLookup => {
+  const kept = referenceLookups.get(nodes);
+  if (kept !== undefined && kept.sources === sources) return kept.lookup;
+  const lookup = referenceLookup(nodes, sources);
+  referenceLookups.set(nodes, { sources, lookup });
+  return lookup;
 };
 
 export const noteExcerpt = (body: string, words: ReadonlyArray<string> = [], max = 140): string => {
