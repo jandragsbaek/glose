@@ -2,7 +2,7 @@ import * as NodeFS from "node:fs";
 import * as NodePath from "node:path";
 import * as NodeUtil from "node:util";
 
-import { linkKey, parseWikilink, WIKILINK } from "@glose/contracts";
+import { indexNodes, linkKey, parseWikilink, WIKILINK } from "@glose/contracts";
 
 import { searchGraph } from "../src/sessions/graphTools.ts";
 import { buildGraphView } from "../src/vault/graphView.ts";
@@ -76,7 +76,7 @@ const measure = (queryOf: (node: (typeof view.nodes)[number]) => string) => {
     const rest = view.nodes
       .filter((other) => other.id !== node.id)
       .map((other) => ({ ...other, body: withoutLinksTo(other.body, key) }));
-    const names = searchGraph(rest, queryOf(node)).map((match) => match.name);
+    const names = searchGraph(indexNodes(rest), queryOf(node)).map((match) => match.name);
     const hits = names.filter((name) => linked.has(name)).length;
     const first = names.findIndex((name) => linked.has(name));
     notes += 1;
