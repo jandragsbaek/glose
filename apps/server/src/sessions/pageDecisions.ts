@@ -19,7 +19,6 @@ import * as Effect from "effect/Effect";
 import type * as Semaphore from "effect/Semaphore";
 import * as SubscriptionRef from "effect/SubscriptionRef";
 
-import * as Graph from "../vault/Graph.ts";
 import * as Notes from "../vault/Notes.ts";
 import * as Sources from "../vault/Sources.ts";
 import * as WebPages from "../research/WebPages.ts";
@@ -102,7 +101,6 @@ export const make = Effect.fn("Sessions.makePageDecisions")(function* ({
   const settings = yield* Settings.Settings;
   const notes = yield* Notes.Notes;
   const sources = yield* Sources.Sources;
-  const graph = yield* Graph.Graph;
   const webPages = yield* WebPages.WebPages;
 
   const decide = Effect.fn("Sessions.decidePage")(function* (
@@ -239,7 +237,7 @@ export const make = Effect.fn("Sessions.makePageDecisions")(function* ({
       }
 
       const today = new Date(yield* Clock.currentTimeMillis).toISOString().slice(0, 10);
-      const library = yield* sources.list;
+      const library = used.length === 0 ? [] : yield* sources.list;
       const prepared = new Map<string, Effect.Success<ReturnType<typeof prepare>>>();
       for (const id of used) {
         const quotes = input.quotes.filter((quote) => quote.page === id);
@@ -263,11 +261,9 @@ export const make = Effect.fn("Sessions.makePageDecisions")(function* ({
         sourceIds.set(id, source.id);
       }
 
-      const view = yield* graph.read;
+      const linked = yield* notes.named(input.links);
       const names = new Map(
-        view.nodes
-          .filter((node) => node.kind !== "source")
-          .map((node) => [linkKey(node.id), node.id]),
+        linked.filter((node) => node.kind !== "source").map((node) => [linkKey(node.id), node.id]),
       );
       const related = [...new Set(input.links.flatMap((link) => names.get(linkKey(link)) ?? []))];
       const { language } = (yield* settings.get).settings;

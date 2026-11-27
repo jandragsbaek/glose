@@ -16,5 +16,6 @@ export const toFileName = (raw: string): string => {
 
 export const isFileName = (id: string): boolean => id.length > 0 && toFileName(id) === id;
 
-export const sameFileName = (a: string, b: string): boolean =>
-  a.normalize("NFC").toLocaleLowerCase("und") === b.normalize("NFC").toLocaleLowerCase("und");
+export const fileNameKey = (name: string): string => name.normalize("NFC").toLowerCase();
+
+export const sameFileName = (a: string, b: string): boolean => fileNameKey(a) === fileNameKey(b);
