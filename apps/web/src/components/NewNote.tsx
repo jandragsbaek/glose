@@ -135,7 +135,7 @@ export function NewNote({
         quotes: notes.quotes,
         links: links.map((link) => link.note).filter((note) => checked.has(note)),
       },
-      reactivityKeys: [...KEYS.sources, ...CARD_KEYS.cards],
+      reactivityKeys: [...KEYS.graph, ...KEYS.passages, ...CARD_KEYS.cards],
     });
     setBusy(false);
     onSaving(false);

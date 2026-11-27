@@ -12,25 +12,28 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useId, useState } from "react";
 
 import { useT } from "../i18n/I18n.tsx";
-import { ARTICLE_KEYS, chooseStartAtom, KEYS, sourcesAtom } from "../state/vault.ts";
+import { ARTICLE_KEYS, chooseStartAtom, sourceKeys, sourcesAtom } from "../state/vault.ts";
 import { stateLine, type States } from "./readerState.ts";
 import { Notice } from "./ui.tsx";
 
 export function LessonNav({ source }: { readonly source: Source }) {
+  if (source.kind !== "lesson" || source.container === null) return null;
+  return <CourseNav source={source} container={source.container} />;
+}
+
+function CourseNav({ source, container }: { readonly source: Source; readonly container: string }) {
   const t = useT();
   const all = AsyncResult.getOrElse(useAtomValue(sourcesAtom), () => []);
-  if (source.kind !== "lesson" || source.container === null) return null;
   const course = all
     .filter(
-      (other) =>
-        other.kind === "lesson" && other.container === source.container && other.part !== null,
+      (other) => other.kind === "lesson" && other.container === container && other.part !== null,
     )
     .sort((a, b) => (a.part ?? "").localeCompare(b.part ?? "", undefined, { numeric: true }));
   const at = course.findIndex((other) => other.id === source.id);
   const previous = at > 0 ? course[at - 1] : undefined;
   const next = at >= 0 ? course[at + 1] : undefined;
   return (
-    <nav className="lesson-nav" aria-label={source.container}>
+    <nav className="lesson-nav" aria-label={container}>
       {previous === undefined || previous.part === null ? null : (
         <Link
           to="/sources/$sourceId"
@@ -212,7 +215,7 @@ export function DoneReading({
     setState("saving");
     const exit = await choose({
       payload: { id: source.id, start },
-      reactivityKeys: [...KEYS.sources, ...ARTICLE_KEYS.articles],
+      reactivityKeys: [...sourceKeys(source.id), ...ARTICLE_KEYS.articles],
     });
     setState(Exit.isSuccess(exit) ? "idle" : "failed");
   };

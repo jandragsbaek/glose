@@ -7,7 +7,7 @@ import { type RefObject, useRef, useState } from "react";
 
 import { useT } from "../i18n/I18n.tsx";
 import { courseVideoUrl, uploadCourseVideo } from "../state/courseVideo.ts";
-import { KEYS, setLessonVideoAtom, sourcesAtom } from "../state/vault.ts";
+import { setLessonVideoAtom, sourceKeys, sourcesAtom } from "../state/vault.ts";
 import { ReadingMarks } from "./ReadingMarks.tsx";
 import { focusAfterRender } from "./textImport.tsx";
 import { CallNumber, Panel } from "./ui.tsx";
@@ -170,7 +170,7 @@ function VideoEdit({
         link,
         removeFile: !draft.keepFile && draft.file === null && lesson.videoFile !== null,
       },
-      reactivityKeys: KEYS.sources,
+      reactivityKeys: sourceKeys(lesson.id),
     });
     if (Exit.isFailure(exit)) {
       setBusy(null);

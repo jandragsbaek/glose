@@ -228,7 +228,7 @@ export function AddArticle({
     };
     setBusy(true);
     onSaving(true);
-    const exit = await importText({ payload, reactivityKeys: KEYS.sources });
+    const exit = await importText({ payload, reactivityKeys: [...KEYS.sources, ...KEYS.graph] });
     setBusy(false);
     onSaving(false);
     if (Exit.isSuccess(exit)) {

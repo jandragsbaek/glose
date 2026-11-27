@@ -7,7 +7,7 @@ import { Check } from "lucide-react";
 import { type ReactNode, useId, useState } from "react";
 
 import { useT } from "../i18n/I18n.tsx";
-import { advanceReadingAtom, KEYS } from "../state/vault.ts";
+import { advanceReadingAtom, sourceKeys } from "../state/vault.ts";
 import { extractionSessionAtom, sessionAtom } from "../state/sessions.ts";
 import { Desk, PointsPanel, StartExtraction, StartGroup } from "./ExtractionDesk.tsx";
 import { PassageNote } from "./PassageNote.tsx";
@@ -270,7 +270,7 @@ function NextStep({ source }: { readonly source: Source }) {
     setBusy(true);
     const exit = await advance({
       payload: { id: source.id, from: "extraction" },
-      reactivityKeys: KEYS.sources,
+      reactivityKeys: sourceKeys(source.id),
     });
     setBusy(false);
     setFailed(Exit.isFailure(exit));

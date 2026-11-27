@@ -28,7 +28,7 @@ import { authorOf, peopleIn, personOfSource } from "../domain/person.ts";
 import { asksWhereToStart, missingDetails, wordCount } from "../domain/source.ts";
 import { videoIdOf, youtubeAt } from "../domain/video.ts";
 import { useT } from "../i18n/I18n.tsx";
-import { graphAtom, KEYS, saveFreeTextAtom, sourceAtom } from "../state/vault.ts";
+import { graphAtom, saveFreeTextAtom, sourceAtom, useSourcePageRefresh } from "../state/vault.ts";
 
 interface SourceSearch {
   readonly text?: 1;
@@ -55,6 +55,7 @@ export const Route = createFileRoute("/sources/$sourceId")({
 
 function ReadingStage() {
   const t = useT();
+  useSourcePageRefresh();
   const { sourceId } = Route.useParams();
   const result = useAtomValue(sourceAtom(sourceId));
   const refresh = useAtomRefresh(sourceAtom(sourceId));
@@ -250,10 +251,7 @@ function FreeText({ source }: { readonly source: Source }) {
 
   const save = async (finish: boolean) => {
     setState("saving");
-    const exit = await saveFreeText({
-      payload: { id: source.id, freeText: text, finish },
-      reactivityKeys: KEYS.sources,
-    });
+    const exit = await saveFreeText({ id: source.id, freeText: text, finish });
     setState(Exit.isSuccess(exit) ? "saved" : "failed");
   };
 

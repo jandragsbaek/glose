@@ -11,7 +11,7 @@ import { wordCount } from "../domain/source.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { addBookPassagesPointAtom, passagesAtom } from "../state/passages.ts";
 import { SESSION_KEYS, startSessionAtom } from "../state/sessions.ts";
-import { advanceReadingAtom, KEYS } from "../state/vault.ts";
+import { advanceReadingAtom, sourceKeys } from "../state/vault.ts";
 import { PassageCapture } from "./PassageCapture.tsx";
 import { PassageEntry, passageElement } from "./PassageEntry.tsx";
 import { PassageNote, type PointIds, useDeskSession } from "./PassageNote.tsx";
@@ -231,6 +231,7 @@ function PassagesDesk({
                   {shown.map((passage) => (
                     <PassageEntry
                       key={passage.id}
+                      source={source.id}
                       passage={passage}
                       selected={selected.includes(passage.id)}
                       onDesk={desk === null ? null : desk.indexOf(passage.id)}
@@ -343,7 +344,7 @@ function DonePassages({
     setState("saving");
     const exit = await advance({
       payload: { id: source.id, from: "passages" },
-      reactivityKeys: KEYS.sources,
+      reactivityKeys: sourceKeys(source.id),
     });
     setState(Exit.isSuccess(exit) ? "idle" : "failed");
     if (Exit.isSuccess(exit)) {

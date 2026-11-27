@@ -4,7 +4,7 @@ import * as Exit from "effect/Exit";
 import { useId, useState } from "react";
 
 import { useT } from "../i18n/I18n.tsx";
-import { chooseStartAtom, KEYS } from "../state/vault.ts";
+import { chooseStartAtom, sourceKeys } from "../state/vault.ts";
 import { Notice, Panel } from "./ui.tsx";
 
 export const STARTS = [
@@ -27,7 +27,7 @@ export function ReadingStart({ source }: { readonly source: Source }) {
     setState("saving");
     const exit = await chooseStart({
       payload: { id: source.id, start },
-      reactivityKeys: KEYS.sources,
+      reactivityKeys: sourceKeys(source.id),
     });
     setState(Exit.isSuccess(exit) ? "idle" : "failed");
   };

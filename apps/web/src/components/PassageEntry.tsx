@@ -7,17 +7,18 @@ import { type FormEvent, useId, useState } from "react";
 
 import { useT } from "../i18n/I18n.tsx";
 import { deletePassageAtom, updatePassageAtom } from "../state/passages.ts";
-import { KEYS } from "../state/vault.ts";
 import { Notice } from "./ui.tsx";
 
 export const passageElement = (id: string) => `passage-${id}`;
 
 export function PassageEntry({
+  source,
   passage,
   selected,
   onDesk,
   onToggle,
 }: {
+  readonly source: string;
   readonly passage: BookPassage;
   readonly selected: boolean;
   readonly onDesk: number | null;
@@ -35,7 +36,7 @@ export function PassageEntry({
   if (editing) {
     return (
       <li className="book-passage" id={passageElement(passage.id)} data-passage={passage.id}>
-        <PassageEdit passage={passage} onDone={() => setEditing(false)} />
+        <PassageEdit source={source} passage={passage} onDone={() => setEditing(false)} />
       </li>
     );
   }
@@ -99,8 +100,8 @@ export function PassageEntry({
                 className="button button--small"
                 onClick={async () => {
                   const exit = await remove({
+                    source,
                     payload: { id: passage.id },
-                    reactivityKeys: KEYS.sources,
                   });
                   setFailed(Exit.isFailure(exit));
                   setAsking(false);
@@ -148,9 +149,11 @@ export function PassageEntry({
 }
 
 function PassageEdit({
+  source,
   passage,
   onDone,
 }: {
+  readonly source: string;
   readonly passage: BookPassage;
   readonly onDone: () => void;
 }) {
@@ -170,13 +173,14 @@ function PassageEdit({
     if (words.trim() === "") return;
     setBusy(true);
     const exit = await update({
+      source,
+      cited: passage.usedBy.length > 0,
       payload: {
         id: passage.id,
         page: page.trim() === "" ? null : page.trim(),
         words: words.trim(),
         yourWords: mine.trim(),
       },
-      reactivityKeys: KEYS.sources,
     });
     setBusy(false);
     if (Exit.isSuccess(exit)) onDone();

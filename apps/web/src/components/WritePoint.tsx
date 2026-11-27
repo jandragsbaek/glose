@@ -8,7 +8,6 @@ import { type FormEvent, useId, useState } from "react";
 
 import { wordCount } from "../domain/source.ts";
 import { useT } from "../i18n/I18n.tsx";
-import { KEYS } from "../state/vault.ts";
 import { dropPointAtom, sendMessageAtom, writePointAtom } from "../state/sessions.ts";
 import { AiText } from "./NoteText.tsx";
 import { elementOf, NoteLink, PointSource } from "./PointRow.tsx";
@@ -66,16 +65,13 @@ export function WritePoint({
     if (!canSave) return;
     setBusy(true);
     const exit = await write({
-      payload: {
-        id: session.id,
-        point: point.id,
-        title,
-        text,
-        aiText,
-        page: page.trim() === "" ? null : page.trim(),
-        links: added,
-      },
-      reactivityKeys: KEYS.sources,
+      id: session.id,
+      point: point.id,
+      title,
+      text,
+      aiText,
+      page: page.trim() === "" ? null : page.trim(),
+      links: added,
     });
     setBusy(false);
     if (Exit.isSuccess(exit)) return;

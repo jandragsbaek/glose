@@ -27,7 +27,7 @@ export function PersonProposal({
   const make = async () => {
     setMaking(true);
     setProblem(null);
-    const exit = await create({ payload: author, reactivityKeys: KEYS.sources });
+    const exit = await create({ payload: author, reactivityKeys: KEYS.graph });
     setMaking(false);
     if (Exit.isSuccess(exit)) {
       void navigate({ to: "/people/$personName", params: { personName: exit.value }, search: {} });
