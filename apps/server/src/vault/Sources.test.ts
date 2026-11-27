@@ -100,26 +100,21 @@ it.layer(NodeServices.layer)("Sources", (it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        yield* fs.writeFileString(
-          path.join(folder, "Hegel 1807 Phenomenology.md"),
-          "---\n\"glose\" : 'source'\nauthor-family: Hegel\ntitle: Phenomenology\n---\n",
-        );
-        yield* fs.writeFileString(
-          path.join(folder, "Kant 1781 Critique.md"),
-          "---\nglose: >-\n  source\nauthor-family: Kant\ntitle: Critique\n---\n",
-        );
-        yield* fs.writeFileString(
-          path.join(folder, "Spinoza 1677 Ethics.md"),
-          '---\n{glose: "source", author-family: Spinoza, title: Ethics}\n---\n',
-        );
+        const files = {
+          "Hegel 1807 Phenomenology": `"glose" : 'source'\nauthor-family: Hegel\ntitle: Phenomenology`,
+          "Hume 1739 Treatise": '"\\x67lose": source\nauthor-family: Hume\ntitle: Treatise',
+          "Kant 1781 Critique": "glose: >-\n  source\nauthor-family: Kant\ntitle: Critique",
+          "Locke 1690 Essay":
+            'title: "An\u2028glose: person\u2028Essay"\nglose: source\nauthor-family: Locke',
+          "Spinoza 1677 Ethics": '{glose: "source", author-family: Spinoza, title: Ethics}',
+        };
+        for (const [id, frontmatter] of Object.entries(files)) {
+          yield* fs.writeFileString(path.join(folder, `${id}.md`), `---\n${frontmatter}\n---\n`);
+        }
 
         const listed = yield* sources.list;
 
-        assert.deepStrictEqual(listed.map((source) => source.id).sort(), [
-          "Hegel 1807 Phenomenology",
-          "Kant 1781 Critique",
-          "Spinoza 1677 Ethics",
-        ]);
+        assert.deepStrictEqual(listed.map((source) => source.id).sort(), Object.keys(files));
       }),
     ),
   );
