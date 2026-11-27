@@ -1,8 +1,9 @@
 import {
   type GraphNode,
+  type GraphSearchIndex,
   type GraphView,
   linkKey,
-  searchNodes,
+  searchIndex,
   withoutSearchMarkup,
 } from "@glose/contracts";
 import * as Effect from "effect/Effect";
@@ -34,9 +35,9 @@ const snippetOf = (body: string, words: ReadonlyArray<string>) => {
   return `${start > 0 ? "…" : ""}${cut}${start + SNIPPET < flat.length ? "…" : ""}`;
 };
 
-export const searchGraph = (nodes: ReadonlyArray<GraphNode>, query: string) => {
-  const titles = new Map(nodes.map((node) => [node.id, node.title]));
-  return searchNodes(nodes, query)
+export const searchGraph = (index: GraphSearchIndex, query: string) => {
+  const titles = new Map(index.nodes.map((node) => [node.id, node.title]));
+  return searchIndex(index, query)
     .slice(0, MAX_MATCHES)
     .map(({ node, matchedBodyWords }) => ({
       name: node.id,
@@ -93,8 +94,8 @@ export const searchGraphTool = (graph: Graph.Graph["Service"]): AgentTool => ({
     Option.match(decodeSearch(args), {
       onNone: () => Effect.succeed({ error: "Give words to search for." }),
       onSome: ({ query }) =>
-        graph.read.pipe(
-          Effect.map((view) => ({ matches: searchGraph(view.nodes, query) })),
+        graph.searchIndex.pipe(
+          Effect.map((index) => ({ matches: searchGraph(index, query) })),
           Effect.orElseSucceed(() => graphFailed),
         ),
     }),

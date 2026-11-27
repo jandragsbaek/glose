@@ -73,7 +73,8 @@ interface Posting {
   readonly body: number;
 }
 
-interface Index {
+export interface GraphSearchIndex {
+  readonly nodes: ReadonlyArray<GraphNode>;
   readonly postings: ReadonlyMap<string, ReadonlyArray<Posting>>;
   readonly byKey: ReadonlyMap<string, ReadonlyArray<string>>;
   readonly lengths: ReadonlyArray<number>;
@@ -86,7 +87,7 @@ const count = (words: ReadonlyArray<string>) => {
   return counts;
 };
 
-const buildIndex = (nodes: ReadonlyArray<GraphNode>): Index => {
+export const indexNodes = (nodes: ReadonlyArray<GraphNode>): GraphSearchIndex => {
   const postings = new Map<string, Array<Posting>>();
   const lengths: Array<number> = [];
   nodes.forEach((node, doc) => {
@@ -110,6 +111,7 @@ const buildIndex = (nodes: ReadonlyArray<GraphNode>): Index => {
   }
   const total = lengths.reduce((sum, length) => sum + length, 0);
   return {
+    nodes,
     postings,
     byKey,
     lengths,
@@ -117,7 +119,7 @@ const buildIndex = (nodes: ReadonlyArray<GraphNode>): Index => {
   };
 };
 
-const matchesOf = (index: Index, keys: ReadonlyArray<string>) => {
+const matchesOf = (index: GraphSearchIndex, keys: ReadonlyArray<string>) => {
   const whole = new Set(keys.flatMap((key) => index.byKey.get(key) ?? []));
   const inside = new Set<string>();
   const parts = keys.filter((key) => key.length >= INSIDE_MIN);
@@ -139,11 +141,11 @@ export interface GraphSearchHit {
   readonly matchedBodyWords: ReadonlyArray<string>;
 }
 
-export const searchNodes = (
-  nodes: ReadonlyArray<GraphNode>,
+export const searchIndex = (
+  index: GraphSearchIndex,
   query: string,
 ): ReadonlyArray<GraphSearchHit> => {
-  const index = buildIndex(nodes);
+  const { nodes } = index;
   const terms = new Map(tokens(query).map((word) => [stemsOf(word).join(" "), stemsOf(word)]));
   const scores = new Map<number, number>();
   const words = new Map<number, Set<string>>();
@@ -185,3 +187,8 @@ export const searchNodes = (
     })
     .sort((a, b) => b.score - a.score || a.node.id.localeCompare(b.node.id, "en"));
 };
+
+export const searchNodes = (
+  nodes: ReadonlyArray<GraphNode>,
+  query: string,
+): ReadonlyArray<GraphSearchHit> => searchIndex(indexNodes(nodes), query);

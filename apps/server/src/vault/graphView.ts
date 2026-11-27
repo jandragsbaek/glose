@@ -15,7 +15,7 @@ import {
 import * as Option from "effect/Option";
 
 import { propertiesOf } from "./frontmatter.ts";
-import { FRONTMATTER, parseSourceFile, parseYaml, SOURCE_FIELDS } from "./sourceFile.ts";
+import { FRONTMATTER, parseYaml, SOURCE_FIELDS, sourceOfFrontmatter } from "./sourceFile.ts";
 
 export interface GraphFile {
   readonly name: string;
@@ -71,13 +71,13 @@ const personOf = (frontmatter: unknown, name: string): PersonName => {
   return { family: last, given: words.length === 0 ? null : words.join(" ") };
 };
 
-interface ParsedFile {
+interface ParsedNode {
   readonly node: Omit<GraphNode, "sourceId">;
   readonly sourceName: string | null;
   readonly targets: ReadonlyArray<string>;
 }
 
-const parseFile = ({ name, markdown }: GraphFile): ParsedFile => {
+const parseNode = ({ name, markdown }: GraphFile): ParsedNode => {
   const match = FRONTMATTER.exec(markdown);
   const frontmatter = match ? parseYaml(match[1] ?? "") : undefined;
   const body = (match ? (match[2] ?? "") : markdown).replace(/^\r?\n/, "").trimEnd();
@@ -106,7 +106,7 @@ const parseFile = ({ name, markdown }: GraphFile): ParsedFile => {
       targets,
     };
   }
-  const source = parseSourceFile(markdown);
+  const source = match ? sourceOfFrontmatter(frontmatter, body) : Option.none();
   const properties = propertiesOf(frontmatter, Option.isSome(source) ? SOURCE_FIELDS : NOTE_FIELDS);
   return Option.match(source, {
     onSome: (source) => ({
@@ -146,20 +146,39 @@ const parseFile = ({ name, markdown }: GraphFile): ParsedFile => {
   });
 };
 
-export const buildGraphView = (files: ReadonlyArray<GraphFile>): GraphView => {
-  const parsed = files.map(parseFile).sort((a, b) => a.node.id.localeCompare(b.node.id, "en"));
-  const byKey = new Map(parsed.map((file) => [linkKey(file.node.id), file.node]));
+export interface ParsedFile {
+  readonly node: Omit<GraphNode, "sourceId">;
+  readonly key: string;
+  readonly sourceKey: string | null;
+  readonly targetKeys: ReadonlyArray<string>;
+}
+
+export const parseGraphFile = (file: GraphFile): ParsedFile => {
+  const { node, sourceName, targets } = parseNode(file);
+  return {
+    node,
+    key: linkKey(node.id),
+    sourceKey: sourceName === null ? null : linkKey(sourceName),
+    targetKeys: targets.map(linkKey),
+  };
+};
+
+const byName = new Intl.Collator("en").compare;
+
+export const assembleGraphView = (files: ReadonlyArray<ParsedFile>): GraphView => {
+  const parsed = files.toSorted((a, b) => byName(a.node.id, b.node.id));
+  const byKey = new Map(parsed.map((file) => [file.key, file.node]));
 
   const nodes: Array<GraphNode> = parsed.map((file) => {
-    const source = file.sourceName === null ? undefined : byKey.get(linkKey(file.sourceName));
+    const source = file.sourceKey === null ? undefined : byKey.get(file.sourceKey);
     return { ...file.node, sourceId: source?.kind === "source" ? source.id : null };
   });
 
   const seen = new Set<string>();
   const links: Array<GraphLink> = [];
   for (const file of parsed) {
-    for (const target of file.targets) {
-      const to = byKey.get(linkKey(target))?.id;
+    for (const target of file.targetKeys) {
+      const to = byKey.get(target)?.id;
       const key = `${file.node.id}\u0000${to}`;
       if (to === undefined || to === file.node.id || seen.has(key)) continue;
       seen.add(key);
@@ -168,3 +187,6 @@ export const buildGraphView = (files: ReadonlyArray<GraphFile>): GraphView => {
   }
   return { nodes, links };
 };
+
+export const buildGraphView = (files: ReadonlyArray<GraphFile>): GraphView =>
+  assembleGraphView(files.map(parseGraphFile));

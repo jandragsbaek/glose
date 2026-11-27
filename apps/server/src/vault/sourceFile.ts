@@ -88,10 +88,11 @@ export const parseYaml = (yaml: string): unknown => {
   }
 };
 
-export const parseSourceFile = (markdown: string): Option.Option<SourceFileContent> => {
-  const match = FRONTMATTER.exec(markdown);
-  if (!match) return Option.none();
-  return decodeFrontmatter(parseYaml(match[1] ?? "")).pipe(
+export const sourceOfFrontmatter = (
+  frontmatter: unknown,
+  freeText: string,
+): Option.Option<SourceFileContent> =>
+  decodeFrontmatter(frontmatter).pipe(
     Option.flatMap((data) =>
       decodeDetails({
         familyName: String(data["author-family"]),
@@ -126,10 +127,18 @@ export const parseSourceFile = (markdown: string): Option.Option<SourceFileConte
             data["reading-step"] ?? (hasOwnText(data.kind ?? "book") ? "read" : "free-text"),
           readingStart: data["reading-start"] ?? null,
           added: addedTime(data.added),
-          freeText: (match[2] ?? "").replace(/^\r?\n/, "").trimEnd(),
+          freeText,
         })),
       ),
     ),
+  );
+
+export const parseSourceFile = (markdown: string): Option.Option<SourceFileContent> => {
+  const match = FRONTMATTER.exec(markdown);
+  if (!match) return Option.none();
+  return sourceOfFrontmatter(
+    parseYaml(match[1] ?? ""),
+    (match[2] ?? "").replace(/^\r?\n/, "").trimEnd(),
   );
 };
 

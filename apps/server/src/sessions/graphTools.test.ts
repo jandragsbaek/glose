@@ -1,4 +1,4 @@
-import type { GraphNode } from "@glose/contracts";
+import { type GraphNode, indexNodes } from "@glose/contracts";
 import { assert, describe, it } from "@effect/vitest";
 
 import { readNote, searchGraph } from "./graphTools.ts";
@@ -22,13 +22,13 @@ const note = (title: string, body: string, updated: string | null = null): Graph
 describe("searchGraph", () => {
   it("shows the snippet around the matched word, not around the same letters in another word", () => {
     const body = `Starting is hard. ${"A long day of work. ".repeat(20)}Art needs time.`;
-    const [match] = searchGraph([note("On craft", body)], "art");
+    const [match] = searchGraph(indexNodes([note("On craft", body)]), "art");
     assert.include(match?.snippet, "Art needs time.");
   });
 
   it("shows the snippet around the matched word, not around an AI mark", () => {
     const body = `> [!ai-part] Habits\n> ${"A long day of work. ".repeat(20)}\n\nThe hard part is starting.`;
-    const [match] = searchGraph([note("On starting", body)], "part");
+    const [match] = searchGraph(indexNodes([note("On starting", body)]), "part");
     assert.include(match?.snippet, "The hard part is starting.");
   });
 });
