@@ -148,27 +148,31 @@ export const searchNodes = (
   const words = new Map<number, Set<string>>();
   for (const keys of terms.values()) {
     const { whole, inside } = matchesOf(index, keys);
-    const weights = new Map<number, number>();
-    for (const [found, share] of [
-      [whole, 1],
-      [inside, INSIDE_SHARE],
-    ] as const) {
+    const weightsOf = (found: ReadonlySet<string>) => {
+      const weights = new Map<number, number>();
       for (const word of found) {
         for (const posting of index.postings.get(word) ?? []) {
           const norm =
             1 -
             BODY_LENGTH_WEIGHT +
             (BODY_LENGTH_WEIGHT * (index.lengths[posting.doc] ?? 0)) / index.averageLength;
-          const weight = share * (TITLE_WEIGHT * posting.title + posting.body / norm);
+          const weight = TITLE_WEIGHT * posting.title + posting.body / norm;
           weights.set(posting.doc, (weights.get(posting.doc) ?? 0) + weight);
           if (posting.body > 0)
             words.set(posting.doc, (words.get(posting.doc) ?? new Set()).add(word));
         }
       }
-    }
-    const idf = Math.log(1 + (nodes.length - weights.size + 0.5) / (weights.size + 0.5));
-    for (const [doc, weight] of weights) {
-      scores.set(doc, (scores.get(doc) ?? 0) + (idf * weight * (K1 + 1)) / (weight + K1));
+      return weights;
+    };
+    const wholeWeights = weightsOf(whole);
+    const insideWeights = weightsOf(inside);
+    const docs = new Set([...wholeWeights.keys(), ...insideWeights.keys()]);
+    const idf = Math.log(1 + (nodes.length - docs.size + 0.5) / (docs.size + 0.5));
+    const saturated = (weight = 0) => (weight * (K1 + 1)) / (weight + K1);
+    for (const doc of docs) {
+      const score =
+        saturated(wholeWeights.get(doc)) + INSIDE_SHARE * saturated(insideWeights.get(doc));
+      scores.set(doc, (scores.get(doc) ?? 0) + idf * score);
     }
   }
   return [...scores]

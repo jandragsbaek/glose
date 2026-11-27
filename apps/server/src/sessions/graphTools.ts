@@ -16,10 +16,12 @@ const decodeReadNote = Schema.decodeUnknownOption(ReadNoteArguments);
 const decodeSearch = Schema.decodeUnknownOption(SearchArguments);
 
 const snippetOf = (body: string, words: ReadonlyArray<string>) => {
-  const flat = body.replace(/\s+/g, " ").trim();
-  const lower = flat.normalize("NFC").toLocaleLowerCase("und");
-  const hit = Math.min(...words.map((word) => lower.indexOf(word)).filter((at) => at >= 0));
-  const start = Number.isFinite(hit) ? Math.max(0, hit - 60) : 0;
+  const flat = body.normalize("NFC").replace(/\s+/g, " ").trim();
+  const matched = new Set(words);
+  const hit = Array.from(flat.matchAll(/[\p{L}\p{N}]+/gu)).find((token) =>
+    matched.has(token[0].toLocaleLowerCase("und")),
+  )?.index;
+  const start = hit === undefined ? 0 : Math.max(0, hit - 60);
   const cut = flat.slice(start, start + SNIPPET);
   return `${start > 0 ? "…" : ""}${cut}${start + SNIPPET < flat.length ? "…" : ""}`;
 };

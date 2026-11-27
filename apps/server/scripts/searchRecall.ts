@@ -1,7 +1,7 @@
 import * as NodeFS from "node:fs";
 import * as NodePath from "node:path";
 
-import { linkKey } from "@glose/contracts";
+import { linkKey, parseWikilink, WIKILINK } from "@glose/contracts";
 
 import { searchGraph } from "../src/sessions/graphTools.ts";
 import { buildGraphView } from "../src/vault/graphView.ts";
@@ -18,9 +18,10 @@ const files = NodeFS.readdirSync(folder)
 const view = buildGraphView(files);
 const kindOf = new Map(view.nodes.map((node) => [node.id, node.kind]));
 
-const WIKILINK = /!?\[\[([^[\]|#]+)(?:#[^[\]|]*)?(?:\|[^[\]]*)?\]\]/g;
 const withoutLinksTo = (body: string, key: string) =>
-  body.replace(WIKILINK, (whole, target: string) => (linkKey(target.trim()) === key ? "" : whole));
+  body.replace(WIKILINK, (whole: string, inner: string) =>
+    linkKey(parseWikilink(inner).target) === key ? "" : whole,
+  );
 const withoutLinks = (body: string) =>
   body.replace(WIKILINK, "").replace(/^(Related|Se også):.*$/gim, "");
 

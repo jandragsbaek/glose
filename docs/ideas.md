@@ -708,8 +708,8 @@ that smaller first slice.
   English.
 - `node apps/server/scripts/searchRecall.ts [Vault folder]` measures it: it hides each Note's
   Links, searches for the Note, and counts its linked Notes in the top ten. On the demo Vault,
-  from the title: 35.6% → 44.8% of linked Notes (first hit 0.49 → 0.59); from the title and text:
-  45.9% → 60.9% (0.64 → 0.78).
+  from the title: 35.6% → 45.0% of linked Notes (first hit 0.49 → 0.61); from the title and text:
+  45.9% → 60.7% (0.64 → 0.78).
 - Find on the Graph canvas and the Cite and Link slips stay name search: they match part of a
   name while the user types.
 - Left out: a hint at Passage capture (Passages never reach Graph search, and it would slow the

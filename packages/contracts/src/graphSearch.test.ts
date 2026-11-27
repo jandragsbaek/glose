@@ -60,10 +60,13 @@ describe("searchNodes", () => {
   });
 
   it("finds a Danish word inside a compound, below a Note with the word itself", () => {
-    const nodes = [note("Arbejdshukommelsen er lille"), note("Hukommelse styrkes af genkaldelse")];
+    const nodes = [
+      note("Arbejdshukommelse, korttidshukommelse, langtidshukommelse og billedhukommelse"),
+      note("Hukommelse styrkes af genkaldelse"),
+    ];
     assert.deepStrictEqual(found(nodes, "hukommelse"), [
       "Hukommelse styrkes af genkaldelse",
-      "Arbejdshukommelsen er lille",
+      "Arbejdshukommelse, korttidshukommelse, langtidshukommelse og billedhukommelse",
     ]);
   });
 
