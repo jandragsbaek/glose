@@ -4,8 +4,15 @@ import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import * as NodeURL from "node:url";
 
+import { countOption, generateVault } from "./generate-vault.mjs";
+
 const root = NodePath.resolve(NodePath.dirname(NodeURL.fileURLToPath(import.meta.url)), "..");
-const demoDir = NodePath.join(NodeOS.tmpdir(), "glose-demo");
+const nodes = countOption(
+  process.argv,
+  "--nodes",
+  process.argv.includes("--large") ? 10_000 : null,
+);
+const demoDir = NodePath.join(NodeOS.tmpdir(), nodes === null ? "glose-demo" : "glose-demo-large");
 const vaultFolder = NodePath.join(demoDir, "Vault");
 const dataDir = NodePath.join(demoDir, "app-data");
 
@@ -13,6 +20,13 @@ const keep = process.argv.includes("--keep") && NodeFS.existsSync(vaultFolder);
 if (!keep) {
   NodeFS.rmSync(vaultFolder, { recursive: true, force: true });
   NodeFS.cpSync(NodePath.join(root, "demo", "Vault"), vaultFolder, { recursive: true });
+  const written = NodeFS.readdirSync(vaultFolder).filter((entry) => entry.endsWith(".md")).length;
+  if (nodes !== null && nodes > written) {
+    const made = generateVault(vaultFolder, { nodes: nodes - written });
+    console.log(
+      `Generated ${made.sources} Sources, ${made.notes} Notes, ${made.people} People and ${made.passages} Passages`,
+    );
+  }
   NodeFS.mkdirSync(NodePath.join(vaultFolder, ".glose"), { recursive: true });
   NodeFS.writeFileSync(NodePath.join(vaultFolder, ".glose", "settings.json"), "{}");
 }

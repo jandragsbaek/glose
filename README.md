@@ -29,12 +29,19 @@ pnpm install
 pnpm dev            # browser: server on :4310, web on http://localhost:5183
 pnpm dev:desktop    # the same, in an Electron window
 pnpm dev:demo       # the browser app on the demo Vault: 12 Sources, 105 linked Notes
+pnpm dev:demo:large # the demo Vault grown to 10,000 nodes, for performance work
 ```
 
 `pnpm dev:demo` (and `pnpm dev:demo:desktop`) copy `demo/Vault` to the temp folder and give the
 app its own computer settings there, so your own Vault and settings are not touched. Each start
 is a fresh copy; add `-- --keep` to continue with the last one. `demo/Vault` is plain Markdown,
 so it also opens as an Obsidian vault.
+
+`pnpm dev:demo:large` uses its own temp folder. It copies `demo/Vault` and adds generated
+Sources, Notes, People and Passages until the Graph has 10,000 nodes (`-- --nodes 50000` for
+another size). The generated files are not kept in the repo: `scripts/generate-vault.mjs` writes
+them from the word lists in `scripts/sample-words.json`, and the same seed always gives the same
+files. Run it alone to fill any folder: `node scripts/generate-vault.mjs <folder> --nodes 10000`.
 
 The app as it ships, where Electron starts the built server itself:
 
