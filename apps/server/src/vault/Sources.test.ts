@@ -95,6 +95,30 @@ it.layer(NodeServices.layer)("Sources", (it) => {
     ),
   );
 
+  it.effect("lists a Source whose kind is quoted by hand", () =>
+    withVault(({ folder, sources }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* fs.writeFileString(
+          path.join(folder, "Hegel 1807 Phenomenology.md"),
+          "---\n\"glose\" : 'source'\nauthor-family: Hegel\ntitle: Phenomenology\n---\n",
+        );
+        yield* fs.writeFileString(
+          path.join(folder, "Spinoza 1677 Ethics.md"),
+          '---\n{glose: "source", author-family: Spinoza, title: Ethics}\n---\n',
+        );
+
+        const listed = yield* sources.list;
+
+        assert.deepStrictEqual(listed.map((source) => source.id).sort(), [
+          "Hegel 1807 Phenomenology",
+          "Spinoza 1677 Ethics",
+        ]);
+      }),
+    ),
+  );
+
   it.effect("counts a Source without an added date from its file", () =>
     withVault(({ folder, sources }) =>
       Effect.gen(function* () {

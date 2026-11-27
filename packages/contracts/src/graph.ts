@@ -56,7 +56,7 @@ export const parseWikilink = (
   return { target: name, label: alias?.trim() || ref.trim() };
 };
 
-export const linkKey = (name: string): string => name.normalize("NFC").toLocaleLowerCase("und");
+export const linkKey = (name: string): string => name.normalize("NFC").toLowerCase();
 
 export const AI_CALLOUT = /^[ \t]*>[ \t]*\[!ai(-part)?\][-+]?(?:[ \t]+(.*?))?[ \t]*$/i;
 

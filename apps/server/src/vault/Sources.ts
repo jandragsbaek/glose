@@ -20,8 +20,8 @@ import {
   SourceNameTaken,
   SourceNotFound,
   StorageError,
+  fileNameKey,
   isFileName,
-  sameFileName,
   toFileName,
   videoAddress,
   VideoNotFound,
@@ -130,6 +130,8 @@ interface Marked {
 
 const MARKDOWN = ".md";
 
+const MAYBE_SOURCE = /glose["']?\s*:\s*["']?source/;
+
 const NOT_FOUND: PassageEdit = { _tag: "Refused", reason: "not-found" };
 
 const stillThere = (
@@ -167,6 +169,7 @@ export const make = Effect.gen(function* () {
   const readSource = Effect.fn("Sources.readSource")(function* (folder: string, id: string) {
     const file = fileOf(folder, id);
     const markdown = yield* fs.readFileString(file);
+    if (!MAYBE_SOURCE.test(markdown)) return Option.none<Source>();
     const info = yield* fs.stat(file);
     const modified = Option.getOrElse(info.mtime, () => new Date(0)).getTime();
     const created = Option.getOrNull(info.birthtime)?.getTime() ?? 0;
@@ -186,19 +189,20 @@ export const make = Effect.gen(function* () {
     );
   });
 
-  const markdownNames = Effect.fn("Sources.markdownNames")(function* (folder: string) {
-    const entries = (yield* fs.readDirectory(folder)).filter((entry) => entry.endsWith(MARKDOWN));
-    const files = yield* Effect.filter(
-      entries,
-      (entry) =>
-        fs.stat(path.join(folder, entry)).pipe(
-          Effect.map((info) => info.type === "File"),
-          Effect.orElseSucceed(() => false),
-        ),
-      { concurrency: 16 },
+  const isFile = (file: string) =>
+    fs.stat(file).pipe(
+      Effect.map((info) => info.type === "File"),
+      Effect.orElseSucceed(() => false),
     );
-    return files.map((entry) => entry.slice(0, -MARKDOWN.length));
-  });
+
+  const listedSource = (folder: string, id: string) =>
+    readSource(folder, id).pipe(
+      Effect.catch((error) =>
+        isFile(fileOf(folder, id)).pipe(
+          Effect.flatMap((file) => (file ? Effect.fail(error) : Effect.succeed(Option.none()))),
+        ),
+      ),
+    );
 
   const writeSource = Effect.fn("Sources.writeSource")(function* (
     folder: string,
@@ -246,7 +250,8 @@ export const make = Effect.gen(function* () {
         .join(" "),
     );
     const existing = yield* fs.readDirectory(folder).pipe(Effect.mapError(storageError));
-    if (id === "" || existing.some((entry) => sameFileName(entry, `${id}${MARKDOWN}`))) {
+    const wanted = fileNameKey(`${id}${MARKDOWN}`);
+    if (id === "" || existing.some((entry) => fileNameKey(entry) === wanted)) {
       return yield* new SourceNameTaken({ fileName: `${id}${MARKDOWN}` });
     }
     return id;
@@ -278,9 +283,11 @@ export const make = Effect.gen(function* () {
   return Sources.of({
     list: Effect.gen(function* () {
       const folder = yield* vaultFolder;
-      const names = yield* markdownNames(folder).pipe(Effect.mapError(storageError));
-      const sources = yield* Effect.forEach(names, (name) => readSource(folder, name), {
-        concurrency: 8,
+      const names = (yield* fs.readDirectory(folder).pipe(Effect.mapError(storageError)))
+        .filter((entry) => entry.endsWith(MARKDOWN))
+        .map((entry) => entry.slice(0, -MARKDOWN.length));
+      const sources = yield* Effect.forEach(names, (name) => listedSource(folder, name), {
+        concurrency: 16,
       }).pipe(Effect.mapError(storageError));
       return sources
         .flatMap((source) => Option.toArray(source))

@@ -91,10 +91,14 @@ export const make = Effect.gen(function* () {
   const folderOf = (vault: string) => path.join(vault, PASSAGES_FOLDER);
   const fileOf = (vault: string, id: string) => path.join(folderOf(vault), `${id}${MARKDOWN}`);
 
-  const markdownFiles = Effect.fn("Passages.markdownFiles")(function* (folder: string) {
+  const markdownNames = Effect.fn("Passages.markdownNames")(function* (folder: string) {
     if (!(yield* fs.exists(folder))) return [];
     const entries = yield* fs.readDirectory(folder);
-    const names = entries.filter((entry) => entry.endsWith(MARKDOWN) && !entry.startsWith("."));
+    return entries.filter((entry) => entry.endsWith(MARKDOWN) && !entry.startsWith("."));
+  });
+
+  const markdownFiles = Effect.fn("Passages.markdownFiles")(function* (folder: string) {
+    const names = yield* markdownNames(folder);
     return yield* Effect.forEach(
       names,
       (entry) =>
@@ -129,19 +133,29 @@ export const make = Effect.gen(function* () {
     );
   });
 
-  const withUse = (
-    id: string,
-    file: PassageFile,
-    notes: ReadonlyArray<{ readonly id: string; readonly links: ReadonlySet<string> }>,
-  ): BookPassage => ({
+  const withUse = (id: string, file: PassageFile, usedBy: ReadonlyArray<string>): BookPassage => ({
     id,
     source: file.source,
     page: file.page,
     words: file.words,
     yourWords: file.yourWords,
     created: file.created,
-    usedBy: notes.filter((note) => note.links.has(linkKey(id))).map((note) => note.id),
+    usedBy,
   });
+
+  const citedBy = (
+    notes: ReadonlyArray<{ readonly id: string; readonly links: ReadonlySet<string> }>,
+  ) => {
+    const byLink = new Map<string, Array<string>>();
+    for (const note of notes) {
+      for (const link of note.links) {
+        const citing = byLink.get(link);
+        if (citing === undefined) byLink.set(link, [note.id]);
+        else citing.push(note.id);
+      }
+    }
+    return (id: string): ReadonlyArray<string> => byLink.get(linkKey(id)) ?? [];
+  };
 
   const read = Effect.fn("Passages.read")(function* (vault: string, id: string) {
     const notFound = new BookPassageNotFound({ id });
@@ -153,7 +167,8 @@ export const make = Effect.gen(function* () {
     );
     if (parsed === null) return yield* notFound;
     const notes = yield* citingNotes(vault).pipe(Effect.mapError(storageError));
-    return { passage: withUse(id, parsed, notes), file: parsed, notes };
+    const usedBy = notes.filter((note) => note.links.has(linkKey(id))).map((note) => note.id);
+    return { passage: withUse(id, parsed, usedBy), file: parsed, notes };
   });
 
   const freeId = Effect.fn("Passages.freeId")(function* (
@@ -162,7 +177,11 @@ export const make = Effect.gen(function* () {
     page: string | null,
     words: string,
   ) {
-    const taken = new Set((yield* markdownFiles(folderOf(vault))).map(({ id }) => linkKey(id)));
+    const taken = new Set(
+      (yield* markdownNames(folderOf(vault))).map((entry) =>
+        linkKey(entry.slice(0, -MARKDOWN.length)),
+      ),
+    );
     const wordCount = words.split(/\s+/).filter((word) => word !== "").length;
     for (let more = 0; more <= wordCount; more++) {
       const id = passageFileTitle(source, page, words, more);
@@ -179,10 +198,11 @@ export const make = Effect.gen(function* () {
       const source = yield* sources.get(asked);
       const vault = yield* vaultFolder;
       const passages = yield* allPassages(vault).pipe(Effect.mapError(storageError));
-      const notes = yield* citingNotes(vault).pipe(Effect.mapError(storageError));
+      const usedBy = citedBy(yield* citingNotes(vault).pipe(Effect.mapError(storageError)));
+      const sourceKey = linkKey(source.id);
       return passages
-        .filter(({ file }) => linkKey(file.source) === linkKey(source.id))
-        .map(({ id, file, born }) => ({ passage: withUse(id, file, notes), born }))
+        .filter(({ file }) => linkKey(file.source) === sourceKey)
+        .map(({ id, file, born }) => ({ passage: withUse(id, file, usedBy(id)), born }))
         .sort(inPageOrder)
         .map(({ passage }) => passage);
     }),

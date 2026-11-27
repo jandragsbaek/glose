@@ -129,6 +129,38 @@ it.layer(NodeServices.layer)("Notes.save", (it) => {
       ),
   );
 
+  it.effect("renames Links written in another case or accent form", () =>
+    withVault(
+      {
+        "Café ΟΔΟΣ.md": "---\nglose: note\n---\n\nThe old road.\n",
+        "Map.md": "See [[CAFE\u0301 ΟΔΟΣ.md|the road]].\n",
+        "Atlas.md": "See [[café οδος#Old]].\n",
+      },
+      ({ folder, notes }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          yield* notes.save({
+            id: "Café ΟΔΟΣ",
+            title: "New road",
+            aiTitle: false,
+            page: null,
+            body: "The old road.",
+            aiNote: false,
+          });
+
+          assert.strictEqual(
+            yield* fs.readFileString(path.join(folder, "Map.md")),
+            "See [[New road.md|the road]].\n",
+          );
+          assert.strictEqual(
+            yield* fs.readFileString(path.join(folder, "Atlas.md")),
+            "See [[New road#Old]].\n",
+          );
+        }),
+    ),
+  );
+
   it.effect("keeps the AI marks on AI text the user left, corrected or not", () =>
     withVault({ [`${AI_TITLE}.md`]: AI_NOTE }, ({ folder, notes }) =>
       Effect.gen(function* () {

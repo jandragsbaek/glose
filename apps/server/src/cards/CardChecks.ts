@@ -32,7 +32,7 @@ import * as ChatGpt from "../chatgpt/ChatGpt.ts";
 import { Responses } from "../chatgpt/Responses.ts";
 import { askStructured, strictObject } from "../chatgpt/structured.ts";
 import * as ServerConfig from "../config.ts";
-import * as Graph from "../vault/Graph.ts";
+import * as Notes from "../vault/Notes.ts";
 import * as Settings from "../settings/Settings.ts";
 import { writeFileAtomic } from "../storage.ts";
 import * as Cards from "./Cards.ts";
@@ -154,7 +154,7 @@ export const make = Effect.gen(function* () {
   const path = yield* Path.Path;
   const { dataDir } = yield* ServerConfig.ServerConfig;
   const settings = yield* Settings.Settings;
-  const graph = yield* Graph.Graph;
+  const vaultNotes = yield* Notes.Notes;
   const cards = yield* Cards.Cards;
   const chatGpt = yield* ChatGpt.ChatGpt;
   const responses = yield* Responses;
@@ -187,13 +187,14 @@ export const make = Effect.gen(function* () {
     Effect.orElseSucceed((): Language => "en"),
   );
 
-  const noteTexts = graph.read.pipe(
-    Effect.map(
-      (view) =>
-        new Map(view.nodes.map((node) => [linkKey(node.id), { name: node.id, text: node.body }])),
-    ),
-    Effect.orElseSucceed(() => new Map<string, { name: string; text: string }>()),
-  );
+  const noteTexts = (items: ReadonlyArray<JudgeItem>) =>
+    vaultNotes.named(items.flatMap((item) => (item.from === null ? [] : [item.from]))).pipe(
+      Effect.map(
+        (nodes) =>
+          new Map(nodes.map((node) => [linkKey(node.id), { name: node.id, text: node.body }])),
+      ),
+      Effect.orElseSucceed(() => new Map<string, { name: string; text: string }>()),
+    );
 
   const connected = chatGpt.status.pipe(
     Stream.runHead,
@@ -311,7 +312,7 @@ export const make = Effect.gen(function* () {
   const judge = Effect.fn("CardChecks.judge")(
     function* (items: ReadonlyArray<JudgeItem>) {
       const lang = yield* language;
-      const notes = yield* noteTexts;
+      const notes = yield* noteTexts(items);
       const known = yield* loadCache;
       const keys = items.map((item) => keyOf(lang, item, notes));
 
@@ -382,8 +383,9 @@ export const make = Effect.gen(function* () {
 
   return CardChecks.of({
     score: Effect.fn("CardChecks.score")(function* (all) {
+      if (all.length === 0) return [];
       const lang = yield* language;
-      const notes = yield* noteTexts;
+      const notes = yield* noteTexts(all);
       const known = yield* loadCache;
       const now = yield* Clock.currentTimeMillis;
       const canJudge = yield* connected;

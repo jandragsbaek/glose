@@ -2,6 +2,7 @@ import {
   CARDS_FOLDER,
   type CreatePerson,
   personFileTitle,
+  type GraphNode,
   type Growth,
   isPropertyKey,
   localDay,
@@ -13,7 +14,9 @@ import {
   NoteNotFound,
   type SaveNote,
   StorageError,
+  fileNameKey,
   isFileName,
+  linkKey,
   sameFileName,
   toFileName,
 } from "@glose/contracts";
@@ -29,6 +32,7 @@ import * as Semaphore from "effect/Semaphore";
 import * as Settings from "../settings/Settings.ts";
 import { writeFileAtomic } from "../storage.ts";
 import { propertiesOf } from "./frontmatter.ts";
+import { buildGraphView } from "./graphView.ts";
 import {
   editNoteFile,
   type NoteFileContent,
@@ -65,8 +69,13 @@ export class Notes extends Context.Service<
     readonly setProperty: (
       input: SetProperty,
     ) => Effect.Effect<string, NoteNotFound | PropertyRefused | VaultFolderNotSet | StorageError>;
+    readonly named: (
+      names: ReadonlyArray<string>,
+    ) => Effect.Effect<ReadonlyArray<NamedNode>, VaultFolderNotSet | StorageError>;
   }
 >()("glose/vault/Notes") {}
+
+export type NamedNode = Pick<GraphNode, "id" | "kind" | "body">;
 
 const MARKDOWN = ".md";
 
@@ -78,6 +87,8 @@ const field = (values: unknown, key: string): unknown =>
   typeof values === "object" && values !== null
     ? (values as Record<string, unknown>)[key]
     : undefined;
+
+const sigmaFolded = (key: string) => key.replaceAll("ς", "σ");
 
 const frontmatterValues = (markdown: string): unknown => {
   const match = FRONTMATTER.exec(markdown);
@@ -97,16 +108,18 @@ export const make = Effect.gen(function* () {
   ) {
     const entries = yield* fs.readDirectory(folder);
     const files = entries.filter((entry) => entry.endsWith(MARKDOWN) && !entry.startsWith("."));
+    const name = sigmaFolded(linkKey(from));
     yield* Effect.forEach(
       files,
       (entry) =>
         Effect.gen(function* () {
           const file = path.join(folder, entry);
           const markdown = yield* fs.readFileString(file);
+          if (!markdown.includes("[[") || !sigmaFolded(linkKey(markdown)).includes(name)) return;
           const relinked = relinkWikilinks(markdown, from, to);
           if (relinked !== markdown) yield* writeFileAtomic(fs, file, relinked);
         }),
-      { concurrency: 8 },
+      { concurrency: 16 },
     );
   });
 
@@ -116,7 +129,8 @@ export const make = Effect.gen(function* () {
     const name = toFileName(title);
     if (name === "") return yield* new NoteNameTaken({ fileName: title });
     const taken = yield* fs.readDirectory(vaultFolder).pipe(Effect.mapError(storageError));
-    if (taken.some((entry) => sameFileName(entry, `${name}${MARKDOWN}`))) {
+    const wanted = fileNameKey(`${name}${MARKDOWN}`);
+    if (taken.some((entry) => fileNameKey(entry) === wanted)) {
       return yield* new NoteNameTaken({ fileName: name });
     }
     return name;
@@ -180,8 +194,33 @@ export const make = Effect.gen(function* () {
     (effect) => writing.withPermit(effect),
   );
 
+  const named = Effect.fn("Notes.named")(function* (names: ReadonlyArray<string>) {
+    const wanted = new Set(names.map(linkKey));
+    if (wanted.size === 0) return [];
+    const { vaultFolder } = (yield* settings.get).settings;
+    if (vaultFolder === null) return yield* new VaultFolderNotSet();
+    const entries = yield* fs.readDirectory(vaultFolder).pipe(Effect.mapError(storageError));
+    const found = entries.filter(
+      (entry) =>
+        entry.endsWith(MARKDOWN) &&
+        !entry.startsWith(".") &&
+        wanted.has(linkKey(entry.slice(0, -MARKDOWN.length))),
+    );
+    const files = yield* Effect.forEach(
+      found,
+      (entry) =>
+        fs
+          .readFileString(path.join(vaultFolder, entry))
+          .pipe(Effect.map((markdown) => ({ name: entry.slice(0, -MARKDOWN.length), markdown }))),
+      { concurrency: 16 },
+    ).pipe(Effect.mapError(storageError));
+    return buildGraphView(files).nodes.map(({ id, kind, body }): NamedNode => ({ id, kind, body }));
+  });
+
   return Notes.of({
     checkName,
+
+    named,
 
     grow: (id, growth) => setFields(id, { growth }),
 
@@ -228,14 +267,13 @@ export const make = Effect.gen(function* () {
 
         const name = toFileName(title);
         if (name === "") return yield* new NoteNameTaken({ fileName: title });
-        const entries = yield* fs.readDirectory(vaultFolder).pipe(Effect.mapError(storageError));
         const own = `${id}${MARKDOWN}`;
-        if (
-          entries.some(
-            (entry) => sameFileName(entry, `${name}${MARKDOWN}`) && !sameFileName(entry, own),
-          )
-        ) {
-          return yield* new NoteNameTaken({ fileName: name });
+        if (!sameFileName(name, id)) {
+          const entries = yield* fs.readDirectory(vaultFolder).pipe(Effect.mapError(storageError));
+          const wanted = fileNameKey(`${name}${MARKDOWN}`);
+          if (entries.some((entry) => fileNameKey(entry) === wanted)) {
+            return yield* new NoteNameTaken({ fileName: name });
+          }
         }
 
         const person = field(frontmatterValues(markdown), "glose") === "person";
