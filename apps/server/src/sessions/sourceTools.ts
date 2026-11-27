@@ -84,7 +84,7 @@ export const listSources = (all: ReadonlyArray<Source>, words: string | null) =>
 export const listSourcesTool = (sources: Sources.Sources["Service"]): AgentTool => ({
   name: "list_sources",
   entry: "list-sources",
-  description: `List the Sources in the user's Graph, with bibliographic data and reading step, without Free text. Returns at most ${MAX_SOURCES}: without words the most recently changed, with words the Sources whose author, title, year or publisher hold the most of them, whole words before parts of words. total says how many there are; when it is more, look up a Source by its author or title words.`,
+  description: `List the Sources in the user's Graph, with bibliographic data and reading step, without Free text. Returns at most ${MAX_SOURCES}: without words the most recently changed, with words the Sources whose author, title, year or publisher hold the most of them (a whole word counts twice a part of a word). total says how many there are; when it is more, look up a Source by its author or title words.`,
   parameters: {
     type: "object",
     properties: {
