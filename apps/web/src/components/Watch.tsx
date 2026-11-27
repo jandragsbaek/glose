@@ -7,7 +7,7 @@ import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 
 import { type Cue, cueAt, cuesOf, notesWordCount, videoIdOf, youtubeAt } from "../domain/video.ts";
 import { useLanguage, useT } from "../i18n/I18n.tsx";
-import { finishWatchingAtom, writeWatchNotesAtom } from "../state/vault.ts";
+import { finishWatchingAtom, saveFreeTextAtom } from "../state/vault.ts";
 import {
   draftOf,
   finishNotes,
@@ -28,7 +28,7 @@ const modKey = () => (isMac() ? "⌘" : "Ctrl");
 const SAVE_AFTER = 900;
 
 function useNotes(source: Source) {
-  const writeNotes = useAtomSet(writeWatchNotesAtom, { mode: "promiseExit" });
+  const writeNotes = useAtomSet(saveFreeTextAtom, { mode: "promiseExit" });
   const finishWatching = useAtomSet(finishWatchingAtom, { mode: "promiseExit" });
   const [text, setText] = useState(
     () =>

@@ -19,8 +19,10 @@ import {
   deleteSourceAtom,
   sourceFootprintAtom,
   SOURCE_RESET_KEYS,
+  sourceKeys,
   startSourceOverAtom,
 } from "../state/vault.ts";
+import { SESSION_KEYS } from "../state/sessions.ts";
 import { versionsStatusAtom } from "../state/versions.ts";
 import { SheetFoot } from "./Backup.tsx";
 import { forgetPassageDraft } from "./PassageCapture.tsx";
@@ -98,7 +100,7 @@ function StartOverSheet({
     setState("saving");
     const exit = await startOver({
       payload: { id: source.id, start },
-      reactivityKeys: SOURCE_RESET_KEYS,
+      reactivityKeys: [...sourceKeys(source.id), ...SESSION_KEYS.sessions],
     });
     if (Exit.isFailure(exit)) {
       setState("failed");

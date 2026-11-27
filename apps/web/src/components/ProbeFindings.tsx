@@ -10,7 +10,7 @@ import * as Exit from "effect/Exit";
 import { useId, useState } from "react";
 
 import { useT } from "../i18n/I18n.tsx";
-import { advanceReadingAtom, KEYS } from "../state/vault.ts";
+import { advanceReadingAtom, sourceKeys } from "../state/vault.ts";
 import { VerdictIcon } from "./ProbeRows.tsx";
 import { followRow } from "./ProbeWhole.tsx";
 import { Flourish, Notice } from "./ui.tsx";
@@ -54,7 +54,7 @@ export function Findings({
     setBusy(true);
     const exit = await advance({
       payload: { id: source.id, from: "probe" },
-      reactivityKeys: KEYS.sources,
+      reactivityKeys: sourceKeys(source.id),
     });
     setBusy(false);
     setFailed(Exit.isFailure(exit));

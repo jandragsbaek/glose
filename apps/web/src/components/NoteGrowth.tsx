@@ -11,7 +11,7 @@ import { useState } from "react";
 
 import { type GraphIndex, growthEvidence } from "../graph/graphIndex.ts";
 import { useT } from "../i18n/I18n.tsx";
-import { growNoteAtom, KEYS, tendNoteAtom } from "../state/vault.ts";
+import { growNoteAtom, nodeKeys, tendNoteAtom } from "../state/vault.ts";
 
 export function NoteGrowth({
   node,
@@ -50,7 +50,7 @@ export function NoteGrowth({
             disabled={busy}
             onClick={() =>
               run(() =>
-                grow({ payload: { id: node.id, growth: next }, reactivityKeys: KEYS.sources }),
+                grow({ payload: { id: node.id, growth: next }, reactivityKeys: nodeKeys(node) }),
               )
             }
           >
@@ -66,7 +66,7 @@ export function NoteGrowth({
           disabled={busy}
           title={g.tendHelp}
           onClick={() =>
-            run(() => tend({ payload: { id: node.id }, reactivityKeys: KEYS.sources }))
+            run(() => tend({ payload: { id: node.id }, reactivityKeys: nodeKeys(node) }))
           }
         >
           {g.tend}

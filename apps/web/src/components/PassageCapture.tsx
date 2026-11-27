@@ -13,7 +13,6 @@ import {
 } from "../domain/passages.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { createPassageAtom } from "../state/passages.ts";
-import { KEYS } from "../state/vault.ts";
 import { IS_MAC } from "./Session.tsx";
 
 const draftKey = (source: string) => `glose.passage-draft.${source}`;
@@ -72,13 +71,10 @@ export function PassageCapture({
     const kept = { words, mine };
     setBusy(true);
     const exit = await create({
-      payload: {
-        source: source.id,
-        page: page.trim() === "" ? null : page.trim(),
-        words: words.trim(),
-        yourWords: mine.trim(),
-      },
-      reactivityKeys: KEYS.sources,
+      source: source.id,
+      page: page.trim() === "" ? null : page.trim(),
+      words: words.trim(),
+      yourWords: mine.trim(),
     });
     setBusy(false);
     setFailed(Exit.isFailure(exit));

@@ -16,7 +16,7 @@ import {
   sessionAtom,
   writePointAtom,
 } from "../state/sessions.ts";
-import { KEYS } from "../state/vault.ts";
+import { TEXT_KEYS } from "../state/vault.ts";
 import { AiText } from "./NoteText.tsx";
 import { pointsOf, SessionProblem, useChatGptReady } from "./Session.tsx";
 import { Notice } from "./ui.tsx";
@@ -136,7 +136,7 @@ export function PassageNote({
         page: page.trim() === "" ? null : page.trim(),
         links: added,
       },
-      reactivityKeys: KEYS.sources,
+      reactivityKeys: TEXT_KEYS,
     });
     setBusy(false);
     if (Exit.isSuccess(exit)) {

@@ -162,7 +162,10 @@ export function AddBook({
     setFailure(null);
     setBusy(true);
     onSaving(true);
-    const exit = await createSource({ payload: details, reactivityKeys: KEYS.sources });
+    const exit = await createSource({
+      payload: details,
+      reactivityKeys: [...KEYS.sources, ...KEYS.graph],
+    });
     setBusy(false);
     onSaving(false);
     if (Exit.isSuccess(exit)) {

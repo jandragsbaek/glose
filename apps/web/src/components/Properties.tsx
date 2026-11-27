@@ -16,7 +16,7 @@ import { type KeyboardEvent, useId, useRef, useState } from "react";
 import type { GraphIndex } from "../graph/graphIndex.ts";
 import { KIND_ICONS, type Save, splitItems, vaultKeys } from "../graph/propertyKeys.ts";
 import { useT } from "../i18n/I18n.tsx";
-import { KEYS, setPropertyAtom } from "../state/vault.ts";
+import { nodeKeys, setPropertyAtom } from "../state/vault.ts";
 import { AddProperty } from "./AddProperty.tsx";
 import { NodeLink } from "./GraphLists.tsx";
 
@@ -43,7 +43,7 @@ export function Properties({
     const saved = saves.then(async () => {
       const exit = await set({
         payload: { id: node.id, key, value },
-        reactivityKeys: KEYS.sources,
+        reactivityKeys: nodeKeys(node),
       });
       if (Exit.isFailure(exit)) setFailed(key);
       return Exit.isSuccess(exit);

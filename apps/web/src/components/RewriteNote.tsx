@@ -1,5 +1,5 @@
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { type GraphNode, linkKey, type Source } from "@glose/contracts";
+import { type GraphNode, linkKey, type Source, toFileName } from "@glose/contracts";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as Cause from "effect/Cause";
 import * as Exit from "effect/Exit";
@@ -19,7 +19,7 @@ import {
 import { type AiScope, parseNoteText } from "../graph/noteText.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { CARD_KEYS, cardsAtom } from "../state/cards.ts";
-import { KEYS, saveNoteAtom } from "../state/vault.ts";
+import { noteTextKeys, saveNoteAtom } from "../state/vault.ts";
 import { AiText, NoteText, type WikilinkPart } from "./NoteText.tsx";
 import { CallNumber, Panel } from "./ui.tsx";
 
@@ -134,7 +134,7 @@ export function RewriteNote({
         body,
         aiNote,
       },
-      reactivityKeys: [...KEYS.sources, ...CARD_KEYS.cards],
+      reactivityKeys: [...noteTextKeys(toFileName(finalTitle) !== node.id), ...CARD_KEYS.cards],
     });
     setBusy(false);
     if (Exit.isSuccess(exit)) {

@@ -11,7 +11,7 @@ import { Check, TriangleAlert, X } from "lucide-react";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 
 import { useT } from "../i18n/I18n.tsx";
-import { KEYS, removePassageAtom, saveFreeTextAtom, setPassageWordsAtom } from "../state/vault.ts";
+import { removePassageAtom, saveFreeTextAtom, setPassageWordsAtom } from "../state/vault.ts";
 import { addPassagePointAtom, SESSION_KEYS } from "../state/sessions.ts";
 import { NeedsChatGpt } from "./Session.tsx";
 import { Deeper } from "./Deeper.tsx";
@@ -129,10 +129,7 @@ export function Notebook({
   const hintId = useId();
   const saveFreeText = useAtomSet(saveFreeTextAtom, { mode: "promiseExit" });
   const save = async (freeText: string) => {
-    const exit = await saveFreeText({
-      payload: { id: source.id, freeText, finish: false },
-      reactivityKeys: KEYS.sources,
-    });
+    const exit = await saveFreeText({ id: source.id, freeText, finish: false });
     if (Exit.isSuccess(exit)) onSaved();
     return Exit.isSuccess(exit);
   };

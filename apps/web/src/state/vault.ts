@@ -10,12 +10,18 @@ import * as Atom from "effect/reactivity/Atom";
 import * as Reactivity from "effect/reactivity/Reactivity";
 
 import { GloseClient } from "../rpc/client.ts";
+import { KEYS, passageKeys, sourceKeys, TEXT_KEYS, writeThenRefresh } from "./keys.ts";
 import { SESSION_KEYS } from "./sessions.ts";
 
-export const KEYS = {
-  settings: ["settings"],
-  sources: ["sources"],
-} as const;
+export {
+  KEYS,
+  nodeKeys,
+  noteTextKeys,
+  passageKeys,
+  sourceKeys,
+  TEXT_KEYS,
+  useSourcePageRefresh,
+} from "./keys.ts";
 
 export const settingsAtom = GloseClient.query(RPC_METHODS.settingsGet, undefined, {
   reactivityKeys: KEYS.settings,
@@ -26,17 +32,33 @@ export const sourcesAtom = GloseClient.query(RPC_METHODS.sourcesList, undefined,
 });
 
 export const graphAtom = GloseClient.query(RPC_METHODS.graphRead, undefined, {
-  reactivityKeys: KEYS.sources,
+  reactivityKeys: KEYS.graph,
 });
 
 export const sourceAtom = Atom.family((id: string) =>
-  GloseClient.query(RPC_METHODS.sourcesGet, { id }, { reactivityKeys: KEYS.sources }),
+  GloseClient.query(RPC_METHODS.sourcesGet, { id }, { reactivityKeys: { source: [id] } }),
 );
 
-export const SOURCE_RESET_KEYS = [...KEYS.sources, ...SESSION_KEYS.sessions];
+export const SOURCE_RESET_KEYS = [
+  ...KEYS.sources,
+  "source",
+  ...TEXT_KEYS,
+  ...SESSION_KEYS.sessions,
+];
 
 export const sourceFootprintAtom = Atom.family((id: string) =>
-  GloseClient.query(RPC_METHODS.sourcesFootprint, { id }, { reactivityKeys: SOURCE_RESET_KEYS }),
+  GloseClient.query(
+    RPC_METHODS.sourcesFootprint,
+    { id },
+    {
+      reactivityKeys: [
+        ...KEYS.graph,
+        ...sourceKeys(id),
+        ...passageKeys(id),
+        ...SESSION_KEYS.sessions,
+      ],
+    },
+  ),
 );
 
 export const startSourceOverAtom = GloseClient.mutation(RPC_METHODS.sourcesStartOver);
@@ -45,7 +67,15 @@ export const deleteSourceAtom = GloseClient.mutation(RPC_METHODS.sourcesDelete);
 export const setLanguageAtom = GloseClient.mutation(RPC_METHODS.settingsSetLanguage);
 export const checkRemoteAtom = GloseClient.mutation(RPC_METHODS.setupCheckRemote);
 export const createSourceAtom = GloseClient.mutation(RPC_METHODS.sourcesCreate);
-export const saveFreeTextAtom = GloseClient.mutation(RPC_METHODS.sourcesSaveFreeText);
+export const saveFreeTextAtom = GloseClient.runtime.fn<typeof SaveFreeText.Type>()(
+  Effect.fnUntraced(function* (payload) {
+    const client = yield* GloseClient;
+    return yield* writeThenRefresh(client(RPC_METHODS.sourcesSaveFreeText, payload), [
+      ...sourceKeys(payload.id),
+      ...TEXT_KEYS,
+    ]);
+  }),
+);
 export const chooseStartAtom = GloseClient.mutation(RPC_METHODS.sourcesChooseStart);
 export const saveNoteAtom = GloseClient.mutation(RPC_METHODS.notesSave);
 export const growNoteAtom = GloseClient.mutation(RPC_METHODS.notesGrow);
@@ -54,27 +84,20 @@ export const setPropertyAtom = GloseClient.mutation(RPC_METHODS.graphSetProperty
 export const createPersonAtom = GloseClient.mutation(RPC_METHODS.peopleCreate);
 export const advanceReadingAtom = GloseClient.mutation(RPC_METHODS.sourcesAdvance);
 
-export const writeWatchNotesAtom = GloseClient.runtime.fn<typeof SaveFreeText.Type>()(
-  Effect.fnUntraced(function* (payload) {
-    const client = yield* GloseClient;
-    return yield* Reactivity.mutation(
-      client(RPC_METHODS.sourcesSaveFreeText, payload),
-      KEYS.sources,
-    );
-  }),
-);
-
 export const savePersonWordsAtom = GloseClient.runtime.fn<typeof SaveNote.Type>()(
   Effect.fnUntraced(function* (payload) {
     const client = yield* GloseClient;
-    return yield* Reactivity.mutation(client(RPC_METHODS.notesSave, payload), KEYS.sources);
+    return yield* Reactivity.mutation(client(RPC_METHODS.notesSave, payload), TEXT_KEYS);
   }),
 );
 
 export const finishWatchingAtom = GloseClient.runtime.fn<typeof AdvanceReading.Type>()(
   Effect.fnUntraced(function* (payload) {
     const client = yield* GloseClient;
-    return yield* Reactivity.mutation(client(RPC_METHODS.sourcesAdvance, payload), KEYS.sources);
+    return yield* Reactivity.mutation(
+      client(RPC_METHODS.sourcesAdvance, payload),
+      sourceKeys(payload.id),
+    );
   }),
 );
 

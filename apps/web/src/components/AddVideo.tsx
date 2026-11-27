@@ -193,7 +193,7 @@ export function AddVideo({
     setFailure(null);
     setBusy(true);
     onSaving(true);
-    const exit = await addVideo({ payload, reactivityKeys: KEYS.sources });
+    const exit = await addVideo({ payload, reactivityKeys: [...KEYS.sources, ...KEYS.graph] });
     setBusy(false);
     onSaving(false);
     if (Exit.isSuccess(exit)) {
