@@ -689,6 +689,10 @@ Decided, a Vault from GitHub at first start (November 2026):
   of clearly sample content.
   `demo/Course export (sample)` holds five sample lesson files to try Add Source → Course lessons. It runs on a copy in the temp folder with its
   own computer settings, so the user's Vault and settings stay untouched.
+- `pnpm dev:demo:large` grows the demo Vault to 10,000 nodes for performance work: about 400
+  generated Sources, 9,400 Notes, 110 People and 1,600 Passages, with Links clustered by Source
+  and topic and a few hub Notes. `scripts/generate-vault.mjs` writes them from a seed, so the
+  repo keeps no generated files.
 
 ## Decided, Graph search (November 2026)
 

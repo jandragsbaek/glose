@@ -1,0 +1,558 @@
+{
+  "topics": [
+    {
+      "topic": "memory",
+      "nouns": [
+        "working memory",
+        "long-term memory",
+        "recall",
+        "forgetting",
+        "retrieval cues",
+        "rehearsal",
+        "recognition",
+        "encoding",
+        "sleep",
+        "context"
+      ]
+    },
+    {
+      "topic": "learning",
+      "nouns": [
+        "spaced practice",
+        "interleaving",
+        "feedback",
+        "testing",
+        "rereading",
+        "worked examples",
+        "transfer",
+        "mastery",
+        "errors",
+        "curiosity"
+      ]
+    },
+    {
+      "topic": "attention",
+      "nouns": [
+        "focus",
+        "distraction",
+        "boredom",
+        "multitasking",
+        "deep work",
+        "notifications",
+        "silence",
+        "fatigue",
+        "routine",
+        "single-tasking"
+      ]
+    },
+    {
+      "topic": "habits",
+      "nouns": [
+        "cues",
+        "rewards",
+        "streaks",
+        "willpower",
+        "environment",
+        "identity",
+        "friction",
+        "routines",
+        "small wins",
+        "relapse"
+      ]
+    },
+    {
+      "topic": "writing",
+      "nouns": [
+        "drafts",
+        "revision",
+        "clarity",
+        "voice",
+        "outlines",
+        "sentences",
+        "paragraphs",
+        "editing",
+        "readers",
+        "deadlines"
+      ]
+    },
+    {
+      "topic": "note-taking",
+      "nouns": [
+        "permanent notes",
+        "fleeting notes",
+        "links",
+        "indexes",
+        "own words",
+        "excerpts",
+        "structure",
+        "tags",
+        "folders",
+        "rereading notes"
+      ]
+    },
+    {
+      "topic": "judgment",
+      "nouns": [
+        "intuition",
+        "bias",
+        "anchoring",
+        "base rates",
+        "confidence",
+        "noise",
+        "forecasts",
+        "hindsight",
+        "framing",
+        "expertise"
+      ]
+    },
+    {
+      "topic": "motivation",
+      "nouns": [
+        "autonomy",
+        "competence",
+        "purpose",
+        "flow",
+        "goals",
+        "praise",
+        "pressure",
+        "play",
+        "progress",
+        "meaning"
+      ]
+    },
+    {
+      "topic": "reading",
+      "nouns": [
+        "skimming",
+        "close reading",
+        "margins",
+        "difficult books",
+        "summaries",
+        "questions",
+        "slow reading",
+        "reading lists",
+        "translation",
+        "rereading"
+      ]
+    },
+    {
+      "topic": "work",
+      "nouns": [
+        "meetings",
+        "email",
+        "craft",
+        "leisure",
+        "labor",
+        "careers",
+        "teams",
+        "rest",
+        "overwork",
+        "status"
+      ]
+    },
+    {
+      "topic": "creativity",
+      "nouns": [
+        "constraints",
+        "incubation",
+        "originality",
+        "copying",
+        "taste",
+        "experiments",
+        "failure",
+        "collaboration",
+        "solitude",
+        "ideas"
+      ]
+    },
+    {
+      "topic": "teaching",
+      "nouns": [
+        "explanation",
+        "examples",
+        "lectures",
+        "questions in class",
+        "grading",
+        "practice problems",
+        "demonstration",
+        "misconceptions",
+        "dialogue",
+        "patience"
+      ]
+    },
+    {
+      "topic": "self",
+      "nouns": [
+        "despair",
+        "choice",
+        "freedom",
+        "faith",
+        "anxiety",
+        "authenticity",
+        "possibility",
+        "necessity",
+        "the past",
+        "character"
+      ]
+    },
+    {
+      "topic": "action",
+      "nouns": [
+        "promises",
+        "forgiveness",
+        "plurality",
+        "speech",
+        "beginnings",
+        "power",
+        "stories",
+        "the public realm",
+        "politics",
+        "natality"
+      ]
+    },
+    {
+      "topic": "happiness",
+      "nouns": [
+        "pleasure",
+        "enjoyment",
+        "comfort",
+        "gratitude",
+        "money",
+        "friendship",
+        "health",
+        "comparison",
+        "expectations",
+        "contentment"
+      ]
+    },
+    {
+      "topic": "technology",
+      "nouns": [
+        "smartphones",
+        "social media",
+        "search engines",
+        "automation",
+        "algorithms",
+        "screens",
+        "tools",
+        "software",
+        "the internet",
+        "artificial intelligence"
+      ]
+    },
+    {
+      "topic": "landscape",
+      "nouns": [
+        "the farm",
+        "the hills",
+        "weather",
+        "drought",
+        "animals",
+        "the river",
+        "the seasons",
+        "the soil",
+        "the horizon",
+        "distance"
+      ]
+    },
+    {
+      "topic": "memoir",
+      "nouns": [
+        "memory of place",
+        "loss",
+        "home",
+        "exile",
+        "childhood",
+        "storytelling",
+        "nostalgia",
+        "honesty",
+        "the narrator",
+        "endings"
+      ]
+    },
+    {
+      "topic": "decisions",
+      "nouns": [
+        "options",
+        "regret",
+        "defaults",
+        "uncertainty",
+        "trade-offs",
+        "deliberation",
+        "commitment",
+        "risk",
+        "information",
+        "deadlines for choice"
+      ]
+    },
+    {
+      "topic": "science",
+      "nouns": [
+        "hypotheses",
+        "evidence",
+        "replication",
+        "models",
+        "measurement",
+        "theories",
+        "observation",
+        "peer review",
+        "statistics",
+        "anomalies"
+      ]
+    },
+    {
+      "topic": "language",
+      "nouns": [
+        "words",
+        "grammar",
+        "metaphor",
+        "translation work",
+        "dialects",
+        "silence in speech",
+        "naming",
+        "jargon",
+        "plain language",
+        "rhetoric"
+      ]
+    },
+    {
+      "topic": "design",
+      "nouns": [
+        "simplicity",
+        "affordances",
+        "user errors",
+        "defaults in design",
+        "prototypes",
+        "feedback loops",
+        "consistency",
+        "visibility",
+        "mental models",
+        "complexity"
+      ]
+    },
+    {
+      "topic": "health",
+      "nouns": [
+        "exercise",
+        "nutrition",
+        "stress",
+        "breathing",
+        "walking",
+        "posture",
+        "recovery",
+        "illness",
+        "routines of care",
+        "rest days"
+      ]
+    },
+    {
+      "topic": "community",
+      "nouns": [
+        "trust",
+        "belonging",
+        "neighbours",
+        "rituals",
+        "conflict",
+        "hospitality",
+        "tradition",
+        "strangers",
+        "shared meals",
+        "mutual aid"
+      ]
+    }
+  ],
+  "predicates": [
+    "shapes",
+    "depends on",
+    "weakens",
+    "strengthens",
+    "predicts",
+    "hides",
+    "explains",
+    "competes with",
+    "grows out of",
+    "makes room for",
+    "slows",
+    "speeds up",
+    "is a form of",
+    "is not the same as",
+    "limits",
+    "protects",
+    "feeds",
+    "undermines",
+    "replaces",
+    "reveals",
+    "follows from",
+    "needs",
+    "outlasts",
+    "distorts",
+    "sharpens",
+    "softens",
+    "frames",
+    "anchors",
+    "rewards",
+    "costs more than",
+    "points to",
+    "comes before",
+    "turns into",
+    "mirrors",
+    "blocks",
+    "opens the way to"
+  ],
+  "openings": [
+    "The claim is simple: {a} {p} {b}.",
+    "I keep seeing the same pattern: {a} {p} {b}, even when nobody plans it.",
+    "At first I took {b} for the cause, but the author argues that {a} {p} {b}.",
+    "This is easy to miss in daily life. {A} {p} {b}, and the effect builds slowly.",
+    "The evidence here is mixed, but the main line holds: {a} {p} {b}."
+  ],
+  "middles": [
+    "It ties in with what I wrote about {link}.",
+    "Compare it with {link}, which points in the same direction.",
+    "If this is right, then {link} needs a second look.",
+    "A good test case is {link}: the two only make sense together.",
+    "I first noticed it while reading about {c}, and {link} says the same in other words.",
+    "Not everyone agrees. {link} pulls the other way.",
+    "This is why {link} matters so much in practice."
+  ],
+  "fillers": [
+    "The point is not to judge {c}, but to see what follows from {c}.",
+    "In my own work this shows up whenever I let {d} crowd out {c}.",
+    "The author gives three examples, all about {c}, and each is a little weaker than the last.",
+    "What I do not know yet is how this works without {d}.",
+    "There is a quiet assumption here about {c}. I want to check it against another source.",
+    "The best version of this idea is also the plainest: watch what happens to {d}.",
+    "Most of the time we notice {c} only when it is too late.",
+    "I would like to try this on a small scale first, with {d}, before I trust it.",
+    "Over a longer stretch of time the effect on {c} looks different, and more interesting.",
+    "One way to say it in my own words: starting with {c} is cheap, and keeping it up is not."
+  ],
+  "book-titles": [
+    "On {X}",
+    "The Art of {X}",
+    "{X} and {Y}",
+    "A Short Guide to {X}",
+    "Why {X} Matters",
+    "The Problem of {X}",
+    "Thinking about {X}",
+    "{X} in Everyday Life",
+    "Notes on {X}",
+    "The Hidden Life of {X}",
+    "A History of {X}",
+    "Beyond {X}",
+    "Making Sense of {X}"
+  ],
+  "families": [
+    "Andersen",
+    "Baker",
+    "Berg",
+    "Carter",
+    "Dahl",
+    "Eriksen",
+    "Fischer",
+    "Garcia",
+    "Hansen",
+    "Holm",
+    "Ibsen",
+    "Jensen",
+    "Keller",
+    "Larsen",
+    "Lund",
+    "Madsen",
+    "Meyer",
+    "Nielsen",
+    "Novak",
+    "Olsen",
+    "Park",
+    "Pedersen",
+    "Quinn",
+    "Rasmussen",
+    "Reed",
+    "Schmidt",
+    "Sato",
+    "Thomsen",
+    "Ueda",
+    "Vogel",
+    "Walsh",
+    "Weber",
+    "Xu",
+    "Young",
+    "Zimmer",
+    "Bloom",
+    "Frost",
+    "Hale",
+    "Kahn",
+    "Lowe",
+    "Moss",
+    "Nash",
+    "Ortiz",
+    "Price",
+    "Rowe",
+    "Shaw",
+    "Stone",
+    "Tate",
+    "Vance",
+    "Wolfe"
+  ],
+  "givens": [
+    "Anna",
+    "Ben",
+    "Clara",
+    "David",
+    "Emma",
+    "Frederik",
+    "Grace",
+    "Henrik",
+    "Ida",
+    "Jonas",
+    "Karen",
+    "Lars",
+    "Maria",
+    "Niels",
+    "Olivia",
+    "Peter",
+    "Rosa",
+    "Sofie",
+    "Thomas",
+    "Ulla",
+    "Victor",
+    "Wilma",
+    "Yusuf",
+    "Zara",
+    "Aiko",
+    "Bruno",
+    "Camille",
+    "Diego",
+    "Elif",
+    "Farah"
+  ],
+  "publishers": [
+    "Sample House",
+    "Example Press",
+    "Placeholder Books",
+    "Demo University Press",
+    "Generated & Co."
+  ],
+  "reading-steps": [
+    ["done", 50],
+    ["extraction", 15],
+    ["passages", 15],
+    ["read", 10],
+    ["probe", 10]
+  ],
+  "growths": [
+    ["seed", 50],
+    ["sprout", 30],
+    ["sapling", 15],
+    ["tree", 5]
+  ],
+  "link-counts": [
+    [0, 5],
+    [1, 15],
+    [2, 30],
+    [3, 25],
+    [4, 15],
+    [6, 7],
+    [10, 3]
+  ]
+}
