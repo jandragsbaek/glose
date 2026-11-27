@@ -5,6 +5,7 @@ export * from "./chatgpt.ts";
 export * from "./desktop.ts";
 export * from "./github.ts";
 export * from "./graph.ts";
+export * from "./graphSearch.ts";
 export * from "./growth.ts";
 export * from "./properties.ts";
 export * from "./probe.ts";

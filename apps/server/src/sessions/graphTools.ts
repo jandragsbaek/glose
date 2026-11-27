@@ -1,4 +1,4 @@
-import { type GraphNode, linkKey } from "@glose/contracts";
+import { type GraphNode, linkKey, searchNodes } from "@glose/contracts";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
@@ -15,41 +15,25 @@ const SearchArguments = Schema.Struct({ query: Schema.String });
 const decodeReadNote = Schema.decodeUnknownOption(ReadNoteArguments);
 const decodeSearch = Schema.decodeUnknownOption(SearchArguments);
 
-const words = (text: string) =>
-  Array.from(new Set(text.toLocaleLowerCase("und").match(/[\p{L}\p{N}]{3,}/gu) ?? []));
-
-const snippetOf = (body: string, terms: ReadonlyArray<string>) => {
+const snippetOf = (body: string, words: ReadonlyArray<string>) => {
   const flat = body.replace(/\s+/g, " ").trim();
-  const lower = flat.toLocaleLowerCase("und");
-  const hit = Math.min(...terms.map((term) => lower.indexOf(term)).filter((at) => at >= 0));
+  const lower = flat.normalize("NFC").toLocaleLowerCase("und");
+  const hit = Math.min(...words.map((word) => lower.indexOf(word)).filter((at) => at >= 0));
   const start = Number.isFinite(hit) ? Math.max(0, hit - 60) : 0;
   const cut = flat.slice(start, start + SNIPPET);
   return `${start > 0 ? "…" : ""}${cut}${start + SNIPPET < flat.length ? "…" : ""}`;
 };
 
 export const searchGraph = (nodes: ReadonlyArray<GraphNode>, query: string) => {
-  const terms = words(query);
-  if (terms.length === 0) return [];
   const titles = new Map(nodes.map((node) => [node.id, node.title]));
-  return nodes
-    .map((node) => {
-      const title = node.title.toLocaleLowerCase("und");
-      const body = node.body.toLocaleLowerCase("und");
-      const score = terms.reduce(
-        (sum, term) => sum + (title.includes(term) ? 3 : 0) + (body.includes(term) ? 1 : 0),
-        0,
-      );
-      return { node, score };
-    })
-    .filter(({ score }) => score > 0)
-    .sort((a, b) => b.score - a.score || a.node.id.localeCompare(b.node.id, "en"))
+  return searchNodes(nodes, query)
     .slice(0, MAX_MATCHES)
-    .map(({ node }) => ({
+    .map(({ node, matchedBodyWords }) => ({
       name: node.id,
       kind: node.kind,
       ...(node.kind === "source" ? { title: node.title } : {}),
       source: node.sourceId === null ? null : (titles.get(node.sourceId) ?? null),
-      snippet: snippetOf(node.body, terms),
+      snippet: snippetOf(node.body, matchedBodyWords),
     }));
 };
 
@@ -58,7 +42,7 @@ const graphFailed = { error: "The Graph could not be read." };
 export const searchGraphTool = (graph: Graph.Graph["Service"]): AgentTool => ({
   name: "search_graph",
   entry: "search-graph",
-  description: `Search the user's Graph (every Note and Source) for words. Returns up to ${MAX_MATCHES} matches with a snippet each. Search more than once, with other words, to find related Notes.`,
+  description: `Search the user's Graph (every Note and Source) for words. Returns up to ${MAX_MATCHES} matches, best first, with a snippet each. It finds whole words and their forms (habit, habits), not synonyms: search more than once, with other words, and in both Danish and English, to find related Notes.`,
   parameters: {
     type: "object",
     properties: { query: { type: "string", description: "A few words to look for." } },
