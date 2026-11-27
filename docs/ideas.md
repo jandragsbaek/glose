@@ -690,6 +690,37 @@ Decided, a Vault from GitHub at first start (November 2026):
   `demo/Course export (sample)` holds five sample lesson files to try Add Source → Course lessons. It runs on a copy in the temp folder with its
   own computer settings, so the user's Vault and settings stay untouched.
 
+## Decided, Graph search (November 2026)
+
+Jan asked whether techniques from RAG could make the Graph easier to search and show how Notes
+relate, also while he makes Notes and Passages. A council (Claude Opus 5.5 5/10, GPT 6.2 Sol 6/10,
+Muse Wonder Full 1.0 6/10) reviewed a first plan without an AI model and cut it down; Jan chose
+that smaller first slice.
+
+- `search_graph`, the AI's search of the Graph (Extraction, the Probe, Find Links), ranks with
+  BM25: a rare word counts more than a common one, a word in the title counts three times a word
+  in the text, and only whole words match. English and Danish stop words are left out. A Note
+  carries no language, so each word gets a light English and a light Danish stem: "habits" finds
+  "habit", "vanerne" finds "vane". A word inside a longer word counts a little, so "hukommelse"
+  still finds "arbejdshukommelsen". The code is `searchNodes` in `@glose/contracts`, with no new
+  package; it reads the Graph at each search and stores nothing.
+- The tool tells the AI that it finds forms of a word, not synonyms, and to search in Danish and
+  English.
+- `node apps/server/scripts/searchRecall.ts [Vault folder]` measures it: it hides each Note's
+  Links, searches for the Note, and counts its linked Notes in the top ten. On the demo Vault,
+  from the title: 35.6% → 45.0% of linked Notes (first hit 0.49 → 0.61); from the title and text:
+  45.9% → 60.7% (0.64 → 0.78).
+- Find on the Graph canvas and the Cite and Link slips stay name search: they match part of a
+  name while the user types.
+- Left out: a hint at Passage capture (Passages never reach Graph search, and it would slow the
+  capture loop), "Notes for this paragraph" on the desk, Notes two Links away, and an index file.
+- Open, for Jan to design: "Related through Links" in a Note's panel (at least two shared Notes,
+  the reason in words, perhaps "From the same Source"), Find Links in a new Note without ChatGPT,
+  and a "Notes with similar words" line on a new Note.
+- Next, only if needed: finding Notes by meaning with a model on the computer (the ChatGPT plan
+  gives no embeddings). It comes when the measurement on a real Vault shows that search misses
+  Notes that say the same thing in other words or in the other language.
+
 ## References in writing
 
 Correct references are a key part of the writing section. The tool will be used for university work, where references must be correct.
