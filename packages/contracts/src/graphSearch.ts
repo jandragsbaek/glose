@@ -25,10 +25,11 @@ const STOP_WORDS = new Set([...ENGLISH_STOP_WORDS, ...DANISH_STOP_WORDS].join(" 
 
 const MARKUP = /\[!ai(?:-part)?\][-+]?|\[\^[^\]\s]*\]/giu;
 
+export const withoutSearchMarkup = (text: string): string => text.replace(MARKUP, " ");
+
 const tokens = (text: string): ReadonlyArray<string> =>
   (
-    text
-      .replace(MARKUP, " ")
+    withoutSearchMarkup(text)
       .normalize("NFC")
       .toLocaleLowerCase("und")
       .match(/[\p{L}\p{N}]+/gu) ?? []

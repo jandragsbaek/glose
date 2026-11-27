@@ -1,4 +1,4 @@
-import { type GraphNode, linkKey, searchNodes } from "@glose/contracts";
+import { type GraphNode, linkKey, searchNodes, withoutSearchMarkup } from "@glose/contracts";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
@@ -16,7 +16,7 @@ const decodeReadNote = Schema.decodeUnknownOption(ReadNoteArguments);
 const decodeSearch = Schema.decodeUnknownOption(SearchArguments);
 
 const snippetOf = (body: string, words: ReadonlyArray<string>) => {
-  const flat = body.normalize("NFC").replace(/\s+/g, " ").trim();
+  const flat = withoutSearchMarkup(body).normalize("NFC").replace(/\s+/g, " ").trim();
   const matched = new Set(words);
   const hit = Array.from(flat.matchAll(/[\p{L}\p{N}]+/gu)).find((token) =>
     matched.has(token[0].toLocaleLowerCase("und")),
