@@ -16,6 +16,7 @@ import {
   sessionAtom,
   writePointAtom,
 } from "../state/sessions.ts";
+import { TEXT_KEYS } from "../state/vault.ts";
 import { AiText } from "./NoteText.tsx";
 import { pointsOf, SessionProblem, useChatGptReady } from "./Session.tsx";
 import { Notice } from "./ui.tsx";
@@ -126,13 +127,16 @@ export function PassageNote({
       return;
     }
     const exit = await write({
-      id: made.session,
-      point: made.point,
-      title: title.trim(),
-      text,
-      aiText,
-      page: page.trim() === "" ? null : page.trim(),
-      links: added,
+      payload: {
+        id: made.session,
+        point: made.point,
+        title: title.trim(),
+        text,
+        aiText,
+        page: page.trim() === "" ? null : page.trim(),
+        links: added,
+      },
+      reactivityKeys: TEXT_KEYS,
     });
     setBusy(false);
     if (Exit.isSuccess(exit)) {

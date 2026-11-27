@@ -174,7 +174,6 @@ function PassageEdit({
     setBusy(true);
     const exit = await update({
       source,
-      cited: passage.usedBy.length > 0,
       payload: {
         id: passage.id,
         page: page.trim() === "" ? null : page.trim(),

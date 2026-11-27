@@ -1,11 +1,10 @@
-import { RPC_METHODS, type WritePoint } from "@glose/contracts";
+import { RPC_METHODS } from "@glose/contracts";
 import * as Effect from "effect/Effect";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as Atom from "effect/reactivity/Atom";
 import * as Stream from "effect/Stream";
 
 import { GloseClient } from "../rpc/client.ts";
-import { TEXT_KEYS, writeThenRefresh } from "./keys.ts";
 
 export const SESSION_KEYS = { sessions: ["sessions"] } as const;
 
@@ -58,12 +57,7 @@ export const keepPointAtom = GloseClient.mutation(RPC_METHODS.sessionsKeepPoint)
 export const dropPointAtom = GloseClient.mutation(RPC_METHODS.sessionsDropPoint);
 export const restorePointAtom = GloseClient.mutation(RPC_METHODS.sessionsRestorePoint);
 export const addPointAtom = GloseClient.mutation(RPC_METHODS.sessionsAddPoint);
-export const writePointAtom = GloseClient.runtime.fn<typeof WritePoint.Type>()(
-  Effect.fnUntraced(function* (payload) {
-    const client = yield* GloseClient;
-    return yield* writeThenRefresh(client(RPC_METHODS.sessionsWritePoint, payload), TEXT_KEYS);
-  }),
-);
+export const writePointAtom = GloseClient.mutation(RPC_METHODS.sessionsWritePoint);
 export const answerProbeAtom = GloseClient.mutation(RPC_METHODS.sessionsAnswerProbe);
 export const askHintAtom = GloseClient.mutation(RPC_METHODS.sessionsAskHint);
 export const finishProbeAtom = GloseClient.mutation(RPC_METHODS.sessionsFinishProbe);

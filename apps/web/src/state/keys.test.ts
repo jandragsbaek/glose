@@ -75,10 +75,15 @@ describe("refresh keys", () => {
     Effect.gen(function* () {
       const refreshed = yield* watchQueries;
       const close = openSourcePage();
+      const writing = yield* Deferred.make<void>();
       const saved = yield* Deferred.make<void>();
       const write = yield* Effect.forkChild(
-        writeThenRefresh(Deferred.await(saved), sourceKeys("a")),
+        writeThenRefresh(
+          Effect.andThen(Deferred.succeed(writing, undefined), Deferred.await(saved)),
+          sourceKeys("a"),
+        ),
       );
+      yield* Deferred.await(writing);
       close();
       assert.deepStrictEqual(refreshed(), []);
       yield* Deferred.succeed(saved, undefined);

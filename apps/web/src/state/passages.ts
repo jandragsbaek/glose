@@ -6,6 +6,7 @@ import {
 } from "@glose/contracts";
 import * as Effect from "effect/Effect";
 import * as Atom from "effect/reactivity/Atom";
+import * as Reactivity from "effect/reactivity/Reactivity";
 
 import { GloseClient } from "../rpc/client.ts";
 import { KEYS, passageKeys, writeThenRefresh } from "./keys.ts";
@@ -30,15 +31,16 @@ export const createPassageAtom = GloseClient.runtime.fn<typeof CreateBookPassage
 
 export const updatePassageAtom = GloseClient.runtime.fn<{
   readonly source: string;
-  readonly cited: boolean;
   readonly payload: typeof UpdateBookPassage.Type;
 }>()(
-  Effect.fnUntraced(function* ({ source, cited, payload }) {
+  Effect.fnUntraced(function* ({ source, payload }) {
     const client = yield* GloseClient;
-    return yield* writeThenRefresh(client(RPC_METHODS.passagesUpdate, payload), [
+    const passage = yield* client(RPC_METHODS.passagesUpdate, payload);
+    yield* Reactivity.invalidate([
       ...passageKeys(source),
-      ...(cited ? KEYS.graph : []),
+      ...(passage.usedBy.length > 0 ? KEYS.graph : []),
     ]);
+    return passage;
   }),
 );
 
