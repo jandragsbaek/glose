@@ -8,7 +8,6 @@ import {
   type Point,
   type PointLink,
   type SessionEntry,
-  type Source,
   youtubeId,
 } from "@glose/contracts";
 import * as Effect from "effect/Effect";
@@ -23,6 +22,7 @@ import { articleOf, readArticleTool } from "./articleTools.ts";
 import { readNoteTool, searchGraphTool } from "./graphTools.ts";
 import { passageWith, readPassagesTool } from "./passageTools.ts";
 import { findInNotes, findQuote } from "./quotes.ts";
+import { describeSource, listSourcesTool } from "./sourceTools.ts";
 
 const NO_ARGUMENTS = {
   type: "object",
@@ -82,24 +82,6 @@ export const decisionsMessage = (decisions: ReadonlyArray<string>): InputItem =>
 });
 
 export const numberOf = (point: Pick<Point, "id">): number => Number(point.id.slice(1));
-
-const describe = (source: Source) => ({
-  id: source.id,
-  kind: source.kind,
-  author: { family: source.familyName, given: source.givenName },
-  otherAuthors: source.otherAuthors,
-  title: source.title,
-  appearedIn: source.container,
-  published: source.published,
-  lesson: source.part,
-  firstPublished: source.firstPublished,
-  edition: source.edition,
-  editionYear: source.editionYear,
-  publisher: source.publisher,
-  translator: source.translator,
-  readingStep: source.readingStep,
-  readingStart: source.readingStart,
-});
 
 export type ProposedPoint = Omit<Point, "id" | "state" | "note">;
 
@@ -205,7 +187,7 @@ export const tools = ({
       run: () =>
         sources.get(source).pipe(
           Effect.map((found) => ({
-            ...describe(found),
+            ...describeSource(found),
             freeText:
               found.kind === "video"
                 ? plainStamps(found.freeText, youtubeId(found.url ?? ""))
@@ -214,18 +196,7 @@ export const tools = ({
           Effect.orElseSucceed(() => ({ error: "The Source could not be read." })),
         ),
     },
-    {
-      name: "list_sources",
-      entry: "list-sources",
-      description:
-        "List every Source in the user's Graph, with bibliographic data and reading step, without Free text.",
-      parameters: NO_ARGUMENTS,
-      run: () =>
-        sources.list.pipe(
-          Effect.map((all) => ({ sources: all.map(describe) })),
-          Effect.orElseSucceed(() => ({ error: "The Sources could not be read." })),
-        ),
-    },
+    listSourcesTool(sources),
     searchGraphTool(graph),
     readNoteTool(graph),
     readArticleTool(sources, source),
