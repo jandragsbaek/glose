@@ -5,7 +5,8 @@ import {
   postFileName,
   referenceToken,
   type ResolvedReference,
-  resolveReferences,
+  resolveWith,
+  unresolvedReferences,
   type WritingProject,
   type WritingReview,
 } from "@glose/contracts";
@@ -16,7 +17,7 @@ import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { TriangleAlert } from "lucide-react";
 import { useId, useRef, useState } from "react";
 
-import { hugWord, proseWords, referenceLead } from "../domain/writing.ts";
+import { graphReferences, hugWord, proseWords, referenceLead } from "../domain/writing.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { graphAtom, settingsAtom, sourcesAtom } from "../state/vault.ts";
 import { publishWritingAtom, reviewWritingAtom, WRITING_KEYS } from "../state/writing.ts";
@@ -126,7 +127,9 @@ export function WritingDesk({
   const publishWriting = useAtomSet(publishWritingAtom, { mode: "promiseExit" });
 
   const nodes = graph?.nodes ?? [];
-  const references = resolveReferences(fields.body, nodes, sources ?? []);
+  const lookup = graph === null || sources === null ? null : graphReferences(graph.nodes, sources);
+  const references =
+    lookup === null ? unresolvedReferences(fields.body) : resolveWith(fields.body, lookup);
   const flagged = flaggedKeys(
     references
       .filter((reference) => reference.problems.length > 0)
@@ -437,6 +440,7 @@ export function WritingDesk({
               ) : (
                 <Checks
                   references={references}
+                  resolved={lookup !== null}
                   claims={claims.length}
                   reviewed={shown !== null && reviewedBody === fields.body}
                   onFix={(reference) => {

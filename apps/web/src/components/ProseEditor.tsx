@@ -338,8 +338,10 @@ export function ProseEditor({
       const editor = view.current;
       const node = host.current;
       if (editor === null || node === null) return null;
-      const coords = editor.coordsAtPos(Math.min(pos, editor.state.doc.length));
-      return coords === null ? null : coords.top - node.getBoundingClientRect().top;
+      const at = Math.min(pos, editor.state.doc.length);
+      const coords = editor.coordsAtPos(at);
+      const top = coords?.top ?? editor.documentTop + editor.lineBlockAt(at).top;
+      return top - node.getBoundingClientRect().top;
     },
     focusedCaret: () => {
       const editor = view.current;

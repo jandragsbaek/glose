@@ -10,6 +10,7 @@ import {
   referenceToken,
   resolveReferences,
   shortCitation,
+  unresolvedReferences,
 } from "./writing.ts";
 
 const NEWPORT: CitedSource = {
@@ -57,6 +58,32 @@ describe("findReferences", () => {
         ["Plain", null],
       ],
     );
+  });
+});
+
+describe("unresolvedReferences", () => {
+  it("numbers the References as written and flags none, before the Notes and Sources arrive", () => {
+    const body = "Busy “quote” [[Busyness is a proxy for productivity]]{p. 64}, and [[Nowhere]].";
+    assert.deepStrictEqual(
+      unresolvedReferences(body).map(({ number, target, page, quote, problems }) => ({
+        number,
+        target,
+        page,
+        quote,
+        problems,
+      })),
+      [
+        {
+          number: 1,
+          target: "Busyness is a proxy for productivity",
+          page: "64",
+          quote: "quote",
+          problems: [],
+        },
+        { number: 2, target: "Nowhere", page: null, quote: null, problems: [] },
+      ],
+    );
+    assert.deepStrictEqual(problems("[[Nowhere]]"), ["not-found"]);
   });
 });
 

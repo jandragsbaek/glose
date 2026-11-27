@@ -2,7 +2,7 @@ import { type GraphNode, linkKey, type Source } from "@glose/contracts";
 import { Search } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 
-import { noteExcerpt, rankOf } from "../domain/writing.ts";
+import { byText, noteExcerpt, rankOf, slipIndex } from "../domain/writing.ts";
 import { useT } from "../i18n/I18n.tsx";
 import { CallNumber } from "./ui.tsx";
 import { isMac } from "./WritingDeskBar.tsx";
@@ -38,33 +38,25 @@ export function LinkSlip({
   const [query, setQuery] = useState(initialQuery);
   const [active, setActive] = useState<string | null>(null);
 
-  const sourceById = new Map(sources.map((source) => [linkKey(source.id), source]));
-  const sourceOf = (node: GraphNode) =>
-    sourceById.get(linkKey(node.kind === "source" ? node.id : (node.sourceId ?? ""))) ?? null;
   const words = query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
-  const matches = nodes
-    .flatMap((node) => {
-      if (linkKey(node.id) === linkKey(self)) return [];
-      const source = sourceOf(node);
-      const about =
-        source === null ? "" : `${source.givenName ?? ""} ${source.familyName} ${source.title}`;
-      const rank = rankOf(
-        words,
-        `${node.id} ${node.title}`.toLocaleLowerCase(),
-        about.toLocaleLowerCase(),
-        node.body.toLocaleLowerCase(),
-      );
-      return rank === null ? [] : [{ node, source, rank }];
+  const selfKey = linkKey(self);
+  const { entries } = slipIndex(nodes, sources);
+  const matches = entries
+    .flatMap((entry) => {
+      if (entry.key === selfKey) return [];
+      const rank = rankOf(words, entry);
+      return rank === null ? [] : [{ node: entry.node, source: entry.source, rank }];
     })
     .sort(
       (a, b) =>
         a.rank - b.rank ||
         KIND_ORDER[a.node.kind] - KIND_ORDER[b.node.kind] ||
-        a.node.title.localeCompare(b.node.title),
+        byText(a.node.title, b.node.title),
     )
     .slice(0, MAX_MATCHES);
   const typed = query.trim();
-  const named = nodes.some((node) => linkKey(node.id) === linkKey(typed));
+  const typedKey = linkKey(typed);
+  const named = entries.some((entry) => entry.key === typedKey);
   const options: ReadonlyArray<Choice> = [
     ...matches.map((match) => ({ ...match, id: match.node.id })),
     ...(typed === "" || named ? [] : [{ id: typed, node: null, source: null }]),

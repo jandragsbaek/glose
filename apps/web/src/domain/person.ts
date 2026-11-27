@@ -43,6 +43,30 @@ const byYear = (a: Source, b: Source) =>
   (a.firstPublished ?? Number.POSITIVE_INFINITY) - (b.firstPublished ?? Number.POSITIVE_INFINITY) ||
   a.title.localeCompare(b.title);
 
+const byTitle = (a: GraphNode, b: GraphNode) => a.title.localeCompare(b.title);
+
+const notesBySource = (
+  view: GraphView,
+  wanted: ReadonlySet<string> | null,
+): ReadonlyMap<string, ReadonlyArray<GraphNode>> => {
+  const notes = new Map<string, Array<GraphNode>>();
+  for (const node of view.nodes) {
+    if (node.kind !== "note" || node.sourceId === null) continue;
+    if (wanted !== null && !wanted.has(node.sourceId)) continue;
+    const list = notes.get(node.sourceId);
+    if (list === undefined) notes.set(node.sourceId, [node]);
+    else list.push(node);
+  }
+  for (const list of notes.values()) list.sort(byTitle);
+  return notes;
+};
+
+const worksIn = (
+  theirs: ReadonlyArray<Source>,
+  notes: ReadonlyMap<string, ReadonlyArray<GraphNode>>,
+): ReadonlyArray<Work> =>
+  [...theirs].sort(byYear).map((source) => ({ source, notes: notes.get(source.id) ?? [] }));
+
 export const worksOf = (
   person: GraphNode,
   sources: ReadonlyArray<Source>,
@@ -50,15 +74,8 @@ export const worksOf = (
 ): ReadonlyArray<Work> => {
   const name = person.person;
   if (name === undefined) return [];
-  return sources
-    .filter((source) => isTheirs(name, source))
-    .sort(byYear)
-    .map((source) => ({
-      source,
-      notes: view.nodes
-        .filter((node) => node.kind === "note" && node.sourceId === source.id)
-        .sort((a, b) => a.title.localeCompare(b.title)),
-    }));
+  const theirs = sources.filter((source) => isTheirs(name, source));
+  return worksIn(theirs, notesBySource(view, new Set(theirs.map((source) => source.id))));
 };
 
 export const firstChoice = (works: ReadonlyArray<Work>): Work | null =>
@@ -91,6 +108,38 @@ const ownerOf = (works: ReadonlyArray<Work>): ReadonlyMap<string, string> =>
 
 const SELF = "\u0000self";
 
+interface Other {
+  readonly node: GraphNode;
+  readonly works: ReadonlyArray<Work>;
+  direct: boolean;
+  readonly meet: Map<string, Map<string, number>>;
+  readonly naming: Map<string, Set<string>>;
+}
+
+const nameKey = (name: string) => linkKey(name.trim());
+
+const sourcesByPerson = (
+  people: ReadonlyArray<GraphNode>,
+  sources: ReadonlyArray<Source>,
+): ReadonlyArray<ReadonlyArray<Source>> => {
+  const byFamily = new Map<string, Array<{ source: Source; given: string | null }>>();
+  for (const source of sources) {
+    const family = nameKey(source.familyName);
+    const given = source.givenName === null ? null : nameKey(source.givenName);
+    const list = byFamily.get(family);
+    if (list === undefined) byFamily.set(family, [{ source, given }]);
+    else list.push({ source, given });
+  }
+  return people.map((other) => {
+    const name = other.person;
+    if (name === undefined) return [];
+    const given = name.given === null ? null : nameKey(name.given);
+    return (byFamily.get(nameKey(name.family)) ?? [])
+      .filter((one) => given === null || one.given === null || one.given === given)
+      .map((one) => one.source);
+  });
+};
+
 export const linkedPeople = (
   person: GraphNode,
   works: ReadonlyArray<Work>,
@@ -99,35 +148,53 @@ export const linkedPeople = (
 ): ReadonlyArray<LinkedPerson> => {
   const mine = ownerOf(works);
   const titles = new Map(sources.map((source) => [source.id, source.title]));
-  return peopleIn(view)
-    .filter((other) => other.id !== person.id)
-    .flatMap((other): ReadonlyArray<LinkedPerson> => {
-      const theirWorks = worksOf(other, sources, view);
-      const theirs = new Map([...ownerOf(theirWorks), [other.id, SELF]]);
-      const direct = view.links.some(
-        (link) =>
-          (link.from === person.id && link.to === other.id) ||
-          (link.from === other.id && link.to === person.id),
-      );
-      const meet = new Map<string, Map<string, number>>();
-      const naming = new Map<string, Set<string>>();
-      for (const link of view.links) {
-        const pairs = [
-          [link.from, theirs.get(link.to), true],
-          [link.to, theirs.get(link.from), false],
-        ] as const;
-        for (const [id, their, outgoing] of pairs) {
-          const work = mine.get(id);
-          if (work === undefined || their === undefined || (their === SELF && !outgoing)) continue;
-          const counts = meet.get(work) ?? new Map<string, number>();
-          if (their === SELF) naming.set(work, (naming.get(work) ?? new Set()).add(id));
-          else counts.set(their, (counts.get(their) ?? 0) + 1);
-          meet.set(work, counts);
-        }
+  const people = peopleIn(view).filter((other) => other.id !== person.id);
+  const theirSources = sourcesByPerson(people, sources);
+  const notes = notesBySource(view, new Set(theirSources.flat().map((source) => source.id)));
+  const others = people.map((node, at): Other => ({
+    node,
+    works: worksIn(theirSources[at] ?? [], notes),
+    direct: false,
+    meet: new Map(),
+    naming: new Map(),
+  }));
+  const owners = new Map<string, Array<{ readonly other: Other; readonly their: string }>>();
+  const byId = new Map<string, Array<Other>>();
+  for (const other of others) {
+    byId.set(other.node.id, [...(byId.get(other.node.id) ?? []), other]);
+    for (const [id, their] of new Map([...ownerOf(other.works), [other.node.id, SELF]])) {
+      const list = owners.get(id);
+      if (list === undefined) owners.set(id, [{ other, their }]);
+      else list.push({ other, their });
+    }
+  }
+  const count = (other: Other, work: string, id: string, their: string) => {
+    const counts = other.meet.get(work) ?? new Map<string, number>();
+    if (their === SELF) other.naming.set(work, (other.naming.get(work) ?? new Set()).add(id));
+    else counts.set(their, (counts.get(their) ?? 0) + 1);
+    other.meet.set(work, counts);
+  };
+  for (const link of view.links) {
+    if (link.from === person.id) for (const other of byId.get(link.to) ?? []) other.direct = true;
+    if (link.to === person.id) for (const other of byId.get(link.from) ?? []) other.direct = true;
+    const fromWork = mine.get(link.from);
+    if (fromWork !== undefined) {
+      for (const { other, their } of owners.get(link.to) ?? []) {
+        count(other, fromWork, link.from, their);
       }
-      if (!direct && meet.size === 0) return [];
+    }
+    const toWork = mine.get(link.to);
+    if (toWork !== undefined) {
+      for (const { other, their } of owners.get(link.from) ?? []) {
+        if (their !== SELF) count(other, toWork, link.to, their);
+      }
+    }
+  }
+  return others
+    .flatMap((other): ReadonlyArray<LinkedPerson> => {
+      if (!other.direct && other.meet.size === 0) return [];
       const meetings = works.flatMap((work): ReadonlyArray<Meeting> => {
-        const counts = meet.get(work.source.id);
+        const counts = other.meet.get(work.source.id);
         if (counts === undefined) return [];
         const toWorks = Array.from(counts);
         return [
@@ -135,15 +202,17 @@ export const linkedPeople = (
             work: work.source.id,
             theirs: toWorks.map(([id]) => titles.get(id) ?? id),
             links: toWorks.reduce((sum, [, n]) => sum + n, 0),
-            named: naming.get(work.source.id)?.size ?? 0,
+            named: other.naming.get(work.source.id)?.size ?? 0,
           },
         ];
       });
       return [
         {
-          node: other,
-          reason: sentenceLinking(person.body, other.id) ?? sentenceLinking(other.body, person.id),
-          works: theirWorks.map((work) => work.source),
+          node: other.node,
+          reason:
+            sentenceLinking(person.body, other.node.id) ??
+            sentenceLinking(other.node.body, person.id),
+          works: other.works.map((work) => work.source),
           meetings,
         },
       ];

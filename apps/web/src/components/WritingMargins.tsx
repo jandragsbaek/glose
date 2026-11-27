@@ -10,6 +10,16 @@ import { CallNumber } from "./ui.tsx";
 
 const MARGIN_GAP = 12;
 
+interface Plan {
+  readonly margin: HTMLElement;
+  readonly items: ReadonlyArray<HTMLElement>;
+  readonly placed: ReadonlyArray<{
+    readonly item: HTMLElement;
+    readonly top: number;
+    readonly height: number;
+  }> | null;
+}
+
 export function useMarginPlacement(editor: RefObject<ProseHandle | null>, mode: "write" | "proof") {
   const leftMargin = useRef<HTMLDivElement | null>(null);
   const rightMargin = useRef<HTMLDivElement | null>(null);
@@ -19,26 +29,38 @@ export function useMarginPlacement(editor: RefObject<ProseHandle | null>, mode: 
     const box = editorBox.current;
     const handle = editor.current;
     if (box === null || handle === null) return;
-    for (const margin of [leftMargin.current, rightMargin.current]) {
-      if (margin === null) continue;
-      const items = Array.from(margin.querySelectorAll<HTMLElement>("[data-pos]"));
-      const first = items[0];
-      const wide =
-        mode === "write" && first !== undefined && getComputedStyle(first).position === "absolute";
-      if (!wide) {
+    const plans = [leftMargin.current, rightMargin.current].flatMap(
+      (margin): ReadonlyArray<Plan> => {
+        if (margin === null) return [];
+        const items = Array.from(margin.querySelectorAll<HTMLElement>("[data-pos]"));
+        const first = items[0];
+        const wide =
+          mode === "write" &&
+          first !== undefined &&
+          getComputedStyle(first).position === "absolute";
+        if (!wide) return [{ margin, items, placed: null }];
+        const offset = box.getBoundingClientRect().top - margin.getBoundingClientRect().top;
+        const placed = items
+          .map((item) => ({
+            item,
+            top: (handle.topOf(Number(item.dataset.pos)) ?? 0) + offset,
+            height: item.offsetHeight,
+          }))
+          .sort((a, b) => a.top - b.top);
+        return [{ margin, items, placed }];
+      },
+    );
+    for (const { margin, items, placed } of plans) {
+      if (placed === null) {
         for (const item of items) item.style.top = "";
         margin.style.minHeight = "";
         continue;
       }
-      const offset = box.getBoundingClientRect().top - margin.getBoundingClientRect().top;
       let floor = 0;
-      const placed = items
-        .map((item) => ({ item, top: (handle.topOf(Number(item.dataset.pos)) ?? 0) + offset }))
-        .sort((a, b) => a.top - b.top);
-      for (const { item, top } of placed) {
+      for (const { item, top, height } of placed) {
         const at = Math.max(top, floor);
         item.style.top = `${at}px`;
-        floor = at + item.offsetHeight + MARGIN_GAP;
+        floor = at + height + MARGIN_GAP;
       }
       margin.style.minHeight = `${floor}px`;
     }
@@ -262,12 +284,14 @@ function FlagAction({
 
 export function Checks({
   references,
+  resolved,
   claims,
   reviewed,
   onFix,
   onAsk,
 }: {
   readonly references: ReadonlyArray<ResolvedReference>;
+  readonly resolved: boolean;
   readonly claims: number;
   readonly reviewed: boolean;
   readonly onFix: (reference: ResolvedReference) => void;
@@ -284,7 +308,7 @@ export function Checks({
       </h2>
       {references.length === 0 ? (
         <p className="checks__line">{t.writing.checkNone}</p>
-      ) : (
+      ) : !resolved ? null : (
         <p className="checks__line checks__line--ok">
           <Check className="checks__icon" aria-hidden="true" />
           <span>
@@ -315,7 +339,8 @@ export function Checks({
           <strong>{t.writing.checkClaims(claims)}</strong>
         </p>
       )}
-      {quotes.length > 0 &&
+      {resolved &&
+      quotes.length > 0 &&
       quotes.every((reference) => !reference.problems.includes("quote-mismatch")) ? (
         <p className="checks__line checks__line--ok">
           <Check className="checks__icon" aria-hidden="true" />

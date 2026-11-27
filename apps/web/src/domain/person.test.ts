@@ -159,6 +159,55 @@ describe("linkedPeople", () => {
       ],
     );
   });
+  it("counts the Links of People who share a Source, and of a Person's own Notes", () => {
+    const anns = source("Elsewhere", "Newport", "Ann", 2001);
+    const view: GraphView = {
+      nodes: [
+        NEWPORT,
+        person("Newports", " newport ", null),
+        person("Ann Newport", "Newport", "Ann"),
+        CSIKSZENTMIHALYI,
+        note("Deep work is rare", "Deep Work"),
+        note("Ann's note", "Elsewhere"),
+        note("Flow needs clear goals", "Flow"),
+      ],
+      links: [
+        { from: "Deep work is rare", to: "Ann's note" },
+        { from: "Deep work is rare", to: "Ann's note" },
+        { from: "Deep work is rare", to: "Deep work is rare" },
+        { from: "Flow needs clear goals", to: "Deep Work" },
+        { from: "Mihaly Csikszentmihalyi", to: "Deep work is rare" },
+        { from: "Deep work is rare", to: "Ann Newport" },
+      ],
+    };
+    const sources = [DEEP_WORK, anns, FLOW];
+    const people = linkedPeople(NEWPORT, worksOf(NEWPORT, sources, view), sources, view);
+
+    assert.deepStrictEqual(
+      people.map(({ node, works, meetings }) => ({
+        id: node.id,
+        works: works.map((one) => one.id),
+        meetings,
+      })),
+      [
+        {
+          id: "Ann Newport",
+          works: ["Elsewhere"],
+          meetings: [{ work: "Deep Work", theirs: ["Elsewhere"], links: 2, named: 1 }],
+        },
+        {
+          id: "Mihaly Csikszentmihalyi",
+          works: ["Flow"],
+          meetings: [{ work: "Deep Work", theirs: ["Flow"], links: 1, named: 0 }],
+        },
+        {
+          id: "Newports",
+          works: ["Elsewhere", "Deep Work"],
+          meetings: [{ work: "Deep Work", theirs: ["Elsewhere", "Deep Work"], links: 4, named: 0 }],
+        },
+      ],
+    );
+  });
 });
 
 describe("sentenceLinking", () => {

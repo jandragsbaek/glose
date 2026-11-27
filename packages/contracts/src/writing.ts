@@ -219,13 +219,42 @@ export const quoteBefore = (body: string, start: number): string | null => {
   return match[1] ?? match[2] ?? match[3] ?? match[4] ?? null;
 };
 
+type CitableNode = Pick<GraphNode, "id" | "kind" | "sourceId" | "body" | "page">;
+
+export interface ReferenceLookup {
+  readonly nodeByKey: ReadonlyMap<string, CitableNode>;
+  readonly sourceByKey: ReadonlyMap<string, CitedSource>;
+}
+
+export const referenceLookup = (
+  nodes: ReadonlyArray<CitableNode>,
+  sources: ReadonlyArray<CitedSource>,
+): ReferenceLookup => ({
+  nodeByKey: new Map(nodes.map((node) => [linkKey(node.id), node])),
+  sourceByKey: new Map(sources.map((source) => [linkKey(source.id), source])),
+});
+
 export const resolveReferences = (
   body: string,
-  nodes: ReadonlyArray<Pick<GraphNode, "id" | "kind" | "sourceId" | "body" | "page">>,
+  nodes: ReadonlyArray<CitableNode>,
   sources: ReadonlyArray<CitedSource>,
+): ReadonlyArray<ResolvedReference> => resolveWith(body, referenceLookup(nodes, sources));
+
+export const unresolvedReferences = (body: string): ReadonlyArray<ResolvedReference> =>
+  findReferences(body).map((token, index) => ({
+    ...token,
+    number: index + 1,
+    noteId: null,
+    source: null,
+    page: token.location,
+    quote: quoteBefore(body, token.start),
+    problems: [],
+  }));
+
+export const resolveWith = (
+  body: string,
+  { nodeByKey, sourceByKey }: ReferenceLookup,
 ): ReadonlyArray<ResolvedReference> => {
-  const nodeByKey = new Map(nodes.map((node) => [linkKey(node.id), node]));
-  const sourceByKey = new Map(sources.map((source) => [linkKey(source.id), source]));
   return findReferences(body).map((token, index) => {
     const node = nodeByKey.get(linkKey(token.target));
     const directSource = sourceByKey.get(linkKey(token.target)) ?? null;
