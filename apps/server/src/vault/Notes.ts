@@ -268,7 +268,7 @@ export const make = Effect.gen(function* () {
         const name = toFileName(title);
         if (name === "") return yield* new NoteNameTaken({ fileName: title });
         const own = `${id}${MARKDOWN}`;
-        if (!sameFileName(name, id)) {
+        if (!sameFileName(`${name}${MARKDOWN}`, own)) {
           const entries = yield* fs.readDirectory(vaultFolder).pipe(Effect.mapError(storageError));
           const wanted = fileNameKey(`${name}${MARKDOWN}`);
           if (entries.some((entry) => fileNameKey(entry) === wanted)) {

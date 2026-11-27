@@ -95,7 +95,7 @@ it.layer(NodeServices.layer)("Sources", (it) => {
     ),
   );
 
-  it.effect("lists a Source whose kind is quoted by hand", () =>
+  it.effect("lists a Source whose kind is written by hand in another YAML form", () =>
     withVault(({ folder, sources }) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -103,6 +103,10 @@ it.layer(NodeServices.layer)("Sources", (it) => {
         yield* fs.writeFileString(
           path.join(folder, "Hegel 1807 Phenomenology.md"),
           "---\n\"glose\" : 'source'\nauthor-family: Hegel\ntitle: Phenomenology\n---\n",
+        );
+        yield* fs.writeFileString(
+          path.join(folder, "Kant 1781 Critique.md"),
+          "---\nglose: >-\n  source\nauthor-family: Kant\ntitle: Critique\n---\n",
         );
         yield* fs.writeFileString(
           path.join(folder, "Spinoza 1677 Ethics.md"),
@@ -113,6 +117,7 @@ it.layer(NodeServices.layer)("Sources", (it) => {
 
         assert.deepStrictEqual(listed.map((source) => source.id).sort(), [
           "Hegel 1807 Phenomenology",
+          "Kant 1781 Critique",
           "Spinoza 1677 Ethics",
         ]);
       }),

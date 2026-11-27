@@ -209,6 +209,28 @@ it.layer(NodeServices.layer)("Notes.save", (it) => {
     ),
   );
 
+  it.effect("refuses a title whose file name differs only where a final sigma folds", () =>
+    withVault({ "ΟΔΟΣ.md": "Upper.\n", "οδος.md": "Lower.\n" }, ({ folder, notes }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const error = yield* notes
+          .save({
+            id: "ΟΔΟΣ",
+            title: "οδος",
+            aiTitle: false,
+            page: null,
+            body: "Upper.",
+            aiNote: false,
+          })
+          .pipe(Effect.flip);
+
+        assert.strictEqual(error._tag, "NoteNameTaken");
+        assert.strictEqual(yield* fs.readFileString(path.join(folder, "οδος.md")), "Lower.\n");
+      }),
+    ),
+  );
+
   it.effect("changes the case of a title in place", () =>
     withVault({ [`${AI_TITLE}.md`]: AI_NOTE }, ({ folder, notes }) =>
       Effect.gen(function* () {

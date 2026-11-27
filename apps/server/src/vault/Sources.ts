@@ -44,6 +44,7 @@ import { writeKeepingFields } from "./frontmatter.ts";
 import { lessonVideos } from "./lessonVideos.ts";
 import { sourceEnds } from "./sourceEnds.ts";
 import {
+  FRONTMATTER,
   parseSourceFile,
   renderSourceFile,
   SOURCE_FIELDS,
@@ -130,7 +131,14 @@ interface Marked {
 
 const MARKDOWN = ".md";
 
-const MAYBE_SOURCE = /glose["']?\s*:\s*["']?source/;
+const PLAIN_KIND = /^glose:[ \t]*([\w-]+)[ \t]*$/m;
+
+const cannotBeSource = (markdown: string): boolean => {
+  const frontmatter = FRONTMATTER.exec(markdown)?.[1];
+  if (frontmatter === undefined || !frontmatter.includes("glose")) return true;
+  const kind = PLAIN_KIND.exec(frontmatter)?.[1];
+  return kind !== undefined && kind !== "source";
+};
 
 const NOT_FOUND: PassageEdit = { _tag: "Refused", reason: "not-found" };
 
@@ -169,7 +177,7 @@ export const make = Effect.gen(function* () {
   const readSource = Effect.fn("Sources.readSource")(function* (folder: string, id: string) {
     const file = fileOf(folder, id);
     const markdown = yield* fs.readFileString(file);
-    if (!MAYBE_SOURCE.test(markdown)) return Option.none<Source>();
+    if (cannotBeSource(markdown)) return Option.none<Source>();
     const info = yield* fs.stat(file);
     const modified = Option.getOrElse(info.mtime, () => new Date(0)).getTime();
     const created = Option.getOrNull(info.birthtime)?.getTime() ?? 0;
