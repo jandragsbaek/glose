@@ -228,7 +228,9 @@ export const slipIndex = (
   sources: ReadonlyArray<Source>,
 ): SlipIndex => {
   const kept = slipIndexes.get(nodes);
-  if (kept !== undefined && kept.sources === sources) return kept.index;
+  const sameSources = (a: ReadonlyArray<Source>) =>
+    a === sources || (a.length === 0 && sources.length === 0);
+  if (kept !== undefined && sameSources(kept.sources)) return kept.index;
   const sourceByKey = new Map(sources.map((source) => [linkKey(source.id), source]));
   const sourceOf = (node: GraphNode) =>
     node.kind === "source"

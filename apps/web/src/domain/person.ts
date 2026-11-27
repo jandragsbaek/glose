@@ -47,12 +47,12 @@ const byTitle = (a: GraphNode, b: GraphNode) => a.title.localeCompare(b.title);
 
 const notesBySource = (
   view: GraphView,
-  wanted: ReadonlySet<string> | null,
+  wanted: ReadonlySet<string>,
 ): ReadonlyMap<string, ReadonlyArray<GraphNode>> => {
   const notes = new Map<string, Array<GraphNode>>();
+  if (wanted.size === 0) return notes;
   for (const node of view.nodes) {
-    if (node.kind !== "note" || node.sourceId === null) continue;
-    if (wanted !== null && !wanted.has(node.sourceId)) continue;
+    if (node.kind !== "note" || node.sourceId === null || !wanted.has(node.sourceId)) continue;
     const list = notes.get(node.sourceId);
     if (list === undefined) notes.set(node.sourceId, [node]);
     else list.push(node);
